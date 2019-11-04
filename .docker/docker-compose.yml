@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+
+  rmg-tomcat:
+    build: ./build
+    image: rmg/tomcat
