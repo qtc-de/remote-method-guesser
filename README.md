@@ -412,3 +412,6 @@ Invoking blindly Java methods on a production system is dangerous and should not
 
 It should also be noticed that RMG was never fully tested and that it was developed by a non-Java developer. It might contain several bugs and there is no gurantee that
 it works for you. If you encounter/find any issues, feel free to submit issues/pull-requests for them.
+
+
+*Copyright 2019, Tobias Neitzel and contributors.*
