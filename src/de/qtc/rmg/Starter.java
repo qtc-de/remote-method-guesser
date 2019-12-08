@@ -27,7 +27,7 @@ public class Starter {
 		
 		Options options = new Options();
 		
-        Option name = new Option("b", "boundName", true, "guess only on this bound name");
+        Option name = new Option(null, "boundName", true, "guess only on this bound name");
         name.setRequired(false);
         options.addOption(name);
 
@@ -35,7 +35,7 @@ public class Starter {
 		build.setRequired(false);
 		options.addOption(build);
         
-		Option classes = new Option("c", "classes", false, "show also class names");
+		Option classes = new Option(null, "classes", false, "show also class names");
 		classes.setRequired(false);
 		options.addOption(classes);
 		
@@ -43,11 +43,11 @@ public class Starter {
         configOption.setRequired(false);
         options.addOption(configOption);
 		
-		Option guess = new Option("g", "guess", false, "guess valid methods on classes");
+		Option guess = new Option(null, "guess", false, "guess valid methods on classes");
 		guess.setRequired(false);
 		options.addOption(guess);
 
-		Option jsonOutput = new Option("j", "json", false, "output in json format");
+		Option jsonOutput = new Option(null, "json", false, "output in json format");
 		jsonOutput.setRequired(false);
 		options.addOption(jsonOutput);
 		
@@ -67,7 +67,7 @@ public class Starter {
 		sources.setRequired(false);
 		options.addOption(sources);
 		
-        Option threads = new Option("t", "threads", true, "maximum number of threads");
+        Option threads = new Option(null, "threads", true, "maximum number of threads");
         threads.setRequired(false);
         options.addOption(threads);
 		
@@ -75,7 +75,7 @@ public class Starter {
 		templates.setRequired(false);
 		options.addOption(templates);
 		
-		Option showClasses = new Option("q", "quite", false, "less verbose output format");
+		Option showClasses = new Option(null, "quite", false, "less verbose output format");
 		showClasses.setRequired(false);
 		options.addOption(showClasses);
 
@@ -88,9 +88,9 @@ public class Starter {
 		String helpString = "rmg.jar [options] [clean | <ip> <port>]\n";
 		helpString += "Tries to identify juicy methods on unknown RMI interfaces.\n\n";
 		helpString += "Positional arguments:\n";
-		helpString += " clean                       Removes all temporary directories.\n";
-		helpString += " ip                          IP address of the target host\n";
-		helpString += " port                        Port number of the RMI registry\n\n";
+		helpString += "    clean                    Removes all temporary directories.\n";
+		helpString += "    ip                       IP address of the target host\n";
+		helpString += "    port                     Port number of the RMI registry\n\n";
 		helpString += "Optional arguments:\n";
 				
 		try {
