@@ -153,7 +153,7 @@ option.
 By default, the method guessing procedure is quite verbose and the corresponding output will look like this:
 
 ```
-[pentester@kali rmg]$ ./rmg.jar -g 172.18.0.2 1099
+[pentester@kali rmg]$ ./rmg.jar -g 172.18.0.2 1099 --createExploits
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
 [+] 2 names are bound to the registry.
@@ -267,7 +267,8 @@ If you do no like that verbose output, you may run *rmg* with the ``-q`` switch,
 As you can see, *rmg* was able to identify four valid method names on the exposed remote interfaces. The corresponding method names (*execute* and *system*), indicate
 that sensitive functionality could be implemented on the server side and that we may be able to exploit the exposed interfaces. But how do we take advantage of that?
 Well, theoretically you could now take the information from above to write your own RMI client to access the corresponding functions on the remote interfaces.
-But this is of course a tedious work and writing this in Java is quite time consuming. Luckily, *rmg* handles the creation of exploit code automatically for you.
+But this is of course a tedious work and writing this in Java is quite time consuming. Luckily, *rmg* handles the creation of exploit code automatically for you, if you
+invoke it with the ``--createExploits`` flag. However, since exploit generation and compilation takes some time, it is disabled by default.
 
 After *rmg* was executed, you will find some new folders inside your current working directory:
 
@@ -341,7 +342,8 @@ Like already mentioned, *rmg* ships some default templates that are fine for mos
 * Juicy method names that take up to three *String* or *String[]* arguments and return *int*
 
 It is of course possible that remote interfaces define juicy methods with other type signatures and you may want to extend the provided
-interfaces or to create a new one. 
+interfaces or to create a new one. Notice that the default location for template files is ``/opt/remote-method-guesser/templates/``. You
+can change this with a custom configuration file (see below) or by using the corresponding commandline options.
 
 To extend an interface, simply add your desired method signatures to the existing template files. However, notice that Java allows only 
 one return type per method name with the same argument signature. Thus, if you want to add method signatures for other return types, 
@@ -368,7 +370,7 @@ and therefore you can also use a configuration file for some of them. The defaul
 like this:
 
 ```properties
-templateFolder  = ./templates
+templateFolder  = /opt/remote-method-guesser/templates/
 outputFolder    = ./exploits
 sourceFolder    = ./sources
 buildFolder     = ./build
