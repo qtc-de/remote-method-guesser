@@ -1,0 +1,78 @@
+#!/bin/bash
+
+function contains() {
+	# Checks whether a certain string is contained inside a list of strings.
+    if [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+function clean() {
+	# Arguments that were already specified on the command line should be removed from
+	# the list of possible completions. This is done by this function.
+
+	tmp=$@
+
+	# iterate over each word inside the current command line
+	for var in $(echo ${COMP_LINE} | sed -e 's/ /\n/g'); do
+
+		# exclude the current word to allow full specified options to be space completed
+		if [[ "$var" == "$cur" ]]; then
+			continue;
+		fi
+		
+		# check if a command line word matches an option and remove it
+		for word in $tmp; do
+			if [[ "$word" == "$var" ]]; then
+				tmp=( "${tmp/${var}}" )
+				break
+			fi
+		done
+	done
+
+	echo $tmp
+}
+
+function _rmg() {
+	# Complete function for rmg
+	local opts cur first prev prev2
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+
+    COMPREPLY=()
+
+	# certain options required filename completion
+	if contains "--config --buildFolder --jarPath --javacPath --outputFolder --sourceFolder --templateFolder" $prev; then
+		compopt -o default
+		return 0
+
+	# when an options requires a non guessable argument, complete nothing
+	elif contains "--boundName --threads" $prev; then
+		return 0
+
+	# otherwise, we just complete options
+	else 
+		opts="--boundName"
+		opts="$opts --buildFolder"
+		opts="$opts --classes"
+		opts="$opts --config"
+		opts="$opts --guess"
+		opts="$opts --json"
+		opts="$opts --jarPath"
+		opts="$opts --javacPath"
+		opts="$opts --outputFolder"
+		opts="$opts --quite"
+		opts="$opts --sourceFolder"
+		opts="$opts --templateFolder"
+		opts="$opts --threads"
+		opts=$(clean $opts)
+	fi
+
+	mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+	return 0
+}
+
+complete -F _rmg rmg
