@@ -28,11 +28,11 @@ public class MethodGuesser {
         this.javaUtils = javaUtils;
     }
     
-    public HashMap<String,ArrayList<Method>> guessMethods(int threads) {
-    	return this.guessMethods(null, threads);
+    public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeExploits) {
+    	return this.guessMethods(null, threads, writeExploits);
     }
     
-    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads) {
+    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeExploits) {
 
         HashMap<String,ArrayList<Method>> results = new HashMap<String,ArrayList<Method>>();
 
@@ -141,20 +141,22 @@ public class MethodGuesser {
 
                 Logger.println("[+]\n[+]\t\t" + existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
  
-                
-                for( Method method : existingMethods ) {
-                	
-                	Logger.println_ye("\t\tWriting exploit for method '" + method.getName() + "'.");
-                	String[] seperated = ClassWriter.splitNames(className);
-                    String packageOnly = seperated[0];
-                    String classOnly = seperated[1];
+                if ( writeExploits ) {
 
-                    String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
-                	classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
-                    String exploitPath = classWriter.writeExploit();
-                    javaUtils.compile(exploitPath);
-                    javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
-                    Logger.println("[+]");
+                    for( Method method : existingMethods ) {
+                        
+                        Logger.println_ye("\t\tWriting exploit for method '" + method.getName() + "'.");
+                        String[] seperated = ClassWriter.splitNames(className);
+                        String packageOnly = seperated[0];
+                        String classOnly = seperated[1];
+
+                        String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
+                        classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
+                        String exploitPath = classWriter.writeExploit();
+                        javaUtils.compile(exploitPath);
+                        javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
+                        Logger.println("[+]");
+                    }
 
                 }
                

@@ -58,6 +58,7 @@ function _rmg() {
 		opts="--boundName"
 		opts="$opts --buildFolder"
 		opts="$opts --classes"
+		opts="$opts --createExploits"
 		opts="$opts --config"
 		opts="$opts --guess"
 		opts="$opts --json"

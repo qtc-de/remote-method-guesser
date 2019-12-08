@@ -75,10 +75,13 @@ public class Starter {
 		templates.setRequired(false);
 		options.addOption(templates);
 		
-		Option showClasses = new Option(null, "quite", false, "less verbose output format");
-		showClasses.setRequired(false);
-		options.addOption(showClasses);
+		Option quite = new Option(null, "quite", false, "less verbose output format");
+		quite.setRequired(false);
+		options.addOption(quite);
 
+		Option exploits = new Option(null, "createExploits", false, "write exploit code for identified methods");
+		exploits.setRequired(false);
+		options.addOption(exploits);
 		
 		
 		CommandLineParser parser = new DefaultParser();
@@ -117,6 +120,7 @@ public class Starter {
 		String jarPath = commandLine.getOptionValue("jarPath", config.getProperty("jarPath"));
 		String boundName = commandLine.getOptionValue("boundName", null);
 		int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
+		
 		File[] tmpDirectories = new File[] { new File(sourceFolder), new File(buildFolder), new File(outputFolder) };
 		
 		List<String> remainingArgs = commandLine.getArgList();
@@ -186,7 +190,7 @@ public class Starter {
 		JavaUtils javaUtils = new JavaUtils(javacPath, jarPath, buildFolder, outputFolder);
 		MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
 		
-		HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount);
+		HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, commandLine.hasOption("createExploits"));
 		format.listGuessedMethods(results);
 		
 	}
