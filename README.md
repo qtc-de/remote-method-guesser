@@ -84,6 +84,19 @@ folder.
 $ mvn package
 ```
 
+*rmg* does also ship autocompletion scripts for bash. You can set them up automatically by using the [installation script](/resources/install.sh) from
+this repository. 
+
+```
+[pentester@kali resources]$ bash install.sh 
+[+] Creating local completion script ~/.bash_completion
+[+] Creating local completion folder ~/.bash_completion.d
+[+] Creating rmg completion script ~/.bash_completion.d/rmg
+[+] Creating symlink for rmg
+```
+
+Alternatively, you can install them manually. Just check the corresponding steps from the installation script.
+
 
 ### Example Workflow & Proof of Concept
 
