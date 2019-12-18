@@ -429,4 +429,4 @@ It should also be noticed that RMG was never fully tested and that it was develo
 it works for you. If you encounter/find any issues, feel free to submit issues/pull-requests for them.
 
 
-*Copyright 2019, Tobias Neitzel and contributors.*
+*Copyright 2019, Tobias Neitzel and the remote-method-guesser contributors.*
