@@ -1,4 +1,4 @@
-# rmg
+# remote-method-guesser
 
 A tool that helps you to identify juicy methods on unknown Java RMI interfaces.
 
