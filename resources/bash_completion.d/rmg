@@ -1,76 +1,52 @@
 #!/bin/bash
 
-function contains() {
-	# Checks whether a certain string is contained inside a list of strings.
-    if [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
-function clean() {
-	# Arguments that were already specified on the command line should be removed from
-	# the list of possible completions. This is done by this function.
-
-	tmp=$@
-
-	# iterate over each word inside the current command line
-	for var in $(echo ${COMP_LINE} | sed -e 's/ /\n/g'); do
-
-		# exclude the current word to allow full specified options to be space completed
-		if [[ "$var" == "$cur" ]]; then
-			continue;
-		fi
-		
-		# check if a command line word matches an option and remove it
-		for word in $tmp; do
-			if [[ "$word" == "$var" ]]; then
-				tmp=( "${tmp/${var}}" )
-				break
-			fi
-		done
-	done
-
-	echo $tmp
-}
+type _comp_filter &> /dev/null || return
+type _comp_contains &> /dev/null || return
+type _comp_filter_shorts &> /dev/null || return
 
 function _rmg() {
-	# Complete function for rmg
-	local opts cur first prev prev2
 
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+    local cur prev words cword opts args
+    _init_completion || return
 
+    _count_args "" "@(-b|--boundName|--buildFolder|--config|--jarPath|--javacPath|--outputFolder|--sourceFolder|-t|--threads|--templateFolder)"
     COMPREPLY=()
 
-	# certain options required filename completion
-	if contains "--config --buildFolder --jarPath --javacPath --outputFolder --sourceFolder --templateFolder" $prev; then
-		compopt -o default
+    # If one non-optional argument was provided and we are at the last word - stop completion
+    if [[ $args -ge 2 && $(($cword+1)) -eq ${#words[@]} ]]; then
+        return 0
+    fi
+
+	# filename completions
+	if _comp_contains "--config --buildFolder --jarPath --javacPath --outputFolder --sourceFolder --templateFolder" $prev; then
+        _filedir
 		return 0
 
-	# when an options requires a non guessable argument, complete nothing
-	elif contains "--boundName --threads" $prev; then
+	# No completions
+	elif _comp_contains "--boundName --threads" $prev; then
 		return 0
 
 	# otherwise, we just complete options
 	else 
-		opts="--boundName"
+		opts="clean"
+		opts="$opts -b --boundName"
 		opts="$opts --buildFolder"
-		opts="$opts --classes"
+		opts="$opts -c --classes"
 		opts="$opts --createExploits"
 		opts="$opts --config"
-		opts="$opts --guess"
-		opts="$opts --json"
+		opts="$opts -g --guess"
+		opts="$opts -j --json"
 		opts="$opts --jarPath"
 		opts="$opts --javacPath"
 		opts="$opts --outputFolder"
-		opts="$opts --quite"
+		opts="$opts -q --quite"
 		opts="$opts --sourceFolder"
 		opts="$opts --templateFolder"
-		opts="$opts --threads"
-		opts=$(clean $opts)
+		opts="$opts -t --threads"
 	fi
+
+    _comp_filter "opts"
+    _comp_filter_shorts "opts"
 
 	mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
 	return 0
