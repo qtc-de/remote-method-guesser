@@ -193,10 +193,23 @@ class Threader implements Runnable {
     public void run() {
 
         int parameterCount = method.getParameterCount();
+
         Object[] parameters = new Object[parameterCount];
+        Class<?>[] classes = method.getParameterTypes();
 
         for(int ctr = 0; ctr < parameterCount; ctr++) {
-          parameters[ctr] = null;
+
+            if( classes[ctr].isPrimitive() ) {
+
+                if( classes[ctr] == Integer.TYPE ) {
+                    parameters[ctr] = 0;
+                } else if( classes[ctr] == Boolean.TYPE ) {
+                    parameters[ctr] = true;
+                }
+
+            } else {
+                parameters[ctr] = null;
+            }
         }
 
         try {
