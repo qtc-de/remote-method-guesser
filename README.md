@@ -73,7 +73,7 @@ or non exception at all. Such a result can be interpreted as ``method exists on 
 The remote-method-guesser (*rmg* in the following) is a *maven* project and the installation should be quite easy. With maven installed, just execute
 the following commands to create an executable ``.jar`` file:
 
-```
+```console
 $ git clone https://github.com/qtc-de/remote-method-guesser
 $ cd remote-method-guesser
 $ mvn package
@@ -132,7 +132,7 @@ However, *rmg* does also support such functionality, if you just invoke it with 
 Now you know that the corresponding port does indeed provide access to an *rmi-registry* and you also know which names are bound to it. You can also request information
 about the class interfaces, that the corresponding boundNames implement:
 
-```
+```console
 [pentester@kali rmg]$ ./rmg.jar -c 172.18.0.2 1099
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
@@ -276,7 +276,7 @@ invoke it with the ``--createExploits`` flag. However, since exploit generation 
 
 After *rmg* was executed with the ``--createExploits`` option, you will find some new folders inside your current working directory:
 
-```
+```console
 [pentester@kali rmg]$ ls
 build  exploits  rmg.jar  sources  templates
 ```
@@ -296,7 +296,7 @@ total 48
 In this folder, *rmg* has created one executable *.jar* file for each successfully guessed remote method. If you just execute one of the *.jar* files without any arguments, you will 
 see the following:
 
-```
+```console
 [pentester@kali rmg]$ java -jar exploits/IServerExecuteExploit.jar 
 [+] To run the exploit, use the ``-x`` switch and specify the required arguments.
 [+] If you need to specify a String array (String[]) as argument, use '<SEP>' as array seperator.
@@ -305,7 +305,7 @@ see the following:
 
 Like the help suggests, you can then use the *-x* switch, to call the corresponding remote method with user defined arguments:
 
-```
+```console
 [pentester@kali rmg]$ java -jar exploits/IServerExecuteExploit.jar -x id
 [+] Connecting to registry on 172.18.0.2:1099... done!
 [+] Starting lookup on SuperCoolServer... done!
@@ -319,7 +319,7 @@ This is of course the best you can hope for.
 One special case of using the exploits provided by *rmg* occurs, when interfaces require a string array (*String[]*) as one of their arguments, like the *system* function from the *IServer* interface.
 In this case, the exploit code will try to convert your arguments to a string array automatically, by using the marker ``<SEP>`` as a separator:
 
-```
+```console
 [pentester@kali rmg]$ java -jar exploits/IServerSystemExploit.jar -x ls "-l<SEP>-a"
 [+] Connecting to registry on 172.18.0.2:1099... done!
 [+] Starting lookup on SuperCoolServer... done!
@@ -329,7 +329,7 @@ In this case, the exploit code will try to convert your arguments to a string ar
 
 If you want to clean the directory structure that was created by *rmg*, just type:
 
-```
+```console
 [pentester@kali rmg]$ ./rmg.jar clean
 [pentester@kali rmg]$ ls
 rmg.jar  templates
