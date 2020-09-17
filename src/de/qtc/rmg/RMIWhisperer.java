@@ -9,9 +9,9 @@ import java.util.HashMap;
 
 public final class RMIWhisperer {
 
-    private Registry rmiRegistry;
-    public String host;
     public int port;
+    public String host;
+    private Registry rmiRegistry;
 
     public void connect(String host, int port) {
 
@@ -86,11 +86,8 @@ public final class RMIWhisperer {
               unknownClasses.put(className, missingClass);
 
           } catch( NotBoundException e) {
-
-            Logger.println("[-] Error: Failed while looking up '" + className + "'... ");
-
+              Logger.println("[-] Error: Failure while looking up '" + className + "'... ");
           }
-
         }
 
         returnList.add(knownClasses);
@@ -101,5 +98,4 @@ public final class RMIWhisperer {
     public Registry getRegistry() {
         return this.rmiRegistry;
     }
-
 }
