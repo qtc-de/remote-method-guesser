@@ -10,14 +10,14 @@ import java.util.HashMap;
 public final class RMIWhisperer {
 
     private Registry rmiRegistry;
-    public String host; 
+    public String host;
     public int port;
 
     public void connect(String host, int port) {
 
-    	this.host = host;
-    	this.port = port;
-    	
+        this.host = host;
+        this.port = port;
+
         Logger.print("[+] Connecting to RMI registry... ");
         try {
 
@@ -26,7 +26,7 @@ public final class RMIWhisperer {
 
         } catch( RemoteException e ) {
 
-        	Logger.println("failed.");
+            Logger.println("failed.");
             System.err.println("[-] Error: Could not connect to " + host + "on port " + port);
             System.err.println("[-] Exception Details: " + e.toString());
             System.exit(1);
@@ -42,23 +42,23 @@ public final class RMIWhisperer {
 
         try {
 
-			boundNames = rmiRegistry.list();
-			Logger.println("done.");
-			Logger.println("[+] " + boundNames.length + " names are bound to the registry.");
+            boundNames = rmiRegistry.list();
+            Logger.println("done.");
+            Logger.println("[+] " + boundNames.length + " names are bound to the registry.");
 
         } catch( RemoteException e ) {
 
-        	Logger.println("failed.");
-        	System.err.println("[-] Error: Remote failure when listing bound names");
-        	System.err.println("[-] Exception Details: " + e.toString());
-        	System.exit(1);
+            Logger.println("failed.");
+            System.err.println("[-] Error: Remote failure when listing bound names");
+            System.err.println("[-] Exception Details: " + e.toString());
+            System.exit(1);
 
         }
 
         return boundNames;
     }
 
-    
+
     public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames) {
 
         ArrayList<HashMap<String, String>> returnList = new ArrayList<HashMap<String, String>>();
@@ -96,10 +96,10 @@ public final class RMIWhisperer {
         returnList.add(knownClasses);
         returnList.add(unknownClasses);
         return returnList;
-    } 
-    
-    public Registry getRegistry() {
-    	return this.rmiRegistry;
     }
-    
+
+    public Registry getRegistry() {
+        return this.rmiRegistry;
+    }
+
 }

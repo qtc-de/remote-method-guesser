@@ -13,31 +13,31 @@ public class ClassWriter {
     public String templateFolder;
     public String sourceFolder;
     private String template;
-	private String exploitClassName;
+    private String exploitClassName;
 
 
     public ClassWriter(String templateFolder, String sourceFolder) {
         this.templateFolder = templateFolder;
         this.sourceFolder = sourceFolder;
     }
-    
-    
+
+
     public File[] getTemplateFiles() {
-    	
+
         File templateDir = new File(this.templateFolder);
         File[] containedFiles = templateDir.listFiles();
-        
+
         List<File> templateFiles = new ArrayList<File>();
         for( File file : containedFiles ) {
           if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("ExploitTemplate.java") ) {
             templateFiles.add(file);
           }
         }
-        
+
         return templateFiles.toArray(new File[templateFiles.size()]);
     }
-    
-    
+
+
     public void loadTemplate(String templateName) {
 
         String path = this.templateFolder + "/" + templateName;
@@ -57,21 +57,21 @@ public class ClassWriter {
 
         } catch( Exception e ) {
 
-        	Logger.println("failed");
+            Logger.println("failed");
             System.err.println("[-]\t\tError: unable to read template file");
             System.exit(1);
 
         }
-        
 
-    }  
+
+    }
 
     public String writeClass(String fullClassName) {
 
-    	String[] components = splitNames(fullClassName);
-    	String packageName = components[0];
-    	String className = components[1];
-    	
+        String[] components = splitNames(fullClassName);
+        String packageName = components[0];
+        String className = components[1];
+
         this.template = this.template.replace("<PACKAGENAME>", packageName);
         this.template = this.template.replace("<CLASSNAME>", className);
 
@@ -87,34 +87,34 @@ public class ClassWriter {
 
         } catch( Exception e ) {
 
-        	Logger.println("failed.");
+            Logger.println("failed.");
             System.err.println("[-] Error: Cannot open '" + destination + "'");
             System.exit(1);
 
         }
-        
+
         return destination;
 
     }
 
 
     public void prepareExploit(String packageName, String className, String boundName, Method method, String exploitClassName, String remoteHost, int remotePort) {
-        
-    	this.loadTemplate("ExploitTemplate.java");
-        this.exploitClassName = exploitClassName; 
+
+        this.loadTemplate("ExploitTemplate.java");
+        this.exploitClassName = exploitClassName;
         String port = String.valueOf(remotePort);
 
         int numberOfArguments = method.getParameterCount();
         StringBuilder argumentString = new StringBuilder();
-        
+
         Class<?>[] typeOfArguments = method.getParameterTypes();
 
         for(int ctr = 1; ctr <= numberOfArguments; ctr++) {
-        	if( typeOfArguments[ctr-1].isArray() ) {
-        		argumentString.append("convertToArray(argv[" + ctr + "])" + ((ctr == numberOfArguments) ? "" : ","));
-        	} else {
-        		argumentString.append("argv[" + ctr + "]" + ((ctr == numberOfArguments) ? "" : ",")); 
-        	}
+            if( typeOfArguments[ctr-1].isArray() ) {
+                argumentString.append("convertToArray(argv[" + ctr + "])" + ((ctr == numberOfArguments) ? "" : ","));
+            } else {
+                argumentString.append("argv[" + ctr + "]" + ((ctr == numberOfArguments) ? "" : ","));
+            }
         }
 
         Logger.print("[+]\t\tPreparing exploit... ");
@@ -135,7 +135,7 @@ public class ClassWriter {
 
     }
 
-    
+
     public String writeExploit() {
 
         String destination = this.sourceFolder + "/" + this.exploitClassName + ".java";
@@ -150,21 +150,21 @@ public class ClassWriter {
 
         } catch( Exception e ) {
 
-        	Logger.println("failed.");
+            Logger.println("failed.");
             System.err.println("[-] Error: Cannot open '" + destination + "'");
             System.exit(1);
 
         }
-        
+
         return destination;
 
     }
-    
-    
+
+
     public static String[] splitNames(String fullName) {
-    	String className = fullName.substring(fullName.lastIndexOf(".") + 1, fullName.length());
-    	String packageName = fullName.substring(0, fullName.lastIndexOf("."));
-    	return new String[] { packageName, className };
+        String className = fullName.substring(fullName.lastIndexOf(".") + 1, fullName.length());
+        String packageName = fullName.substring(0, fullName.lastIndexOf("."));
+        return new String[] { packageName, className };
     }
 
 }

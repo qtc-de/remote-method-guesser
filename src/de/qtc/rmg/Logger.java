@@ -11,9 +11,9 @@ public class Logger {
     public static final String ANSI_PURPLE = "\u001B[35m";
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
-    
-    
-	public static boolean verbose = true;
+
+
+    public static boolean verbose = true;
 
     public static void print(String msg) {
         if( Logger.verbose ) {
@@ -26,17 +26,17 @@ public class Logger {
             System.out.println(msg);
         }
     }
-    
+
     public static void println_bl(String msg) {
-    	if( Logger.verbose ) {
+        if( Logger.verbose ) {
             System.out.println("[+]" + ANSI_BLUE + msg + ANSI_RESET);
         }
     }
 
     public static void println_ye(String msg) {
-    	if( Logger.verbose ) {
+        if( Logger.verbose ) {
             System.out.println("[+]" + ANSI_YELLOW + msg + ANSI_RESET);
         }
     }
-    
+
 }

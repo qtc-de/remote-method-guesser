@@ -18,7 +18,7 @@ public class JavaUtils {
         this.outputFolder = outputFolder;
     }
 
-    
+
     public void compile(String filename) {
         this.compile(filename, this.buildFolder);
     }
@@ -33,7 +33,7 @@ public class JavaUtils {
             command.append(" -cp " + destinationFolder);
             command.append(" -d " + destinationFolder);
             command.append(" " + filename);
-            
+
             Process compiler = Runtime.getRuntime().exec(command.toString());
             compiler.waitFor();
 
@@ -41,17 +41,17 @@ public class JavaUtils {
                 BufferedReader stdErr = new BufferedReader(new InputStreamReader(compiler.getErrorStream()));
                 StringBuilder error = new StringBuilder("");
                 String line = "";
-                while ((line = stdErr.readLine()) != null) {  
+                while ((line = stdErr.readLine()) != null) {
                       error.append(line);
                 }
                 throw new Exception(error.toString());
-             }  
+             }
 
             Logger.println("done.");
 
         } catch( Exception e ) {
 
-        	Logger.println("failed.");
+            Logger.println("failed.");
             System.err.println("[-] Error: During compile phase");
             System.err.println("[-] Javac error stream: " + e.getMessage());
             System.exit(1);
@@ -60,10 +60,10 @@ public class JavaUtils {
     }
 
     public void packJar(String mainClass, String jarName) {
-    	this.packJar(this.buildFolder, this.outputFolder + "/" + jarName, mainClass);
+        this.packJar(this.buildFolder, this.outputFolder + "/" + jarName, mainClass);
     }
-    
-    
+
+
     public void packJar(String inFolder, String outputFile, String mainClass) {
 
         String manifestPath = inFolder + "/MANIFEST.MF";
@@ -73,14 +73,14 @@ public class JavaUtils {
         try {
 
             PrintWriter writer = new PrintWriter(manifestPath, "UTF-8");
-            String manifest = "Manifest-Version: 1.0\nMain-Class: de.qtc.rmg." + mainClass + "\n"; 
+            String manifest = "Manifest-Version: 1.0\nMain-Class: de.qtc.rmg." + mainClass + "\n";
             writer.print(manifest);
             writer.close();
             Logger.println("done.");
 
         } catch( Exception e ) {
-            
-        	Logger.println("failed.");
+
+            Logger.println("failed.");
             System.err.println("[-] Error: Cannot create '" + manifestPath);
             System.exit(1);
 
@@ -88,7 +88,7 @@ public class JavaUtils {
 
         try {
 
-        	Logger.print("[+]\t\tCreating " + outputFile + "... ");
+            Logger.print("[+]\t\tCreating " + outputFile + "... ");
             StringBuilder command = new StringBuilder(this.jarPath);
             command.append(" -cvfm " + outputFile);
             command.append(" " + manifestPath);
@@ -103,18 +103,18 @@ public class JavaUtils {
                 BufferedReader stdErr = new BufferedReader(new InputStreamReader(packer.getErrorStream()));
                 StringBuilder error = new StringBuilder("");
                 String line = "";
-                while ((line = stdErr.readLine()) != null) {  
+                while ((line = stdErr.readLine()) != null) {
                   error.append(line);
                 }
                 throw new Exception(error.toString());
 
-        }  
+        }
 
             Logger.println("done.");
 
         } catch( Exception e ) {
-            
-        	Logger.println("failed.");
+
+            Logger.println("failed.");
             System.err.println("[-] Error: During package phase");
             System.err.println("[-] jar error stream: " + e.getMessage());
             System.exit(1);
@@ -127,14 +127,14 @@ public class JavaUtils {
 
         try {
 
-        	Logger.print("[+] Removing '" + this.buildFolder + "' folder... ");
+            Logger.print("[+] Removing '" + this.buildFolder + "' folder... ");
             Process cleanup = Runtime.getRuntime().exec("rm -r " + this.buildFolder);
             cleanup.waitFor();
             Logger.println("done.");
 
         } catch( Exception e ) {
 
-        	Logger.println("failed.");
+            Logger.println("failed.");
             System.err.println("[-] Error during cleanup.");
 
         }

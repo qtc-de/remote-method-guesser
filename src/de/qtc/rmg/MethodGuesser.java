@@ -27,11 +27,11 @@ public class MethodGuesser {
         this.classWriter = classWriter;
         this.javaUtils = javaUtils;
     }
-    
+
     public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeExploits) {
-    	return this.guessMethods(null, threads, writeExploits);
+        return this.guessMethods(null, threads, writeExploits);
     }
-    
+
     public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeExploits) {
 
         HashMap<String,ArrayList<Method>> results = new HashMap<String,ArrayList<Method>>();
@@ -76,13 +76,13 @@ public class MethodGuesser {
             while (it.hasNext()) {
 
                 @SuppressWarnings("rawtypes")
-				Map.Entry pair = (Map.Entry)it.next();
+                Map.Entry pair = (Map.Entry)it.next();
 
                 String boundName = (String) pair.getKey();
                 String className = (String) pair.getValue();
-                
+
                 if( targetName != null && !targetName.equals(boundName) ) {
-                	continue;
+                    continue;
                 }
                 Logger.println_bl("\t\tAttacking boundName '" + boundName + "'.");
 
@@ -92,7 +92,7 @@ public class MethodGuesser {
                 javaUtils.compile(newClass);
 
                 Class<?> remoteClass = null;
-                Class<?> lookupDummy = null; 
+                Class<?> lookupDummy = null;
                 try {
 
                     remoteClass = ucl.loadClass(className);
@@ -100,7 +100,7 @@ public class MethodGuesser {
 
                 } catch( Exception e ) {
 
-                	System.err.println("[-] Error: Unable to load required classes dynamically.");
+                    System.err.println("[-] Error: Unable to load required classes dynamically.");
                     System.err.println("[-] The following exception was thrown: " + e.toString());
                     System.exit(1);
 
@@ -108,14 +108,14 @@ public class MethodGuesser {
 
                 Method[] lookupMethods = lookupDummy.getDeclaredMethods();
                 Logger.print("[+]\t\tGetting instance of '" + boundName + "'... ");
-                
+
                 Object[] arguments = new Object[]{this.rmi.getRegistry(), boundName};
                 Object instance = null;
-                
+
                 try {
-                	instance = lookupMethods[0].invoke(lookupDummy, arguments);
+                    instance = lookupMethods[0].invoke(lookupDummy, arguments);
                 } catch( Exception e ) {
-                	System.err.println("[-] Error: Unable to get instance for '" + boundName + "'.");
+                    System.err.println("[-] Error: Unable to get instance for '" + boundName + "'.");
                     System.err.println("[-] The following exception was thrown: " + e.toString());
                     System.exit(1);
                 }
@@ -126,25 +126,25 @@ public class MethodGuesser {
                 Method[] methodList = remoteClass.getDeclaredMethods();
                 ArrayList<Method> existingMethods = new ArrayList<Method>();
 
-                ExecutorService pool = Executors.newFixedThreadPool(threads); 
+                ExecutorService pool = Executors.newFixedThreadPool(threads);
                 for( Method method : methodList ) {
-                	Runnable r = new Threader(method, instance, existingMethods);
-                	pool.execute(r);
+                    Runnable r = new Threader(method, instance, existingMethods);
+                    pool.execute(r);
                 }
-             
+
                 pool.shutdown();
                 try {
-                	 pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                     pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
                 } catch (InterruptedException e) {
-                	 Logger.println("[/] Interrupted!");
+                     Logger.println("[/] Interrupted!");
                 }
 
                 Logger.println("[+]\n[+]\t\t" + existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
- 
+
                 if ( writeExploits ) {
 
                     for( Method method : existingMethods ) {
-                        
+
                         Logger.println_ye("\t\tWriting exploit for method '" + method.getName() + "'.");
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
@@ -159,7 +159,7 @@ public class MethodGuesser {
                     }
 
                 }
-               
+
                 if( results.containsKey(boundName) ) {
                     ArrayList<Method> tmp = results.get(boundName);
                     tmp.addAll(existingMethods);
@@ -170,26 +170,26 @@ public class MethodGuesser {
             }
 
         }
-        
-		return results;
+
+        return results;
 
     }
 
 }
 
 class Threader implements Runnable {
-	
-	private Method method;
-	private Object instance;
-	private ArrayList<Method> existingMethods;
-	
-	public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
-		this.method = method;
-		this.instance = instance;
-		this.existingMethods = existingMethods;
-	}
-	
-	
+
+    private Method method;
+    private Object instance;
+    private ArrayList<Method> existingMethods;
+
+    public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
+        this.method = method;
+        this.instance = instance;
+        this.existingMethods = existingMethods;
+    }
+
+
     public void run() {
 
         int parameterCount = method.getParameterCount();
@@ -215,13 +215,13 @@ class Threader implements Runnable {
         try {
 
             method.invoke(instance, parameters);
-            
+
         } catch( Exception e ) {
-        	if( e.getCause() != null && e.getCause() instanceof ServerException)
-        		if( e.getCause().getCause() instanceof java.rmi.UnmarshalException)
-        			return;
-        } 
-        
+            if( e.getCause() != null && e.getCause() instanceof ServerException)
+                if( e.getCause().getCause() instanceof java.rmi.UnmarshalException)
+                    return;
+        }
+
         Logger.println_ye("\t\t\tHIT: " + method.toGenericString() + " --> exists!");
         existingMethods.add(method);
     }
