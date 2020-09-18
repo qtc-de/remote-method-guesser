@@ -14,7 +14,7 @@ public class ClassWriter {
     public String sourceFolder;
 
     private String template;
-    private String exploitClassName;
+    private String sampleClassName;
 
 
     public ClassWriter(String templateFolder, String sourceFolder) {
@@ -30,7 +30,7 @@ public class ClassWriter {
 
         List<File> templateFiles = new ArrayList<File>();
         for( File file : containedFiles ) {
-            if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("ExploitTemplate.java") ) {
+            if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("SampleTemplate.java") ) {
                 templateFiles.add(file);
             }
         }
@@ -42,9 +42,9 @@ public class ClassWriter {
     public void loadTemplate(String templateName) {
 
         String path = this.templateFolder + "/" + templateName;
-        File exploitTemplate = new File(path);
+        File sampleTemplate = new File(path);
 
-        if( !exploitTemplate.exists() ) {
+        if( !sampleTemplate.exists() ) {
             System.err.println("[-]\t\tError: '" + templateName + "' seems not to be contained in '" + this.templateFolder + "'.");
             System.err.println("[-] Stopping execution.");
             System.exit(1);
@@ -99,15 +99,15 @@ public class ClassWriter {
     }
 
 
-    public void prepareExploit(String packageName, String className, String boundName, Method method, String exploitClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
+    public void prepareSample(String packageName, String className, String boundName, Method method, String sampleClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
 
         Security.checkAlphaNumeric(className);
         Security.checkAlphaNumeric(boundName);
         Security.checkPackageName(packageName);
-        Security.checkAlphaNumeric(exploitClassName);
+        Security.checkAlphaNumeric(sampleClassName);
 
-        this.loadTemplate("ExploitTemplate.java");
-        this.exploitClassName = exploitClassName;
+        this.loadTemplate("SampleTemplate.java");
+        this.sampleClassName = sampleClassName;
         String port = String.valueOf(remotePort);
 
         int numberOfArguments = method.getParameterCount();
@@ -123,10 +123,10 @@ public class ClassWriter {
             }
         }
 
-        Logger.print("[+]\t\tPreparing exploit... ");
+        Logger.print("[+]\t\tPreparing sample... ");
 
         this.template = this.template.replace(  "<PACKAGE>",      packageName + "." + className);
-        this.template = this.template.replace(  "<CLASSNAME>",    exploitClassName);
+        this.template = this.template.replace(  "<CLASSNAME>",    sampleClassName);
         this.template = this.template.replace(  "<METHODSIG>",    method.toString());
         this.template = this.template.replace(  "<REMOTEHOST>",   remoteHost);
         this.template = this.template.replace(  "<REMOTEPORT>",   port);
@@ -141,10 +141,10 @@ public class ClassWriter {
     }
 
 
-    public String writeExploit() {
+    public String writeSample() {
 
-        String destination = this.sourceFolder + "/" + this.exploitClassName + ".java";
-        Logger.print("[+]\t\tWriting exploit '" + destination + "' to disk... ");
+        String destination = this.sourceFolder + "/" + this.sampleClassName + ".java";
+        Logger.print("[+]\t\tWriting sample '" + destination + "' to disk... ");
 
         try {
 

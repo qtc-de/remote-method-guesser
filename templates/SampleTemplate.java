@@ -17,15 +17,15 @@ public class <CLASSNAME> {
 
         List<String> list = Arrays.asList(argv);
 
-        // If the exploit command line switch (-x) is missing, or a help switch was used, we display a help message for the user and end execution.
-        if( ! list.contains("-x") || list.contains("-h") || list.contains("--help") || list.contains("help") ) {
+        // If the command line switch '-x' is missing, or a help switch was used, we display a help message for the user and end execution.
+        if( ! list.contains("-x") || list.contains("-h") || list.contains("--help") ) {
 
-            System.out.println("[+] To run the exploit, use the '-x' switch and specify the required arguments.");
+            System.out.println("[+] To run the sample, use the '-x' switch and specify the required arguments.");
             System.out.println("[+] If you need to specify a String array (String[]) as argument, use '" + arraySeperator + "' as array seperator.");
             System.out.println("[+] The method signature is: <METHODSIG>");
             System.exit(1);
 
-        // If the exploit command line switch (-x) was specified, the total number of arguments should match <ARGCOUNT> + 1. Otherwise, execution ends here.
+        // If the command line switch '-x' was specified, the total number of arguments should match <ARGCOUNT> + 1. Otherwise, execution ends here.
         } else if( argv.length != <ARGCOUNT> + 1 ) {
 
           System.err.println("[-] Wrong number of arguments!");

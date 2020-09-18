@@ -29,11 +29,11 @@ public class MethodGuesser {
         this.javaUtils = javaUtils;
     }
 
-    public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeExploits) {
-        return this.guessMethods(null, threads, writeExploits);
+    public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeSamples) {
+        return this.guessMethods(null, threads, writeSamples);
     }
 
-    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeExploits) {
+    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeSamples) {
 
         HashMap<String,ArrayList<Method>> results = new HashMap<String,ArrayList<Method>>();
 
@@ -154,7 +154,7 @@ public class MethodGuesser {
 
                 Logger.println("[+]\n[+]\t\t" + existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
 
-                if ( writeExploits ) {
+                if ( writeSamples ) {
 
                     for( Method method : existingMethods ) {
 
@@ -164,11 +164,11 @@ public class MethodGuesser {
                         String classOnly = seperated[1];
 
                         try {
-                            String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
-                            classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
-                            String exploitPath = classWriter.writeExploit();
-                            javaUtils.compile(exploitPath);
-                            javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
+                            String sampleClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Sample";
+                            classWriter.prepareSample(packageOnly, classOnly, boundName, method, sampleClassName, this.rmi.host, this.rmi.port);
+                            String samplePath = classWriter.writeSample();
+                            javaUtils.compile(samplePath);
+                            javaUtils.packJar(sampleClassName, sampleClassName + ".jar");
 
                         } catch(UnexpectedCharacterException | FileNotFoundException e) {
                             System.err.println("[-]\t\tError during sample creation.");

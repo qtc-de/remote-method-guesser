@@ -83,9 +83,9 @@ public class Starter {
         quite.setRequired(false);
         options.addOption(quite);
 
-        Option exploits = new Option(null, "create-samples", false, "compile sample classes for identified methods");
-        exploits.setRequired(false);
-        options.addOption(exploits);
+        Option samples = new Option(null, "create-samples", false, "compile sample classes for identified methods");
+        samples.setRequired(false);
+        options.addOption(samples);
 
         Option trusted = new Option(null, "trusted", false, "disable filtering for bound and class names (dangerous)");
         trusted.setRequired(false);
