@@ -1,6 +1,7 @@
 package de.qtc.rmg;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -49,7 +50,14 @@ public class MethodGuesser {
         Logger.println("[+]\t\t" + templateFiles.length + " template files found.");
 
         String dummyPath = classWriter.templateFolder + "/LookupDummy.java";
-        javaUtils.compile(dummyPath);
+        try {
+            javaUtils.compile(dummyPath);
+        } catch (FileNotFoundException | UnexpectedCharacterException e1) {
+            System.err.println("[-] Unable to compile 'LookupDummy.java'.");
+            System.err.println("[-] Cannot proceed from here.");
+            System.err.println("[-] Stacktrace:");
+            e1.printStackTrace();
+        }
 
         for( File templateFile : templateFiles ) {
 
@@ -63,7 +71,7 @@ public class MethodGuesser {
 
             } catch ( Exception e ) {
 
-                System.err.println("[-] Error: Unexpected exception was thrown: " + e.toString());
+                System.err.println("[-] Error: Unexpected exception was thrown: " + e.getMessage());
                 System.exit(1);
             }
 
@@ -86,10 +94,15 @@ public class MethodGuesser {
                 }
                 Logger.println_bl("\t\tAttacking boundName '" + boundName + "'.");
 
-                classWriter.loadTemplate(templateName);
-                String newClass = classWriter.writeClass(className);
-
-                javaUtils.compile(newClass);
+                try {
+                    classWriter.loadTemplate(templateName);
+                    String newClass = classWriter.writeClass(className);
+                    javaUtils.compile(newClass);
+                } catch(UnexpectedCharacterException | FileNotFoundException e) {
+                    System.err.println("[-]\t\tError during class creation.");
+                    System.err.println("[-]\t\tError message: " + e.getMessage());
+                    continue;
+                }
 
                 Class<?> remoteClass = null;
                 Class<?> lookupDummy = null;
@@ -101,7 +114,7 @@ public class MethodGuesser {
                 } catch( Exception e ) {
 
                     System.err.println("[-] Error: Unable to load required classes dynamically.");
-                    System.err.println("[-] The following exception was thrown: " + e.toString());
+                    System.err.println("[-] The following exception was thrown: " + e.getMessage());
                     System.exit(1);
 
                 }
@@ -116,7 +129,7 @@ public class MethodGuesser {
                     instance = lookupMethods[0].invoke(lookupDummy, arguments);
                 } catch( Exception e ) {
                     System.err.println("[-] Error: Unable to get instance for '" + boundName + "'.");
-                    System.err.println("[-] The following exception was thrown: " + e.toString());
+                    System.err.println("[-] The following exception was thrown: " + e.getMessage());
                     System.exit(1);
                 }
 
@@ -145,16 +158,23 @@ public class MethodGuesser {
 
                     for( Method method : existingMethods ) {
 
-                        Logger.println_ye("\t\tWriting exploit for method '" + method.getName() + "'.");
+                        Logger.println_ye("\t\tWriting sample class for method '" + method.getName() + "'.");
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
                         String classOnly = seperated[1];
 
-                        String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
-                        classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
-                        String exploitPath = classWriter.writeExploit();
-                        javaUtils.compile(exploitPath);
-                        javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
+                        try {
+                            String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
+                            classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
+                            String exploitPath = classWriter.writeExploit();
+                            javaUtils.compile(exploitPath);
+                            javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
+
+                        } catch(UnexpectedCharacterException | FileNotFoundException e) {
+                            System.err.println("[-]\t\tError during sample creation.");
+                            System.err.println("[-]\t\tError message: " + e.getMessage());
+                        }
+
                         Logger.println("[+]");
                     }
 
@@ -166,15 +186,10 @@ public class MethodGuesser {
                 } else {
                     results.put(boundName, existingMethods);
                 }
-
             }
-
         }
-
         return results;
-
     }
-
 }
 
 class Threader implements Runnable {

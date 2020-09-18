@@ -12,6 +12,7 @@ public class ClassWriter {
 
     public String templateFolder;
     public String sourceFolder;
+
     private String template;
     private String exploitClassName;
 
@@ -29,9 +30,9 @@ public class ClassWriter {
 
         List<File> templateFiles = new ArrayList<File>();
         for( File file : containedFiles ) {
-          if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("ExploitTemplate.java") ) {
-            templateFiles.add(file);
-          }
+            if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("ExploitTemplate.java") ) {
+                templateFiles.add(file);
+            }
         }
 
         return templateFiles.toArray(new File[templateFiles.size()]);
@@ -43,8 +44,8 @@ public class ClassWriter {
         String path = this.templateFolder + "/" + templateName;
         File exploitTemplate = new File(path);
 
-        if( ! exploitTemplate.exists() ) {
-            System.err.println("[-]\t\tError: '" + templateName + "' seems not to be contained in '" + this.templateFolder + "'");
+        if( !exploitTemplate.exists() ) {
+            System.err.println("[-]\t\tError: '" + templateName + "' seems not to be contained in '" + this.templateFolder + "'.");
             System.err.println("[-] Stopping execution.");
             System.exit(1);
         }
@@ -62,11 +63,12 @@ public class ClassWriter {
             System.exit(1);
 
         }
-
-
     }
 
-    public String writeClass(String fullClassName) {
+
+    public String writeClass(String fullClassName) throws UnexpectedCharacterException{
+
+        Security.checkPackageName(fullClassName);
 
         String[] components = splitNames(fullClassName);
         String packageName = components[0];
@@ -94,11 +96,15 @@ public class ClassWriter {
         }
 
         return destination;
-
     }
 
 
-    public void prepareExploit(String packageName, String className, String boundName, Method method, String exploitClassName, String remoteHost, int remotePort) {
+    public void prepareExploit(String packageName, String className, String boundName, Method method, String exploitClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
+
+        Security.checkAlphaNumeric(className);
+        Security.checkAlphaNumeric(boundName);
+        Security.checkPackageName(packageName);
+        Security.checkAlphaNumeric(exploitClassName);
 
         this.loadTemplate("ExploitTemplate.java");
         this.exploitClassName = exploitClassName;
@@ -132,7 +138,6 @@ public class ClassWriter {
         this.template = this.template.replace(  "<ARGUMENTS>",    argumentString.toString());
 
         Logger.println("done.");
-
     }
 
 
@@ -153,11 +158,9 @@ public class ClassWriter {
             Logger.println("failed.");
             System.err.println("[-] Error: Cannot open '" + destination + "'");
             System.exit(1);
-
         }
 
         return destination;
-
     }
 
 
@@ -166,5 +169,4 @@ public class ClassWriter {
         String packageName = fullName.substring(0, fullName.lastIndexOf("."));
         return new String[] { packageName, className };
     }
-
 }

@@ -1,6 +1,9 @@
 package de.qtc.rmg;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
@@ -19,20 +22,34 @@ public class JavaUtils {
     }
 
 
-    public void compile(String filename) {
+    public void compile(String filename) throws FileNotFoundException, UnexpectedCharacterException {
         this.compile(filename, this.buildFolder);
     }
 
 
-    public void compile(String filename, String destinationFolder) {
+    public void compile(String filename, String destinationFolder) throws FileNotFoundException, UnexpectedCharacterException {
 
         Logger.print("[+]\t\tCompiling file " + filename + "... ");
 
+        File tmpFile = new File(filename);
+        File tmpFolder = new File(destinationFolder);
+
+        if( !tmpFile.exists() ) {
+            throw new FileNotFoundException("Required resource '" + tmpFile.getAbsolutePath() + "' does not exist.");
+        }
+
+        if( !tmpFolder.exists() ) {
+            throw new FileNotFoundException("Required resource '" + tmpFolder.getAbsolutePath() + "' does not exist.");
+        }
+
+        Security.checkShellInjection(filename);
+        Security.checkShellInjection(destinationFolder);
+
         try {
             StringBuilder command = new StringBuilder(this.javacPath);
-            command.append(" -cp " + destinationFolder);
-            command.append(" -d " + destinationFolder);
-            command.append(" " + filename);
+            command.append(" -cp '" + destinationFolder);
+            command.append("' -d '" + destinationFolder);
+            command.append("' '" + filename + "'");
 
             Process compiler = Runtime.getRuntime().exec(command.toString());
             compiler.waitFor();
@@ -55,45 +72,49 @@ public class JavaUtils {
             System.err.println("[-] Error: During compile phase");
             System.err.println("[-] Javac error stream: " + e.getMessage());
             System.exit(1);
-
         }
     }
 
-    public void packJar(String mainClass, String jarName) {
+
+    public void packJar(String mainClass, String jarName) throws UnexpectedCharacterException {
+        Security.checkJarFile(jarName);
+        Security.checkPackageName(mainClass);
         this.packJar(this.buildFolder, this.outputFolder + "/" + jarName, mainClass);
     }
 
 
-    public void packJar(String inFolder, String outputFile, String mainClass) {
+    public void packJar(String inFolder, String outputFile, String mainClass) throws UnexpectedCharacterException {
 
         String manifestPath = inFolder + "/MANIFEST.MF";
-
         Logger.print("[+]\t\tCreating manifest for '" + outputFile + "... ");
 
         try {
 
+            Security.checkPackageName(mainClass);
             PrintWriter writer = new PrintWriter(manifestPath, "UTF-8");
             String manifest = "Manifest-Version: 1.0\nMain-Class: de.qtc.rmg." + mainClass + "\n";
             writer.print(manifest);
             writer.close();
             Logger.println("done.");
 
-        } catch( Exception e ) {
+        } catch( IOException e ) {
 
             Logger.println("failed.");
             System.err.println("[-] Error: Cannot create '" + manifestPath);
             System.exit(1);
-
         }
+
+        Security.checkShellInjection(inFolder);
+        Security.checkShellInjection(outputFile);
 
         try {
 
             Logger.print("[+]\t\tCreating " + outputFile + "... ");
             StringBuilder command = new StringBuilder(this.jarPath);
-            command.append(" -cvfm " + outputFile);
-            command.append(" " + manifestPath);
-            command.append(" -C " + inFolder);
-            command.append(" .");
+            command.append(" -cvfm '" + outputFile);
+            command.append("' '" + manifestPath);
+            command.append("' -C '" + inFolder);
+            command.append("' .");
 
             Process packer = Runtime.getRuntime().exec(command.toString());
             packer.waitFor();
@@ -107,7 +128,6 @@ public class JavaUtils {
                   error.append(line);
                 }
                 throw new Exception(error.toString());
-
         }
 
             Logger.println("done.");
@@ -118,26 +138,6 @@ public class JavaUtils {
             System.err.println("[-] Error: During package phase");
             System.err.println("[-] jar error stream: " + e.getMessage());
             System.exit(1);
-
         }
-    }
-
-
-    public void clean() {
-
-        try {
-
-            Logger.print("[+] Removing '" + this.buildFolder + "' folder... ");
-            Process cleanup = Runtime.getRuntime().exec("rm -r " + this.buildFolder);
-            cleanup.waitFor();
-            Logger.println("done.");
-
-        } catch( Exception e ) {
-
-            Logger.println("failed.");
-            System.err.println("[-] Error during cleanup.");
-
-        }
-
     }
 }
