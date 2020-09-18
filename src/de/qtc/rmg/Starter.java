@@ -87,6 +87,10 @@ public class Starter {
         exploits.setRequired(false);
         options.addOption(exploits);
 
+        Option trusted = new Option(null, "trusted", false, "disable filtering for bound and class names (dangerous)");
+        trusted.setRequired(false);
+        options.addOption(trusted);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine = null;
@@ -129,6 +133,7 @@ public class Starter {
         String javacPath = commandLine.getOptionValue("javac-path", config.getProperty("javacPath"));
         String jarPath = commandLine.getOptionValue("jar-path", config.getProperty("jarPath"));
         String boundName = commandLine.getOptionValue("bound-name", null);
+        Security.trusted = commandLine.hasOption("trusted");
 
         File[] tmpDirectories = new File[] { new File(sourceFolder), new File(buildFolder), new File(outputFolder) };
 
