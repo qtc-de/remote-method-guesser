@@ -190,6 +190,13 @@ public class Starter {
             System.exit(0);
         }
 
+        if( boundClasses.get(1).size() <= 0 ) {
+            format.listBoundNames(boundNames, boundClasses);
+            System.err.println("[+] No unknown classes identified.");
+            System.err.println("[+] Guessing methods not necessary.");
+            System.exit(0);
+        }
+
         /* If execution reaches this point, we need the template folder */
         File templatesFolder = new File(templateFolder);
         if( !templatesFolder.exists() ) {
