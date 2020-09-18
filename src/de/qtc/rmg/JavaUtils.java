@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.List;
 
 public class JavaUtils {
 
@@ -46,12 +47,8 @@ public class JavaUtils {
         Security.checkShellInjection(destinationFolder);
 
         try {
-            StringBuilder command = new StringBuilder(this.javacPath);
-            command.append(" -cp '" + destinationFolder);
-            command.append("' -d '" + destinationFolder);
-            command.append("' '" + filename + "'");
-
-            Process compiler = Runtime.getRuntime().exec(command.toString());
+            String[] command = new String[] { this.javacPath, "-cp", destinationFolder, "-d", destinationFolder, filename };
+            Process compiler = Runtime.getRuntime().exec(command);
             compiler.waitFor();
 
             if( compiler.exitValue() != 0 ) {
@@ -108,14 +105,8 @@ public class JavaUtils {
         Security.checkShellInjection(outputFile);
 
         try {
-
             Logger.print("[+]\t\tCreating " + outputFile + "... ");
-            StringBuilder command = new StringBuilder(this.jarPath);
-            command.append(" -cvfm '" + outputFile);
-            command.append("' '" + manifestPath);
-            command.append("' -C '" + inFolder);
-            command.append("' .");
-
+            String[] command = new String[] { this.jarPath, "-cvfm", outputFile, manifestPath, "-C", inFolder, "." };
             Process packer = Runtime.getRuntime().exec(command.toString());
             packer.waitFor();
 
