@@ -4,8 +4,15 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMIClientSocketFactory;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 public final class RMIWhisperer {
 
@@ -13,15 +20,30 @@ public final class RMIWhisperer {
     public String host;
     private Registry rmiRegistry;
 
-    public void connect(String host, int port) {
+    public void connect(String host, int port, boolean ssl) {
 
         this.host = host;
         this.port = port;
 
+        try {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
+            SSLContext.setDefault(ctx);
+        } catch (NoSuchAlgorithmException | KeyManagementException e1) {
+            System.err.println("[-] Unable to set TrustManager for SSL connections.");
+            System.err.println("[-] SSL connections to untrusted hosts might fail.");
+        }
+
         Logger.print("[+] Connecting to RMI registry... ");
         try {
+            if( ssl ) {
 
-            this.rmiRegistry = LocateRegistry.getRegistry(host, port);
+                RMIClientSocketFactory csf = new SslRMIClientSocketFactory();
+                this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
+
+            } else {
+                this.rmiRegistry = LocateRegistry.getRegistry(host, port);
+            }
             Logger.println("done.");
 
         } catch( RemoteException e ) {
@@ -30,7 +52,6 @@ public final class RMIWhisperer {
             System.err.println("[-] Error: Could not connect to " + host + "on port " + port);
             System.err.println("[-] Exception Details: " + e.toString());
             System.exit(1);
-
         }
     }
 
@@ -52,9 +73,7 @@ public final class RMIWhisperer {
             System.err.println("[-] Error: Remote failure when listing bound names");
             System.err.println("[-] Exception Details: " + e.toString());
             System.exit(1);
-
         }
-
         return boundNames;
     }
 

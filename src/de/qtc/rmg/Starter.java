@@ -91,6 +91,10 @@ public class Starter {
         trusted.setRequired(false);
         options.addOption(trusted);
 
+        Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
+        ssl.setRequired(false);
+        options.addOption(ssl);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine = null;
@@ -172,7 +176,7 @@ public class Starter {
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
-        rmi.connect(host, port);
+        rmi.connect(host, port, commandLine.hasOption("ssl"));
 
         String[] boundNames = rmi.getBoundNames();
         ArrayList<HashMap<String,String>> boundClasses = null;
