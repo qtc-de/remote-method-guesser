@@ -232,9 +232,12 @@ class Threader implements Runnable {
             method.invoke(instance, parameters);
 
         } catch( Exception e ) {
-            if( e.getCause() != null && e.getCause() instanceof ServerException)
+            if( e.getCause() != null && e.getCause() instanceof ServerException) {
                 if( e.getCause().getCause() instanceof java.rmi.UnmarshalException)
                     return;
+            } else if( e instanceof java.lang.reflect.InvocationTargetException ) {
+                return;
+            }
         }
 
         Logger.println_ye("\t\t\tHIT: " + method.toGenericString() + " --> exists!");
