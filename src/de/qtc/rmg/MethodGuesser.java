@@ -203,6 +203,7 @@ class Threader implements Runnable {
     private Method method;
     private Object instance;
     private ArrayList<Method> existingMethods;
+    private String error;
 
     public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
         this.method = method;
@@ -238,11 +239,20 @@ class Threader implements Runnable {
             method.invoke(instance, parameters);
 
         } catch( Exception e ) {
-            if( e.getCause() != null && e.getCause() instanceof ServerException) {
-                if( e.getCause().getCause() instanceof java.rmi.UnmarshalException)
+
+            Throwable cause = e.getCause();
+            if( cause != null ) {
+
+                if( cause instanceof ServerException) {
+                    if( cause.getCause() instanceof java.rmi.UnmarshalException)
+                        return;
+
+                } else if( cause instanceof java.rmi.UnknownHostException  ) {
+                    error = "[-]                ";
+                    error += "Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage();
+                    System.err.println(error);
                     return;
-            } else if( e instanceof java.lang.reflect.InvocationTargetException ) {
-                return;
+                }
             }
         }
 
