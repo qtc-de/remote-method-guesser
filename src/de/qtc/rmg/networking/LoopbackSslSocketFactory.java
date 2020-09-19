@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import de.qtc.rmg.io.Logger;
 
 public class LoopbackSslSocketFactory extends SSLSocketFactory {
 
@@ -18,14 +19,15 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 	@Override
     public Socket createSocket(String target, int port) throws IOException {
         if(!host.equals(target)) {
-            printInfos("\n[*]             RMI object tries to connect to different remote host: " + target, true);
+            printInfos(" RMI object tries to connect to different remote host: " + target);
 
             if( followRedirect ) {
-                printInfos("[*]             Following connection to new target... ", false);
+                printInfos("     Following ssl connection to new target... ");
             } else {
-                printInfos("[*]             Redirecting the connection back to " + host + "... ", false);
+                printInfos("     Redirecting the ssl connection back to " + host + "... ");
                 target = host;
             }
+            printInfos("     This is done for all further requests. This message is not shown again. ");
             printInfo = false;
         }
         return fac.createSocket(target, port);
@@ -61,12 +63,8 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 		return fac.createSocket(arg0, arg1, arg2, arg3);
 	}
 
-    private void printInfos(String info, boolean newLine) {
-        if( printInfo ) {
-        	if( newLine )
-        		System.out.println(info);
-        	else
-        		System.out.print(info);
-        }
+    private void printInfos(String info) {
+        if( printInfo )
+            Logger.eprintln_bl(info);
     }
 }

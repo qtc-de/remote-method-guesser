@@ -21,10 +21,18 @@ public class Logger {
         }
     }
 
+    public static void eprint(String msg) {
+        System.err.print(msg);
+    }
+
     public static void println(String msg) {
         if( Logger.verbose ) {
             System.out.println(msg);
         }
+    }
+
+    public static void eprintln(String msg) {
+        System.err.println(msg);
     }
 
     public static void println_bl(String msg) {
@@ -33,10 +41,18 @@ public class Logger {
         }
     }
 
+    public static void eprintln_bl(String msg) {
+        System.err.println("[+]" + ANSI_BLUE + msg + ANSI_RESET);
+    }
+
     public static void println_ye(String msg) {
         if( Logger.verbose ) {
             System.out.println("[+]" + ANSI_YELLOW + msg + ANSI_RESET);
         }
+    }
+
+    public static void eprintln_ye(String msg) {
+        System.err.println("[+]" + ANSI_YELLOW + msg + ANSI_RESET);
     }
 
 }
