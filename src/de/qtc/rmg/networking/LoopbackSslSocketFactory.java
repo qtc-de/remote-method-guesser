@@ -18,12 +18,12 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 	@Override
     public Socket createSocket(String target, int port) throws IOException {
         if(!host.equals(target)) {
-            printInfos("[*]		RMI object tries to connect to different remote host: " + target, true);
+            printInfos("\n[*]             RMI object tries to connect to different remote host: " + target, true);
 
             if( followRedirect ) {
-                printInfos("[*]		Following connection to new target... ", false);
+                printInfos("[*]             Following connection to new target... ", false);
             } else {
-                printInfos("[*]		Redirecting the connection back to " + host + "... ", false);
+                printInfos("[*]             Redirecting the connection back to " + host + "... ", false);
                 target = host;
             }
             printInfo = false;

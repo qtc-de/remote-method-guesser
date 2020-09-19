@@ -1,10 +1,12 @@
 package de.qtc.rmg.utils;
 
+import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMISocketFactory;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.DummyTrustManager;
+import de.qtc.rmg.networking.LoopbackSocketFactory;
+import de.qtc.rmg.networking.LoopbackSslSocketFactory;
 
 public final class RMIWhisperer {
 
@@ -28,10 +32,25 @@ public final class RMIWhisperer {
         this.host = host;
         this.port = port;
 
+        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
+        RMISocketFactory my = new LoopbackSocketFactory(host, fac, false);
+        try {
+            RMISocketFactory.setSocketFactory(my);
+        } catch (IOException e2) {
+            System.err.println("[-] Unable to set RMISocketFactory.");
+            System.err.println("[-] Host redirection will not work.");
+        }
+
         try {
             SSLContext ctx = SSLContext.getInstance("TLS");
             ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
             SSLContext.setDefault(ctx);
+
+            LoopbackSslSocketFactory.host = host;
+            LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
+            LoopbackSslSocketFactory.followRedirect = false;
+            java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
+
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
             System.err.println("[-] Unable to set TrustManager for SSL connections.");
             System.err.println("[-] SSL connections to untrusted hosts might fail.");
