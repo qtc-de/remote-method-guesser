@@ -15,6 +15,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.ClassWriter;
+import de.qtc.rmg.utils.JavaUtils;
+import de.qtc.rmg.utils.RMIWhisperer;
+import de.qtc.rmg.utils.UnexpectedCharacterException;
+
 public class MethodGuesser {
 
     private RMIWhisperer rmi;

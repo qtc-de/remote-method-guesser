@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.qtc.rmg.io.Logger;
+
 public class ClassWriter {
 
     public String templateFolder;

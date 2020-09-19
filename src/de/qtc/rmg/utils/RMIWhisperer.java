@@ -14,6 +14,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.DummyTrustManager;
+
 public final class RMIWhisperer {
 
     public int port;

@@ -3,7 +3,7 @@ package de.qtc.rmg.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract class Security {
+public abstract class Security {
 
     public static boolean trusted = false;
 
@@ -59,11 +59,3 @@ abstract class Security {
     }
 }
 
-@SuppressWarnings("serial")
-class UnexpectedCharacterException extends Exception {
-      public UnexpectedCharacterException() {}
-
-      public UnexpectedCharacterException(String message) {
-         super(message);
-      }
- }
