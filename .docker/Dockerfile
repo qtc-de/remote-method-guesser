@@ -1,12 +1,22 @@
-FROM openjdk:8
+FROM alpine:latest
 
-COPY . /usr/rmg/testserver
+# Copy server code and keystore
+COPY ./resources/trust/store.p12 /opt/store.p12
+COPY ./resources/example-server /opt/example-server
 
-WORKDIR /usr/rmg/testserver
+# Compile server code
 RUN set -ex \
-    && javac -d "./" src/IServer.java \
-    && javac -d "./" src/Server.java \
-    && javac -d "./" src/IServer2.java \
-    && javac -d "./" src/Server2.java
+    && apk update \
+    && apk add maven \
+    && apk add openjdk8 \
+    && cd /opt/example-server \
+    && mvn clean package
 
-CMD ["bash", "entrypoint.sh"]
+# Set required java options
+ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
+    -Djavax.net.ssl.keyStorePassword=password \
+    -Djavax.net.ssl.keyStore=/opt/store.p12 \
+    -Djavax.net.ssl.keyStoreType=pkcs12
+
+# Run the server
+CMD ["java", "-jar", "/opt/example-server/target/rmg-example-server.jar"]

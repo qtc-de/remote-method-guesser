@@ -27,12 +27,12 @@ public class ExampleServer {
 			Registry registry = LocateRegistry.createRegistry(registryPort, csf, ssf);
 			System.out.println("done.");
 			
-	        System.out.print("[+] Creating Server object... ");
+	        System.out.print("[+] Creating Plain Server object... ");
 	        remoteObject1 = new PlainServer();
 	        IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject1, 0);
 	        System.out.println("done.");
 	        
-	        System.out.print("[+] Creating Server object... ");
+	        System.out.print("[+] Creating SSL Server object... ");
 	        remoteObject2 = new SslServer();
 	        ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(remoteObject2, 0, csf, ssf);
 	        System.out.println("done.");
@@ -51,6 +51,6 @@ public class ExampleServer {
         System.out.print("[+] Binding Server as '" + boundName + "'... ");
         registry.bind(boundName, object);
         System.out.println("done.");
-        System.err.println("[+] " + boundName + " ready.");
+        System.err.println("[+] Boundname '" + boundName + "' is ready.");
 	}
 }
