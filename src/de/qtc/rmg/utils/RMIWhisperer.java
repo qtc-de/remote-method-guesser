@@ -27,13 +27,13 @@ public final class RMIWhisperer {
     public String host;
     private Registry rmiRegistry;
 
-    public void connect(String host, int port, boolean ssl) {
+    public void connect(String host, int port, boolean ssl, boolean followRedirects) {
 
         this.host = host;
         this.port = port;
 
         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-        RMISocketFactory my = new LoopbackSocketFactory(host, fac, false);
+        RMISocketFactory my = new LoopbackSocketFactory(host, fac, followRedirects);
         try {
             RMISocketFactory.setSocketFactory(my);
         } catch (IOException e2) {
@@ -48,7 +48,7 @@ public final class RMIWhisperer {
 
             LoopbackSslSocketFactory.host = host;
             LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-            LoopbackSslSocketFactory.followRedirect = false;
+            LoopbackSslSocketFactory.followRedirect = followRedirects;
             java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
 
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {

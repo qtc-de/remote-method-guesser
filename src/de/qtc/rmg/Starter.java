@@ -102,6 +102,10 @@ public class Starter {
         ssl.setRequired(false);
         options.addOption(ssl);
 
+        Option follow = new Option(null, "follow", false, "follow redirects to different servers");
+        follow.setRequired(false);
+        options.addOption(follow);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine = null;
@@ -183,7 +187,7 @@ public class Starter {
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
-        rmi.connect(host, port, commandLine.hasOption("ssl"));
+        rmi.connect(host, port, commandLine.hasOption("ssl"), commandLine.hasOption("follow"));
 
         String[] boundNames = rmi.getBoundNames();
         ArrayList<HashMap<String,String>> boundClasses = null;
@@ -224,7 +228,9 @@ public class Starter {
         JavaUtils javaUtils = new JavaUtils(javacPath, jarPath, buildFolder, outputFolder);
         MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
 
-        HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, commandLine.hasOption("create-samples"));
+        boolean createSamples = commandLine.hasOption("create-samples");
+
+        HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, createSamples);
         format.listGuessedMethods(results);
     }
 
