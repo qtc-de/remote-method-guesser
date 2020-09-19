@@ -18,7 +18,7 @@ abstract class Security {
             return;
 
         Matcher m = alphaNumeric.matcher(input);
-        if( m.matches() )
+        if( !m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' contains non alphanumeric characters.");
     }
 
@@ -27,7 +27,7 @@ abstract class Security {
             return;
 
         Matcher m = packageName.matcher(input);
-        if( m.matches() )
+        if( !m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' is not a valid package name.");
     }
 
@@ -36,7 +36,7 @@ abstract class Security {
             return;
 
         Matcher m = javaFile.matcher(input);
-        if( m.matches() )
+        if( !m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' is not a valid .java file.");
     }
 
@@ -45,7 +45,7 @@ abstract class Security {
             return;
 
         Matcher m = jarFile.matcher(input);
-        if( m.matches() )
+        if( !m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' is not a valid .jar file.");
     }
 
