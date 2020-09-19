@@ -13,7 +13,9 @@ import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 public class ExampleServer {
 
-	static int registryPort = 1090;
+	private static int registryPort = 1090;
+    private static Remote remoteObject1 = null;
+    private static Remote remoteObject2 = null;
 
 	public static void main(String[] argv) {
 	
@@ -26,13 +28,13 @@ public class ExampleServer {
 			System.out.println("done.");
 			
 	        System.out.print("[+] Creating Server object... ");
-	        PlainServer obj = new PlainServer();
-	        IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(obj, 0);
+	        remoteObject1 = new PlainServer();
+	        IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject1, 0);
 	        System.out.println("done.");
 	        
 	        System.out.print("[+] Creating Server object... ");
-	        SslServer obj2 = new SslServer();
-	        ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(obj2, 0, csf, ssf);
+	        remoteObject2 = new SslServer();
+	        ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(remoteObject2, 0, csf, ssf);
 	        System.out.println("done.");
 	        
 	        bindToRegistry(stub, registry, "plain-server");
