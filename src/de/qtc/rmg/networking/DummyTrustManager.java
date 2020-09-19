@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.networking;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;

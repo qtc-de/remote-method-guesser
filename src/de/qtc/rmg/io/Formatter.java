@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.io;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

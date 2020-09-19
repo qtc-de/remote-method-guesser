@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

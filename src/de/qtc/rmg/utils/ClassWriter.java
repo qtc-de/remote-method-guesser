@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.utils;
 
 import java.io.File;
 import java.io.PrintWriter;
