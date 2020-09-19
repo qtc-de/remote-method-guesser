@@ -38,9 +38,16 @@
           </execution>
         </executions>
         <configuration>
+          <finalName>rmg-example-server</finalName>
+          <archive>
+              <manifest>
+                  <mainClass>de.qtc.rmg.ExampleServer</mainClass>
+              </manifest>
+          </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
       </plugin>
     </plugins>
