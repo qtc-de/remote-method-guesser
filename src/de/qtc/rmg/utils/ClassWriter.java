@@ -102,8 +102,8 @@ public class ClassWriter {
 
     public void prepareSample(String packageName, String className, String boundName, Method method, String sampleClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
 
+        Security.checkBoundName(boundName);
         Security.checkAlphaNumeric(className);
-        Security.checkAlphaNumeric(boundName);
         Security.checkPackageName(packageName);
         Security.checkAlphaNumeric(sampleClassName);
 
