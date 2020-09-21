@@ -94,6 +94,9 @@ public class Logger {
     }
 
     public static String getIndent() {
-        return " " + "\t".repeat(indent);
+        if( verbose )
+            return " " + "\t".repeat(indent);
+        else
+            return " ";
     }
 }
