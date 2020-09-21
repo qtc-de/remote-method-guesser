@@ -7,9 +7,9 @@ public abstract class Security {
 
     public static boolean trusted = false;
 
-    private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9]");
-    private static Pattern jarFile = Pattern.compile("[a-zA-Z0-9]\\.jar");
-    private static Pattern javaFile = Pattern.compile("[a-zA-Z0-9]\\.java");
+    private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9]+");
+    private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9])+\\.jar");
+    private static Pattern javaFile = Pattern.compile("([a-zA-Z0-9])+\\.java");
     private static Pattern packageName = Pattern.compile("([a-zA-Z0-9]\\.?)+");
     private static Pattern shellInjection = Pattern.compile(".*[ '\"#&;`|*?~<>^()\\[\\]{}$\\\\\n].*");
 

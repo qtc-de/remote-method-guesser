@@ -170,7 +170,7 @@ public class MethodGuesser {
 
                     for( Method method : existingMethods ) {
 
-                        Logger.println_ye("Writing sample class for method '" + method.getName() + "'.");
+                        Logger.println("Writing sample class for method '" + method.getName() + "'.");
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
                         String classOnly = seperated[1];
