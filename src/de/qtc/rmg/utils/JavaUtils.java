@@ -109,7 +109,7 @@ public class JavaUtils {
         try {
             Logger.print("Creating " + outputFile + "... ");
             String[] command = new String[] { this.jarPath, "-cvfm", outputFile, manifestPath, "-C", inFolder, "." };
-            Process packer = Runtime.getRuntime().exec(command.toString());
+            Process packer = Runtime.getRuntime().exec(command);
             packer.waitFor();
 
             if( packer.exitValue() != 0 ) {
