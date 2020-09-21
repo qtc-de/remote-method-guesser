@@ -47,23 +47,22 @@ public class ClassWriter {
         File sampleTemplate = new File(path);
 
         if( !sampleTemplate.exists() ) {
-            System.err.println("[-]\t\tError: '" + templateName + "' seems not to be contained in '" + this.templateFolder + "'.");
-            System.err.println("[-] Stopping execution.");
+            Logger.eprintln("Error: '" + templateName + "' seems not to be contained in '" + this.templateFolder + "'.");
+            Logger.eprintln("Stopping execution.");
             System.exit(1);
         }
 
-        Logger.print("[+]\t\tReading template file: '" + path +  "'... ");
+        Logger.print("Reading template file: '" + path +  "'... ");
         try {
 
             this.template = new String(Files.readAllBytes(Paths.get(path)));
-            Logger.println("done");
+            Logger.printlnPlain("done");
 
         } catch( Exception e ) {
 
-            Logger.println("failed");
-            System.err.println("[-]\t\tError: unable to read template file");
+            Logger.printlnPlain("failed");
+            Logger.eprintln("Error: unable to read template file");
             System.exit(1);
-
         }
     }
 
@@ -80,19 +79,19 @@ public class ClassWriter {
         this.template = this.template.replace("<CLASSNAME>", className);
 
         String destination = this.sourceFolder + "/" + className + ".java";
-        Logger.print("[+]\t\tWriting class '" + destination + "' to disk... ");
+        Logger.print("Writing class '" + destination + "' to disk... ");
 
         try {
 
             PrintWriter writer = new PrintWriter(destination, "UTF-8");
             writer.print(this.template);
             writer.close();
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: Cannot open '" + destination + "'");
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: Cannot open '" + destination + "'");
             System.exit(1);
 
         }
@@ -125,7 +124,7 @@ public class ClassWriter {
             }
         }
 
-        Logger.print("[+]\t\tPreparing sample... ");
+        Logger.print("Preparing sample... ");
 
         this.template = this.template.replace(  "<PACKAGE>",      packageName + "." + className);
         this.template = this.template.replace(  "<CLASSNAME>",    sampleClassName);
@@ -139,26 +138,26 @@ public class ClassWriter {
         this.template = this.template.replace(  "<ARGCOUNT>",     Integer.toString(numberOfArguments));
         this.template = this.template.replace(  "<ARGUMENTS>",    argumentString.toString());
 
-        Logger.println("done.");
+        Logger.printlnPlain("done.");
     }
 
 
     public String writeSample() {
 
         String destination = this.sourceFolder + "/" + this.sampleClassName + ".java";
-        Logger.print("[+]\t\tWriting sample '" + destination + "' to disk... ");
+        Logger.print("Writing sample '" + destination + "' to disk... ");
 
         try {
 
             PrintWriter writer = new PrintWriter(destination, "UTF-8");
             writer.print(template);
             writer.close();
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: Cannot open '" + destination + "'");
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: Cannot open '" + destination + "'");
             System.exit(1);
         }
 

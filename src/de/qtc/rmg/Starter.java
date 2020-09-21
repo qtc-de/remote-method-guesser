@@ -160,7 +160,7 @@ public class Starter {
                     Logger.println("Deleting directory " + dir.getAbsolutePath());
                     FileUtils.deleteDirectory(dir);
                 } catch (IOException e) {
-                    Logger.println("[-] Error during cleanup.");
+                    Logger.eprintln("Error during cleanup.");
                 }
             }
             System.exit(0);
@@ -203,24 +203,24 @@ public class Starter {
 
         if( boundClasses.get(1).size() <= 0 ) {
             format.listBoundNames(boundNames, boundClasses);
-            System.err.println("[+] No unknown classes identified.");
-            System.err.println("[+] Guessing methods not necessary.");
+            Logger.eprintln("No unknown classes identified.");
+            Logger.eprintln("Guessing methods not necessary.");
             System.exit(0);
         }
 
         /* If execution reaches this point, we need the template folder */
         File templatesFolder = new File(templateFolder);
         if( !templatesFolder.exists() ) {
-            System.err.println("[-] Error: Template folder '" + templateFolder + "' does not exist");
-            System.err.println("[-] RMG attack requires an existing template folder.");
+            Logger.eprintln("Error: Template folder '" + templateFolder + "' does not exist");
+            Logger.eprintln("RMG attack requires an existing template folder.");
             System.exit(1);
         }
 
         for(File dir : tmpDirectories) {
              if( !dir.exists() ) {
-                 Logger.print("[+] Creating required folder '" + dir.getName() + "'... ");
+                 Logger.print("Creating required folder '" + dir.getName() + "'... ");
                  dir.mkdir();
-                 Logger.println("done.");
+                 Logger.printlnPlain("done.");
              }
         }
 
@@ -249,7 +249,7 @@ public class Starter {
         configStream.close();
 
         } catch( IOException e ) {
-            System.out.println("[-] Unable to load properties file '" + filename + "'");
+            Logger.eprintln("Unable to load properties file '" + filename + "'");
             System.exit(1);
         }
     }

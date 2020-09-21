@@ -46,45 +46,43 @@ public class MethodGuesser {
         File[] templateFiles = classWriter.getTemplateFiles();
         if( templateFiles == null || templateFiles.length == 0 ) {
 
-            System.err.println("[-] Error: Could not find any template files");
-            System.err.println("[-] Stopping RMG attack");
+            Logger.eprintln("Error: Could not find any template files");
+            Logger.eprintln("[-] Stopping RMG attack");
             System.exit(1);
 
         }
 
-        Logger.println("[+]\n[+] Starting RMG Attack");
-        Logger.println("[+]\t\t" + templateFiles.length + " template files found.");
+        Logger.println("\n[+] Starting RMG Attack");
+        Logger.increaseIndent();
+        Logger.println(templateFiles.length + " template files found.");
 
         String dummyPath = classWriter.templateFolder + "/LookupDummy.java";
         try {
             javaUtils.compile(dummyPath);
         } catch (FileNotFoundException | UnexpectedCharacterException e1) {
-            System.err.println("[-] Unable to compile 'LookupDummy.java'.");
-            System.err.println("[-] Cannot proceed from here.");
-            System.err.println("[-] Stacktrace:");
+            Logger.eprintln("Unable to compile 'LookupDummy.java'.");
+            Logger.eprintln("Cannot proceed from here.");
+            Logger.eprintln("Stacktrace:");
             e1.printStackTrace();
         }
 
         for( File templateFile : templateFiles ) {
-
             URLClassLoader ucl = null;
 
             try {
-
                 URL loadPath = new File(javaUtils.buildFolder).toURI().toURL();
                 URL newClassPath[] = new URL[]{loadPath};
                 ucl = new URLClassLoader(newClassPath);
 
             } catch ( Exception e ) {
-
-                System.err.println("[-] Error: Unexpected exception was thrown: " + e.getMessage());
+                Logger.eprintln("Error: Unexpected exception was thrown: " + e.getMessage());
                 System.exit(1);
             }
 
             String templateName = templateFile.getName();
-            Logger.println("[+]");
-            Logger.println_bl("\tCurrent template file: '" + templateName + "'");
-            Logger.println("[+]");
+            Logger.println("");
+            Logger.println_bl("Current template file: '" + templateName + "'");
+            Logger.println("");
 
             Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
             while (it.hasNext()) {
@@ -98,15 +96,18 @@ public class MethodGuesser {
                 if( targetName != null && !targetName.equals(boundName) ) {
                     continue;
                 }
-                Logger.println_bl("\t\tAttacking boundName '" + boundName + "'.");
+
+                Logger.increaseIndent();
+                Logger.println_bl("Attacking boundName '" + boundName + "'.");
 
                 try {
                     classWriter.loadTemplate(templateName);
                     String newClass = classWriter.writeClass(className);
                     javaUtils.compile(newClass);
                 } catch(UnexpectedCharacterException | FileNotFoundException e) {
-                    System.err.println("[-]\t\tError during class creation.");
-                    System.err.println("[-]\t\tError message: " + e.getMessage());
+                    Logger.eprintln("Error during class creation.");
+                    Logger.eprint("Exception message: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
                     continue;
                 }
 
@@ -119,14 +120,15 @@ public class MethodGuesser {
 
                 } catch( Exception e ) {
 
-                    System.err.println("[-] Error: Unable to load required classes dynamically.");
-                    System.err.println("[-] The following exception was thrown: " + e.getMessage());
+                    Logger.eprintln("Error: Unable to load required classes dynamically.");
+                    Logger.eprint("The following exception was thrown: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
 
                 }
 
                 Method[] lookupMethods = lookupDummy.getDeclaredMethods();
-                Logger.print("[+]\t\tGetting instance of '" + boundName + "'... ");
+                Logger.println("Getting instance of '" + boundName + "'...");
 
                 Object[] arguments = new Object[]{this.rmi.getRegistry(), boundName};
                 Object instance = null;
@@ -134,13 +136,14 @@ public class MethodGuesser {
                 try {
                     instance = lookupMethods[0].invoke(lookupDummy, arguments);
                 } catch( Exception e ) {
-                    System.err.println("[-] Error: Unable to get instance for '" + boundName + "'.");
-                    System.err.println("[-] The following exception was thrown: " + e.getMessage());
+                    Logger.eprintln("[-] Error: Unable to get instance for '" + boundName + "'.");
+                    Logger.eprint("[-] The following exception was thrown: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
                 }
 
-                Logger.println("done.");
-                Logger.println("[+]\t\tGuessing methods...\n[+]");
+                Logger.println("Guessing methods...\n[+]");
+                Logger.increaseIndent();
 
                 Method[] methodList = remoteClass.getDeclaredMethods();
                 ArrayList<Method> existingMethods = new ArrayList<Method>();
@@ -152,19 +155,22 @@ public class MethodGuesser {
                 }
 
                 pool.shutdown();
+
                 try {
                      pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                     Logger.decreaseIndent();
                 } catch (InterruptedException e) {
-                     Logger.println("[/] Interrupted!");
+                     Logger.eprintln("Interrupted!");
                 }
 
-                Logger.println("[+]\n[+]\t\t" + existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
+                Logger.println("");
+                Logger.println(existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
 
                 if ( writeSamples ) {
 
                     for( Method method : existingMethods ) {
 
-                        Logger.println_ye("\t\tWriting sample class for method '" + method.getName() + "'.");
+                        Logger.println_ye("Writing sample class for method '" + method.getName() + "'.");
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
                         String classOnly = seperated[1];
@@ -177,13 +183,13 @@ public class MethodGuesser {
                             javaUtils.packJar(sampleClassName, sampleClassName + ".jar");
 
                         } catch(UnexpectedCharacterException | FileNotFoundException e) {
-                            System.err.println("[-]\t\tError during sample creation.");
-                            System.err.println("[-]\t\tError message: " + e.getMessage());
+                            Logger.eprintln("Error during sample creation.");
+                            Logger.eprint("Exception message: ");
+                            Logger.eprintlnPlain_ye(e.getMessage());
                         }
 
-                        Logger.println("[+]");
+                        Logger.println("");
                     }
-
                 }
 
                 if( results.containsKey(boundName) ) {
@@ -192,6 +198,8 @@ public class MethodGuesser {
                 } else {
                     results.put(boundName, existingMethods);
                 }
+
+                Logger.decreaseIndent();
             }
         }
         return results;
@@ -203,7 +211,6 @@ class Threader implements Runnable {
     private Method method;
     private Object instance;
     private ArrayList<Method> existingMethods;
-    private String error;
 
     public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
         this.method = method;
@@ -248,15 +255,13 @@ class Threader implements Runnable {
                         return;
 
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
-                    error = "[-]                ";
-                    error += "Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage();
-                    System.err.println(error);
+                    Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
                     return;
                 }
             }
         }
 
-        Logger.println_ye("\t\t\tHIT: " + method.toGenericString() + " --> exists!");
+        Logger.println_ye("HIT: " + method.toGenericString() + " --> exists!");
         existingMethods.add(method);
     }
 }

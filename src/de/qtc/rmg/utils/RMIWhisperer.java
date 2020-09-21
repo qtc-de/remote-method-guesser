@@ -37,8 +37,8 @@ public final class RMIWhisperer {
         try {
             RMISocketFactory.setSocketFactory(my);
         } catch (IOException e2) {
-            System.err.println("[-] Unable to set RMISocketFactory.");
-            System.err.println("[-] Host redirection will not work.");
+            Logger.eprintln("Unable to set RMISocketFactory.");
+            Logger.eprintln("Host redirection will not work.");
         }
 
         try {
@@ -52,11 +52,11 @@ public final class RMIWhisperer {
             java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
 
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
-            System.err.println("[-] Unable to set TrustManager for SSL connections.");
-            System.err.println("[-] SSL connections to untrusted hosts might fail.");
+            Logger.eprintln("Unable to set TrustManager for SSL connections.");
+            Logger.eprintln("SSL connections to untrusted hosts might fail.");
         }
 
-        Logger.print("[+] Connecting to RMI registry... ");
+        Logger.print("Connecting to RMI registry... ");
         try {
             if( ssl ) {
 
@@ -66,13 +66,14 @@ public final class RMIWhisperer {
             } else {
                 this.rmiRegistry = LocateRegistry.getRegistry(host, port);
             }
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( RemoteException e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: Could not connect to " + host + "on port " + port);
-            System.err.println("[-] Exception Details: " + e.toString());
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: Could not connect to " + host + "on port " + port);
+            Logger.eprint("Exception Message: ");
+            Logger.eprintlnPlain_ye(e.getMessage());
             System.exit(1);
         }
     }
@@ -81,19 +82,20 @@ public final class RMIWhisperer {
     public String[] getBoundNames() {
 
         String[] boundNames = null;
-        Logger.print("[+] Obtaining a list of bound names... ");
+        Logger.print("Obtaining a list of bound names... ");
 
         try {
 
             boundNames = rmiRegistry.list();
-            Logger.println("done.");
-            Logger.println("[+] " + boundNames.length + " names are bound to the registry.");
+            Logger.printlnPlain("done.");
+            Logger.println(boundNames.length + " names are bound to the registry.");
 
         } catch( RemoteException e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: Remote failure when listing bound names");
-            System.err.println("[-] Exception Details: " + e.toString());
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: Remote failure when listing bound names");
+            Logger.eprint("Exception Message: ");
+            Logger.eprintlnPlain_ye(e.getMessage());
             System.exit(1);
         }
         return boundNames;
@@ -127,7 +129,7 @@ public final class RMIWhisperer {
               unknownClasses.put(className, missingClass);
 
           } catch( NotBoundException e) {
-              Logger.println("[-] Error: Failure while looking up '" + className + "'... ");
+              Logger.eprintln("Error: Failure while looking up '" + className + "'... ");
           }
         }
 

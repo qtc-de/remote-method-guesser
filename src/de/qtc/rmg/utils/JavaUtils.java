@@ -31,7 +31,7 @@ public class JavaUtils {
 
     public void compile(String filename, String destinationFolder) throws FileNotFoundException, UnexpectedCharacterException {
 
-        Logger.print("[+]\t\tCompiling file " + filename + "... ");
+        Logger.print("Compiling file " + filename + "... ");
 
         File tmpFile = new File(filename);
         File tmpFolder = new File(destinationFolder);
@@ -62,13 +62,14 @@ public class JavaUtils {
                 throw new Exception(error.toString());
              }
 
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: During compile phase");
-            System.err.println("[-] Javac error stream: " + e.getMessage());
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: During compile phase");
+            Logger.eprint("Javac error stream: ");
+            Logger.eprintlnPlain_ye(e.getMessage());
             System.exit(1);
         }
     }
@@ -84,7 +85,7 @@ public class JavaUtils {
     public void packJar(String inFolder, String outputFile, String mainClass) throws UnexpectedCharacterException {
 
         String manifestPath = inFolder + "/MANIFEST.MF";
-        Logger.print("[+]\t\tCreating manifest for '" + outputFile + "... ");
+        Logger.print("Creating manifest for '" + outputFile + "... ");
 
         try {
 
@@ -93,12 +94,12 @@ public class JavaUtils {
             String manifest = "Manifest-Version: 1.0\nMain-Class: de.qtc.rmg." + mainClass + "\n";
             writer.print(manifest);
             writer.close();
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( IOException e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: Cannot create '" + manifestPath);
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("Error: Could not create file '" + manifestPath +"'.");
             System.exit(1);
         }
 
@@ -106,7 +107,7 @@ public class JavaUtils {
         Security.checkShellInjection(outputFile);
 
         try {
-            Logger.print("[+]\t\tCreating " + outputFile + "... ");
+            Logger.print("Creating " + outputFile + "... ");
             String[] command = new String[] { this.jarPath, "-cvfm", outputFile, manifestPath, "-C", inFolder, "." };
             Process packer = Runtime.getRuntime().exec(command.toString());
             packer.waitFor();
@@ -122,13 +123,14 @@ public class JavaUtils {
                 throw new Exception(error.toString());
         }
 
-            Logger.println("done.");
+            Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
 
-            Logger.println("failed.");
-            System.err.println("[-] Error: During package phase");
-            System.err.println("[-] jar error stream: " + e.getMessage());
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("[-] Error: During package phase");
+            Logger.eprint("[-] jar error stream: ");
+            Logger.eprintlnPlain_ye(e.getMessage());
             System.exit(1);
         }
     }
