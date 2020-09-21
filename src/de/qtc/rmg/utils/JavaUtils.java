@@ -128,8 +128,8 @@ public class JavaUtils {
         } catch( Exception e ) {
 
             Logger.printlnPlain("failed.");
-            Logger.eprintln("[-] Error: During package phase");
-            Logger.eprint("[-] jar error stream: ");
+            Logger.eprintln("Error: During package phase");
+            Logger.eprint("jar error stream: ");
             Logger.eprintlnPlain_ye(e.getMessage());
             System.exit(1);
         }

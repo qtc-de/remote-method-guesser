@@ -47,7 +47,7 @@ public class MethodGuesser {
         if( templateFiles == null || templateFiles.length == 0 ) {
 
             Logger.eprintln("Error: Could not find any template files");
-            Logger.eprintln("[-] Stopping RMG attack");
+            Logger.eprintln("Stopping RMG attack");
             System.exit(1);
 
         }
@@ -136,8 +136,8 @@ public class MethodGuesser {
                 try {
                     instance = lookupMethods[0].invoke(lookupDummy, arguments);
                 } catch( Exception e ) {
-                    Logger.eprintln("[-] Error: Unable to get instance for '" + boundName + "'.");
-                    Logger.eprint("[-] The following exception was thrown: ");
+                    Logger.eprintln("Error: Unable to get instance for '" + boundName + "'.");
+                    Logger.eprint("The following exception was thrown: ");
                     Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
                 }
