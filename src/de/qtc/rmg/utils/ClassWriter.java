@@ -14,16 +14,29 @@ public class ClassWriter {
 
     public String templateFolder;
     public String sourceFolder;
+    public String sampleFolder;
 
+    private String ssl;
     private String template;
+    private String templateIntf;
     private String sampleClassName;
+    private String followRedirects;
 
-
-    public ClassWriter(String templateFolder, String sourceFolder) {
-        this.templateFolder = templateFolder;
+    public ClassWriter(String templateFolder, String sourceFolder, String sampleFolder) {
         this.sourceFolder = sourceFolder;
+        this.templateFolder = templateFolder;
+        this.sampleFolder = sampleFolder;
+        this.ssl = "false";
+        this.followRedirects = "false";
     }
 
+    public ClassWriter(String templateFolder, String sourceFolder, String sampleFolder, boolean ssl, boolean followRedirects) {
+        this.sourceFolder = sourceFolder;
+        this.templateFolder = templateFolder;
+        this.sampleFolder = sampleFolder;
+        this.ssl = ssl ? "true" : "false";
+        this.followRedirects = followRedirects ? "true" : "false";
+    }
 
     public File[] getTemplateFiles() {
 
@@ -40,8 +53,11 @@ public class ClassWriter {
         return templateFiles.toArray(new File[templateFiles.size()]);
     }
 
-
     public void loadTemplate(String templateName) {
+        loadTemplate(templateName, true);
+    }
+
+    public void loadTemplate(String templateName, boolean populateIntf) {
 
         String path = this.templateFolder + "/" + templateName;
         File sampleTemplate = new File(path);
@@ -56,6 +72,15 @@ public class ClassWriter {
         try {
 
             this.template = new String(Files.readAllBytes(Paths.get(path)));
+
+            if(populateIntf) {
+                int interfaceIndex = this.template.indexOf("public interface");
+                if( interfaceIndex < 0 ) {
+                    Logger.eprintln("Error: '" + templateName + "' seems not to be a valid template file");
+                    System.exit(1);
+                }
+                this.templateIntf = this.template.substring(interfaceIndex + 7);
+            }
             Logger.printlnPlain("done");
 
         } catch( Exception e ) {
@@ -107,7 +132,9 @@ public class ClassWriter {
         Security.checkPackageName(packageName);
         Security.checkAlphaNumeric(sampleClassName);
 
-        this.loadTemplate("SampleTemplate.java");
+        this.loadTemplate("SampleTemplate.java", false);
+        this.template += "\n" + this.templateIntf;
+
         this.sampleClassName = sampleClassName;
         String port = String.valueOf(remotePort);
 
@@ -116,23 +143,27 @@ public class ClassWriter {
 
         Class<?>[] typeOfArguments = method.getParameterTypes();
 
-        for(int ctr = 1; ctr <= numberOfArguments; ctr++) {
-            if( typeOfArguments[ctr-1].isArray() ) {
-                argumentString.append("convertToArray(argv[" + ctr + "])" + ((ctr == numberOfArguments) ? "" : ","));
-            } else {
-                argumentString.append("argv[" + ctr + "]" + ((ctr == numberOfArguments) ? "" : ","));
-            }
+        String argument;
+        for(int ctr = 0; ctr < numberOfArguments; ctr++) {
+            argument = "/*";
+            argument += typeOfArguments[ctr].getSimpleName();
+            argument += "*/";
+            argument += " value" + ctr;
+            argument += (ctr == numberOfArguments - 1) ? "" : ",";
+            argumentString.append(argument);
         }
 
         Logger.print("Preparing sample... ");
 
         this.template = this.template.replace(  "<PACKAGE>",      packageName + "." + className);
-        this.template = this.template.replace(  "<CLASSNAME>",    sampleClassName);
+        this.template = this.template.replace(  "<SAMPLECLASSNAME>",    sampleClassName);
+        this.template = this.template.replace(  "<SSL>",          this.ssl);
+        this.template = this.template.replace(  "<FOLLOW>",       this.followRedirects);
         this.template = this.template.replace(  "<METHODSIG>",    method.toString());
         this.template = this.template.replace(  "<REMOTEHOST>",   remoteHost);
         this.template = this.template.replace(  "<REMOTEPORT>",   port);
         this.template = this.template.replace(  "<BOUNDNAME>",    boundName);
-        this.template = this.template.replace(  "<CLASS>",        className);
+        this.template = this.template.replace(  "<CLASSNAME>",    className);
         this.template = this.template.replace(  "<METHODNAME>",   method.getName());
         this.template = this.template.replace(  "<RETURNTYPE>",   method.getReturnType().getName());
         this.template = this.template.replace(  "<ARGCOUNT>",     Integer.toString(numberOfArguments));
@@ -144,7 +175,10 @@ public class ClassWriter {
 
     public String writeSample() {
 
-        String destination = this.sourceFolder + "/" + this.sampleClassName + ".java";
+        String sampleDir = this.sampleFolder + "/" + this.sampleClassName;
+        new File(sampleDir).mkdirs();
+
+        String destination = sampleDir + "/" + this.sampleClassName + ".java";
         Logger.print("Writing sample '" + destination + "' to disk... ");
 
         try {

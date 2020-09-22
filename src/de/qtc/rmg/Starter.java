@@ -70,7 +70,7 @@ public class Starter {
         jar.setRequired(false);
         options.addOption(jar);
 
-        Option outputs = new Option(null, "output-folder", true, "location of the source folder");
+        Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
         outputs.setRequired(false);
         options.addOption(outputs);
 
@@ -142,7 +142,7 @@ public class Starter {
 
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("templateFolder"));
-        String outputFolder = commandLine.getOptionValue("output-folder", config.getProperty("outputFolder"));
+        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sampleFolder"));
         String sourceFolder = commandLine.getOptionValue("source-folder", config.getProperty("sourceFolder"));
         String buildFolder = commandLine.getOptionValue("build-folder", config.getProperty("buildFolder"));
         String javacPath = commandLine.getOptionValue("javac-path", config.getProperty("javacPath"));
@@ -150,7 +150,7 @@ public class Starter {
         String boundName = commandLine.getOptionValue("bound-name", null);
         Security.trusted = commandLine.hasOption("trusted");
 
-        File[] tmpDirectories = new File[] { new File(sourceFolder), new File(buildFolder), new File(outputFolder) };
+        File[] tmpDirectories = new File[] { new File(sourceFolder), new File(buildFolder), new File(sampleFolder) };
 
         List<String> remainingArgs = commandLine.getArgList();
         if( remainingArgs.size() == 1 && remainingArgs.get(0).equals("clean") ) {
@@ -187,7 +187,9 @@ public class Starter {
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
-        rmi.connect(host, port, commandLine.hasOption("ssl"), commandLine.hasOption("follow"));
+        boolean sslValue = commandLine.hasOption("ssl");
+        boolean followRedirect = commandLine.hasOption("follow");
+        rmi.connect(host, port, sslValue, followRedirect);
 
         String[] boundNames = rmi.getBoundNames();
         ArrayList<HashMap<String,String>> boundClasses = null;
@@ -224,8 +226,8 @@ public class Starter {
              }
         }
 
-        ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder);
-        JavaUtils javaUtils = new JavaUtils(javacPath, jarPath, buildFolder, outputFolder);
+        ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, sslValue, followRedirect);
+        JavaUtils javaUtils = new JavaUtils(javacPath, jarPath, buildFolder, sampleFolder);
         MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
 
         boolean createSamples = commandLine.hasOption("create-samples");
