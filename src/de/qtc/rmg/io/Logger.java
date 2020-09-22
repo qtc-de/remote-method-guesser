@@ -95,7 +95,7 @@ public class Logger {
 
     public static String getIndent() {
         if( verbose )
-            return " " + "\t".repeat(indent);
+            return " " + new String(new char[indent]).replace("\0", "\t");
         else
             return " ";
     }
