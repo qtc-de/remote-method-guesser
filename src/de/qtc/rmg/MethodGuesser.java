@@ -178,11 +178,9 @@ public class MethodGuesser {
                         try {
                             String sampleClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Sample";
                             classWriter.prepareSample(packageOnly, classOnly, boundName, method, sampleClassName, this.rmi.host, this.rmi.port);
-                            String samplePath = classWriter.writeSample();
-                            javaUtils.compile(samplePath);
-                            javaUtils.packJar(sampleClassName, sampleClassName + ".jar");
+                            classWriter.writeSample();
 
-                        } catch(UnexpectedCharacterException | FileNotFoundException e) {
+                        } catch(UnexpectedCharacterException e) {
                             Logger.eprintln("Error during sample creation.");
                             Logger.eprint("Exception message: ");
                             Logger.eprintlnPlain_ye(e.getMessage());
