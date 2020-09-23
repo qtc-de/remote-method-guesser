@@ -66,10 +66,6 @@ public class Starter {
         javac.setRequired(false);
         options.addOption(javac);
 
-        Option jar = new Option(null, "jar-path", true, "location of the jar executable");
-        jar.setRequired(false);
-        options.addOption(jar);
-
         Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
         outputs.setRequired(false);
         options.addOption(outputs);
@@ -90,7 +86,7 @@ public class Starter {
         quite.setRequired(false);
         options.addOption(quite);
 
-        Option samples = new Option(null, "create-samples", false, "compile sample classes for identified methods");
+        Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
         samples.setRequired(false);
         options.addOption(samples);
 
@@ -111,7 +107,7 @@ public class Starter {
         CommandLine commandLine = null;
 
         String helpString = "rmg [options] [clean | <ip> <port>]\n";
-        helpString += "Java RMI enumeration tool. Can list and guess methods exposed by an Java RMI endpoint.\n\n";
+        helpString += "RMI enumeration tool. List and guess methods on Java RMI endpoints.\n\n";
         helpString += "Positional arguments:\n";
         helpString += "    clean                    Removes all temporary directories.\n";
         helpString += "    ip                       IP address of the target host\n";
@@ -146,7 +142,6 @@ public class Starter {
         String sourceFolder = commandLine.getOptionValue("source-folder", config.getProperty("sourceFolder"));
         String buildFolder = commandLine.getOptionValue("build-folder", config.getProperty("buildFolder"));
         String javacPath = commandLine.getOptionValue("javac-path", config.getProperty("javacPath"));
-        String jarPath = commandLine.getOptionValue("jar-path", config.getProperty("jarPath"));
         String boundName = commandLine.getOptionValue("bound-name", null);
         Security.trusted = commandLine.hasOption("trusted");
 
@@ -157,7 +152,7 @@ public class Starter {
             for(File dir : tmpDirectories) {
 
                 try {
-                    Logger.println("Deleting directory " + dir.getAbsolutePath());
+                    Logger.println("Deleting directory " + dir.getCanonicalPath());
                     FileUtils.deleteDirectory(dir);
                 } catch (IOException e) {
                     Logger.eprintln("Error during cleanup.");
@@ -227,12 +222,12 @@ public class Starter {
         }
 
         ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, sslValue, followRedirect);
-        JavaUtils javaUtils = new JavaUtils(javacPath, jarPath, buildFolder, sampleFolder);
+        JavaUtils javaUtils = new JavaUtils(javacPath, buildFolder, sampleFolder);
         MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
 
         boolean createSamples = commandLine.hasOption("create-samples");
-
         HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, createSamples);
+
         format.listGuessedMethods(results);
     }
 
