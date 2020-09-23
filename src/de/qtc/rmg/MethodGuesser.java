@@ -171,12 +171,11 @@ public class MethodGuesser {
                         Logger.increaseIndent();
 
                         String[] seperated = ClassWriter.splitNames(className);
-                        String packageOnly = seperated[0];
                         String classOnly = seperated[1];
 
                         try {
                             String sampleClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Sample";
-                            classWriter.prepareSample(packageOnly, classOnly, boundName, method, sampleClassName, this.rmi.host, this.rmi.port);
+                            classWriter.prepareSample(classOnly, boundName, method, sampleClassName, this.rmi.host, this.rmi.port);
                             classWriter.writeSample();
 
                         } catch(UnexpectedCharacterException e) {

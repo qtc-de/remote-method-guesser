@@ -45,7 +45,7 @@ public class ClassWriter {
 
         List<File> templateFiles = new ArrayList<File>();
         for( File file : containedFiles ) {
-            if( file.getName().matches("[a-zA-Z0-9]+Template.java") && ! file.getName().equals("SampleTemplate.java") ) {
+            if( file.getName().matches("[a-zA-Z0-9]+Template.java") && !file.getName().equals("SampleTemplate.java") ) {
                 templateFiles.add(file);
             }
         }
@@ -84,9 +84,10 @@ public class ClassWriter {
             Logger.printlnPlain("done");
 
         } catch( Exception e ) {
-
             Logger.printlnPlain("failed");
-            Logger.eprintln("Error: unable to read template file");
+            Logger.eprintln("Error: unable to read template file.");
+            Logger.eprint("The following exception was thrown: ");
+            Logger.eprintln_ye(e.getMessage());
             System.exit(1);
         }
     }
@@ -107,29 +108,27 @@ public class ClassWriter {
         Logger.print("Writing class '" + destination + "' to disk... ");
 
         try {
-
             PrintWriter writer = new PrintWriter(destination, "UTF-8");
             writer.print(this.template);
             writer.close();
             Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
-
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Cannot open '" + destination + "'");
+            Logger.eprintln("Error: Cannot open '" + destination + "'.");
+            Logger.eprint("The following exception was thrown: ");
+            Logger.eprintln_ye(e.getMessage());
             System.exit(1);
-
         }
 
         return destination;
     }
 
 
-    public void prepareSample(String packageName, String className, String boundName, Method method, String sampleClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
+    public void prepareSample(String className, String boundName, Method method, String sampleClassName, String remoteHost, int remotePort) throws UnexpectedCharacterException{
 
         Security.checkBoundName(boundName);
         Security.checkAlphaNumeric(className);
-        Security.checkPackageName(packageName);
         Security.checkAlphaNumeric(sampleClassName);
 
         this.loadTemplate("SampleTemplate.java", false);
@@ -140,10 +139,9 @@ public class ClassWriter {
 
         int numberOfArguments = method.getParameterCount();
         StringBuilder argumentString = new StringBuilder();
-
         Class<?>[] typeOfArguments = method.getParameterTypes();
 
-        String argument;
+        String argument = "";
         for(int ctr = 0; ctr < numberOfArguments; ctr++) {
             argument = "/*";
             argument += typeOfArguments[ctr].getSimpleName();
@@ -155,7 +153,6 @@ public class ClassWriter {
 
         Logger.print("Preparing sample... ");
 
-        this.template = this.template.replace(  "<PACKAGE>",      packageName + "." + className);
         this.template = this.template.replace(  "<SAMPLECLASSNAME>",    sampleClassName);
         this.template = this.template.replace(  "<SSL>",          this.ssl);
         this.template = this.template.replace(  "<FOLLOW>",       this.followRedirects);
@@ -182,16 +179,16 @@ public class ClassWriter {
         Logger.print("Writing sample '" + destination + "' to disk... ");
 
         try {
-
             PrintWriter writer = new PrintWriter(destination, "UTF-8");
             writer.print(template);
             writer.close();
             Logger.printlnPlain("done.");
 
         } catch( Exception e ) {
-
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Cannot open '" + destination + "'");
+            Logger.eprintln("Error: Cannot open '" + destination + "'.");
+            Logger.eprint("The following exception was thrown: ");
+            Logger.eprintln_ye(e.getMessage());
             System.exit(1);
         }
 
@@ -200,8 +197,9 @@ public class ClassWriter {
 
 
     public static String[] splitNames(String fullName) {
-        String className = fullName.substring(fullName.lastIndexOf(".") + 1, fullName.length());
-        String packageName = fullName.substring(0, fullName.lastIndexOf("."));
+        int index = fullName.lastIndexOf(".");
+        String className = fullName.substring(index + 1, fullName.length());
+        String packageName = fullName.substring(0, index);
         return new String[] { packageName, className };
     }
 }
