@@ -171,6 +171,8 @@ public class MethodGuesser {
                     for( Method method : existingMethods ) {
 
                         Logger.println("Writing sample class for method '" + method.getName() + "'.");
+                        Logger.increaseIndent();
+
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
                         String classOnly = seperated[1];
@@ -186,6 +188,7 @@ public class MethodGuesser {
                             Logger.eprintlnPlain_ye(e.getMessage());
                         }
 
+                        Logger.decreaseIndent();
                         Logger.println("");
                     }
                 }
