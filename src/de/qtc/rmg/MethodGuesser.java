@@ -252,6 +252,10 @@ class Threader implements Runnable {
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
                     Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
                     return;
+
+                } else if( cause instanceof java.rmi.ConnectException  ) {
+                    Logger.eprintln((cause.getMessage().split(";"))[0]);
+                    return;
                 }
             }
         }
