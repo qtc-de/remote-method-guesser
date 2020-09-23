@@ -114,17 +114,14 @@ public class MethodGuesser {
                 Class<?> remoteClass = null;
                 Class<?> lookupDummy = null;
                 try {
-
                     remoteClass = ucl.loadClass(className);
                     lookupDummy = ucl.loadClass("de.qtc.rmg.LookupDummy");
 
                 } catch( Exception e ) {
-
                     Logger.eprintln("Error: Unable to load required classes dynamically.");
                     Logger.eprint("The following exception was thrown: ");
                     Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
-
                 }
 
                 Method[] lookupMethods = lookupDummy.getDeclaredMethods();
@@ -158,11 +155,11 @@ public class MethodGuesser {
 
                 try {
                      pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-                     Logger.decreaseIndent();
                 } catch (InterruptedException e) {
                      Logger.eprintln("Interrupted!");
                 }
 
+                Logger.decreaseIndent();
                 Logger.println("");
                 Logger.println(existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
 
@@ -219,7 +216,6 @@ class Threader implements Runnable {
         this.existingMethods = existingMethods;
     }
 
-
     public void run() {
 
         int parameterCount = method.getParameterCount();
@@ -243,7 +239,6 @@ class Threader implements Runnable {
         }
 
         try {
-
             method.invoke(instance, parameters);
 
         } catch( Exception e ) {
