@@ -9,16 +9,16 @@ function _rmg() {
     local cur prev words cword opts args
     _init_completion || return
 
-    _count_args "" "@(-b|--bound-name|--build-folder|--config|--jar-path|--javac-path|--output-folder|--source-folder|-t|--threads|--template-folder)"
+    _count_args "" "@(--bound-name|--build-folder|--config|--javac-path|--sample-folder|--source-folder|--threads|--template-folder)"
     COMPREPLY=()
 
     # If one non-optional argument was provided and we are at the last word - stop completion
-    if [[ $args -ge 2 && $(($cword+1)) -eq ${#words[@]} ]]; then
+    if [[ $args -eq 2 && $(($cword+1)) -eq ${#words[@]} ]]; then
         return 0
     fi
 
 	# filename completions
-	if _comp_contains "--config --build-folder --jar-path --javac-path --output-folder --source-folder --template-folder" $prev; then
+	if _comp_contains "--config --build-folder --javac-path --sample-folder --source-folder --template-folder" $prev; then
         _filedir
 		return 0
 
@@ -29,20 +29,22 @@ function _rmg() {
 	# otherwise, we just complete options
 	else 
 		opts="clean"
-		opts="$opts -b --bound-name"
+		opts="$opts --bound-name"
 		opts="$opts --build-folder"
-		opts="$opts -c --classes"
-		opts="$opts --create-samples"
+		opts="$opts --classes"
 		opts="$opts --config"
-		opts="$opts -g --guess"
-		opts="$opts -j --json"
-		opts="$opts --jar-path"
+		opts="$opts --create-samples"
+		opts="$opts --follow"
+		opts="$opts --guess"
+		opts="$opts --help"
 		opts="$opts --javac-path"
-		opts="$opts --output-folder"
-		opts="$opts -q --quite"
+		opts="$opts --json"
+		opts="$opts --sample-folder"
 		opts="$opts --source-folder"
+		opts="$opts --ssl"
 		opts="$opts --template-folder"
-		opts="$opts -t --threads"
+		opts="$opts --threads"
+		opts="$opts --quite"
 	fi
 
     _comp_filter "opts"
