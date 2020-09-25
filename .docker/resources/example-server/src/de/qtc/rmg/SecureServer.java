@@ -23,12 +23,14 @@ public class SecureServer implements ISecureServer {
     public void logMessage(int logLevel, Object message) throws RemoteException
     {
         System.out.println("[+]\t[Secure Server]: Processing call for 'void logMessage(int arg, Object arg)'...");
+
+        String logMessage = "";
         if( logLevel == 1 )
-            System.out.println((String)message);
+            logMessage = "Info: " +(String)message;
         if( logLevel == 2 )
-            System.err.println((String)message);
-        else
-            System.err.println("Unknown logLevel: " + logLevel);
+            logMessage = "Error: " +(String)message;
+
+        //tdb.appendToLog(logMessage);
     }
 
     public void updatePreferences(ArrayList<String> preferences) throws RemoteException

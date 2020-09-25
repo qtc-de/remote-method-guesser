@@ -2,15 +2,14 @@ FROM alpine:latest
 
 # Copy server code and keystore
 COPY ./resources/trust/store.p12 /opt/store.p12
-COPY ./resources/example-server /opt/example-server
+COPY ./resources/rmg-example-server.jar /opt/example-server.jar
+COPY ./resources/commons-collections-3.1.jar /usr/lib/jvm/default-jvm/jre/lib/ext/commons-collections-3.1.jar
 
-# Compile server code
+# Install openjdk8
 RUN set -ex \
     && apk update \
-    && apk add maven \
     && apk add openjdk8 \
-    && cd /opt/example-server \
-    && mvn clean package
+    && rm -rf /var/cache/apk/*
 
 # Set required java options
 ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
@@ -19,4 +18,4 @@ ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
     -Djavax.net.ssl.keyStoreType=pkcs12
 
 # Run the server
-CMD ["java", "-jar", "/opt/example-server/target/rmg-example-server.jar"]
+CMD ["java", "-jar", "/opt/example-server.jar"]
