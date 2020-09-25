@@ -2,6 +2,8 @@ package <PACKAGENAME>;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public interface <CLASSNAME> extends Remote
 {
@@ -55,11 +57,11 @@ public interface <CLASSNAME> extends Remote
     boolean execute(String dummy) throws RemoteException;
     boolean execute(String[] dummy) throws RemoteException;
 
-    boolean logEntry(int dummy1, Object dummy2) thows RemoteException;
-    boolean logEntry(Object dummy1) thows RemoteException;
-    boolean logEntry(Object dummy2, int dummy2) thows RemoteException;
-    boolean logEntry(Object dummy2, String dummy2) thows RemoteException;
-    boolean logEntry(String dummy1, Object dummy2) thows RemoteException;
+    boolean logEntry(int dummy1, Object dummy2) throws RemoteException;
+    boolean logEntry(Object dummy1) throws RemoteException;
+    boolean logEntry(Object dummy1, int dummy2) throws RemoteException;
+    boolean logEntry(Object dummy1, String dummy2) throws RemoteException;
+    boolean logEntry(String dummy1, Object dummy2) throws RemoteException;
 
     boolean login(ArrayList dummy1, String dummy2) throws RemoteException;
     boolean login(ArrayList dummy1) throws RemoteException;
@@ -74,13 +76,13 @@ public interface <CLASSNAME> extends Remote
     boolean login(String dummy) throws RemoteException;
     boolean login(String[] dummy) throws RemoteException;
 
-    boolean log(int dummy1, Object dummy2) thows RemoteException;
+    boolean log(int dummy1, Object dummy2) throws RemoteException;
     boolean log(int dummy1, String dummy2) throws RemoteException;
-    boolean log(Object dummy1) thows RemoteException;
-    boolean log(Object dummy1, String dummy2) thows RemoteException;
-    boolean log(Object dummy1, int dummy2) thows RemoteException;
+    boolean log(Object dummy1) throws RemoteException;
+    boolean log(Object dummy1, String dummy2) throws RemoteException;
+    boolean log(Object dummy1, int dummy2) throws RemoteException;
     boolean log(String dummy1, int dummy2) throws RemoteException;
-    boolean log(String dummy1, Object dummy2) thows RemoteException;
+    boolean log(String dummy1, Object dummy2) throws RemoteException;
     boolean log(String dummy, String dummy2, String dummy3) throws RemoteException;
     boolean log(String dummy, String dummy2) throws RemoteException;
     boolean log(String dummy) throws RemoteException;
@@ -92,12 +94,12 @@ public interface <CLASSNAME> extends Remote
     boolean loginUser(String dummy) throws RemoteException;
     boolean loginUser(String[] dummy) throws RemoteException;
 
-    boolean logMessage(int dummy1, Object dummy2) thows RemoteException;
+    boolean logMessage(int dummy1, Object dummy2) throws RemoteException;
     boolean logMessage(int dummy1, String dummy2) throws RemoteException;
-    boolean logMessage(Object dummy1) thows RemoteException;
-    boolean logMessage(Object dummy2, int dummy2) thows RemoteException;
-    boolean logMessage(Object dummy2, String dummy2) thows RemoteException;
-    boolean logMessage(String dummy1, Object dummy2) thows RemoteException;
+    boolean logMessage(Object dummy1) throws RemoteException;
+    boolean logMessage(Object dummy1, int dummy2) throws RemoteException;
+    boolean logMessage(Object dummy1, String dummy2) throws RemoteException;
+    boolean logMessage(String dummy1, Object dummy2) throws RemoteException;
     boolean logMessage(String dummy, String dummy2, String dummy3) throws RemoteException;
     boolean logMessage(String dummy, String dummy2) throws RemoteException;
     boolean logMessage(String dummy) throws RemoteException;

@@ -57,11 +57,11 @@ public interface <CLASSNAME> extends Remote
     String execute(String dummy) throws RemoteException;
     String execute(String[] dummy) throws RemoteException;
 
-    String logEntry(int dummy1, Object dummy2) thows RemoteException;
-    String logEntry(Object dummy1) thows RemoteException;
-    String logEntry(Object dummy2, int dummy2) thows RemoteException;
-    String logEntry(Object dummy2, String dummy2) thows RemoteException;
-    String logEntry(String dummy1, Object dummy2) thows RemoteException;
+    String logEntry(int dummy1, Object dummy2) throws RemoteException;
+    String logEntry(Object dummy1) throws RemoteException;
+    String logEntry(Object dummy1, int dummy2) throws RemoteException;
+    String logEntry(Object dummy1, String dummy2) throws RemoteException;
+    String logEntry(String dummy1, Object dummy2) throws RemoteException;
 
     String login(ArrayList dummy1, String dummy2) throws RemoteException;
     String login(ArrayList dummy1) throws RemoteException;
@@ -76,13 +76,13 @@ public interface <CLASSNAME> extends Remote
     String login(String dummy) throws RemoteException;
     String login(String[] dummy) throws RemoteException;
 
-    String log(int dummy1, Object dummy2) thows RemoteException;
+    String log(int dummy1, Object dummy2) throws RemoteException;
     String log(int dummy1, String dummy2) throws RemoteException;
-    String log(Object dummy1) thows RemoteException;
-    String log(Object dummy1, String dummy2) thows RemoteException;
-    String log(Object dummy1, int dummy2) thows RemoteException;
+    String log(Object dummy1) throws RemoteException;
+    String log(Object dummy1, String dummy2) throws RemoteException;
+    String log(Object dummy1, int dummy2) throws RemoteException;
     String log(String dummy1, int dummy2) throws RemoteException;
-    String log(String dummy1, Object dummy2) thows RemoteException;
+    String log(String dummy1, Object dummy2) throws RemoteException;
     String log(String dummy, String dummy2, String dummy3) throws RemoteException;
     String log(String dummy, String dummy2) throws RemoteException;
     String log(String dummy) throws RemoteException;
@@ -94,12 +94,12 @@ public interface <CLASSNAME> extends Remote
     String loginUser(String dummy) throws RemoteException;
     String loginUser(String[] dummy) throws RemoteException;
 
-    String logMessage(int dummy1, Object dummy2) thows RemoteException;
+    String logMessage(int dummy1, Object dummy2) throws RemoteException;
     String logMessage(int dummy1, String dummy2) throws RemoteException;
-    String logMessage(Object dummy1) thows RemoteException;
-    String logMessage(Object dummy2, int dummy2) thows RemoteException;
-    String logMessage(Object dummy2, String dummy2) thows RemoteException;
-    String logMessage(String dummy1, Object dummy2) thows RemoteException;
+    String logMessage(Object dummy1) throws RemoteException;
+    String logMessage(Object dummy1, int dummy2) throws RemoteException;
+    String logMessage(Object dummy1, String dummy2) throws RemoteException;
+    String logMessage(String dummy1, Object dummy2) throws RemoteException;
     String logMessage(String dummy, String dummy2, String dummy3) throws RemoteException;
     String logMessage(String dummy, String dummy2) throws RemoteException;
     String logMessage(String dummy) throws RemoteException;

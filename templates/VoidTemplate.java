@@ -2,6 +2,8 @@ package <PACKAGENAME>;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public interface <CLASSNAME> extends Remote
 {
@@ -55,11 +57,11 @@ public interface <CLASSNAME> extends Remote
     void execute(String dummy) throws RemoteException;
     void execute(String[] dummy) throws RemoteException;
 
-    void logEntry(int dummy1, Object dummy2) thows RemoteException;
-    void logEntry(Object dummy1) thows RemoteException;
-    void logEntry(Object dummy2, int dummy2) thows RemoteException;
-    void logEntry(Object dummy2, String dummy2) thows RemoteException;
-    void logEntry(String dummy1, Object dummy2) thows RemoteException;
+    void logEntry(int dummy1, Object dummy2) throws RemoteException;
+    void logEntry(Object dummy1) throws RemoteException;
+    void logEntry(Object dummy1, int dummy2) throws RemoteException;
+    void logEntry(Object dummy1, String dummy2) throws RemoteException;
+    void logEntry(String dummy1, Object dummy2) throws RemoteException;
 
     void login(ArrayList dummy1, String dummy2) throws RemoteException;
     void login(ArrayList dummy1) throws RemoteException;
@@ -74,13 +76,13 @@ public interface <CLASSNAME> extends Remote
     void login(String dummy) throws RemoteException;
     void login(String[] dummy) throws RemoteException;
 
-    void log(int dummy1, Object dummy2) thows RemoteException;
+    void log(int dummy1, Object dummy2) throws RemoteException;
     void log(int dummy1, String dummy2) throws RemoteException;
-    void log(Object dummy1) thows RemoteException;
-    void log(Object dummy1, String dummy2) thows RemoteException;
-    void log(Object dummy1, int dummy2) thows RemoteException;
+    void log(Object dummy1) throws RemoteException;
+    void log(Object dummy1, String dummy2) throws RemoteException;
+    void log(Object dummy1, int dummy2) throws RemoteException;
     void log(String dummy1, int dummy2) throws RemoteException;
-    void log(String dummy1, Object dummy2) thows RemoteException;
+    void log(String dummy1, Object dummy2) throws RemoteException;
     void log(String dummy, String dummy2, String dummy3) throws RemoteException;
     void log(String dummy, String dummy2) throws RemoteException;
     void log(String dummy) throws RemoteException;
@@ -92,12 +94,12 @@ public interface <CLASSNAME> extends Remote
     void loginUser(String dummy) throws RemoteException;
     void loginUser(String[] dummy) throws RemoteException;
 
-    void logMessage(int dummy1, Object dummy2) thows RemoteException;
+    void logMessage(int dummy1, Object dummy2) throws RemoteException;
     void logMessage(int dummy1, String dummy2) throws RemoteException;
-    void logMessage(Object dummy1) thows RemoteException;
-    void logMessage(Object dummy2, int dummy2) thows RemoteException;
-    void logMessage(Object dummy2, String dummy2) thows RemoteException;
-    void logMessage(String dummy1, Object dummy2) thows RemoteException;
+    void logMessage(Object dummy1) throws RemoteException;
+    void logMessage(Object dummy1, int dummy2) throws RemoteException;
+    void logMessage(Object dummy1, String dummy2) throws RemoteException;
+    void logMessage(String dummy1, Object dummy2) throws RemoteException;
     void logMessage(String dummy, String dummy2, String dummy3) throws RemoteException;
     void logMessage(String dummy, String dummy2) throws RemoteException;
     void logMessage(String dummy) throws RemoteException;
