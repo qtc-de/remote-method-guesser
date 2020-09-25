@@ -48,6 +48,8 @@ public class ExampleServer {
             bindToRegistry(stub2, registry, "ssl-server");
             bindToRegistry(stub3, registry, "secure-server");
 
+            System.out.print("[+] Server setup finished.");
+            System.out.print("[+] Waiting for incoming connections.");
 
         } catch (RemoteException | AlreadyBoundException e) {
             System.err.println("[-] Unexpected RMI Error:");
