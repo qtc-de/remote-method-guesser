@@ -162,9 +162,17 @@ public class ClassWriter {
         this.template = this.template.replace(  "<BOUNDNAME>",    boundName);
         this.template = this.template.replace(  "<CLASSNAME>",    className);
         this.template = this.template.replace(  "<METHODNAME>",   method.getName());
-        this.template = this.template.replace(  "<RETURNTYPE>",   method.getReturnType().getName());
         this.template = this.template.replace(  "<ARGCOUNT>",     Integer.toString(numberOfArguments));
         this.template = this.template.replace(  "<ARGUMENTS>",    argumentString.toString());
+
+        String returnType = method.getReturnType().getName();
+
+        if( returnType.equals("void") ) {
+            this.template = this.template.replace("<RETURNTYPE> response = ", "");
+            this.template = this.template.replace("System.out.println(\"[+] The servers response is: \" + response);", "");
+        } else {
+            this.template = this.template.replace("<RETURNTYPE>", returnType);
+        }
 
         Logger.printlnPlain("done.");
     }
