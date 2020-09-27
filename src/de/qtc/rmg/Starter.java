@@ -221,7 +221,7 @@ public class Starter {
              }
         }
 
-        ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, sslValue, followRedirect);
+        ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, buildFolder, sslValue, followRedirect);
         JavaUtils javaUtils = new JavaUtils(javacPath, buildFolder, sampleFolder);
         MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
 

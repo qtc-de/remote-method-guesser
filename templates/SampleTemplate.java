@@ -1,5 +1,3 @@
-package de.qtc.rmg;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -25,6 +23,8 @@ import javax.net.ssl.X509TrustManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
+
+import <PACKAGE>;
 
 /*
  * Compile this sample class with the following command:
@@ -68,7 +68,7 @@ public class <SAMPLECLASSNAME> extends SSLSocketFactory {
             <SAMPLECLASSNAME>.host = remoteHost;
             <SAMPLECLASSNAME>.fac = ctx.getSocketFactory();
             <SAMPLECLASSNAME>.followRedirect = <FOLLOW>;
-            java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.<SAMPLECLASSNAME>");
+            java.security.Security.setProperty("ssl.SocketFactory.provider", "<SAMPLECLASSNAME>");
 
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
             System.err.println("Unable to set TrustManager for SSL connections.");
