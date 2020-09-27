@@ -96,6 +96,8 @@ public class <SAMPLECLASSNAME> extends SSLSocketFactory {
             System.out.println("[+] Starting lookup on <BOUNDNAME>... ");
             <CLASSNAME> stub = (<CLASSNAME>) registry.lookup("<BOUNDNAME>");
 
+            <ARGUMENTTYPE> <ARGUMENT> = TODO;
+
             System.out.print("[+] Invoking method <METHODNAME>... ");
             <RETURNTYPE> response = stub.<METHODNAME>(<ARGUMENTS>);
             System.out.println("done!");

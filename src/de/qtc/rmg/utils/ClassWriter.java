@@ -142,27 +142,28 @@ public class ClassWriter {
         Class<?>[] typeOfArguments = method.getParameterTypes();
 
         String argument = "";
+        String placeholder = "<ARGUMENTTYPE> <ARGUMENT> = TODO;";
+
         for(int ctr = 0; ctr < numberOfArguments; ctr++) {
-            argument = "/*";
-            argument += typeOfArguments[ctr].getSimpleName();
-            argument += "*/";
-            argument += " value" + ctr;
-            argument += (ctr == numberOfArguments - 1) ? "" : ",";
+            argument = "argument" + ctr;
+            this.template = this.template.replace(placeholder, placeholder + "\n            " + placeholder);
+            this.template = this.template.replaceFirst("<ARGUMENTTYPE>", typeOfArguments[ctr].getName());
+            this.template = this.template.replaceFirst("<ARGUMENT>", argument);
+            argument += (ctr == numberOfArguments - 1) ? "" : ", ";
             argumentString.append(argument);
         }
 
+        this.template = this.template.replace("\n            " + placeholder, "");
         Logger.print("Preparing sample... ");
 
         this.template = this.template.replace(  "<SAMPLECLASSNAME>",    sampleClassName);
         this.template = this.template.replace(  "<SSL>",          this.ssl);
         this.template = this.template.replace(  "<FOLLOW>",       this.followRedirects);
-        this.template = this.template.replace(  "<METHODSIG>",    method.toString());
         this.template = this.template.replace(  "<REMOTEHOST>",   remoteHost);
         this.template = this.template.replace(  "<REMOTEPORT>",   port);
         this.template = this.template.replace(  "<BOUNDNAME>",    boundName);
         this.template = this.template.replace(  "<CLASSNAME>",    className);
         this.template = this.template.replace(  "<METHODNAME>",   method.getName());
-        this.template = this.template.replace(  "<ARGCOUNT>",     Integer.toString(numberOfArguments));
         this.template = this.template.replace(  "<ARGUMENTS>",    argumentString.toString());
 
         String returnType = method.getReturnType().getName();
