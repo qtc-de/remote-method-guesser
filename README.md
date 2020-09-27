@@ -1,7 +1,9 @@
 ### Remote Method Guesser
 
-*rmg* (*remote-method-guesser*) is a command line utility written in Java. It allows to identify available methods
-on *RMI* endpoints without requiring the corresponding interface definition. Exposed methods are identified by
+---
+
+*remote-method-guesser* (*rmg*) is a command line utility written in *Java*. It allows to identify available methods
+on *Java RMI* endpoints without requiring the corresponding interface definition. Exposed methods are identified by
 using a bruteforce approach that relies on *method-wordlists* that can be defined by the user.
 
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/master%20maven%20CI/badge.svg?branch=master)
@@ -12,32 +14,32 @@ using a bruteforce approach that relies on *method-wordlists* that can be define
 
 -----
 
-*Remote Method Guessing* is a technique to identify available methods on Java interfaces that are exposed by *Java RMI* servers.
-Before talking about the tool itself, let's look at this brief reminder of *Java RMI*:
+*Remote Method Guessing* is a technique to identify available methods on *Java* interfaces that are exposed by *Java RMI* servers.
+Before talking about the tool itself, let's look do a brief reminder on *Java RMI*:
 
 #### What is Java RMI?
 
 *Java RMI* stands for *Java Remote Method Invocation* and can be used to invoke methods on remote objects. With *Java RMI*,
 an *RMI* server can implement a class and make it available over the network. Other clients can then create instances
-of this class and invoke methods on it, as the class would be defined locally. However, the clue is that these method
+of this class and invoke methods on it, as with classes that are defined locally. However, the clue is that these method
 calls are dispatched and executed on the *RMI* server.
 
-![Java RMI](/resources/images/01-java-rmi.png)
+![Java RMI](/resources/images/01-rmi-overview.png)
 
 #### The Registry
 
-When an *RMI* server wants to expose a Java class over the network, it has to register the class on an *RMI registry* server.
-The *RMI registry* is basically like a *DNS* service. Then a client wants to instantiate a remote class, it looks up the name 
-inside the *RMI registry*, which responds with the location (ip:port) where the remote class is exposed. Therefore, one could
-also describe the *RMI registry* as a portmapper for *RMI* services.
+When an *RMI* server wants to expose a *Java Object* over the network, it usually registers the object on a *RMI registry* server.
+The *RMI registry* is basically like a *DNS* service for *Remote Objects*. Then a client wants to communicate with a remote
+object, it looks up the name inside the *RMI registry*, which responds with the location (``ip:port:ObjectID``) where the remote object 
+can be found. Therefore, one could also describe the *RMI registry* as a portmapper for *RMI* services.
 
 #### Hidden Interfaces
 
-With builtin methods of *Java RMI* one can easily dump the names of all registered classes on an *RMI registry* endpoint.
-However, in order to instantiate a remote class, the local *Java Virtual Machine* needs to know the remote class interface. In the actual use
-cases of *Java RMI* this is reasonable, since a vendor can ship the class interfaces together with the actual client software.
-But for a black box security assessment, it is pretty sad, as you may encounter promising remote class names like 'server-manager'
-and cannot create instances of it.
+With builtin methods of *Java RMI* one can easily dump the names of all registered objects on an *RMI registry* endpoint.
+However, in order to instantiate a remote class and to do something useful with it, the local *Java Virtual Machine*
+needs to know the remote class interface. In the actual use cases of *Java RMI* this is reasonable, since a vendor can
+ship the class interfaces together with the actual client software. But for a black box security assessment, it is pretty frustrating,
+as you may encounter promising remote class names like 'server-manager' and cannot communicate to them.
 
 Here comes *Remote Method Guessing* into play. The idea is pretty simple: One creates a dummy interface for the targeted class
 and fills it with some guessed method names:
@@ -58,19 +60,18 @@ public interface <CLASSNAME> extends Remote {
     [...]
 ```
 
-With the dummy interface available on the class path, it is already possible to create an instance of the remote class.
-By calling all the defined methods in out dummy interface, it is now possible to enumerate available methods on the remote class.
-Method class will fail when the corresponding method signature does not exist on the remote class, which leads to a corresponding
-(*RMI* specific) exception. This exception can be catched and interpreted as ``method does not exist``.
-However, once an existing method is hit, the *RMI* server will respond with a different exception, like e.g. a *NullPointer Exception*
-or non exception at all. Such a result can be interpreted as ``method exists on the remote class``.
+By calling all the defined methods in the *dummy interface*, it is now possible to enumerate available methods on the remote object.
+Method class will fail when the corresponding method signature does not exist on the server side, which leads to a corresponding
+(*RMI* specific) exception. This exception can be caught and interpreted as ``method does not exist``.
+However, once an existing method is hit, the *RMI* server will respond with a different exception, like e.g. a ``NullPointer Exception``
+or non exception at all. Such a result can be interpreted as ``method exists on the remote object``.
 
 
 ### Installation
 
 ------
 
-The remote-method-guesser (*rmg* in the following) is a *maven* project and the installation should be quite easy. With maven installed, just execute
+*rmg* is a *maven* project and the installation should be straight forward. With maven installed, just execute
 the following commands to create an executable ``.jar`` file:
 
 ```console
@@ -81,7 +82,7 @@ $ mvn package
 
 *rmg* does also support autocompletion for bash. To take advantage of autocompletion, you need to have the
 [completion-helpers](https://github.com/qtc-de/completion-helpers) project installed. If setup correctly, just
-copying the [completion script](./resources/bash_completion.d/rmg) to your ``~/.bash_completion.d`` enables
+copying the [completion script](./resources/bash_completion.d/rmg) to your ``~/.bash_completion.d`` folder enables
 autocompletion.
 
 ```console
