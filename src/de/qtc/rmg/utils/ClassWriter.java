@@ -23,6 +23,7 @@ public class ClassWriter {
     private String ssl;
     private String template;
     private String className;
+    private String packageName;
     private String templateIntf;
     private String sampleClassName;
     private String followRedirects;
@@ -117,8 +118,9 @@ public class ClassWriter {
 
         this.loadTemplate("SampleTemplate.java");
 
-        this.sampleClassName = sampleClassName;
         this.className = className;
+        this.packageName = packageName;
+        this.sampleClassName = sampleClassName;
         String port = String.valueOf(remotePort);
 
         int numberOfArguments = method.getParameterCount();
@@ -165,20 +167,33 @@ public class ClassWriter {
 
     public void writeSample()
     {
-        File sampleDir = new File(this.sampleFolder + "/" + this.sampleClassName);
+        File sampleDir = new File(this.sampleFolder + File.separator + this.sampleClassName);
         sampleDir.mkdirs();
 
         try {
-            String destination = sampleDir.getCanonicalPath() + "/" + this.sampleClassName + ".java";
+            String samplePath = sampleDir.getCanonicalPath();
+
+            String destination = samplePath + File.separator + this.sampleClassName + ".java";
             Logger.print("Writing sample '" + destination + "' to disk... ");
             writeFile(destination, this.template);
 
-            destination = sampleDir.getCanonicalPath() + "/" + this.className + ".java";
+            destination = samplePath + File.separator + this.className + ".java";
             Logger.print("Writing sample interface '" + destination + "' to disk... ");
             writeFile(destination, this.templateIntf);
 
-            File interfaceDir = new File(this.buildFolder);
-            FileUtils.copyDirectory(interfaceDir, sampleDir);
+            String packagePath = this.packageName.replace(".", File.separator);
+            File interfaceFile = new File(this.buildFolder + File.separator + packagePath + File.separator + this.className + ".class");
+
+            if( !interfaceFile.exists() ) {
+                Logger.printlnPlain("failed.");
+                Logger.eprint("Unable to find compiled interface at: ");
+                Logger.eprintln_ye(interfaceFile.getCanonicalPath());
+                return;
+            }
+
+            sampleDir = new File(samplePath + File.separator + packagePath);
+            sampleDir.mkdirs();
+            FileUtils.copyFileToDirectory(interfaceFile, sampleDir);
 
         } catch( IOException e ) {
             Logger.printlnPlain("failed.");
