@@ -22,6 +22,8 @@ public class ClassWriter {
 
     private String ssl;
     private String template;
+    private String className;
+    private String templateIntf;
     private String sampleClassName;
     private String followRedirects;
 
@@ -97,6 +99,7 @@ public class ClassWriter {
 
         this.template = this.template.replace("<PACKAGENAME>", packageName);
         this.template = this.template.replace("<CLASSNAME>", className);
+        this.templateIntf = this.template;
 
         String destination = this.sourceFolder + "/" + className + ".java";
         Logger.print("Writing class '" + destination + "' to disk... ");
@@ -115,6 +118,7 @@ public class ClassWriter {
         this.loadTemplate("SampleTemplate.java");
 
         this.sampleClassName = sampleClassName;
+        this.className = className;
         String port = String.valueOf(remotePort);
 
         int numberOfArguments = method.getParameterCount();
@@ -168,6 +172,10 @@ public class ClassWriter {
             String destination = sampleDir.getCanonicalPath() + "/" + this.sampleClassName + ".java";
             Logger.print("Writing sample '" + destination + "' to disk... ");
             writeFile(destination, this.template);
+
+            destination = sampleDir.getCanonicalPath() + "/" + this.className + ".java";
+            Logger.print("Writing sample interface '" + destination + "' to disk... ");
+            writeFile(destination, this.templateIntf);
 
             File interfaceDir = new File(this.buildFolder);
             FileUtils.copyDirectory(interfaceDir, sampleDir);
