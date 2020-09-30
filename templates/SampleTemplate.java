@@ -28,7 +28,7 @@ import <PACKAGE>;
 
 /*
  * Compile this sample class with the following command:
- *      javac -d . <SAMPLECLASSNAME>.java
+ *      javac <SAMPLECLASSNAME>.java
  */
 public class <SAMPLECLASSNAME> extends SSLSocketFactory {
 
