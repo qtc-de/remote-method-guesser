@@ -1,6 +1,7 @@
 package de.qtc.rmg;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -13,6 +14,12 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.ClassWriter;
+import de.qtc.rmg.utils.JavaUtils;
+import de.qtc.rmg.utils.RMIWhisperer;
+import de.qtc.rmg.utils.UnexpectedCharacterException;
 
 public class MethodGuesser {
 
@@ -27,139 +34,162 @@ public class MethodGuesser {
         this.classWriter = classWriter;
         this.javaUtils = javaUtils;
     }
-    
-    public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeExploits) {
-    	return this.guessMethods(null, threads, writeExploits);
+
+    public HashMap<String,ArrayList<Method>> guessMethods(int threads, boolean writeSamples) {
+        return this.guessMethods(null, threads, writeSamples);
     }
-    
-    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeExploits) {
+
+    public HashMap<String,ArrayList<Method>> guessMethods(String targetName, int threads, boolean writeSamples) {
 
         HashMap<String,ArrayList<Method>> results = new HashMap<String,ArrayList<Method>>();
 
         File[] templateFiles = classWriter.getTemplateFiles();
         if( templateFiles == null || templateFiles.length == 0 ) {
 
-            System.err.println("[-] Error: Could not find any template files");
-            System.err.println("[-] Stopping RMG attack");
+            Logger.eprintln("Error: Could not find any template files");
+            Logger.eprintln("Stopping RMG attack");
             System.exit(1);
 
         }
 
-        Logger.println("[+]\n[+] Starting RMG Attack");
-        Logger.println("[+]\t\t" + templateFiles.length + " template files found.");
+        Logger.println("\n[+] Starting RMG Attack");
+        Logger.increaseIndent();
+        Logger.println(templateFiles.length + " template files found.");
 
         String dummyPath = classWriter.templateFolder + "/LookupDummy.java";
-        javaUtils.compile(dummyPath);
+        try {
+            javaUtils.compile(dummyPath);
+        } catch (FileNotFoundException | UnexpectedCharacterException e1) {
+            Logger.eprintln("Unable to compile 'LookupDummy.java'.");
+            Logger.eprintln("Cannot proceed from here.");
+            Logger.eprintln("Stacktrace:");
+            e1.printStackTrace();
+        }
 
         for( File templateFile : templateFiles ) {
-
             URLClassLoader ucl = null;
 
             try {
-
                 URL loadPath = new File(javaUtils.buildFolder).toURI().toURL();
                 URL newClassPath[] = new URL[]{loadPath};
                 ucl = new URLClassLoader(newClassPath);
 
             } catch ( Exception e ) {
-
-                System.err.println("[-] Error: Unexpected exception was thrown: " + e.toString());
+                Logger.eprintln("Error: Unexpected exception was thrown: " + e.getMessage());
                 System.exit(1);
             }
 
             String templateName = templateFile.getName();
-            Logger.println("[+]");
-            Logger.println_bl("\tCurrent template file: '" + templateName + "'");
-            Logger.println("[+]");
+            Logger.println("");
+            Logger.println_bl("Current template file: '" + templateName + "'");
+            Logger.println("");
 
             Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
             while (it.hasNext()) {
 
                 @SuppressWarnings("rawtypes")
-				Map.Entry pair = (Map.Entry)it.next();
+                Map.Entry pair = (Map.Entry)it.next();
 
                 String boundName = (String) pair.getKey();
                 String className = (String) pair.getValue();
-                
+
                 if( targetName != null && !targetName.equals(boundName) ) {
-                	continue;
+                    continue;
                 }
-                Logger.println_bl("\t\tAttacking boundName '" + boundName + "'.");
 
-                classWriter.loadTemplate(templateName);
-                String newClass = classWriter.writeClass(className);
+                Logger.increaseIndent();
+                Logger.println_bl("Attacking boundName '" + boundName + "'.");
 
-                javaUtils.compile(newClass);
+                try {
+                    classWriter.loadTemplate(templateName);
+                    String newClass = classWriter.writeClass(className);
+                    javaUtils.compile(newClass);
+                } catch(UnexpectedCharacterException | FileNotFoundException e) {
+                    Logger.eprintln("Error during class creation.");
+                    Logger.eprint("Exception message: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
+                    continue;
+                }
 
                 Class<?> remoteClass = null;
-                Class<?> lookupDummy = null; 
+                Class<?> lookupDummy = null;
                 try {
-
                     remoteClass = ucl.loadClass(className);
                     lookupDummy = ucl.loadClass("de.qtc.rmg.LookupDummy");
 
                 } catch( Exception e ) {
-
-                	System.err.println("[-] Error: Unable to load required classes dynamically.");
-                    System.err.println("[-] The following exception was thrown: " + e.toString());
+                    Logger.eprintln("Error: Unable to load required classes dynamically.");
+                    Logger.eprint("The following exception was thrown: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
-
                 }
 
                 Method[] lookupMethods = lookupDummy.getDeclaredMethods();
-                Logger.print("[+]\t\tGetting instance of '" + boundName + "'... ");
-                
+                Logger.println("Getting instance of '" + boundName + "'...");
+
                 Object[] arguments = new Object[]{this.rmi.getRegistry(), boundName};
                 Object instance = null;
-                
+
                 try {
-                	instance = lookupMethods[0].invoke(lookupDummy, arguments);
+                    instance = lookupMethods[0].invoke(lookupDummy, arguments);
                 } catch( Exception e ) {
-                	System.err.println("[-] Error: Unable to get instance for '" + boundName + "'.");
-                    System.err.println("[-] The following exception was thrown: " + e.toString());
+                    Logger.eprintln("Error: Unable to get instance for '" + boundName + "'.");
+                    Logger.eprint("The following exception was thrown: ");
+                    Logger.eprintlnPlain_ye(e.getMessage());
                     System.exit(1);
                 }
 
-                Logger.println("done.");
-                Logger.println("[+]\t\tGuessing methods...\n[+]");
+                Logger.println("Guessing methods...\n[+]");
+                Logger.increaseIndent();
 
                 Method[] methodList = remoteClass.getDeclaredMethods();
                 ArrayList<Method> existingMethods = new ArrayList<Method>();
 
-                ExecutorService pool = Executors.newFixedThreadPool(threads); 
+                ExecutorService pool = Executors.newFixedThreadPool(threads);
                 for( Method method : methodList ) {
-                	Runnable r = new Threader(method, instance, existingMethods);
-                	pool.execute(r);
-                }
-             
-                pool.shutdown();
-                try {
-                	 pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-                } catch (InterruptedException e) {
-                	 Logger.println("[/] Interrupted!");
+                    Runnable r = new Threader(method, instance, existingMethods);
+                    pool.execute(r);
                 }
 
-                Logger.println("[+]\n[+]\t\t" + existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
- 
-                if ( writeExploits ) {
+                pool.shutdown();
+
+                try {
+                     pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                } catch (InterruptedException e) {
+                     Logger.eprintln("Interrupted!");
+                }
+
+                Logger.decreaseIndent();
+                Logger.println("");
+                Logger.println(existingMethods.size() + " valid method names were identified for '" + templateName + "'.");
+
+                if ( writeSamples ) {
 
                     for( Method method : existingMethods ) {
-                        
-                        Logger.println_ye("\t\tWriting exploit for method '" + method.getName() + "'.");
+
+                        Logger.println("Writing sample class for method '" + method.getName() + "'.");
+                        Logger.increaseIndent();
+
                         String[] seperated = ClassWriter.splitNames(className);
                         String packageOnly = seperated[0];
                         String classOnly = seperated[1];
 
-                        String exploitClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Exploit";
-                        classWriter.prepareExploit(packageOnly, classOnly, boundName, method, exploitClassName, this.rmi.host, this.rmi.port);
-                        String exploitPath = classWriter.writeExploit();
-                        javaUtils.compile(exploitPath);
-                        javaUtils.packJar(exploitClassName, exploitClassName + ".jar");
-                        Logger.println("[+]");
-                    }
+                        try {
+                            String sampleClassName = classOnly + method.getName().substring(0,1).toUpperCase() + method.getName().substring(1) + "Sample";
+                            classWriter.prepareSample(packageOnly, classOnly, boundName, method, sampleClassName, this.rmi.host, this.rmi.port);
+                            classWriter.writeSample();
 
+                        } catch(UnexpectedCharacterException e) {
+                            Logger.eprintln("Error during sample creation.");
+                            Logger.eprint("Exception message: ");
+                            Logger.eprintlnPlain_ye(e.getMessage());
+                        }
+
+                        Logger.decreaseIndent();
+                        Logger.println("");
+                    }
                 }
-               
+
                 if( results.containsKey(boundName) ) {
                     ArrayList<Method> tmp = results.get(boundName);
                     tmp.addAll(existingMethods);
@@ -167,29 +197,25 @@ public class MethodGuesser {
                     results.put(boundName, existingMethods);
                 }
 
+                Logger.decreaseIndent();
             }
-
         }
-        
-		return results;
-
+        return results;
     }
-
 }
 
 class Threader implements Runnable {
-	
-	private Method method;
-	private Object instance;
-	private ArrayList<Method> existingMethods;
-	
-	public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
-		this.method = method;
-		this.instance = instance;
-		this.existingMethods = existingMethods;
-	}
-	
-	
+
+    private Method method;
+    private Object instance;
+    private ArrayList<Method> existingMethods;
+
+    public Threader(Method method, Object instance, ArrayList<Method> existingMethods) {
+        this.method = method;
+        this.instance = instance;
+        this.existingMethods = existingMethods;
+    }
+
     public void run() {
 
         int parameterCount = method.getParameterCount();
@@ -213,16 +239,29 @@ class Threader implements Runnable {
         }
 
         try {
-
             method.invoke(instance, parameters);
-            
+
         } catch( Exception e ) {
-        	if( e.getCause() != null && e.getCause() instanceof ServerException)
-        		if( e.getCause().getCause() instanceof java.rmi.UnmarshalException)
-        			return;
-        } 
-        
-        Logger.println_ye("\t\t\tHIT: " + method.toGenericString() + " --> exists!");
+
+            Throwable cause = e.getCause();
+            if( cause != null ) {
+
+                if( cause instanceof ServerException) {
+                    if( cause.getCause() instanceof java.rmi.UnmarshalException)
+                        return;
+
+                } else if( cause instanceof java.rmi.UnknownHostException  ) {
+                    Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
+                    return;
+
+                } else if( cause instanceof java.rmi.ConnectException  ) {
+                    Logger.eprintln((cause.getMessage().split(";"))[0]);
+                    return;
+                }
+            }
+        }
+
+        Logger.println_ye("HIT: " + method.toGenericString() + " --> exists!");
         existingMethods.add(method);
     }
 }
