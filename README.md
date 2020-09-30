@@ -124,7 +124,7 @@ or *Metasploit* would not work in this case, as these tools are not compatible w
 *rmg* can get the job done:
 
 ```console
-[pentester@kali ~]$ rmg --ssl 172.17.0.2 1090
+[qtc@kali ~]$ rmg --ssl 172.17.0.2 1090
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
 [+] 3 names are bound to the registry.
@@ -138,7 +138,7 @@ If you want to obtain more information on the exposed *bound names*, you can add
 *package* and *classname* behind the available *bound names*.
 
 ```console
-[pentester@kali ~]$ rmg --ssl --classes 172.17.0.2 1090
+[qtc@kali ~]$ rmg --ssl --classes 172.17.0.2 1090
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
 [+] 3 names are bound to the registry.
@@ -217,14 +217,14 @@ investigations. The default output of *rmg* is pretty verbose, but the important
 [+] 		Writing sample class for method 'logMessage'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/ISecureServerLogMessageSample/ISecureServerLogMessageSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/ISecureServerLogMessageSample/ISecureServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/ISecureServerLogMessageSample/ISecureServerLogMessageSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/ISecureServerLogMessageSample/ISecureServer.java' to disk... done.
 [+] 		
 [+] 		Writing sample class for method 'updatePreferences'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/ISecureServerUpdatePreferencesSample/ISecureServerUpdatePreferencesSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/ISecureServerUpdatePreferencesSample/ISecureServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/ISecureServerUpdatePreferencesSample/ISecureServerUpdatePreferencesSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/ISecureServerUpdatePreferencesSample/ISecureServer.java' to disk... done.
 [+] 		
 [+] 	
 [+] 	Current template file: 'StringTemplate.java'
@@ -242,8 +242,8 @@ investigations. The default output of *rmg* is pretty verbose, but the important
 [+] 		Writing sample class for method 'system'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/ISslServerSystemSample/ISslServerSystemSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/ISslServerSystemSample/ISslServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/ISslServerSystemSample/ISslServerSystemSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/ISslServerSystemSample/ISslServer.java' to disk... done.
 [+] 		
 [+] 		Attacking boundName 'plain-server'.
 [+] 		Reading template file: '/opt/remote-method-guesser/templates//StringTemplate.java'... done
@@ -259,14 +259,14 @@ investigations. The default output of *rmg* is pretty verbose, but the important
 [+] 		Writing sample class for method 'execute'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/IPlainServerExecuteSample/IPlainServerExecuteSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/IPlainServerExecuteSample/IPlainServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/IPlainServerExecuteSample/IPlainServerExecuteSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/IPlainServerExecuteSample/IPlainServer.java' to disk... done.
 [+] 		
 [+] 		Writing sample class for method 'system'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/IPlainServerSystemSample/IPlainServerSystemSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/IPlainServerSystemSample/IPlainServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/IPlainServerSystemSample/IPlainServerSystemSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/IPlainServerSystemSample/IPlainServer.java' to disk... done.
 [+] 		
 [+] 		Attacking boundName 'secure-server'.
 [+] 		Reading template file: '/opt/remote-method-guesser/templates//StringTemplate.java'... done
@@ -281,8 +281,8 @@ investigations. The default output of *rmg* is pretty verbose, but the important
 [+] 		Writing sample class for method 'login'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/ISecureServerLoginSample/ISecureServerLoginSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/ISecureServerLoginSample/ISecureServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/ISecureServerLoginSample/ISecureServerLoginSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/ISecureServerLoginSample/ISecureServer.java' to disk... done.
 [+] 		
 [+] 	
 [+] 	Current template file: 'BooleanTemplate.java'
@@ -330,8 +330,8 @@ investigations. The default output of *rmg* is pretty verbose, but the important
 [+] 		Writing sample class for method 'execute'.
 [+] 			Reading template file: '/opt/remote-method-guesser/templates//SampleTemplate.java'... done
 [+] 			Preparing sample... done.
-[+] 			Writing sample '/home/pentester/rmg-samples/ISslServerExecuteSample/ISslServerExecuteSample.java' to disk... done.
-[+] 			Writing sample interface '/home/pentester/rmg-samples/ISslServerExecuteSample/ISslServer.java' to disk... done.
+[+] 			Writing sample '/home/qtc/rmg-samples/ISslServerExecuteSample/ISslServerExecuteSample.java' to disk... done.
+[+] 			Writing sample interface '/home/qtc/rmg-samples/ISslServerExecuteSample/ISslServer.java' to disk... done.
 [+] 		
 [+] 		Attacking boundName 'plain-server'.
 [+] 		Reading template file: '/opt/remote-method-guesser/templates//IntegerTemplate.java'... done
@@ -468,6 +468,15 @@ As expected, the ``execute`` method allowed the execution of operating system co
 to mention that not only dangerous methods like ``execute`` or ``system`` can be exploited. As explained in [this awesome blog post](https://mogwailabs.de/blog/2019/03/attacking-java-rmi-services-after-jep-290/)
 by *Hans-Martin Münch*, methods like ``java.lang.String de.qtc.rmg.ISecureServer.login(java.util.HashMap)`` can be vulnerable to
 *deserialization attacks*. A corresponding example can also be found inside of the [container description](./docker).
+
+If you want to clean all folders that were created by *rmg* you can use *rmg's* ``clean`` command:
+
+```console
+[qtc@kali ~]$ rmg clean
+[+] Deleting directory /home/qtc/rmg-src
+[+] Deleting directory /home/qtc/rmg-build
+[+] Deleting directory /home/qtc/rmg-samples
+```
 
 
 ### Templates

