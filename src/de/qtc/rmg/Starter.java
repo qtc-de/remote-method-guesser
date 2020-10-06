@@ -223,7 +223,16 @@ public class Starter {
 
         ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, buildFolder, sslValue, followRedirect);
         JavaUtils javaUtils = new JavaUtils(javacPath, buildFolder, sampleFolder);
-        MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
+
+        MethodGuesser guesser = null;
+        try {
+            guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
+        } catch (NoSuchFieldException | SecurityException e) {
+            Logger.eprintln_ye("Unable to create MethodGuesser object.");
+            Logger.eprintln("StackTrace:");
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         boolean createSamples = commandLine.hasOption("create-samples");
         HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, createSamples);
