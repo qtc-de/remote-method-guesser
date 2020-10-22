@@ -121,6 +121,7 @@ public class MethodGuesser {
                     Logger.eprintln("Error during class creation.");
                     Logger.eprint("Exception message: ");
                     Logger.eprintlnPlain_ye(e.getMessage());
+                    Logger.decreaseIndent();
                     continue;
                 }
 
