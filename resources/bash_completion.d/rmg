@@ -44,6 +44,7 @@ function _rmg() {
 		opts="$opts --ssl"
 		opts="$opts --template-folder"
 		opts="$opts --threads"
+		opts="$opts --trusted"
 		opts="$opts --quite"
 	fi
 
