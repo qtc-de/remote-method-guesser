@@ -11,6 +11,7 @@ services:
       #          -Djavax.net.ssl.keyStore=/opt/store.p12
       #          -Djavax.net.ssl.keyStoreType=pkcs12
       #      volumes: 
-      #        - ./resources/trust/store.p12 /opt/store.p12
-      #        - ./resources/rmg-example-server.jar /opt/example-server.jar
-      #        - ./resources/commons-collections-3.1.jar /usr/lib/jvm/java-1.8-openjdk/jre/lib/ext/commons-collections-3.1.jar
+      #        - ./resources/trust/store.p12:/opt/store.p12
+      #        - ./resources/rmg-example-server.jar:/opt/example-server.jar
+      #        - ./resources/rmg-legacy-server.jar:/opt/example-server.jar
+      #        - ./resources/commons-collections-3.1.jar:/usr/lib/jvm/java-1.8-openjdk/jre/lib/ext/commons-collections-3.1.jar
