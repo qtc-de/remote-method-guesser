@@ -8,10 +8,10 @@ public abstract class Security {
     public static boolean trusted = false;
 
     private static Pattern boundName = Pattern.compile("[a-zA-Z0-9_-]+");
-    private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9]+");
-    private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9])+\\.jar");
-    private static Pattern javaFile = Pattern.compile("([a-zA-Z0-9])+\\.java");
-    private static Pattern packageName = Pattern.compile("([a-zA-Z0-9]\\.?)+");
+    private static Pattern className = Pattern.compile("[a-zA-Z0-9_]+");
+    private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9_])+\\.jar");
+    private static Pattern javaFile = Pattern.compile("([a-zA-Z0-9_])+\\.java");
+    private static Pattern packageName = Pattern.compile("([a-zA-Z0-9_]\\.?)+");
     private static Pattern shellInjection = Pattern.compile(".*[ '\"#&;`|*?~<>^()\\[\\]{}$\\\\\n].*");
 
     public static void checkBoundName(String input) throws UnexpectedCharacterException {
@@ -23,13 +23,13 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Bound name '" + input + "' contains invalid characters.");
     }
 
-    public static void checkAlphaNumeric(String input) throws UnexpectedCharacterException {
+    public static void checkClassName(String input) throws UnexpectedCharacterException {
         if( trusted )
             return;
 
-        Matcher m = alphaNumeric.matcher(input);
+        Matcher m = className.matcher(input);
         if( !m.matches() )
-            throw new UnexpectedCharacterException("Input '" + input + "' contains non alphanumeric characters.");
+            throw new UnexpectedCharacterException("Input '" + input + "' contains invalid characters.");
     }
 
     public static void checkPackageName(String input) throws UnexpectedCharacterException {
