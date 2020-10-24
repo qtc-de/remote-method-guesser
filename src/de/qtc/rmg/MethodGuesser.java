@@ -2,6 +2,7 @@ package de.qtc.rmg;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InvalidClassException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -153,10 +154,24 @@ public class MethodGuesser {
                     remoteField.set(ref, confuser);
 
                 } catch( Exception e ) {
+
+                    Logger.increaseIndent();
                     Logger.eprintln("Error: Unable to get instance for '" + boundName + "'.");
-                    Logger.eprint("The following exception was thrown: ");
-                    Logger.eprintlnPlain_ye(e.getMessage());
-                    System.exit(1);
+
+                    Throwable cause = e.getCause();
+                    if( cause instanceof UnmarshalException && cause.getCause() instanceof InvalidClassException) {
+                         Logger.eprint("Caught: ");
+                         Logger.eprintlnPlain_ye("InvalidClassException");
+                         Logger.eprintln("'" + boundName + "' probably uses legacy RMI stubs.");
+                         Logger.eprintln("Retry guessing for this bound name with the --force-legacy option.");
+                    } else {
+                        Logger.eprint("The following exception was thrown: ");
+                        Logger.eprintlnPlain_ye(e.getMessage());
+                    }
+
+                    Logger.decreaseIndent();
+                    Logger.decreaseIndent();
+                    continue;
                 }
 
                 Logger.println("Guessing methods...\n[+]");
