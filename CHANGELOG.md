@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [x.x.x] - YYYY-MM-DD
+
+### Added
+
+* Add legacy RMI example server
+* Add support for guessing without invoking (type confusion)
+
+
 ## [2.0.0] - 2020-09-30
 
 ### Added
