@@ -18,50 +18,52 @@ public class WordlistHandler {
 
     private String wordlistFile;
     private String wordlistFolder;
-    private boolean rewriteTemplates;
-    private List<MethodCandidate> methods;
+    private boolean updateWordlists;
 
-    public WordlistHandler(String wordlistFolder, String wordlistFile, boolean rewriteTemplates)
+    public WordlistHandler(String wordlistFile, String wordlistFolder, boolean updateWordlists)
     {
         this.wordlistFile = wordlistFile;
         this.wordlistFolder = wordlistFolder;
-        this.rewriteTemplates = rewriteTemplates;
+        this.updateWordlists = updateWordlists;
     }
 
-    public void initWordlistMethods() throws IOException
+    public List<MethodCandidate> getWordlistMethods() throws IOException
     {
         if( this.wordlistFile != null ) {
-            initWordlistMethodsFromFile();
+            return getWordlistMethodsFromFile();
         } else {
-            initWordlistMethodsFromFolder();
+            return getWordlistMethodsFromFolder();
         }
     }
 
-    public void initWordlistMethodsFromFile() throws IOException
+    public List<MethodCandidate> getWordlistMethodsFromFile() throws IOException
     {
         File wordlistFile = new File(this.wordlistFile);
-        this.methods.addAll(getWordlistMethods(wordlistFile));
+        return getWordlistMethods(wordlistFile);
     }
 
-    public void initWordlistMethodsFromFolder() throws IOException
+    public List<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
     {
         File wordlistFolder = new File(this.wordlistFolder);
         List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
         Logger.printMixedBlueFirst(String.valueOf(files.size()), "wordlist files found.");
-        Logger.increaseIndent();
 
+        List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
         for(File file : files){
-            this.methods.addAll(getWordlistMethods(file));
+            methods.addAll(getWordlistMethods(file));
         }
+
+        return methods;
     }
 
 
     public List<MethodCandidate> getWordlistMethods(File file) throws IOException
     {
-        Logger.printMixedBlue("Reading method candidates from file", file.getAbsolutePath());
-        List<String> content = FileUtils.readLines(file, StandardCharsets.UTF_8);
+        Logger.printlnMixedBlue("Reading method candidates from file", file.getAbsolutePath());
+        Logger.increaseIndent();
 
+        List<String> content = FileUtils.readLines(file, StandardCharsets.UTF_8);
         List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
 
         for(String line : content) {
@@ -69,10 +71,10 @@ public class WordlistHandler {
 
             try {
                 if(split.length == 1)
-                    methods.add(new MethodCandidate(split[0]));
+                    methods.add(new MethodCandidate(split[0].trim()));
 
                 else if(split.length == 3)
-                    methods.add(new MethodCandidate(split[0], split[1], split[2]));
+                    methods.add(new MethodCandidate(split[0].trim(), split[1].trim(), split[2].trim()));
 
                 else
                     Logger.eprintlnMixedYellow("Encountered unknown method format:", line);
@@ -83,9 +85,14 @@ public class WordlistHandler {
             }
         }
 
-        if(rewriteTemplates) {
+        Logger.printlnMixedYellowFirst(String.valueOf(methods.size()), "methods were successfully parsed.");
+
+        if(updateWordlists) {
+            Logger.println("Updating template file.");
             updateWordlist(file, methods);
         }
+
+        Logger.decreaseIndent();
         return methods;
     }
 

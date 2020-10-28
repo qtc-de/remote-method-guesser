@@ -3,7 +3,6 @@ package de.qtc.rmg;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,12 +10,13 @@ import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 
+import de.qtc.rmg.internal.ArgumentParser;
+import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.ArgumentParser;
+import de.qtc.rmg.io.WordlistHandler;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
-import de.qtc.rmg.utils.Security;
 
 public class Starter {
 
@@ -25,7 +25,11 @@ public class Starter {
     public static void main(String[] argv) {
 
         ArgumentParser parser = new ArgumentParser();
-        CommandLine commandLine = parser.parse(argv);;
+        CommandLine commandLine = parser.parse(argv);
+
+        parser.checkArgumentCount(2);
+        String host = parser.getPositionalString(0);
+        int port = parser.getPositionalInt(1);
 
         Properties config = new Properties();
         Starter.loadConfig(defaultConfiguration, config, false);
@@ -35,39 +39,25 @@ public class Starter {
             Starter.loadConfig(additionalConfig, config, true);
 
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
-        String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("templateFolder"));
+        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("template-sample"));
+        String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
+        String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
+        String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
         String boundName = commandLine.getOptionValue("bound-name", null);
-        Security.trusted = commandLine.hasOption("trusted");
-
-        List<String> remainingArgs = commandLine.getArgList();
-        if( remainingArgs.size() != 2 ) {
-            System.err.println("Error: insufficient number of arguments.\n");
-            parser.printHelp();
-            System.exit(1);
-        }
-
-        String host = remainingArgs.get(0);
-        int port = 1090;
-
-        try {
-            port = Integer.valueOf(remainingArgs.get(1));
-        } catch( Exception e ) {
-            System.err.println("Error: Specified port is not an integer.\n");
-            parser.printHelp();
-            System.exit(1);
-        }
 
         Logger.verbose = !commandLine.hasOption("quite") && !commandLine.hasOption("json");
+        boolean sslValue = commandLine.hasOption("ssl");
+        boolean followRedirect = commandLine.hasOption("follow");
+        boolean updateWordlists = commandLine.hasOption("update");
+        boolean createSamples = commandLine.hasOption("create-samples");
+
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
-        boolean sslValue = commandLine.hasOption("ssl");
-        boolean followRedirect = commandLine.hasOption("follow");
         rmi.connect(host, port, sslValue, followRedirect);
-
         String[] boundNames = rmi.getBoundNames();
-        ArrayList<HashMap<String,String>> boundClasses = null;
 
+        ArrayList<HashMap<String,String>> boundClasses = null;
         if( commandLine.hasOption("classes") || commandLine.hasOption("guess") ) {
             boundClasses = rmi.getClassNames(boundNames);
         }
@@ -84,20 +74,19 @@ public class Starter {
             System.exit(0);
         }
 
-        RMGUtils.init(templateFolder);
-        MethodGuesser guesser = null;
-
+        RMGUtils.init();
+        WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
+        List<MethodCandidate> candidates = null;
         try {
-            guesser = new MethodGuesser(rmi, boundClasses.get(1));
-        } catch (NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnYellow("Unable to create MethodGuesser object.");
-            Logger.eprintln("StackTrace:");
-            e.printStackTrace();
+            candidates = wlHandler.getWordlistMethods();
+        } catch( IOException e ) {
+            Logger.eprintlnMixedYellow("Caught exception while reading wordlist file", e.getMessage());
+            Logger.eprintln("Cannot continue from here.");
             System.exit(1);
         }
 
-        boolean createSamples = commandLine.hasOption("create-samples");
-        HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, createSamples);
+        MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
+        HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples);
 
         format.listGuessedMethods(results);
     }

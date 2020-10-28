@@ -1,4 +1,6 @@
-package de.qtc.rmg.utils;
+package de.qtc.rmg.internal;
+
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,6 +16,8 @@ public class ArgumentParser {
     private String helpString;
     private HelpFormatter formatter;
     private CommandLineParser parser;
+    private CommandLine cmdLine;
+    private List<String> argList;
 
     public ArgumentParser() {
         this.parser = new DefaultParser();
@@ -38,12 +42,23 @@ public class ArgumentParser {
             System.exit(0);
         }
 
+        this.cmdLine = cmd;
         return cmd;
     }
 
     public void printHelp()
     {
         formatter.printHelp(helpString, options);
+    }
+
+    public void checkArgumentCount(int expectedCount)
+    {
+         List<String> remainingArgs = cmdLine.getArgList();
+         if( remainingArgs.size() != expectedCount ) {
+             System.err.println("Error: insufficient number of arguments.\n");
+             printHelp();
+             System.exit(1);
+         }
     }
 
     private Options getParserOptions()
@@ -90,7 +105,7 @@ public class ArgumentParser {
         wordlistFolder.setRequired(false);
         options.addOption(wordlistFolder);
 
-        Option wordlist = new Option(null, "wordlist", true, "wordlist file to use for method guessing");
+        Option wordlist = new Option(null, "wordlist-file", true, "wordlist file to use for method guessing");
         wordlist.setRequired(false);
         options.addOption(wordlist);
 
@@ -114,6 +129,10 @@ public class ArgumentParser {
         follow.setRequired(false);
         options.addOption(follow);
 
+        Option update = new Option(null, "update", false, "update wordlist file with method hashes");
+        update.setRequired(false);
+        options.addOption(update);
+
         return options;
     }
 
@@ -127,5 +146,32 @@ public class ArgumentParser {
         helpString += "Optional arguments:\n";
 
         return helpString;
+    }
+
+    public String getPositionalString(int position)
+    {
+        if( this.argList != null ) {
+            return this.argList.get(position);
+        } else {
+            this.argList = cmdLine.getArgList();
+            return this.argList.get(position);
+        }
+    }
+
+    public int getPositionalInt(int position)
+    {
+        try {
+            if( this.argList != null ) {
+                return Integer.valueOf(this.argList.get(position));
+            } else {
+                this.argList = cmdLine.getArgList();
+                return Integer.valueOf(this.argList.get(position));
+            }
+        } catch( Exception e ) {
+            System.err.println("Error: Unable to parse " + this.argList.get(position) + " as integer.");
+            printHelp();
+            System.exit(1);
+        }
+        return 0;
     }
 }

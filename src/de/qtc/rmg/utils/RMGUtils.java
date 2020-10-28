@@ -15,16 +15,12 @@ import javassist.NotFoundException;
 public class RMGUtils {
 
     private static ClassPool pool;
-    private static CtClass remoteClass;
-    private static String templateFolder;
-    private static String methodTemplate;
     private static CtClass dummyClass;
+    private static CtClass remoteClass;
 
-    public static void init(String tmplFolder)
+    public static void init()
     {
         pool = ClassPool.getDefault();
-        templateFolder = tmplFolder;
-        methodTemplate = "public void dummy() throws java.rmi.RemoteException;";
 
         try {
             remoteClass = pool.getCtClass(Remote.class.getName());
@@ -33,29 +29,24 @@ public class RMGUtils {
             Logger.eprintln("Unable to continue from here.");
             System.exit(1);
         }
-    }
-
-    public static CtClass getDummyClass()
-    {
-        if( dummyClass != null )
-            return dummyClass;
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
-        return dummyClass;
     }
+
 
     @SuppressWarnings("rawtypes")
     public static Class makeInterface(String className) throws CannotCompileException
     {
         CtClass intf = pool.makeInterface(className, remoteClass);
-        CtMethod dummyMethod = CtNewMethod.make(methodTemplate, intf);
+        CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
+        intf.addMethod(dummyMethod);
+        dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
         return intf.toClass();
     }
 
     public static CtMethod makeMethod(String signature) throws CannotCompileException
     {
-        CtClass dummyClass = RMGUtils.getDummyClass();
         CtMethod method = CtNewMethod.make("public " + signature + ";", dummyClass);
         return method;
     }
@@ -71,6 +62,9 @@ public class RMGUtils {
 
         type = signature.substring(0, functionStart);
         types.add(type);
+
+        if( signature.contains("()") )
+            return types;
 
         while( argumentsStart > 1 ) {
             tmp = signature.indexOf(' ', argumentsStart);

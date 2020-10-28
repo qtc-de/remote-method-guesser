@@ -38,10 +38,22 @@ public class MethodCandidate {
         this.primitive = Boolean.valueOf(isPrimitive);
     }
 
+    public Object[] getConfusedArgument()
+    {
+        if( this.isPrimitive() ) {
+            return new Object[] { "RMG" };
+        } else {
+            return new Object[] { 42 };
+        }
+    }
 
     private boolean checkPrimitive(CtMethod method) throws NotFoundException
     {
         CtClass[] types = method.getParameterTypes();
+
+        if( types.length == 0 )
+            return false;
+
         return types[0].isPrimitive();
     }
 

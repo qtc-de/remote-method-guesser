@@ -71,9 +71,8 @@ public final class RMIWhisperer {
         } catch( RemoteException e ) {
 
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Could not connect to " + host + "on port " + port);
-            Logger.eprint("Exception Message: ");
-            Logger.eprintlnPlain_ye(e.getMessage());
+            Logger.eprintlnMixedYellow("Error: Could not connect to " + host + ":" + port, ".");
+            Logger.eprintlnMixedYellow("Exception Message:", e.getMessage());
             System.exit(1);
         }
     }
@@ -88,14 +87,13 @@ public final class RMIWhisperer {
 
             boundNames = rmiRegistry.list();
             Logger.printlnPlain("done.");
-            Logger.println(boundNames.length + " names are bound to the registry.");
+            Logger.printlnMixedBlueFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
 
         } catch( RemoteException e ) {
 
             Logger.printlnPlain("failed.");
             Logger.eprintln("Error: Remote failure when listing bound names");
-            Logger.eprint("Exception Message: ");
-            Logger.eprintlnPlain_ye(e.getMessage());
+            Logger.eprintlnMixedYellow("Exception Message:", e.getMessage());
             System.exit(1);
         }
         return boundNames;
