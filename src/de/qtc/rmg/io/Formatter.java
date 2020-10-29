@@ -2,6 +2,7 @@ package de.qtc.rmg.io;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -10,8 +11,8 @@ import org.json.simple.JSONObject;
 
 import de.qtc.rmg.internal.MethodCandidate;
 
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class Formatter {
-
 
     private boolean json = false;
 
@@ -19,7 +20,8 @@ public class Formatter {
         this.json = json;
     }
 
-    public void listBoundNames(String[] boundNames) {
+    public void listBoundNames(String[] boundNames)
+    {
         if( this.json ) {
             this.listBoundNamesJson(boundNames, null, null);
         } else {
@@ -27,7 +29,8 @@ public class Formatter {
         }
     }
 
-    public void listBoundNames(String[] boundNames, ArrayList<HashMap<String,String>> classes) {
+    public void listBoundNames(String[] boundNames, ArrayList<HashMap<String,String>> classes)
+    {
         HashMap<String,String> knownClasses = null;
         HashMap<String,String> unknownClasses = null;
 
@@ -43,30 +46,37 @@ public class Formatter {
         }
     }
 
-    public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses) {
+    public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
+    {
+        Logger.println("Listing bound names in registry:");
+        Logger.increaseIndent();
 
-        System.out.println("[+] Listing bound names in registry:");
         for( String name : boundNames ) {
 
-            System.out.println("[+]\t• " + name);
+            Logger.printlnMixedYellow("•", name);
 
             if( knownClasses == null || unknownClasses == null ) {
                 continue;
             }
 
+            Logger.increaseIndent();
+
             if( knownClasses.containsKey(name) ) {
-                System.out.println("[+]\t  --> " + knownClasses.get(name) + " (known class)");
+                Logger.printlnMixedBlue("-->", knownClasses.get(name), "(known class)");
             }
 
             if( unknownClasses.containsKey(name) ) {
-                System.out.println("[+]\t  --> " + unknownClasses.get(name) + " (unknown class)");
+                Logger.printlnMixedBlue("-->", unknownClasses.get(name), "(unknown class)");
             }
+
+            Logger.decreaseIndent();
         }
+
+        Logger.decreaseIndent();
     }
 
-    @SuppressWarnings("unchecked")
-    public void listBoundNamesJson(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses) {
-
+    public void listBoundNamesJson(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
+    {
         JSONObject json = new JSONObject();
         JSONArray knownArray = new JSONArray();
         JSONArray unknownArray = new JSONArray();
@@ -104,7 +114,8 @@ public class Formatter {
     }
 
 
-    public void listGuessedMethods(HashMap<String,ArrayList<MethodCandidate>> results) {
+    public void listGuessedMethods(HashMap<String,ArrayList<MethodCandidate>> results)
+    {
         if(this.json) {
             this.listGuessedMethodsJson(results);
         } else {
@@ -112,35 +123,38 @@ public class Formatter {
         }
     }
 
+    public void listGuessedMethodsPlain(HashMap<String,ArrayList<MethodCandidate>> results)
+    {
+        Logger.println("");
+        Logger.println("Listing successfully guessed methods:");
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void listGuessedMethodsPlain(HashMap<String,ArrayList<MethodCandidate>> results) {
+        Logger.increaseIndent();
+        Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
 
-        System.out.println("[+] Successfully guessed methods:");
-
-        java.util.Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
         while(it.hasNext()) {
 
             Map.Entry pair = (Map.Entry)it.next();
-            String boundName = (String) pair.getKey();
-            ArrayList<MethodCandidate> methods = ((ArrayList<MethodCandidate>) pair.getValue());
+            String boundName = (String)pair.getKey();
+            ArrayList<MethodCandidate> methods = ((ArrayList<MethodCandidate>)pair.getValue());
 
-            System.out.println("[+]\t• " + boundName);
+            Logger.printlnMixedBlue("• ", boundName);
+            Logger.increaseIndent();
 
             for( MethodCandidate m : methods ) {
-                System.out.println("[+]\t\t--> " + m.getSignature());
+                Logger.printlnMixedYellow("-->", m.getSignature());
             }
 
+            Logger.decreaseIndent();
             it.remove();
         }
+
+        Logger.decreaseIndent();
     }
 
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void listGuessedMethodsJson(HashMap<String,ArrayList<MethodCandidate>> results) {
-
+    public void listGuessedMethodsJson(HashMap<String,ArrayList<MethodCandidate>> results)
+    {
         JSONObject json = new JSONObject();
-        java.util.Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
+        Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
         while(it.hasNext()) {
 
             JSONArray methodArray = new JSONArray();

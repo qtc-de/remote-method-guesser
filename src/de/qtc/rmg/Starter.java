@@ -39,7 +39,7 @@ public class Starter {
             Starter.loadConfig(additionalConfig, config, true);
 
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
-        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("template-sample"));
+        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sample-folder"));
         String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
         String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
@@ -80,7 +80,7 @@ public class Starter {
         try {
             candidates = wlHandler.getWordlistMethods();
         } catch( IOException e ) {
-            Logger.eprintlnMixedYellow("Caught exception while reading wordlist file", e.getMessage());
+            Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
             Logger.eprintln("Cannot continue from here.");
             System.exit(1);
         }

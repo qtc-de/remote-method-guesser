@@ -180,6 +180,10 @@ class Threader implements Runnable {
             if( cause != null ) {
 
                 if( cause instanceof java.rmi.UnmarshalException) {
+                    /*
+                     * This server-exception is thrown when the supplied method hash does not match any
+                     * remote method. Therefore, we just continue from here.
+                     */
                     return;
 
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
@@ -192,12 +196,25 @@ class Threader implements Runnable {
                 }
             }
 
+        } catch (java.rmi.UnmarshalException e) {
+            /*
+             * This occurs on invocation of methods taking zero arguments. Since the call always succeeds,
+             * the remote method returns some value that probably not matches the expected return value of
+             * the lookup method.
+             */
+            return;
+
         } catch (Exception e) {
             Logger.eprintlnMixedBlue("Caught unexpected exception while guessing:", e.getMessage());
             Logger.eprintln("StackTrace:");
             e.printStackTrace();
         }
 
+        /*
+         * Successfully guessed methods cause either an EOFException (object passed instead of primitive
+         * or two few arguments) or an OptionalDataException (primitive passed for instead of object). As
+         * these exceptions are not caught, we end up here.
+         */
         Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
         existingMethods.add(candidate);
     }

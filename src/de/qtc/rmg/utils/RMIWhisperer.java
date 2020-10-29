@@ -87,7 +87,7 @@ public final class RMIWhisperer {
 
             boundNames = rmiRegistry.list();
             Logger.printlnPlain("done.");
-            Logger.printlnMixedBlueFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
+            Logger.printlnMixedYellowFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
 
         } catch( RemoteException e ) {
 

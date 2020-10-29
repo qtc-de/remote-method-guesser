@@ -13,7 +13,6 @@ import de.qtc.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
-
 public class WordlistHandler {
 
     private String wordlistFile;
@@ -29,10 +28,12 @@ public class WordlistHandler {
 
     public List<MethodCandidate> getWordlistMethods() throws IOException
     {
-        if( this.wordlistFile != null ) {
+        if( this.wordlistFile != null && !this.wordlistFile.isEmpty() ) {
             return getWordlistMethodsFromFile();
-        } else {
+        } else if( this.wordlistFolder != null && !this.wordlistFolder.isEmpty() ) {
             return getWordlistMethodsFromFolder();
+        } else {
+            throw new IOException("Neither wordlist-folder nor wordlist-file was specified.");
         }
     }
 
@@ -45,8 +46,11 @@ public class WordlistHandler {
     public List<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
     {
         File wordlistFolder = new File(this.wordlistFolder);
-        List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+        if( !wordlistFolder.isDirectory() ) {
+            throw new IOException("wordlist-folder " + wordlistFolder.getCanonicalPath() + " is not a directory.");
+        }
 
+        List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
         Logger.printMixedBlueFirst(String.valueOf(files.size()), "wordlist files found.");
 
         List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
@@ -60,13 +64,18 @@ public class WordlistHandler {
 
     public List<MethodCandidate> getWordlistMethods(File file) throws IOException
     {
-        Logger.printlnMixedBlue("Reading method candidates from file", file.getAbsolutePath());
+        Logger.printlnMixedBlue("Reading method candidates from file", file.getCanonicalPath());
         Logger.increaseIndent();
 
         List<String> content = FileUtils.readLines(file, StandardCharsets.UTF_8);
         List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
 
         for(String line : content) {
+
+            if( line.trim().startsWith("#") || line.isBlank() ) {
+                continue;
+            }
+
             String[] split = line.split(";");
 
             try {
@@ -76,8 +85,10 @@ public class WordlistHandler {
                 else if(split.length == 3)
                     methods.add(new MethodCandidate(split[0].trim(), split[1].trim(), split[2].trim()));
 
-                else
+                else {
                     Logger.eprintlnMixedYellow("Encountered unknown method format:", line);
+                    Logger.eprintln("Skipping this signature");
+                }
 
             } catch(CannotCompileException | NotFoundException e) {
                 Logger.eprintlnMixedYellow("Caught Exception while processing", line);
