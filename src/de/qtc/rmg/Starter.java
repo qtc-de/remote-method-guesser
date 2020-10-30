@@ -28,8 +28,13 @@ public class Starter {
         CommandLine commandLine = parser.parse(argv);
 
         parser.checkArgumentCount(2);
+        String action = "enum";
         String host = parser.getPositionalString(0);
         int port = parser.getPositionalInt(1);
+
+        if( parser.getArgumentCount() >= 3 ) {
+            action = parser.getPositionalString(2);
+        }
 
         Properties config = new Properties();
         Starter.loadConfig(defaultConfiguration, config, false);
@@ -54,43 +59,55 @@ public class Starter {
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
+        RMGUtils.init();
         rmi.connect(host, port, sslValue, followRedirect);
         String[] boundNames = rmi.getBoundNames();
+        ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
 
-        ArrayList<HashMap<String,String>> boundClasses = null;
-        if( commandLine.hasOption("classes") || commandLine.hasOption("guess") ) {
-            boundClasses = rmi.getClassNames(boundNames);
+        switch( action ) {
+
+            case "guess":
+                if( !containsUnknown(boundClasses.get(1)) )
+                    break;
+
+                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
+                List<MethodCandidate> candidates = null;
+
+                try {
+                    candidates = wlHandler.getWordlistMethods();
+                } catch( IOException e ) {
+                    Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
+                    Logger.eprintln("Cannot continue from here.");
+                    System.exit(1);
+                }
+
+                MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples);
+
+                format.listGuessedMethods(results);
+                break;
+
+            case "attack":
+
+            default:
+                Logger.printlnMixedYellow("Unknown action:", action, ".");
+                Logger.printlnMixedBlue("Performing default action:", "enum");
+
+            case "enum":
+                format.listBoundNames(boundNames, boundClasses);
         }
-
-        if( !commandLine.hasOption("guess") ) {
-            format.listBoundNames(boundNames, boundClasses);
-            System.exit(0);
-        }
-
-        if( boundClasses.get(1).size() <= 0 ) {
-            format.listBoundNames(boundNames, boundClasses);
-            Logger.eprintln("No unknown classes identified.");
-            Logger.eprintln("Guessing methods not necessary.");
-            System.exit(0);
-        }
-
-        RMGUtils.init();
-        WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
-        List<MethodCandidate> candidates = null;
-        try {
-            candidates = wlHandler.getWordlistMethods();
-        } catch( IOException e ) {
-            Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
-            Logger.eprintln("Cannot continue from here.");
-            System.exit(1);
-        }
-
-        MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-        HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples);
-
-        format.listGuessedMethods(results);
     }
 
+    private static boolean containsUnknown(HashMap<String,String> unknownClasses)
+    {
+        if( unknownClasses.size() <= 0 ) {
+            Logger.eprintln("No unknown classes identified.");
+            Logger.eprintln("Guessing methods not necessary.");
+            return false;
+        }
+
+        return true;
+    }
 
     private static void loadConfig(String filename, Properties prop, boolean extern) {
 

@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import de.qtc.rmg.internal.GuessingWorker;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -121,9 +122,9 @@ public class MethodGuesser {
             for( MethodCandidate method : this.candidates ) {
                 Runnable r;
                 if( method.isPrimitive() ) {
-                    r = new Threader(rmgInvokeObject, instance, remoteRef, existingMethods, method);
+                    r = new GuessingWorker(rmgInvokeObject, instance, remoteRef, existingMethods, method);
                 } else {
-                    r = new Threader(rmgInvokePrimitive, instance, remoteRef, existingMethods, method);
+                    r = new GuessingWorker(rmgInvokePrimitive, instance, remoteRef, existingMethods, method);
                 }
 
                 pool.execute(r);
@@ -150,82 +151,5 @@ public class MethodGuesser {
             Logger.decreaseIndent();
         }
         return results;
-    }
-}
-
-class Threader implements Runnable {
-
-    private Method method;
-    private RemoteRef instance;
-    private Remote remote;
-    private MethodCandidate candidate;
-    private ArrayList<MethodCandidate> existingMethods;
-
-    public Threader(Method method, Remote remote, RemoteRef instance, ArrayList<MethodCandidate> existingMethods, MethodCandidate candidate) {
-        this.method = method;
-        this.instance = instance;
-        this.existingMethods = existingMethods;
-        this.candidate = candidate;
-    }
-
-    public void run() {
-
-        try {
-
-            instance.invoke(remote, method, candidate.getConfusedArgument(), candidate.getHash());
-
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = getCause(e);
-            if( cause != null ) {
-
-                if( cause instanceof java.rmi.UnmarshalException) {
-                    /*
-                     * This server-exception is thrown when the supplied method hash does not match any
-                     * remote method. Therefore, we just continue from here.
-                     */
-                    return;
-
-                } else if( cause instanceof java.rmi.UnknownHostException  ) {
-                    Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
-                    return;
-
-                } else if( cause instanceof java.rmi.ConnectException  ) {
-                    Logger.eprintln((cause.getMessage().split(";"))[0]);
-                    return;
-                }
-            }
-
-        } catch (java.rmi.UnmarshalException e) {
-            /*
-             * This occurs on invocation of methods taking zero arguments. Since the call always succeeds,
-             * the remote method returns some value that probably not matches the expected return value of
-             * the lookup method.
-             */
-            return;
-
-        } catch (Exception e) {
-            Logger.eprintlnMixedBlue("Caught unexpected exception while guessing:", e.getMessage());
-            Logger.eprintln("StackTrace:");
-            e.printStackTrace();
-        }
-
-        /*
-         * Successfully guessed methods cause either an EOFException (object passed instead of primitive
-         * or two few arguments) or an OptionalDataException (primitive passed for instead of object). As
-         * these exceptions are not caught, we end up here.
-         */
-        Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
-        existingMethods.add(candidate);
-    }
-
-    private Throwable getCause(Throwable e) {
-        Throwable cause = null;
-        Throwable result = e;
-
-        while(null != (cause = result.getCause())  && (result != cause) ) {
-            result = cause;
-        }
-        return result;
     }
 }
