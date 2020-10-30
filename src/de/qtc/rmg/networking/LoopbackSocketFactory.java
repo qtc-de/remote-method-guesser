@@ -42,6 +42,6 @@ public class LoopbackSocketFactory extends RMISocketFactory {
 
     private void printInfos(String info) {
         if( this.printInfo )
-            Logger.eprintln_bl(info);
+            Logger.eprintlnBlue(info);
     }
 }

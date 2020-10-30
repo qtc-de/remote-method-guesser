@@ -72,7 +72,7 @@ public class WordlistHandler {
 
         for(String line : content) {
 
-            if( line.trim().startsWith("#") || line.isBlank() ) {
+            if( line.trim().startsWith("#") || line.trim().isEmpty() ) {
                 continue;
             }
 

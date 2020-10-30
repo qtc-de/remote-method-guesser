@@ -65,6 +65,6 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 
     private void printInfos(String info) {
         if( printInfo )
-            Logger.eprintln_bl(info);
+            Logger.eprintlnBlue(info);
     }
 }
