@@ -174,4 +174,14 @@ public class ArgumentParser {
         }
         return 0;
     }
+
+    public int getArgumentCount()
+    {
+        if( this.argList != null ) {
+            return this.argList.size();
+        } else {
+            this.argList = cmdLine.getArgList();
+            return this.argList.size();
+        }
+    }
 }
