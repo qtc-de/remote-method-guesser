@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.operations;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

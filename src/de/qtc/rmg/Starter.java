@@ -15,6 +15,8 @@ import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.operations.MethodAttacker;
+import de.qtc.rmg.operations.MethodGuesser;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import javassist.CannotCompileException;
