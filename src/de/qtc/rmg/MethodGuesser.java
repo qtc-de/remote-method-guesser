@@ -28,12 +28,13 @@ public class MethodGuesser {
 
     private RMIWhisperer rmi;
     private HashMap<String,String> classes;
-    private List<MethodCandidate> candidates;;
+    private List<MethodCandidate> candidates;
 
     private Field proxyField;
     private Field remoteField;
 
-    public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, List<MethodCandidate> candidates) {
+    public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, List<MethodCandidate> candidates)
+    {
         this.rmi = rmiRegistry;
         this.classes = unknownClasses;
         this.candidates = candidates;
@@ -51,26 +52,38 @@ public class MethodGuesser {
         }
     }
 
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(int threads, boolean writeSamples) {
-        return this.guessMethods(null, threads, writeSamples);
+    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(int threads, boolean writeSamples, boolean zeroArg)
+    {
+        return this.guessMethods(null, threads, writeSamples, zeroArg);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean writeSamples) {
-
+    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean writeSamples, boolean zeroArg)
+    {
         HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
+
+        int count = this.candidates.size();
+        if( count == 0 ) {
+            Logger.eprintlnMixedYellow("List of candidate methods contains", "0", "elements.");
+            Logger.eprintln("No guessing required.");
+            return results;
+        }
+
         Logger.println("\n[+] Starting RMG Attack");
         Logger.increaseIndent();
 
-
-        Logger.printlnMixedYellow("Guessing", String.valueOf(this.candidates.size()), "methods on each bound name.");
+        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "methods on each bound name.");
+        if( count == 1 ) {
+            Logger.printlnMixedBlue("Method signature:", candidates.get(0).getSignature());
+        }
+        Logger.println("");
 
         Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
         while (it.hasNext()) {
 
             Map.Entry pair = (Map.Entry)it.next();
-            String boundName = (String) pair.getKey();
-            String className = (String) pair.getValue();
+            String boundName = (String)pair.getKey();
+            String className = (String)pair.getValue();
 
             if( targetName != null && !targetName.equals(boundName) ) {
                 continue;
@@ -120,7 +133,13 @@ public class MethodGuesser {
 
             ExecutorService pool = Executors.newFixedThreadPool(threads);
             for( MethodCandidate method : this.candidates ) {
+
                 Runnable r;
+                if( method.isVoid() && !zeroArg ) {
+                    Logger.printlnMixedBlue("Skipping zero arguments method:", method.getSignature());
+                    continue;
+                }
+
                 if( method.isPrimitive() ) {
                     r = new GuessingWorker(rmgInvokeObject, instance, remoteRef, existingMethods, method);
                 } else {

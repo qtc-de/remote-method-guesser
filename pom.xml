@@ -71,7 +71,7 @@
                   </execution>
                 </executions>
                 <configuration>
-                  <finalName>rmg</finalName>
+                  <finalName>rmg-${project.version}</finalName>
                   <archive>
                       <manifest>
                           <mainClass>de.qtc.rmg.Starter</mainClass>

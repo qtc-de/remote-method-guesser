@@ -51,7 +51,7 @@ public class WordlistHandler {
         }
 
         List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-        Logger.printMixedBlueFirst(String.valueOf(files.size()), "wordlist files found.");
+        Logger.printlnMixedBlueFirst(String.valueOf(files.size()), "wordlist files found.");
 
         List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
         for(File file : files){
@@ -60,7 +60,6 @@ public class WordlistHandler {
 
         return methods;
     }
-
 
     public List<MethodCandidate> getWordlistMethods(File file) throws IOException
     {
@@ -82,8 +81,8 @@ public class WordlistHandler {
                 if(split.length == 1)
                     methods.add(new MethodCandidate(split[0].trim()));
 
-                else if(split.length == 3)
-                    methods.add(new MethodCandidate(split[0].trim(), split[1].trim(), split[2].trim()));
+                else if(split.length == 4)
+                    methods.add(new MethodCandidate(split[0].trim(), split[1].trim(), split[2].trim(), split[3].trim()));
 
                 else {
                     Logger.eprintlnMixedYellow("Encountered unknown method format:", line);
@@ -106,7 +105,6 @@ public class WordlistHandler {
         Logger.decreaseIndent();
         return methods;
     }
-
 
     public void updateWordlist(File file, List<MethodCandidate> methods) throws IOException
     {

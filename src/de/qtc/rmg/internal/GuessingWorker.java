@@ -6,6 +6,7 @@ import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.RMGUtils;
 
 public class GuessingWorker implements Runnable {
 
@@ -29,7 +30,7 @@ public class GuessingWorker implements Runnable {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = getCause(e);
+            Throwable cause = RMGUtils.getCause(e);
             if( cause != null ) {
 
                 if( cause instanceof java.rmi.UnmarshalException) {
@@ -70,15 +71,5 @@ public class GuessingWorker implements Runnable {
          */
         Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
         existingMethods.add(candidate);
-    }
-
-    private Throwable getCause(Throwable e) {
-        Throwable cause = null;
-        Throwable result = e;
-
-        while(null != (cause = result.getCause())  && (result != cause) ) {
-            result = cause;
-        }
-        return result;
     }
 }

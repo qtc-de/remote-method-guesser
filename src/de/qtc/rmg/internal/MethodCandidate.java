@@ -7,6 +7,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -17,25 +18,36 @@ public class MethodCandidate {
 
     private long hash;
     private String signature;
-    private boolean primitive;
+    private boolean isVoid;
+    private boolean isPrimitive;
+    private CtMethod method;;
 
     public MethodCandidate(String signature) throws CannotCompileException, NotFoundException
     {
         this.signature = signature;
-
         RMGUtils.createTypesFromSignature(signature);
-        CtMethod method = RMGUtils.makeMethod(signature);
 
+        method = RMGUtils.makeMethod(signature);
+        CtClass[] types = method.getParameterTypes();
         this.hash = getCtMethodHash(method);
-        this.primitive = checkPrimitive(method);
+
+        if( types.length == 0 ) {
+            this.isVoid = true;
+            this.isPrimitive = false;
+
+        } else {
+            this.isVoid = false;
+            this.isPrimitive = types[0].isPrimitive();
+        }
     }
 
 
-    public MethodCandidate(String signature, String hash, String isPrimitive)
+    public MethodCandidate(String signature, String hash, String isPrimitive, String isVoid)
     {
         this.signature = signature;
         this.hash = Long.valueOf(hash);
-        this.primitive = Boolean.valueOf(isPrimitive);
+        this.isPrimitive = Boolean.valueOf(isPrimitive);
+        this.isVoid = Boolean.valueOf(isVoid);
     }
 
     public Object[] getConfusedArgument()
@@ -47,23 +59,11 @@ public class MethodCandidate {
         }
     }
 
-    private boolean checkPrimitive(CtMethod method) throws NotFoundException
-    {
-        CtClass[] types = method.getParameterTypes();
-
-        if( types.length == 0 )
-            return false;
-
-        return types[0].isPrimitive();
-    }
-
-
     private long getCtMethodHash(CtMethod method)
     {
         String methodSignature = method.getName() + method.getSignature();
         return computeMethodHash(methodSignature);
     }
-
 
     private long computeMethodHash(String methodSignature) {
         long hash = 0;
@@ -90,6 +90,40 @@ public class MethodCandidate {
         return hash;
     }
 
+    public int getPrimitive(int selected) throws NotFoundException
+    {
+        CtClass[] types = this.method.getParameterTypes();
+
+        if(selected != 0) {
+
+            if( selected >= types.length ) {
+                Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is out of bounds.");
+                return 0;
+            }
+
+            if( types[selected].isPrimitive() ) {
+                Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is a primitive type.");
+                return 0;
+            }
+
+            return selected;
+        }
+
+        int result = 0;
+        for(int ctr = 0; ctr < types.length; ctr++) {
+
+            if(!types[ctr].isPrimitive()) {
+
+                if(types[ctr].getName() == "java.lang.String")
+                    result = ctr;
+
+                else
+                    return ctr;
+            }
+        }
+        return result;
+    }
+
     public String getSignature()
     {
         return this.signature;
@@ -102,11 +136,16 @@ public class MethodCandidate {
 
     public boolean isPrimitive()
     {
-        return this.primitive;
+        return this.isPrimitive;
+    }
+
+    public boolean isVoid()
+    {
+        return this.isVoid;
     }
 
     public String convertToString()
     {
-        return this.signature + "; " + this.hash + "; " + this.primitive;
+        return this.signature + "; " + this.hash + "; " + this.isPrimitive + "; " + this.isVoid;
     }
 }

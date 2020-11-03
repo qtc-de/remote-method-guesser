@@ -54,7 +54,7 @@ public class ArgumentParser {
     public void checkArgumentCount(int expectedCount)
     {
          List<String> remainingArgs = cmdLine.getArgList();
-         if( remainingArgs.size() != expectedCount ) {
+         if( remainingArgs.size() < expectedCount ) {
              System.err.println("Error: insufficient number of arguments.\n");
              printHelp();
              System.exit(1);
@@ -69,17 +69,9 @@ public class ArgumentParser {
         name.setRequired(false);
         options.addOption(name);
 
-        Option classes = new Option(null, "classes", false, "show classes of identified bound names");
-        classes.setRequired(false);
-        options.addOption(classes);
-
         Option configOption = new Option(null, "config", true, "path to a configuration file");
         configOption.setRequired(false);
         options.addOption(configOption);
-
-        Option guess = new Option(null, "guess", false, "guess valid methods on bound names");
-        guess.setRequired(false);
-        options.addOption(guess);
 
         Option help = new Option(null, "help", false, "display help message");
         help.setRequired(false);
@@ -109,17 +101,9 @@ public class ArgumentParser {
         wordlist.setRequired(false);
         options.addOption(wordlist);
 
-        Option quite = new Option(null, "quite", false, "less verbose output format");
-        quite.setRequired(false);
-        options.addOption(quite);
-
         Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
         samples.setRequired(false);
         options.addOption(samples);
-
-        Option trusted = new Option(null, "trusted", false, "disable filtering for bound and class names (dangerous)");
-        trusted.setRequired(false);
-        options.addOption(trusted);
 
         Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
         ssl.setRequired(false);
@@ -133,17 +117,42 @@ public class ArgumentParser {
         update.setRequired(false);
         options.addOption(update);
 
+        Option noColor = new Option(null, "no-color", false, "disable colored output");
+        noColor.setRequired(false);
+        options.addOption(noColor);
+
+        Option zeroArg = new Option(null, "zero-arg", false, "allow guessing on void functions (dangerous)");
+        zeroArg.setRequired(false);
+        options.addOption(zeroArg);
+
+        Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialisation attacks");
+        yso.setRequired(false);
+        options.addOption(yso);
+
+        Option signature = new Option(null, "signature", true, "function signature for guessing or attacking");
+        signature.setRequired(false);
+        options.addOption(signature);
+
+        Option position = new Option(null, "argument-position", true, "select argument position for deserialization attacks");
+        position.setRequired(false);
+        options.addOption(position);
+
         return options;
     }
 
     private String getHelpString()
     {
-        String helpString = "rmg [options] [clean | <ip> <port>]\n";
-        helpString += "RMI enumeration tool. List and guess methods on Java RMI endpoints.\n\n";
-        helpString += "Positional arguments:\n";
-        helpString += "    ip                       IP address of the target host\n";
-        helpString += "    port                     Port number of the RMI registry\n\n";
-        helpString += "Optional arguments:\n";
+        String helpString = "rmg [options] <ip> <port> <action>\n"
+                +"Bruteforce remote methods on unknown Java RMI endpoints.\n\n"
+                +"Positional Arguments:\n"
+                +"    ip:                  IP address of the target\n"
+                +"    port:                Port of the RMI registry\n"
+                +"    action:              One of the possible actions listed below\n\n"
+                +"Possible Actions:\n"
+                +"    enum                 Enumerate registered bound names and classes\n"
+                +"    guess                Guess methods on available bound names\n"
+                +"    attack               Perform deserialisation attacks against a method\n\n"
+                +"Optional Arguments:";
 
         return helpString;
     }

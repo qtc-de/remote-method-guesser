@@ -2,9 +2,9 @@ package de.qtc.rmg.io;
 
 public class Logger {
 
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_YELLOW = "\u001B[33m";
-    private static final String ANSI_BLUE = "\u001B[34m";
+    private static String ANSI_RESET = "\u001B[0m";
+    private static String ANSI_YELLOW = "\u001B[33m";
+    private static String ANSI_BLUE = "\u001B[34m";
 
     public static int indent = 0;
     public static boolean verbose = true;
@@ -303,5 +303,12 @@ public class Logger {
             return " " + new String(new char[indent]).replace("\0", "\t");
         else
             return " ";
+    }
+
+    public static void disableColor()
+    {
+        ANSI_RESET = "";
+        ANSI_YELLOW = "";
+        ANSI_BLUE = "";
     }
 }
