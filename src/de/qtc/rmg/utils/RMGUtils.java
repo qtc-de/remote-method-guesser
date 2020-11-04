@@ -200,8 +200,8 @@ public class RMGUtils {
         return ysoPayload;
     }
 
-
-    public static Throwable getCause(Throwable e) {
+    public static Throwable getCause(Throwable e)
+    {
         Throwable cause = null;
         Throwable result = e;
 
@@ -209,5 +209,11 @@ public class RMGUtils {
             result = cause;
         }
         return result;
+    }
+
+    public static void exit()
+    {
+        Logger.eprintln("Cannot continue from here.");
+        System.exit(1);
     }
 }

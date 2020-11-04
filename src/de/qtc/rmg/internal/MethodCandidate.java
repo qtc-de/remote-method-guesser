@@ -144,6 +144,11 @@ public class MethodCandidate {
         return this.isVoid;
     }
 
+    public CtMethod getMethod()
+    {
+        return this.method;
+    }
+
     public String convertToString()
     {
         return this.signature + "; " + this.hash + "; " + this.isPrimitive + "; " + this.isVoid;
