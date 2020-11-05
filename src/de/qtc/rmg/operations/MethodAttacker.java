@@ -82,10 +82,11 @@ public class MethodAttacker {
             int attackArgument = 0;
             try {
                 attackArgument = this.targetMethod.getPrimitive(argumentPosition);
-            } catch (NotFoundException e1) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "NotFoundException", "while searching for primitives.");
-                Logger.eprintln("Cannot continue from here.");
-                System.exit(1);
+            } catch (CannotCompileException | NotFoundException e) {
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while searching for primitives.");
+                Logger.eprintln("StackTrace:");
+                e.printStackTrace();
+                RMGUtils.exit();
             }
 
             if( attackArgument == 0 ) {

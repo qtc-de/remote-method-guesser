@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 
+import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.ArgumentParser;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
@@ -19,6 +20,7 @@ import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
+import de.qtc.rmg.utils.SampleWriter;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
@@ -121,6 +123,44 @@ public class Starter {
                 HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg);
 
                 format.listGuessedMethods(results);
+                if( !createSamples )
+                    break;
+
+                Logger.println("");
+                Logger.println("Starting creation of sample files");
+                Logger.increaseIndent();
+
+                try {
+                    String className;
+                    SampleWriter writer;
+                    writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect);
+
+                    for(String name : results.keySet()) {
+
+                        Logger.printlnMixedYellow("Creating samples for bound name", name);
+                        Logger.increaseIndent();
+
+                        className = boundClasses.get(1).get(name);
+                        writer.createInterfaceSample(name, className, (List<MethodCandidate>)results.get(name));
+                        writer.createSamples(name, className, (List<MethodCandidate>)results.get(name), rmi);
+
+                        Logger.decreaseIndent();
+                    }
+
+                } catch (IOException | CannotCompileException | NotFoundException e) {
+                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during sample creation.");
+                    Logger.eprintln("StackTrace:");
+                    e.printStackTrace();
+                    RMGUtils.exit();
+
+                } catch (UnexpectedCharacterException e) {
+                    Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
+                    Logger.eprintln("This is caused by special characters within bound- or classes names.");
+                    Logger.eprintlnMixedYellow("You can enforce sample cration with the", "--trusted", "switch.");
+                    RMGUtils.exit();
+                }
+
+                Logger.decreaseIndent();
                 break;
 
             case "attack":

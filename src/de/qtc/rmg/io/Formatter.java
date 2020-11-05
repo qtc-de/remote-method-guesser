@@ -145,7 +145,6 @@ public class Formatter {
             }
 
             Logger.decreaseIndent();
-            it.remove();
         }
 
         Logger.decreaseIndent();

@@ -25,6 +25,7 @@ import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import <PACKAGE>;
+import <IMPORT>;
 
 /*
  * Compile this sample class with the following command:

@@ -41,7 +41,6 @@ public class MethodCandidate {
         }
     }
 
-
     public MethodCandidate(String signature, String hash, String isPrimitive, String isVoid)
     {
         this.signature = signature;
@@ -57,6 +56,16 @@ public class MethodCandidate {
         } else {
             return new Object[] { 42 };
         }
+    }
+
+    public CtClass[] getParameterTypes() throws CannotCompileException, NotFoundException
+    {
+        return this.getMethod().getParameterTypes();
+    }
+
+    public String getName() throws CannotCompileException, NotFoundException
+    {
+        return this.getMethod().getName();
     }
 
     private long getCtMethodHash(CtMethod method)
@@ -90,9 +99,9 @@ public class MethodCandidate {
         return hash;
     }
 
-    public int getPrimitive(int selected) throws NotFoundException
+    public int getPrimitive(int selected) throws NotFoundException, CannotCompileException
     {
-        CtClass[] types = this.method.getParameterTypes();
+        CtClass[] types = this.getParameterTypes();
 
         if(selected != 0) {
 
@@ -144,8 +153,13 @@ public class MethodCandidate {
         return this.isVoid;
     }
 
-    public CtMethod getMethod()
+    public CtMethod getMethod() throws CannotCompileException, NotFoundException
     {
+        if( this.method == null ) {
+            MethodCandidate tmp = new MethodCandidate(this.getSignature());
+            this.method = tmp.getMethod();
+        }
+
         return this.method;
     }
 

@@ -72,7 +72,12 @@ public class MethodGuesser {
         Logger.println("\n[+] Starting RMG Attack");
         Logger.increaseIndent();
 
-        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "methods on each bound name.");
+        if( targetName != null )
+            Logger.printlnMixedBlue("Target name specified. Only guessing on bound name:", targetName);
+        else
+            Logger.printlnMixedBlue("No target name specified. Guessing on", "all", "available bound names.");
+
+        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signatures");
         if( count == 1 ) {
             Logger.printlnMixedBlue("Method signature:", candidates.get(0).getSignature());
         }
@@ -86,6 +91,7 @@ public class MethodGuesser {
             String className = (String)pair.getValue();
 
             if( targetName != null && !targetName.equals(boundName) ) {
+                Logger.printlnMixedBlue("Skipping bound name", boundName);
                 continue;
             }
 
@@ -169,6 +175,8 @@ public class MethodGuesser {
 
             Logger.decreaseIndent();
         }
+
+        Logger.decreaseIndent();
         return results;
     }
 }

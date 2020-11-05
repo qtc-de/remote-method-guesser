@@ -1,9 +1,13 @@
 package de.qtc.rmg.utils;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -50,37 +54,66 @@ public class SampleWriter {
             RMGUtils.exit();
         }
 
-        Logger.printlnMixedBlue("Reading template file:", canonicalPath, "...");
         return new String(Files.readAllBytes(templateFile.toPath()));
     }
 
-    public void writeSample(String sampleName, String sampleContent) throws UnexpectedCharacterException, IOException
+    public void writeSample(String sampleFolder, String sampleName, String sampleContent) throws UnexpectedCharacterException, IOException
+    {
+        writeSample(sampleFolder, sampleName, sampleContent, null);
+    }
+
+    public void writeSample(String sampleFolder, String sampleName, String sampleContent, String subfolder) throws UnexpectedCharacterException, IOException
     {
         Security.checkAlphaNumeric(sampleName);
+        Security.checkAlphaNumeric(sampleFolder);
+
+        File destinationFolder = new File(this.sampleFolder, sampleFolder);
+        if( subfolder != null ) {
+            destinationFolder = new File(destinationFolder, subfolder);
+        }
+        destinationFolder.mkdirs();
+
         sampleName = sampleName + ".java";
-        File destination = new File(this.templateFolder, sampleName);
+        File sampleFile = new File(destinationFolder, sampleName);
 
-        Logger.printlnMixedBlue("Writing sample file", destination.getCanonicalPath(), ".");
+        Logger.printlnMixedBlue("Writing sample file", sampleFile.getCanonicalPath());
 
-        PrintWriter writer = new PrintWriter(destination, "UTF-8");
+        PrintWriter writer = new PrintWriter(sampleFile, "UTF-8");
         writer.print(sampleContent);
         writer.close();
     }
 
+    public void createSamples(String boundName, String className, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    {
+        for(MethodCandidate method : methods) {
+            createSample(className, boundName, method, rmi.host, rmi.port);
+        }
+    }
+
     public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        Logger.printlnMixedBlue("Preparing sample for", boundName + ":" + className, ".");
-
         Security.checkBoundName(boundName);
         Security.checkPackageName(className);
-        Security.checkAlphaNumeric(className);
 
         String template = loadTemplate("SampleTemplate.java");
         String port = String.valueOf(remotePort);
 
-        method = new MethodCandidate(method.getSignature());
-        CtClass[] types = method.getMethod().getParameterTypes();
+        CtClass[] types = method.getParameterTypes();
         int numberOfArguments = types.length;
+
+        String typeName;
+        String importPlaceholder = "import <IMPORT>;";
+        List<String> typeList = new ArrayList<String>();
+
+        for(CtClass type : types) {
+
+            typeName = type.getName();
+            if( typeName.contains(".") && !typeName.startsWith("java.lang") && !typeList.contains(typeName)) {
+                typeList.add(typeName);
+                template = template.replace(importPlaceholder, importPlaceholder + "\n" + importPlaceholder);
+                template = template.replaceFirst("<IMPORT>", typeName);
+            }
+        }
 
         String argument = "";
         StringBuilder argumentString = new StringBuilder();
@@ -96,8 +129,9 @@ public class SampleWriter {
         }
 
         String pureClassName = getClassName(className);
-        String sampleClassName = pureClassName + "_Sample";
+        String sampleClassName = method.getName();
 
+        template = template.replace(importPlaceholder, "");
         template = template.replace("\n            " + placeholder, "");
         template = template.replace(  "<PACKAGE>",                  className);
         template = template.replace(  "<SAMPLECLASSNAME>",            sampleClassName);
@@ -119,7 +153,46 @@ public class SampleWriter {
             template = template.replace("<RETURNTYPE>", returnType);
         }
 
-        writeSample(sampleClassName, template);
+        writeSample(boundName, sampleClassName, template, sampleClassName);
+    }
+
+    public void createInterfaceSample(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
+    {
+        Security.checkPackageName(className);
+        String template = loadTemplate("InterfaceTemplate.java");
+
+        String typeName;
+        List<String> types = new ArrayList<String>();
+
+        String importPlaceholder = "import <IMPORT>;";
+        String methodPlaceholder = "    <METHOD> throws RemoteException;";
+
+        for(MethodCandidate method : methods) {
+            template = template.replaceFirst(methodPlaceholder, methodPlaceholder + "\n" + methodPlaceholder);
+            template = template.replaceFirst("<METHOD>", method.getSignature());
+
+            for(CtClass type : method.getParameterTypes()) {
+
+                typeName = type.getName();
+                if( typeName.contains(".") && !typeName.startsWith("java.lang") && !types.contains(typeName)) {
+                    types.add(typeName);
+                    template = template.replace(importPlaceholder, importPlaceholder + "\n" + importPlaceholder);
+                    template = template.replaceFirst("<IMPORT>", typeName);
+                }
+            }
+        }
+
+        template = template.replace(importPlaceholder, "");
+        template = template.replace(methodPlaceholder, "");
+
+        String packageName = getPackageName(className);
+        className = getClassName(className);
+
+        template = template.replace("<PACKAGENAME>", packageName);
+        template = template.replace("<CLASSNAME>", className);
+        template = template.replace("<METHOD>", className);
+
+        writeSample(boundName, className, template);
     }
 
     private static String getClassName(String fullName)
@@ -127,6 +200,13 @@ public class SampleWriter {
         int index = fullName.lastIndexOf(".");
         String className = fullName.substring(index + 1, fullName.length());
         return className;
+    }
+
+    private static String getPackageName(String fullName)
+    {
+        int index = fullName.lastIndexOf(".");
+        String packageName = fullName.substring(0, index);
+        return packageName;
     }
 
 }

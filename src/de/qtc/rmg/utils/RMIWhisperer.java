@@ -27,8 +27,8 @@ public final class RMIWhisperer {
     public String host;
     private Registry rmiRegistry;
 
-    public void connect(String host, int port, boolean ssl, boolean followRedirects) {
-
+    public void connect(String host, int port, boolean ssl, boolean followRedirects)
+    {
         this.host = host;
         this.port = port;
 
@@ -77,9 +77,8 @@ public final class RMIWhisperer {
         }
     }
 
-
-    public String[] getBoundNames() {
-
+    public String[] getBoundNames()
+    {
         String[] boundNames = null;
         Logger.print("Obtaining a list of bound names... ");
 
@@ -100,8 +99,8 @@ public final class RMIWhisperer {
     }
 
 
-    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames) {
-
+    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames)
+    {
         ArrayList<HashMap<String, String>> returnList = new ArrayList<HashMap<String, String>>();
 
         HashMap<String, String> knownClasses = new HashMap<String,String>();
@@ -136,7 +135,8 @@ public final class RMIWhisperer {
         return returnList;
     }
 
-    public Registry getRegistry() {
+    public Registry getRegistry()
+    {
         return this.rmiRegistry;
     }
 }
