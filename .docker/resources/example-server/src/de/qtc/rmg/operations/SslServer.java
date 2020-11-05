@@ -1,6 +1,9 @@
-package de.qtc.rmg;
+package de.qtc.rmg.operations;
 
 import java.io.IOException;
+
+import de.qtc.rmg.Utils;
+import de.qtc.rmg.interfaces.ISslServer;
 
 public class SslServer implements ISslServer {
 

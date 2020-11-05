@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.legacy;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

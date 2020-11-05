@@ -11,6 +11,14 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
+import de.qtc.rmg.interfaces.IPlainServer;
+import de.qtc.rmg.interfaces.ISecureServer;
+import de.qtc.rmg.interfaces.ISslServer;
+import de.qtc.rmg.legacy.LegacyServer;
+import de.qtc.rmg.operations.PlainServer;
+import de.qtc.rmg.operations.SecureServer;
+import de.qtc.rmg.operations.SslServer;
+
 public class ExampleServer {
 
     private static int registryPort = 1090;
@@ -20,26 +28,27 @@ public class ExampleServer {
 
     public static void main(String[] argv)
     {
-
+    	System.out.println("[+] Initializing Java RMI Server:");
+    	
         try {
             SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
             SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
 
-            System.out.print("[+] Creating RMI-Registry on port " + registryPort + "... ");
+            System.out.print("[+] \tCreating RMI-Registry on port " + registryPort + "... ");
             Registry registry = LocateRegistry.createRegistry(registryPort, csf, ssf);
             System.out.println("done.");
 
-            System.out.print("[+] Creating Plain Server object... ");
+            System.out.print("[+] \tCreating Plain Server object... ");
             remoteObject1 = new PlainServer();
             IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject1, 0);
             System.out.println("done.");
 
-            System.out.print("[+] Creating SSL Server object... ");
+            System.out.print("[+] \tCreating SSL Server object... ");
             remoteObject2 = new SslServer();
             ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(remoteObject2, 0, csf, ssf);
             System.out.println("done.");
 
-            System.out.print("[+] Creating Secure Server object... ");
+            System.out.print("[+] \tCreating Secure Server object... ");
             remoteObject3 = new SecureServer();
             ISecureServer stub3 = (ISecureServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
             System.out.println("done.");
@@ -48,8 +57,10 @@ public class ExampleServer {
             bindToRegistry(stub2, registry, "ssl-server");
             bindToRegistry(stub3, registry, "secure-server");
 
-            System.out.println("[+] Server setup finished.");
-            System.out.println("[+] Waiting for incoming connections.");
+            System.out.println("[+] \tServer setup finished.\n[+]");
+            System.out.println("[+] Initializing legacy server.");
+            
+            LegacyServer.init();
 
         } catch (RemoteException | AlreadyBoundException e) {
             System.err.println("[-] Unexpected RMI Error:");
@@ -59,9 +70,9 @@ public class ExampleServer {
 
     public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException
     {
-        System.out.print("[+] Binding Server as '" + boundName + "'... ");
+        System.out.print("[+] \t\tBinding Server as '" + boundName + "'... ");
         registry.bind(boundName, object);
         System.out.println("done.");
-        System.err.println("[+] Boundname '" + boundName + "' is ready.");
+        System.err.println("[+] \t\tBoundname '" + boundName + "' is ready.");
     }
 }

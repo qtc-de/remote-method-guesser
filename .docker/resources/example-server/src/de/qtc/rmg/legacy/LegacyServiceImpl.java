@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.legacy;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public class LegacyServiceImpl extends UnicastRemoteObject implements LegacyService
 {
-    public LegacyServiceImpl() throws RemoteException
+	public LegacyServiceImpl() throws RemoteException
     {
     }
 

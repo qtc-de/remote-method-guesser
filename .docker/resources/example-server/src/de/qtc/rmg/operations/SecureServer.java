@@ -1,8 +1,10 @@
-package de.qtc.rmg;
+package de.qtc.rmg.operations;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import de.qtc.rmg.interfaces.ISecureServer;
 
 public class SecureServer implements ISecureServer {
 
@@ -20,7 +22,8 @@ public class SecureServer implements ISecureServer {
         return null;
     }
 
-    public void logMessage(int logLevel, Object message) throws RemoteException
+    @SuppressWarnings("unused")
+	public void logMessage(int logLevel, Object message) throws RemoteException
     {
         System.out.println("[+]\t[Secure Server]: Processing call for 'void logMessage(int arg, Object arg)'...");
 
