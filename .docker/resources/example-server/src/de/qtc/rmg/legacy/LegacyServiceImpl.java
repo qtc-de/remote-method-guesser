@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
+@SuppressWarnings("serial")
 public class LegacyServiceImpl extends UnicastRemoteObject implements LegacyService
 {
 	public LegacyServiceImpl() throws RemoteException
@@ -25,5 +26,15 @@ public class LegacyServiceImpl extends UnicastRemoteObject implements LegacyServ
             return "Session-ID-123";
         }
         return null;
+    }
+
+    public void logMessage(int type, String msg) throws RemoteException
+    {
+        System.out.println("[+]\t[LegacyServiceImpl]: Processing call for 'void logMessage(int type, String msg)'...");
+    }
+
+    public void logMessage(int type, StringContainer msg) throws RemoteException
+    {
+        System.out.println("[+]\t[LegacyServiceImpl]: Processing call for 'void logMessage(int type, StringContainer msg)'...");
     }
 }

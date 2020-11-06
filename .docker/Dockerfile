@@ -2,8 +2,8 @@ FROM alpine:latest
 
 # Copy server code and keystore
 COPY ./resources/trust/store.p12 /opt/store.p12
-COPY ./resources/rmg-example-server.jar /opt/example-server.jar
-COPY ./resources/commons-collections-3.1.jar /usr/lib/jvm/java-1.8-openjdk/jre/lib/ext/commons-collections-3.1.jar
+COPY ./resources/bin/rmg-example-server.jar /opt/example-server.jar
+COPY ./resources/bin/commons-collections-3.1.jar /usr/lib/jvm/java-1.8-openjdk/jre/lib/ext/commons-collections-3.1.jar
 COPY ./resources/scripts/start.sh /opt/start.sh
 
 # Install openjdk8
