@@ -23,7 +23,7 @@ import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
 
     private static ClassPool pool;
@@ -31,7 +31,6 @@ public class RMGUtils {
     private static CtClass remoteClass;
     private static CtClass remoteStubClass;
 
-    @SuppressWarnings("deprecation")
     public static void init()
     {
         pool = ClassPool.getDefault();
@@ -50,26 +49,61 @@ public class RMGUtils {
 
     public static Class makeInterface(String className) throws CannotCompileException
     {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            /*
+             * className is not known and was not created before. This is usually expected.
+             * In this case, we just create the class :)
+             */
+        }
+
         CtClass intf = pool.makeInterface(className, remoteClass);
         CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
+
         intf.addMethod(dummyMethod);
         dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
+
         return intf.toClass();
     }
 
     public static Class makeInterface(String className, String methodSignature) throws CannotCompileException
     {
-        CtClass intf = pool.makeInterface(className, remoteClass);
+        CtClass intf = null;
+
+        try {
+            intf = pool.getCtClass(className);
+            intf.defrost();
+
+        } catch (NotFoundException e) {
+            /*
+             * className is not known and was not created before. This is usually expected.
+             * In this case, we just create the class :)
+             */
+            intf = pool.makeInterface(className, remoteClass);
+        }
+
         CtMethod dummyMethod = CtNewMethod.make("public " + methodSignature + " throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
+
         return intf.toClass();
     }
 
     public static Class makeLegacyStub(String className) throws CannotCompileException
     {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            /*
+             * className is not known and was not created before. This is usually expected.
+             * In this case, we just create the class :)
+             */
+        }
+
         CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
         CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
+
         intf.addMethod(dummyMethod);
         dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
