@@ -53,6 +53,7 @@ public class Starter {
         if( additionalConfig != null )
             Starter.loadConfig(additionalConfig, config, true);
 
+        int legacyMode = parser.getLegacyMode();
         int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "0"));
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
         String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sample-folder"));
@@ -120,7 +121,7 @@ public class Starter {
                 }
 
                 MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg, legacyMode);
 
                 format.listGuessedMethods(results);
                 if( !createSamples )

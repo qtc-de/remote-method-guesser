@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.rmi.Remote;
+import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,8 +16,11 @@ import de.qtc.rmg.io.Logger;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import javassist.CtPrimitiveType;
+import javassist.Modifier;
 import javassist.NotFoundException;
 
 @SuppressWarnings("rawtypes")
@@ -25,13 +29,16 @@ public class RMGUtils {
     private static ClassPool pool;
     private static CtClass dummyClass;
     private static CtClass remoteClass;
+    private static CtClass remoteStubClass;
 
+    @SuppressWarnings("deprecation")
     public static void init()
     {
         pool = ClassPool.getDefault();
 
         try {
             remoteClass = pool.getCtClass(Remote.class.getName());
+            remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
             Logger.printlnMixedYellow("Caught", "NotFoundException", "during initialisation of RMGUtils.");
             Logger.eprintln("Unable to continue from here.");
@@ -57,6 +64,25 @@ public class RMGUtils {
         CtMethod dummyMethod = CtNewMethod.make("public " + methodSignature + " throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
         return intf.toClass();
+    }
+
+    public static Class makeLegacyStub(String className) throws CannotCompileException
+    {
+        CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
+        CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
+        intf.addMethod(dummyMethod);
+        dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
+        intf.addMethod(dummyMethod);
+        intf.toClass();
+
+        CtClass ctClass = pool.makeClass(className, remoteStubClass);
+        ctClass.setInterfaces(new CtClass[] { intf });
+
+        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
+        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+
+        return ctClass.toClass();
     }
 
     public static Class makeRandomClass() throws CannotCompileException, NotFoundException

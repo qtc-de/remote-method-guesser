@@ -54,11 +54,11 @@ public class MethodGuesser {
 
     public HashMap<String,ArrayList<MethodCandidate>> guessMethods(int threads, boolean writeSamples, boolean zeroArg)
     {
-        return this.guessMethods(null, threads, writeSamples, zeroArg);
+        return this.guessMethods(null, threads, writeSamples, zeroArg, 0);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean writeSamples, boolean zeroArg)
+    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean writeSamples, boolean zeroArg, int legacyMode)
     {
         HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
@@ -96,13 +96,28 @@ public class MethodGuesser {
             }
 
             Logger.increaseIndent();
-            Logger.printlnMixedBlue("Attacking boundName", boundName, ".");
+            Logger.printlnMixedBlue("Attacking boundName", boundName);
+
+            boolean isLegacy = false;
+            if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
+                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
+                Logger.decreaseIndent();
+                isLegacy = true;
+            }
 
             Remote instance = null;
             Class remoteClass = null;
 
             try {
-                remoteClass = RMGUtils.makeInterface(className);
+
+                if( !isLegacy )
+                    remoteClass = RMGUtils.makeInterface(className);
+
+                else
+                    remoteClass = RMGUtils.makeLegacyStub(className);
+
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
@@ -114,8 +129,12 @@ public class MethodGuesser {
             try {
                 instance = rmi.getRegistry().lookup(boundName);
 
-                RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
-                remoteRef = ref.getRef();
+                if( !isLegacy ) {
+                    RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
+                    remoteRef = ref.getRef();
+                } else {
+                    remoteRef = (RemoteRef)remoteField.get(instance);
+                }
 
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", boundName, ".");

@@ -137,6 +137,14 @@ public class ArgumentParser {
         position.setRequired(false);
         options.addOption(position);
 
+        Option noLegacy = new Option(null, "no-legacy", false, "disable automatic legacy stub detection");
+        noLegacy.setRequired(false);
+        options.addOption(noLegacy);
+
+        Option forceLegacy = new Option(null, "force-legacy", false, "treat all classes as legacy stubs");
+        forceLegacy.setRequired(false);
+        options.addOption(forceLegacy);
+
         return options;
     }
 
@@ -192,5 +200,17 @@ public class ArgumentParser {
             this.argList = cmdLine.getArgList();
             return this.argList.size();
         }
+    }
+
+    public int getLegacyMode()
+    {
+        if( this.cmdLine.hasOption("--no-legacy") )
+            return 2;
+
+        else if( this.cmdLine.hasOption("--force-legacy") )
+            return 1;
+
+        else
+            return 0;
     }
 }
