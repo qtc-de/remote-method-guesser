@@ -103,22 +103,22 @@ public class MethodCandidate {
     {
         CtClass[] types = this.getParameterTypes();
 
-        if(selected != 0) {
+        if(selected != -1) {
 
             if( selected >= types.length ) {
                 Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is out of bounds.");
-                return 0;
+                return -1;
             }
 
             if( types[selected].isPrimitive() ) {
                 Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is a primitive type.");
-                return 0;
+                return -1;
             }
 
             return selected;
         }
 
-        int result = 0;
+        int result = -1;
         for(int ctr = 0; ctr < types.length; ctr++) {
 
             if(!types[ctr].isPrimitive()) {

