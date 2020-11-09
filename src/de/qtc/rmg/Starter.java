@@ -76,7 +76,7 @@ public class Starter {
         String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
         String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
-        String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial"));
+        String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial-path"));
         String functionSignature = commandLine.getOptionValue("signature", null);
         String boundName = commandLine.getOptionValue("bound-name", null);
 
