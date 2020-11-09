@@ -194,7 +194,7 @@ public class Starter {
 
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
                 MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "ysoserial");
+                attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
 
                 break;
 
@@ -216,7 +216,7 @@ public class Starter {
                 }
 
                 attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "codebase");
+                attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
 
                 break;
 

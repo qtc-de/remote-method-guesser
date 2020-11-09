@@ -133,6 +133,29 @@ public class RMGUtils {
         return ctClass.toClass();
     }
 
+    public static Class makeLegacyStub(String className, MethodCandidate candidate) throws CannotCompileException
+    {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {}
+
+        CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
+        CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
+        intf.addMethod(dummyMethod);
+        intf.toClass();
+
+        CtClass ctClass = pool.makeClass(className, remoteStubClass);
+        ctClass.setInterfaces(new CtClass[] { intf });
+
+        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
+        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+
+        ctClass.toClass();
+
+        return intf.getClass();
+    }
+
     public static Class makeRandomClass() throws CannotCompileException, NotFoundException
     {
         String classname = UUID.randomUUID().toString().replaceAll("-", "");
