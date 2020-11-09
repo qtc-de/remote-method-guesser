@@ -10,6 +10,8 @@ services:
       #          -Djavax.net.ssl.keyStorePassword=password
       #          -Djavax.net.ssl.keyStore=/opt/store.p12
       #          -Djavax.net.ssl.keyStoreType=pkcs12
+      #          -Djava.rmi.server.useCodebaseOnly=false
+      #          -Djava.security.policy=/opt/policy
       #      volumes: 
       #        - ./resources/trust/store.p12:/opt/store.p12
       #        - ./resources/bin/rmg-example-server.jar:/opt/example-server.jar

@@ -5,6 +5,7 @@ COPY ./resources/trust/store.p12 /opt/store.p12
 COPY ./resources/bin/rmg-example-server.jar /opt/example-server.jar
 COPY ./resources/bin/commons-collections-3.1.jar /usr/lib/jvm/java-1.8-openjdk/jre/lib/ext/commons-collections-3.1.jar
 COPY ./resources/scripts/start.sh /opt/start.sh
+COPY ./resources/conf/policy /opt/policy
 
 # Install openjdk8
 RUN set -ex \
@@ -17,7 +18,9 @@ RUN set -ex \
 ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
     -Djavax.net.ssl.keyStorePassword=password \
     -Djavax.net.ssl.keyStore=/opt/store.p12 \
-    -Djavax.net.ssl.keyStoreType=pkcs12
+    -Djavax.net.ssl.keyStoreType=pkcs12 \
+    -Djava.rmi.server.useCodebaseOnly=false \
+    -Djava.security.policy=/opt/policy
 
 # Run the server
 CMD ["/opt/start.sh"]

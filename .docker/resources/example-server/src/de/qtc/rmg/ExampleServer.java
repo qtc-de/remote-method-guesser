@@ -31,6 +31,10 @@ public class ExampleServer {
     {
         System.out.println("[+] Initializing Java RMI Server:");
 
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new SecurityManager());
+        }
+
         try {
             SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
             SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
