@@ -53,7 +53,7 @@ public class LegacyServer {
             System.out.println("done.");
             bindToRegistry(stub2, registry, "plain-server2");
 
-            System.out.println("[+] Server setup finished.\n[+]");
+            System.out.println("[+] \tServer setup finished.\n[+]");
             System.out.println("[+] Waiting for incoming connections.");
 
         } catch (RemoteException | MalformedURLException | AlreadyBoundException | NotBoundException e) {
