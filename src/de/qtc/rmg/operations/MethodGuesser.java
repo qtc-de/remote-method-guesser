@@ -47,8 +47,7 @@ public class MethodGuesser {
 
         } catch(NoSuchFieldException | SecurityException e) {
             Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodGuesser instantiation:", e.getMessage());
-            Logger.eprintln("Cannot continue from here");
-            System.exit(1);
+            RMGUtils.exit();
         }
     }
 
@@ -149,11 +148,14 @@ public class MethodGuesser {
             Method rmgInvokeObject = null;
             Method rmgInvokePrimitive = null;
             ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
+
             try {
                 rmgInvokeObject = remoteClass.getMethod("rmgInvokeObject", String.class);
                 rmgInvokePrimitive = remoteClass.getMethod("rmgInvokePrimitive", int.class);
             } catch (NoSuchMethodException | SecurityException e) {
-                e.printStackTrace();
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during method lookup.");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
             }
 
             ExecutorService pool = Executors.newFixedThreadPool(threads);

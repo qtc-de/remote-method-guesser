@@ -71,8 +71,7 @@ public class MethodAttacker {
                 attackArgument = this.targetMethod.getPrimitive(argumentPosition);
             } catch (CannotCompileException | NotFoundException e) {
                 Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while searching for primitives.");
-                Logger.eprintln("StackTrace:");
-                e.printStackTrace();
+                RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
 
@@ -124,7 +123,6 @@ public class MethodAttacker {
                 }
 
             } catch( Exception e ) {
-                e.printStackTrace();
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
                 Logger.decreaseIndent();
@@ -189,8 +187,7 @@ public class MethodAttacker {
 
                         } else {
                             Logger.eprintlnYellow("Deserialization attack probably failed.");
-                            Logger.eprintln("StackTrace:");
-                            e.printStackTrace();
+                            RMGUtils.stackTrace(e);
                         }
                     }
 
@@ -231,6 +228,11 @@ public class MethodAttacker {
                     Logger.eprintlnMixedYellow("Caught", "java.rmi.ServerException", "with unknown cause.");
                     RMGUtils.stackTrace(e);
                 }
+
+            } catch( java.lang.ClassCastException e ) {
+                Logger.eprintlnMixedYellow("Caught", "ClassCastException", "during " + operationMode + " attack.");
+                Logger.eprintln("This could be caused when attacking String parameters on a patched RMI server.");
+                RMGUtils.stackTrace(e);
 
             } catch( Exception e ) {
                 Logger.eprintlnYellow("Caught unexpected Exception during " + operationMode + " attack.");

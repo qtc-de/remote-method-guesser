@@ -60,8 +60,7 @@ public class GuessingWorker implements Runnable {
 
         } catch (Exception e) {
             Logger.eprintlnMixedBlue("Caught unexpected exception while guessing:", e.getMessage());
-            Logger.eprintln("StackTrace:");
-            e.printStackTrace();
+            RMGUtils.stackTrace(e);
         }
 
         /*

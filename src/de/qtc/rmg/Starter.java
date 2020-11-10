@@ -166,8 +166,7 @@ public class Starter {
 
                 } catch (IOException | CannotCompileException | NotFoundException e) {
                     Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during sample creation.");
-                    Logger.eprintln("StackTrace:");
-                    e.printStackTrace();
+                    RMGUtils.stackTrace(e);
                     RMGUtils.exit();
 
                 } catch (UnexpectedCharacterException e) {
@@ -210,8 +209,7 @@ public class Starter {
 
                 } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
                     Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during payload creation.");
-                    Logger.eprintln("StackTrace:");
-                    e.printStackTrace();
+                    RMGUtils.stackTrace(e);
                     RMGUtils.exit();
                 }
 

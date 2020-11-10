@@ -299,9 +299,8 @@ public class RMGUtils {
 
             Logger.eprintlnMixedYellow("Error: Unable to create ysoserial gadget", gadget);
             Logger.eprintlnMixedYellow("Error message is:", ex.getMessage());
-            Logger.eprintln("StackTrace:");
-            ex.printStackTrace();
-            System.exit(1);
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
 
         Logger.printlnPlain("done.");
