@@ -72,8 +72,8 @@ public final class RMIWhisperer {
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
             Logger.eprintlnMixedYellow("Error: Could not connect to " + host + ":" + port, ".");
-            Logger.eprintlnMixedYellow("Exception Message:", e.getMessage());
-            System.exit(1);
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
     }
 
@@ -90,9 +90,10 @@ public final class RMIWhisperer {
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
             Logger.eprintln("Error: Remote failure when listing bound names");
-            Logger.eprintlnMixedYellow("Exception Message:", e.getMessage());
-            System.exit(1);
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
+
         return boundNames;
     }
 

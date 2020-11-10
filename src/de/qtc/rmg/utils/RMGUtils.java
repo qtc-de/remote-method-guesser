@@ -47,8 +47,7 @@ public class RMGUtils {
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
             Logger.printlnMixedYellow("Caught", "NotFoundException", "during initialisation of RMGUtils.");
-            Logger.eprintln("Unable to continue from here.");
-            System.exit(1);
+            RMGUtils.exit();
         }
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
@@ -277,7 +276,7 @@ public class RMGUtils {
 
         if( !ysoJar.exists() ) {
             Logger.eprintlnMixedYellow("Error:", ysoJar.getAbsolutePath(), "does not exist.");
-            System.exit(1);
+            RMGUtils.exit();
         }
 
         Logger.print("Creating ysoserial payload...");
@@ -328,18 +327,20 @@ public class RMGUtils {
     {
         InputStream configStream = null;
         try {
-            if( extern ) {
-                configStream = new FileInputStream(filename);
-            } else {
-                configStream = Starter.class.getResourceAsStream(filename);
-            }
 
-        prop.load(configStream);
-        configStream.close();
+            if( extern )
+
+                configStream = new FileInputStream(filename);
+            else
+                configStream = Starter.class.getResourceAsStream(filename);
+
+            prop.load(configStream);
+            configStream.close();
 
         } catch( IOException e ) {
-            Logger.eprintln("Unable to load properties file '" + filename + "'");
-            System.exit(1);
+            Logger.eprintlnMixedYellow("Unable to load properties file", filename);
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
     }
 

@@ -42,8 +42,7 @@ public class MethodAttacker {
 
         } catch(NoSuchFieldException | SecurityException e) {
             Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodAttacker instantiation:", e.getMessage());
-            Logger.eprintln("Cannot continue from here");
-            System.exit(1);
+            RMGUtils.exit();
         }
     }
 
@@ -77,8 +76,7 @@ public class MethodAttacker {
 
             if( attackArgument == -1 ) {
                 Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", this.targetMethod.getSignature(), ".");
-                Logger.eprintln("Cannot continue from here");
-                System.exit(1);
+                RMGUtils.exit();
             }
 
             Logger.printlnMixedYellow("Found non primitive argument on position", String.valueOf(attackArgument));
