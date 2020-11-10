@@ -26,7 +26,7 @@ public class Starter {
 
     private static String defaultConfiguration = "/config.properties";
 
-    @SuppressWarnings({ "rawtypes", "deprecation" })
+    @SuppressWarnings({ "rawtypes", "deprecation", "unchecked" })
     public static void main(String[] argv) {
 
         ArgumentParser parser = new ArgumentParser();
@@ -99,7 +99,7 @@ public class Starter {
         String[] boundNames = rmi.getBoundNames();
 
         ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
-        HashMap<String,String> allClasses = boundClasses.get(0);
+        HashMap<String,String> allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
         allClasses.putAll(boundClasses.get(1));
 
         MethodCandidate candidate = null;
