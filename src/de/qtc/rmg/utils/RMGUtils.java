@@ -142,7 +142,7 @@ public class RMGUtils {
         CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
         CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
         intf.addMethod(dummyMethod);
-        intf.toClass();
+        Class intfClass = intf.toClass();
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
@@ -153,7 +153,7 @@ public class RMGUtils {
 
         ctClass.toClass();
 
-        return intf.getClass();
+        return intfClass;
     }
 
     public static Class makeRandomClass() throws CannotCompileException, NotFoundException
