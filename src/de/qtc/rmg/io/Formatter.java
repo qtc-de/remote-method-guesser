@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -49,11 +51,12 @@ public class Formatter {
     public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
     {
         Logger.println("Listing bound names in registry:");
+        Logger.println("");
         Logger.increaseIndent();
 
         for( String name : boundNames ) {
 
-            Logger.printlnMixedYellow("•", name);
+            Logger.printlnMixedYellow("-", name);
 
             if( knownClasses == null || unknownClasses == null ) {
                 continue;
@@ -170,5 +173,29 @@ public class Formatter {
 
         }
         System.out.println(json.toJSONString());
+    }
+
+    public void listCodeases()
+    {
+        HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
+        if(codebases.isEmpty())
+            return;
+
+        Logger.println("RMI servers exposes the following codebase(s):");
+        Logger.increaseIndent();
+
+        for( Entry<String,Set<String>> item : codebases.entrySet() ) {
+
+            Logger.println("");
+            Logger.printlnMixedYellow("-", item.getKey());
+            Logger.increaseIndent();
+
+            Iterator<String> iterator = item.getValue().iterator();
+            while( iterator.hasNext() ) {
+                Logger.printlnMixedBlue("-->", iterator.next());
+            }
+        }
+
+        Logger.decreaseIndent();
     }
 }

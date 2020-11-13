@@ -95,6 +95,7 @@ public class Starter {
         RMIWhisperer rmi = new RMIWhisperer();
 
         RMGUtils.init();
+        RMGUtils.enableCodebase();
         rmi.connect(host, port, sslValue, followRedirect);
         String[] boundNames = rmi.getBoundNames();
 
@@ -224,6 +225,8 @@ public class Starter {
 
             case "enum":
                 format.listBoundNames(boundNames, boundClasses);
+                Logger.println("");
+                format.listCodeases();
         }
     }
 }

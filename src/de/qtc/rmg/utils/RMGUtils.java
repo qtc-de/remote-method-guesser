@@ -360,4 +360,10 @@ public class RMGUtils {
         Logger.eprintln("StackTrace:");
         e.printStackTrace();
     }
+
+    public static void enableCodebase()
+    {
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
+        System.setProperty("java.rmi.server.useCodebaseOnly", "false");
+    }
 }
