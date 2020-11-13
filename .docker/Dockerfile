@@ -20,7 +20,8 @@ ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
     -Djavax.net.ssl.keyStore=/opt/store.p12 \
     -Djavax.net.ssl.keyStoreType=pkcs12 \
     -Djava.rmi.server.useCodebaseOnly=false \
-    -Djava.security.policy=/opt/policy
+    -Djava.security.policy=/opt/policy \
+    -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
 
 # Run the server
 CMD ["/opt/start.sh"]

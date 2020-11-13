@@ -13,6 +13,7 @@ services:
           -Djavax.net.ssl.keyStoreType=pkcs12
           -Djava.rmi.server.useCodebaseOnly=false
           -Djava.security.policy=/opt/policy
+          -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
       volumes: 
         - ./resources/trust/store.p12:/opt/store.p12
         - ./resources/bin/rmg-example-server.jar:/opt/example-server.jar
