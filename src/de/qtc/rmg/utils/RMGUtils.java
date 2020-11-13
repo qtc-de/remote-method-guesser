@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -365,5 +366,23 @@ public class RMGUtils {
     {
         System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
+    }
+
+    /*
+     * Taken from https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
+     */
+    public static void disableWarning()
+    {
+        try {
+            Field theUnsafe = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            sun.misc.Unsafe u = (sun.misc.Unsafe) theUnsafe.get(null);
+
+            Class cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+            Field logger = cls.getDeclaredField("logger");
+            u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
+        } catch (Exception e) {
+            // ignore
+        }
     }
 }

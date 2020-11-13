@@ -96,6 +96,8 @@ public class Starter {
 
         RMGUtils.init();
         RMGUtils.enableCodebase();
+        RMGUtils.disableWarning();
+
         rmi.connect(host, port, sslValue, followRedirect);
         String[] boundNames = rmi.getBoundNames();
 
