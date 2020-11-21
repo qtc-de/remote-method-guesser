@@ -86,7 +86,7 @@ public class MethodAttacker {
                 RMGUtils.exit();
             }
 
-            Logger.printlnMixedYellow("Found non primitive argument on position", String.valueOf(attackArgument));
+            Logger.printlnMixedYellow("Found non primitive argument type on position", String.valueOf(attackArgument));
 
             boolean isLegacy = false;
             if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
