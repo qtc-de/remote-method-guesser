@@ -9,7 +9,7 @@
     <name>remote-method-guesser</name>
     <packaging>jar</packaging>
     <version>3.0.0</version>
-    <description>Bruteforce remote methods on Java RMI endpoints.</description>
+    <description>Identify common misconfigurations on Java RMI endpoints</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -50,50 +50,48 @@
         <sourceDirectory>src</sourceDirectory>
 
         <resources>
-
           <resource>
             <directory>src</directory>
             <includes>
                 <include>config.properties</include>
             </includes>
           </resource>
-
         </resources>
+
         <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                  <execution>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                  </execution>
-                </executions>
-                <configuration>
-                  <finalName>rmg-${project.version}</finalName>
-                  <archive>
-                      <manifest>
-                          <mainClass>de.qtc.rmg.Starter</mainClass>
-                      </manifest>
-                  </archive>
-                  <descriptorRefs>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                  </descriptorRefs>
-                </configuration>
-            </plugin>
+          <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>single</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <finalName>rmg-${project.version}</finalName>
+                <archive>
+                    <manifest>
+                        <mainClass>de.qtc.rmg.Starter</mainClass>
+                    </manifest>
+                </archive>
+                <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+              </configuration>
+          </plugin>
 
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
-                <executions>
-                  <execution>
-                     <id>default-jar</id>
-                     <phase>none</phase>
-                  </execution>
-                </executions>
-            </plugin>
-
+          <plugin>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>3.2.0</version>
+              <executions>
+                <execution>
+                   <id>default-jar</id>
+                   <phase>none</phase>
+                </execution>
+              </executions>
+          </plugin>
         </plugins>
 
     </build>
