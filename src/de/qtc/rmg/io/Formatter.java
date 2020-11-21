@@ -140,7 +140,7 @@ public class Formatter {
             String boundName = (String)pair.getKey();
             ArrayList<MethodCandidate> methods = ((ArrayList<MethodCandidate>)pair.getValue());
 
-            Logger.printlnMixedBlue("• ", boundName);
+            Logger.printlnMixedBlue("- ", boundName);
             Logger.increaseIndent();
 
             for( MethodCandidate m : methods ) {

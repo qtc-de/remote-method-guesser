@@ -76,7 +76,7 @@ public class MethodGuesser {
         else
             Logger.printlnMixedBlue("No target name specified. Guessing on", "all", "available bound names.");
 
-        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signatures");
+        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signature(s).");
         if( count == 1 ) {
             Logger.printlnMixedBlue("Method signature:", candidates.get(0).getSignature());
         }
@@ -94,8 +94,8 @@ public class MethodGuesser {
                 continue;
             }
 
+            Logger.printlnMixedYellow("Current bound name:", boundName);
             Logger.increaseIndent();
-            Logger.printlnMixedBlue("Attacking boundName", boundName);
 
             boolean isLegacy = false;
             if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {

@@ -38,6 +38,7 @@ public class SampleWriter {
         if( !this.sampleFolder.exists() ) {
             Logger.printlnMixedBlue("Sample folder", this.sampleFolder.getCanonicalPath(), "does not exist.");
             Logger.println("Creating sample folder.");
+            Logger.println("");
             this.sampleFolder.mkdirs();
         }
     }

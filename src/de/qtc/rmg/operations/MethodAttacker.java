@@ -51,6 +51,13 @@ public class MethodAttacker {
     {
         Logger.printlnMixedYellow("Attacking", this.targetMethod.getSignature());
 
+        if( boundName != null )
+            Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
+        else
+            Logger.printlnMixedBlue("No target name specified. Attacking", "all", "available bound names.");
+
+        Logger.println("");
+
         Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
         while (it.hasNext()) {
 
@@ -162,7 +169,9 @@ public class MethodAttacker {
             methodArguments[attackArgument] = payloadArray;
 
             try {
+                Logger.println("Invoking remote method...");
                 remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
+
                 Logger.eprintln("Remote method invocation didn't cause any exception.");
                 Logger.eprintln("This is unusual and the attack probably didn't work.");
 

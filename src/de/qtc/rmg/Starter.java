@@ -147,7 +147,8 @@ public class Starter {
                     break;
 
                 Logger.println("");
-                Logger.println("Starting creation of sample files");
+                Logger.println("Starting creation of sample files:");
+                Logger.println("");
                 Logger.increaseIndent();
 
                 try {

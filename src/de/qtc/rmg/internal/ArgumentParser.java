@@ -19,11 +19,13 @@ public class ArgumentParser {
     private CommandLine cmdLine;
     private List<String> argList;
 
-    public ArgumentParser() {
+    public ArgumentParser()
+    {
         this.parser = new DefaultParser();
         this.options = getParserOptions();
-        this.formatter = new HelpFormatter();
         this.helpString = getHelpString();
+        this.formatter = new HelpFormatter();
+        this.formatter.setWidth(130);
     }
 
     public CommandLine parse(String[] argv)
@@ -65,13 +67,32 @@ public class ArgumentParser {
     {
         Options options = new Options();
 
+        Option position = new Option(null, "argument-position", true, "select argument position for deserialization attacks");
+        position.setArgName("int");
+        position.setRequired(false);
+        options.addOption(position);
+
         Option name = new Option(null, "bound-name", true, "guess only on the specified bound name");
+        name.setArgName("name");
         name.setRequired(false);
         options.addOption(name);
 
         Option configOption = new Option(null, "config", true, "path to a configuration file");
+        configOption.setArgName("file");
         configOption.setRequired(false);
         options.addOption(configOption);
+
+        Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
+        samples.setRequired(false);
+        options.addOption(samples);
+
+        Option follow = new Option(null, "follow", false, "follow redirects to different servers");
+        follow.setRequired(false);
+        options.addOption(follow);
+
+        Option forceLegacy = new Option(null, "force-legacy", false, "treat all classes as legacy stubs");
+        forceLegacy.setRequired(false);
+        options.addOption(forceLegacy);
 
         Option help = new Option(null, "help", false, "display help message");
         help.setRequired(false);
@@ -81,69 +102,60 @@ public class ArgumentParser {
         jsonOutput.setRequired(false);
         options.addOption(jsonOutput);
 
-        Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
-        outputs.setRequired(false);
-        options.addOption(outputs);
-
-        Option threads = new Option(null, "threads", true, "maximum number of threads (default: 5)");
-        threads.setRequired(false);
-        options.addOption(threads);
-
-        Option templates = new Option(null, "template-folder", true, "location of the template folder");
-        templates.setRequired(false);
-        options.addOption(templates);
-
-        Option wordlistFolder = new Option(null, "wordlist-folder", true, "location of the wordlist folder");
-        wordlistFolder.setRequired(false);
-        options.addOption(wordlistFolder);
-
-        Option wordlist = new Option(null, "wordlist-file", true, "wordlist file to use for method guessing");
-        wordlist.setRequired(false);
-        options.addOption(wordlist);
-
-        Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
-        samples.setRequired(false);
-        options.addOption(samples);
-
-        Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
-        ssl.setRequired(false);
-        options.addOption(ssl);
-
-        Option follow = new Option(null, "follow", false, "follow redirects to different servers");
-        follow.setRequired(false);
-        options.addOption(follow);
-
-        Option update = new Option(null, "update", false, "update wordlist file with method hashes");
-        update.setRequired(false);
-        options.addOption(update);
-
         Option noColor = new Option(null, "no-color", false, "disable colored output");
         noColor.setRequired(false);
         options.addOption(noColor);
-
-        Option zeroArg = new Option(null, "zero-arg", false, "allow guessing on void functions (dangerous)");
-        zeroArg.setRequired(false);
-        options.addOption(zeroArg);
-
-        Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialisation attacks");
-        yso.setRequired(false);
-        options.addOption(yso);
-
-        Option signature = new Option(null, "signature", true, "function signature for guessing or attacking");
-        signature.setRequired(false);
-        options.addOption(signature);
-
-        Option position = new Option(null, "argument-position", true, "select argument position for deserialization attacks");
-        position.setRequired(false);
-        options.addOption(position);
 
         Option noLegacy = new Option(null, "no-legacy", false, "disable automatic legacy stub detection");
         noLegacy.setRequired(false);
         options.addOption(noLegacy);
 
-        Option forceLegacy = new Option(null, "force-legacy", false, "treat all classes as legacy stubs");
-        forceLegacy.setRequired(false);
-        options.addOption(forceLegacy);
+        Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
+        outputs.setArgName("folder");
+        outputs.setRequired(false);
+        options.addOption(outputs);
+
+        Option signature = new Option(null, "signature", true, "function signature for guessing or attacking");
+        signature.setArgName("method");
+        signature.setRequired(false);
+        options.addOption(signature);
+
+        Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
+        ssl.setRequired(false);
+        options.addOption(ssl);
+
+        Option templates = new Option(null, "template-folder", true, "location of the template folder");
+        templates.setArgName("folder");
+        templates.setRequired(false);
+        options.addOption(templates);
+
+        Option threads = new Option(null, "threads", true, "maximum number of threads (default: 5)");
+        threads.setArgName("int");
+        threads.setRequired(false);
+        options.addOption(threads);
+
+        Option update = new Option(null, "update", false, "update wordlist file with method hashes");
+        update.setRequired(false);
+        options.addOption(update);
+
+        Option wordlist = new Option(null, "wordlist-file", true, "wordlist file to use for method guessing");
+        wordlist.setArgName("file");
+        wordlist.setRequired(false);
+        options.addOption(wordlist);
+
+        Option wordlistFolder = new Option(null, "wordlist-folder", true, "location of the wordlist folder");
+        wordlistFolder.setArgName("folder");
+        wordlistFolder.setRequired(false);
+        options.addOption(wordlistFolder);
+
+        Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialization attacks");
+        yso.setArgName("file");
+        yso.setRequired(false);
+        options.addOption(yso);
+
+        Option zeroArg = new Option(null, "zero-arg", false, "allow guessing on void functions (dangerous)");
+        zeroArg.setRequired(false);
+        options.addOption(zeroArg);
 
         return options;
     }
@@ -153,13 +165,14 @@ public class ArgumentParser {
         String helpString = "rmg [options] <ip> <port> <action>\n"
                 +"Bruteforce remote methods on unknown Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
-                +"    ip:                  IP address of the target\n"
-                +"    port:                Port of the RMI registry\n"
-                +"    action:              One of the possible actions listed below\n\n"
+                +"    ip:                          IP address of the target\n"
+                +"    port:                        Port of the RMI registry\n"
+                +"    action:                      One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
-                +"    enum                 Enumerate registered bound names and classes\n"
-                +"    guess                Guess methods on available bound names\n"
-                +"    attack               Perform deserialisation attacks against a method\n\n"
+                +"    attack <gadget> <command>    Perform deserialization attacks\n"
+                +"    codebase <url> <classname>   Perform remote class loading attacks\n"
+                +"    enum                         Enumerate bound names and classes\n"
+                +"    guess                        Guess methods on bound names\n\n"
                 +"Optional Arguments:";
 
         return helpString;

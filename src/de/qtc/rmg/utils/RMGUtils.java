@@ -172,6 +172,11 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(classname);
         ctClass.addInterface(pool.get("java.io.Serializable"));
+
+        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
+        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+
         return ctClass.toClass();
     }
 
