@@ -123,7 +123,7 @@ public class MethodCandidate {
 
             if(!types[ctr].isPrimitive()) {
 
-                if(types[ctr].getName() == "java.lang.String")
+                if( types[ctr].getName().equals("java.lang.String") )
                     result = ctr;
 
                 else
