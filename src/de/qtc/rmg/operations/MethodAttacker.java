@@ -82,7 +82,10 @@ public class MethodAttacker {
             }
 
             if( attackArgument == -1 ) {
-                Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", this.targetMethod.getSignature(), ".");
+
+                if( argumentPosition == -1 )
+                    Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", this.targetMethod.getSignature());
+
                 RMGUtils.exit();
             }
 
