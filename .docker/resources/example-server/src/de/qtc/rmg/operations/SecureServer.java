@@ -1,4 +1,4 @@
-package de.qtc.rmg.operations;
+package de.qtc.rmg.server.operations;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.server;
 
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
@@ -12,13 +12,13 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
-import de.qtc.rmg.interfaces.IPlainServer;
-import de.qtc.rmg.interfaces.ISecureServer;
-import de.qtc.rmg.interfaces.ISslServer;
-import de.qtc.rmg.legacy.LegacyServer;
-import de.qtc.rmg.operations.PlainServer;
-import de.qtc.rmg.operations.SecureServer;
-import de.qtc.rmg.operations.SslServer;
+import de.qtc.rmg.server.interfaces.IPlainServer;
+import de.qtc.rmg.server.interfaces.ISecureServer;
+import de.qtc.rmg.server.interfaces.ISslServer;
+import de.qtc.rmg.server.legacy.LegacyServer;
+import de.qtc.rmg.server.operations.PlainServer;
+import de.qtc.rmg.server.operations.SecureServer;
+import de.qtc.rmg.server.operations.SslServer;
 
 public class ExampleServer {
 

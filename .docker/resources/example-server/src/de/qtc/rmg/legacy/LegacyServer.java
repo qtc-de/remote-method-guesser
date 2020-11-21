@@ -1,4 +1,4 @@
-package de.qtc.rmg.legacy;
+package de.qtc.rmg.server.legacy;
 
 import java.net.MalformedURLException;
 import java.rmi.AccessException;
@@ -11,8 +11,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import de.qtc.rmg.interfaces.IPlainServer;
-import de.qtc.rmg.operations.PlainServer;
+import de.qtc.rmg.server.interfaces.IPlainServer;
+import de.qtc.rmg.server.operations.PlainServer;
 
 @SuppressWarnings("unused")
 public class LegacyServer {
