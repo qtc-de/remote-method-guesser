@@ -163,7 +163,7 @@ public class ArgumentParser {
     private String getHelpString()
     {
         String helpString = "rmg [options] <ip> <port> <action>\n"
-                +"Bruteforce remote methods on unknown Java RMI endpoints.\n\n"
+                +"Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
                 +"    ip:                          IP address of the target\n"
                 +"    port:                        Port of the RMI registry\n"
