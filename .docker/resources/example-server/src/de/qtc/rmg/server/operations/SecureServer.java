@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.qtc.rmg.interfaces.ISecureServer;
+import de.qtc.rmg.server.interfaces.ISecureServer;
 
 public class SecureServer implements ISecureServer {
 

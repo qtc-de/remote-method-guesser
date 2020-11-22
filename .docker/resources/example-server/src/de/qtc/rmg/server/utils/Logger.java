@@ -6,7 +6,7 @@ import java.util.Calendar;
 public class Logger {
 
     public static int indent = 0;
-    public static Calender cal = Calendar.getInstance();
+    public static Calendar cal = Calendar.getInstance();
     public static SimpleDateFormat date = new SimpleDateFormat("HH:mm:ss");
 
     private static String prefix()
@@ -19,33 +19,30 @@ public class Logger {
         return "[-] " + date.format(cal.getTime()) + Logger.getIndent();
     }
 
-    private static void log(String msg)
+    public static void log(String msg)
     {
         log(msg, true);
     }
 
-    private static void log(String msg, boolean newline)
+    public static void log(String msg, boolean newline)
     {
-        if( Logger.verbose ) {
-
-            if( newline )
-                System.out.println(msg);
-            else
-                System.out.print(msg);
-        }
+        if( newline )
+            System.out.println(prefix() + msg);
+        else
+            System.out.print(prefix() + msg);
     }
 
-    private static void elog(String msg)
+    public static void elog(String msg)
     {
         elog(msg, true);
     }
 
-    private static void elog(String msg, boolean newline)
+    public static void elog(String msg, boolean newline)
     {
         if( newline )
-            System.out.println(msg);
+            System.out.println(eprefix() + msg);
         else
-            System.out.print(msg);
+            System.out.print(eprefix() + msg);
     }
 
     public static void increaseIndent()

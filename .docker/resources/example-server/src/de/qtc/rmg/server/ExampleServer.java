@@ -79,7 +79,7 @@ public class ExampleServer {
         System.out.println("done.");
 
         Object o = registry.lookup(boundName);
-        String className = o.getClass().getName();
-        System.out.println("[+] \t\tBoundname '" + boundName + "' as class '" + className + "' is ready.");
+        String className = o.getClass().getInterfaces()[0].getSimpleName();
+        System.out.println("[+] \t\tBoundname '" + boundName + "' with interface '" + className + "' is ready.");
     }
 }
