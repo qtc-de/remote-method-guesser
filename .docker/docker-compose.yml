@@ -15,8 +15,9 @@ services:
           -Djava.security.policy=/opt/policy
           -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
         - >
-          DELETE_THIS_AND_THE_ABOVE_LINE_TO_ENABLE_CODEBASE_LOGGING=
+          DELETE_THIS_AND_THE_ABOVE_LINE_TO_ENABLE_CODEBASE_LOGGING_OR_TO_DISABLE_COLOR=
           -Djava.rmi.server.RMIClassLoaderSpi=de.qtc.rmg.server.utils.CodebaseLogger
+          -Dde.qtc.rmg.server.disableColor=true
       volumes: 
         - ./resources/trust/store.p12:/opt/store.p12
         - ./resources/bin/rmg-example-server.jar:/opt/example-server.jar
