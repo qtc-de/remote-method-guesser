@@ -19,6 +19,7 @@ import de.qtc.rmg.server.legacy.LegacyServer;
 import de.qtc.rmg.server.operations.PlainServer;
 import de.qtc.rmg.server.operations.SecureServer;
 import de.qtc.rmg.server.operations.SslServer;
+import de.qtc.rmg.server.utils.Logger;
 
 public class ExampleServer {
 
@@ -29,7 +30,13 @@ public class ExampleServer {
 
     public static void main(String[] argv)
     {
-        System.out.println("[+] Initializing Java RMI Server:");
+        String disableColor = System.getProperty("de.qtc.rmg.server.disableColor");
+        if( disableColor != null && disableColor.equalsIgnoreCase("true") )
+            Logger.disableColor();
+
+        Logger.println("Initializing Java RMI Server:");
+        Logger.println("");
+        Logger.increaseIndent();
 
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
@@ -39,30 +46,30 @@ public class ExampleServer {
             SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
             SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
 
-            System.out.print("[+] \tCreating RMI-Registry on port " + registryPort + "... ");
+            Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
             Registry registry = LocateRegistry.createRegistry(registryPort, csf, ssf);
-            System.out.println("done.");
+            Logger.println("");
 
-            System.out.print("[+] \tCreating Plain Server object... ");
+            Logger.printlnMixedBlue("Creating", "PlainServer", "object.");
             remoteObject1 = new PlainServer();
             IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject1, 0);
-            System.out.println("done.");
             bindToRegistry(stub, registry, "plain-server");
 
-            System.out.print("[+] \tCreating SSL Server object... ");
+            Logger.printlnMixedBlue("Creating", "SSLServer", "object.");
             remoteObject2 = new SslServer();
             ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(remoteObject2, 0, csf, ssf);
-            System.out.println("done.");
             bindToRegistry(stub2, registry, "ssl-server");
 
-            System.out.print("[+] \tCreating Secure Server object... ");
+            Logger.printlnMixedBlue("Creating", "SecureServer", "object.");
             remoteObject3 = new SecureServer();
             ISecureServer stub3 = (ISecureServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
-            System.out.println("done.");
             bindToRegistry(stub3, registry, "secure-server");
 
-            System.out.println("[+] \tServer setup finished.\n[+]");
-            System.out.println("[+] Initializing legacy server.");
+            Logger.decreaseIndent();
+            Logger.println("");
+            Logger.println("Server setup finished.");
+            Logger.println("Initializing legacy server.");
+            Logger.println("");
 
             LegacyServer.init();
 
@@ -74,12 +81,14 @@ public class ExampleServer {
 
     public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException, NotBoundException
     {
-        System.out.print("[+] \t\tBinding Server as '" + boundName + "'... ");
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("Binding Object as", boundName);
         registry.bind(boundName, object);
-        System.out.println("done.");
 
         Object o = registry.lookup(boundName);
         String className = o.getClass().getInterfaces()[0].getSimpleName();
-        System.out.println("[+] \t\tBoundname '" + boundName + "' with interface '" + className + "' is ready.");
+        Logger.printMixedYellow("Boundname", boundName);
+        Logger.printlnPlainMixedBlue(" with interface", className, "is ready.");
+        Logger.decreaseIndent();
     }
 }

@@ -13,6 +13,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import de.qtc.rmg.server.interfaces.IPlainServer;
 import de.qtc.rmg.server.operations.PlainServer;
+import de.qtc.rmg.server.utils.Logger;
 
 @SuppressWarnings("unused")
 public class LegacyServer {
@@ -24,52 +25,60 @@ public class LegacyServer {
 
     public static void init()
     {
+    	Logger.increaseIndent();
+    	
         try {
-            System.out.print("[+] \tCreating RMI-Registry on port " + registryPort + "... ");
+            Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
             Registry registry = LocateRegistry.createRegistry(registryPort);
-            System.out.println("done.");
-
-            System.out.print("[+] \tCreating LegacyServiceImpl object... ");
+            Logger.println("");
+            
+            Logger.printlnMixedBlue("Creating", "LegacyServiceImpl", "object.");
             remoteObject1 = new LegacyServiceImpl();
-            System.out.println("done.");
 
-            System.out.print("[+] \t\tBindung LegacyServiceImpl as legacy-service... ");
+            Logger.increaseIndent();
+            Logger.printMixedYellow("Binding", "LegacyServiceImpl");
+            Logger.printlnPlainMixedBlue(" as", "legacy-service");
             Naming.rebind("//127.0.0.1:" + registryPort + "/legacy-service", remoteObject1);
-            System.out.println("done.");
 
             Object o = registry.lookup("legacy-service");
             String className = o.getClass().getName();
-            System.out.println("[+] \t\tBoundname 'legacy-service' as class '" + className + "' is ready." );
+            Logger.printMixedYellow("Boundname", "legacy-service");
+            Logger.printlnPlainMixedBlue(" with class", className, "is ready.");
+            Logger.decreaseIndent();
 
-            System.out.print("[+] \tCreating Plain Server object... ");
+            Logger.printlnMixedBlue("Creating", "PlainServer", "object.");
             remoteObject2 = new PlainServer();
             IPlainServer stub1 = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject2, 0);
-            System.out.println("done.");
             bindToRegistry(stub1, registry, "plain-server");
 
-            System.out.print("[+] \tCreating another Plain Server object... ");
+            Logger.printlnMixedBlue("Creating another", "PlainServer", "object.");
             remoteObject3 = new PlainServer();
             IPlainServer stub2 = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
-            System.out.println("done.");
             bindToRegistry(stub2, registry, "plain-server2");
 
-            System.out.println("[+] \tServer setup finished.\n[+]");
-            System.out.println("[+] Waiting for incoming connections.");
+            Logger.println("");
+            Logger.decreaseIndent();
+            
+            Logger.println("Server setup finished.");
+            Logger.println("Waiting for incoming connections.");
+            Logger.println("");
 
         } catch (RemoteException | MalformedURLException | AlreadyBoundException | NotBoundException e) {
-            System.err.println("[-] Unexpected RMI Error:");
+            Logger.eprintln("Unexpected RMI Error:");
             e.printStackTrace();
         }
     }
 
     public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException, NotBoundException
     {
-        System.out.print("[+] \t\tBinding Server as '" + boundName + "'... ");
+    	Logger.increaseIndent();
+    	Logger.printlnMixedYellow("Binding Object as", boundName);
         registry.bind(boundName, object);
-        System.out.println("done.");
 
         Object o = registry.lookup(boundName);
         String className = o.getClass().getInterfaces()[0].getSimpleName();
-        System.out.println("[+] \t\tBoundname '" + boundName + "' with interface '" + className + "' is ready.");
+        Logger.printMixedYellow("Boundname", boundName);
+        Logger.printlnPlainMixedBlue(" with interface", className, "is ready.");
+        Logger.decreaseIndent();
     }
 }
