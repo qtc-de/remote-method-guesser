@@ -2,20 +2,21 @@ package de.qtc.rmg.server.operations;
 
 import java.io.IOException;
 
-import de.qtc.rmg.server.utils.Utils;
 import de.qtc.rmg.server.interfaces.IPlainServer;
+import de.qtc.rmg.server.utils.Logger;
+import de.qtc.rmg.server.utils.Utils;
 
 public class PlainServer implements IPlainServer {
 
     public String notRelevant()
     {
-        System.out.println("[+]\t[Plain Server]: Processing call for notRelevant()...");
-        return "Some irrelevant text...";
+        Logger.printlnMixedBlueYellow("[PlainServer]:", "Processing call for", "String notRelevant()");
+        return "Hello world :)";
     }
 
     public String execute(String command)
     {
-        System.out.println("[+]\t[Plain Server]: Processing call for 'String execute(String command)'...");
+        Logger.printlnMixedBlueYellow("[PlainServer]:", "Processing call for", "String execute(String command)");
         String result = "";
 
         try {
@@ -31,7 +32,7 @@ public class PlainServer implements IPlainServer {
 
     public String system(String command, String[] args)
     {
-        System.out.println("[+]\t[Plain Server]: Processing call for 'String system(String command, String[] args)'...");
+        Logger.printlnMixedBlueYellow("[PlainServer]:", "Processing call for", "String system(String command, String[] args)");
         String result = "";
 
         String[] commandArray = new String[args.length + 1];
@@ -47,5 +48,17 @@ public class PlainServer implements IPlainServer {
         }
 
         return result;
+    }
+
+    public String upload(int size, int id, byte[] content)
+    {
+        Logger.printlnMixedBlueYellow("[PlainServer]:", "Processing call for", "String upload(int size, int id, byte[] content)");
+        return "Upload of size " + size + " was saved as user_uploads_" + id + ".";
+    }
+
+    public int math(int num1, int num2)
+    {
+        Logger.printlnMixedBlueYellow("[PlainServer]:", "Processing call for", "int math(int num1, int num2)");
+        return num1 / num2;
     }
 }

@@ -2,20 +2,21 @@ package de.qtc.rmg.server.operations;
 
 import java.io.IOException;
 
-import de.qtc.rmg.server.utils.Utils;
 import de.qtc.rmg.server.interfaces.ISslServer;
+import de.qtc.rmg.server.utils.Logger;
+import de.qtc.rmg.server.utils.Utils;
 
 public class SslServer implements ISslServer {
 
     public String notRelevant()
     {
-        System.out.println("[+]\t[SSL Server]: Processing call for notRelevant()...");
-        return "Some irrelevant text...";
+        Logger.printlnMixedBlueYellow("[SslServer]:", "Processing call for", "String notRelevant()");
+        return "Hello World :)";
     }
 
     public int execute(String command)
     {
-        System.out.println("[+]\t[SSL Server]: Processing call for 'int execute(String command)'...");
+        Logger.printlnMixedBlueYellow("[SslServer]:", "Processing call for", "int execute(String command)");
 
         try {
             Process p = java.lang.Runtime.getRuntime().exec(command);
@@ -28,7 +29,7 @@ public class SslServer implements ISslServer {
 
     public String system(String[] args)
     {
-        System.out.println("[+]\t[SSL Server]: Processing call for 'String system(String[] args)'...");
+        Logger.printlnMixedBlueYellow("[SslServer]:", "Processing call for", "String system(String[] args)");
         String result = "";
 
         try {
@@ -41,5 +42,11 @@ public class SslServer implements ISslServer {
         }
 
         return result;
+    }
+
+    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+    {
+        Logger.printlnMixedBlueYellow("[SslServer]:", "Processing call for", "void releaseRecord(int recordID, String tableName, Integer remoteHashCode)");
+        return;
     }
 }

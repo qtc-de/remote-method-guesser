@@ -33,7 +33,6 @@ public class LegacyServiceImpl extends UnicastRemoteObject implements LegacyServ
     public void logMessage(int type, String msg) throws RemoteException
     {
         Logger.printlnMixedBlueYellow("[LegacyServiceImpl]:", "Processing call for", "void logMessage(int type, String msg)");
-
     }
 
     public void logMessage(int type, StringContainer msg) throws RemoteException
