@@ -89,7 +89,7 @@ public final class RMIWhisperer {
 
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Remote failure when listing bound names");
+            Logger.eprintlnYellow("Error: Remote failure when listing bound names");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
