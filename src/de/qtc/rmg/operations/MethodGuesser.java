@@ -96,15 +96,7 @@ public class MethodGuesser {
 
             Logger.printlnMixedYellow("Current bound name:", boundName);
             Logger.increaseIndent();
-
-            boolean isLegacy = false;
-            if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-                Logger.increaseIndent();
-                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
-                Logger.decreaseIndent();
-                isLegacy = true;
-            }
+            boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
 
             Remote instance = null;
             Class remoteClass = null;
