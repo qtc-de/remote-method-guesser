@@ -3,6 +3,7 @@ package de.qtc.rmg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -124,7 +125,7 @@ public class Starter {
                 if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
                     break;
 
-                List<MethodCandidate> candidates = new ArrayList<MethodCandidate>();
+                HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
                 if( candidate != null ) {
                     candidates.add(candidate);
 

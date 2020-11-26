@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 
 import de.qtc.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
@@ -26,7 +26,7 @@ public class WordlistHandler {
         this.updateWordlists = updateWordlists;
     }
 
-    public List<MethodCandidate> getWordlistMethods() throws IOException
+    public HashSet<MethodCandidate> getWordlistMethods() throws IOException
     {
         if( this.wordlistFile != null && !this.wordlistFile.isEmpty() ) {
             return getWordlistMethodsFromFile();
@@ -37,23 +37,23 @@ public class WordlistHandler {
         }
     }
 
-    public List<MethodCandidate> getWordlistMethodsFromFile() throws IOException
+    public HashSet<MethodCandidate> getWordlistMethodsFromFile() throws IOException
     {
         File wordlistFile = new File(this.wordlistFile);
         return getWordlistMethods(wordlistFile);
     }
 
-    public List<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
+    public HashSet<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
     {
         File wordlistFolder = new File(this.wordlistFolder);
         if( !wordlistFolder.isDirectory() ) {
             throw new IOException("wordlist-folder " + wordlistFolder.getCanonicalPath() + " is not a directory.");
         }
 
-        List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+        List<File> files = (List<File>)FileUtils.listFiles(wordlistFolder, new String[]{"txt", "TXT"}, false);
         Logger.printlnMixedBlueFirst(String.valueOf(files.size()), "wordlist files found.");
 
-        List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
+        HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
         for(File file : files){
             methods.addAll(getWordlistMethods(file));
         }
@@ -61,13 +61,13 @@ public class WordlistHandler {
         return methods;
     }
 
-    public List<MethodCandidate> getWordlistMethods(File file) throws IOException
+    public HashSet<MethodCandidate> getWordlistMethods(File file) throws IOException
     {
         Logger.printlnMixedBlue("Reading method candidates from file", file.getCanonicalPath());
         Logger.increaseIndent();
 
         List<String> content = FileUtils.readLines(file, StandardCharsets.UTF_8);
-        List<MethodCandidate> methods = new ArrayList<MethodCandidate>();
+        HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
 
         for(String line : content) {
 
@@ -75,6 +75,7 @@ public class WordlistHandler {
                 continue;
             }
 
+            line = line.trim().replaceAll(" +", " ").replaceAll(" *, *", ", ").replaceAll("\\<[^>]+\\>", "");
             String[] split = line.split(";");
 
             try {
@@ -106,7 +107,7 @@ public class WordlistHandler {
         return methods;
     }
 
-    public void updateWordlist(File file, List<MethodCandidate> methods) throws IOException
+    public void updateWordlist(File file, HashSet<MethodCandidate> methods) throws IOException
     {
         List<String> signatures = new ArrayList<String>();
         for(MethodCandidate method : methods) {

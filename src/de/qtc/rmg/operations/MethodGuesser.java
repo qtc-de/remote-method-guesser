@@ -9,8 +9,8 @@ import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -28,12 +28,12 @@ public class MethodGuesser {
 
     private RMIWhisperer rmi;
     private HashMap<String,String> classes;
-    private List<MethodCandidate> candidates;
+    private HashSet<MethodCandidate> candidates;
 
     private Field proxyField;
     private Field remoteField;
 
-    public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, List<MethodCandidate> candidates)
+    public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, HashSet<MethodCandidate> candidates)
     {
         this.rmi = rmiRegistry;
         this.classes = unknownClasses;
@@ -78,7 +78,7 @@ public class MethodGuesser {
 
         Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signature(s).");
         if( count == 1 ) {
-            Logger.printlnMixedBlue("Method signature:", candidates.get(0).getSignature());
+            Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature());
         }
         Logger.println("");
 

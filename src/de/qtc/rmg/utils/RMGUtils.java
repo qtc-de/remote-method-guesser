@@ -190,22 +190,19 @@ public class RMGUtils {
     {
         int functionStart = signature.indexOf(' ');
         int argumentsStart = signature.indexOf('(') + 1;
+        int argumentsEnd = signature.indexOf(')');
 
-        int tmp;
-        String type;
         List<String> types = new ArrayList<String>();
+        types.add(signature.substring(0, functionStart));
 
-        type = signature.substring(0, functionStart);
-        types.add(type);
-
-        if( signature.contains("()") )
+        String argumentPart = signature.substring(argumentsStart, argumentsEnd);
+        if( argumentPart.equals("") )
             return types;
 
-        while( argumentsStart > 1 ) {
-            tmp = signature.indexOf(' ', argumentsStart);
-            type = signature.substring(argumentsStart, tmp);
-            types.add(type);
-            argumentsStart = signature.indexOf(',', tmp) + 2;
+        String[] argumentParts = argumentPart.split(" ");
+
+        for(int ctr = 0; ctr < argumentParts.length; ctr += 2) {
+            types.add(argumentParts[ctr]);
         }
 
         return types;

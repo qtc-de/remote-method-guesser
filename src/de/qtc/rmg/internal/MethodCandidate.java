@@ -49,6 +49,21 @@ public class MethodCandidate {
         this.isVoid = Boolean.valueOf(isVoid);
     }
 
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!(o instanceof MethodCandidate))
+            return false;
+
+        MethodCandidate other = (MethodCandidate)o;
+        return this.hash == other.getHash();
+    }
+
+    @Override
+    public int hashCode(){
+       return Long.hashCode(this.hash);
+    }
+
     public Object[] getConfusedArgument()
     {
         if( this.isPrimitive() ) {
