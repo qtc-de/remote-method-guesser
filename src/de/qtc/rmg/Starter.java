@@ -154,7 +154,7 @@ public class Starter {
                 try {
                     String className;
                     SampleWriter writer;
-                    writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect);
+                    writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect, legacyMode);
 
                     for(String name : results.keySet()) {
 
@@ -162,7 +162,7 @@ public class Starter {
                         Logger.increaseIndent();
 
                         className = boundClasses.get(1).get(name);
-                        writer.createInterfaceSample(name, className, (List<MethodCandidate>)results.get(name));
+                        writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
                         writer.createSamples(name, className, (List<MethodCandidate>)results.get(name), rmi);
 
                         Logger.decreaseIndent();

@@ -12,9 +12,13 @@ import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import javassist.CannotCompileException;
 import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 
 public class SampleWriter {
+
+    private int legacyMode;
 
     private String ssl;
     private String followRedirects;
@@ -22,8 +26,10 @@ public class SampleWriter {
     private File sampleFolder;
     private File templateFolder;
 
-    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects) throws IOException
+    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects, int legacyMode) throws IOException
     {
+        this.legacyMode = legacyMode;
+
         this.ssl = ssl ? "true" : "false";
         this.followRedirects = followRedirects ? "true" : "false";
 
@@ -91,6 +97,10 @@ public class SampleWriter {
 
     public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+        if(isLegacy)
+            className += "_Interface";
+
         Security.checkBoundName(boundName);
         Security.checkPackageName(className);
 
@@ -155,6 +165,18 @@ public class SampleWriter {
         writeSample(boundName, sampleClassName, template, sampleClassName);
     }
 
+    public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
+    {
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+
+        if(isLegacy) {
+            createInterfaceSample(boundName, className + "_Interface", methods);
+            createLegacyStub(boundName, className, methods);
+        } else {
+            createInterfaceSample(boundName, className, methods);
+        }
+    }
+
     public void createInterfaceSample(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
         Security.checkPackageName(className);
@@ -194,6 +216,92 @@ public class SampleWriter {
         writeSample(boundName, className, template);
     }
 
+    public void createLegacyStub(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
+    {
+        Security.checkPackageName(className);
+        String stubTemplate = loadTemplate("LegacyTemplate.java");
+        String methodTemplate = loadTemplate("LegacyMethodTemplate.java");
+
+
+        int count = 0;
+        String argName;
+        String castPlaceholder = "            return (<CAST>)object;";
+        String methodPlaceholder = "    <METHOD>";
+        String methodVarPlaceholder = "    <METHOD_VAR>";
+        String methodLookupPlaceholder = "            <METHOD_LOOKUP>";
+        List<String> types = new ArrayList<String>();
+
+        for(MethodCandidate method : methods) {
+
+            CtMethod current = method.getMethod();
+            CtClass returnType = current.getReturnType();
+            CtClass[] parameterTypes = current.getParameterTypes();
+
+            String currentTemplate = methodTemplate;
+            stubTemplate = duplicate(stubTemplate, methodPlaceholder);
+            stubTemplate = duplicate(stubTemplate, methodVarPlaceholder);
+            stubTemplate = duplicate(stubTemplate, methodLookupPlaceholder);
+
+            if( returnType != CtPrimitiveType.voidType) {
+                addImport(stubTemplate, returnType.getName(), types);
+                currentTemplate = currentTemplate.replaceFirst("<CAST>", RMGUtils.getCast(returnType));
+            } else {
+                currentTemplate = remove(currentTemplate, castPlaceholder);
+            }
+
+            int ctr = 0;
+            StringBuilder arguments = new StringBuilder();
+            StringBuilder argumentArray = new StringBuilder();
+            StringBuilder methodLookup = new StringBuilder();
+            methodLookup.append("intf.getMethod(\"" + method.getName() + "\", ");
+
+            for(CtClass type : parameterTypes) {
+
+                stubTemplate = addImport(stubTemplate, type.getName(), types);
+                argName = "arg_" + ctr;
+
+                arguments.append(type.getName() + " " + argName + ", ");
+                argumentArray.append(RMGUtils.getSampleArgument(type, argName) + ", ");
+                methodLookup.append(RMGUtils.getTypeString(type) + ", ");
+
+                ctr += 1;
+            }
+
+            methodLookup.setLength(methodLookup.length() - 2);
+            methodLookup.append(");");
+
+            String methodVariable = "method_" + count;
+            stubTemplate = stubTemplate.replaceFirst("<METHOD_VAR>", "private static Method " + methodVariable + ";");
+            stubTemplate = stubTemplate.replaceFirst("<METHOD_LOOKUP>", methodVariable + " = " + methodLookup);
+
+            currentTemplate = currentTemplate.replaceFirst("<METHODNAME>", method.getName());
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENTS>", arguments.substring(0, arguments.length() - 2));
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENT_ARRAY>", argumentArray.substring(0, argumentArray.length() - 2));
+            currentTemplate = currentTemplate.replaceFirst("<HASH>", Long.toString(method.getHash()));
+            currentTemplate = currentTemplate.replaceFirst("<RETURN>", returnType.getName());
+            currentTemplate = currentTemplate.replaceFirst("<METHOD>", methodVariable);
+            stubTemplate = stubTemplate.replaceFirst(methodPlaceholder, currentTemplate);
+
+            count += 1;
+        }
+
+        stubTemplate = remove(stubTemplate, "import <IMPORT>;");
+        stubTemplate = remove(stubTemplate, methodPlaceholder);
+        stubTemplate = remove(stubTemplate, methodLookupPlaceholder);
+        stubTemplate = remove(stubTemplate, methodVarPlaceholder);
+
+        String packageName = getPackageName(className);
+        String pureClassName = getClassName(className);
+
+        stubTemplate = stubTemplate.replace("<PACKAGE>", packageName);
+        stubTemplate = stubTemplate.replace("<INTERFACE_IMPORT>", className + "_Interface");
+        stubTemplate = stubTemplate.replace("<CLASSNAME>", pureClassName);
+        stubTemplate = stubTemplate.replace("<INTERFACE>", pureClassName + "_Interface");
+        stubTemplate = stubTemplate.replace("<METHOD>", className);
+
+        writeSample(boundName, pureClassName, stubTemplate);
+    }
+
     private static String getClassName(String fullName)
     {
         int index = fullName.lastIndexOf(".");
@@ -208,4 +316,24 @@ public class SampleWriter {
         return packageName;
     }
 
+    private static String duplicate(String template, String match)
+    {
+        return template.replace(match, match + "\n" + match);
+    }
+
+    private static String remove(String template, String match)
+    {
+        return template.replace(match, "");
+    }
+
+    private static String addImport(String template, String typeName, List<String> types)
+    {
+        if( typeName.contains(".") && !typeName.startsWith("java.lang") && !types.contains(typeName)) {
+            types.add(typeName);
+            template = duplicate(template, "import <IMPORT>;");
+            template = template.replaceFirst("<IMPORT>", typeName);
+        }
+
+        return template;
+    }
 }

@@ -275,6 +275,69 @@ public class RMGUtils {
         return argumentArray;
     }
 
+    public static String getSampleArgument(CtClass type, String argName)
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return String.format("new Integer(%s)", argName);
+            } else if (type == CtPrimitiveType.booleanType) {
+                return String.format("new Boolean(%s)", argName);
+            } else if (type == CtPrimitiveType.byteType) {
+                return String.format("new Byte(%s)", argName);
+            } else if (type == CtPrimitiveType.charType) {
+                return String.format("new Character(%s)", argName);
+            } else if (type == CtPrimitiveType.shortType) {
+                return String.format("new Short(%s)", argName);
+            } else if (type == CtPrimitiveType.longType) {
+                return String.format("new Long(%s)", argName);
+            } else if (type == CtPrimitiveType.floatType) {
+                return String.format("new Float(%s)", argName);
+            } else if (type == CtPrimitiveType.doubleType) {
+                return String.format("new Double(%s)", argName);
+            } else {
+                throw new Error("unrecognized primitive type: " + type);
+            }
+
+        } else {
+            return argName;
+        }
+    }
+
+    public static String getTypeString(CtClass type)
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return "Integer.TYPE";
+            } else if (type == CtPrimitiveType.booleanType) {
+                return "Boolean.TYPE";
+            } else if (type == CtPrimitiveType.byteType) {
+                return "Byte.TYPE";
+            } else if (type == CtPrimitiveType.charType) {
+                return "Char.TYPE";
+            } else if (type == CtPrimitiveType.shortType) {
+                return "Short.TYPE";
+            } else if (type == CtPrimitiveType.longType) {
+                return "Long.TYPE";
+            } else if (type == CtPrimitiveType.floatType) {
+                return "Float.TYPE";
+            } else if (type == CtPrimitiveType.doubleType) {
+                return "Double.TYPE";
+            } else {
+                throw new Error("unrecognized primitive type: " + type);
+            }
+
+        } else {
+            return type.getName() + ".class";
+        }
+    }
+
+    public static String getCast(CtClass type)
+    {
+        String classString = getTypeString(type);
+        int index = classString.lastIndexOf(".");
+        return classString.substring(0, index);
+    }
+
     public static Object getPayloadObject(String ysoPath, String gadget, String command) {
 
         Object ysoPayload = null;
