@@ -21,7 +21,7 @@ and was used first (to the best of my knowledge) by [Jake Miller](https://twitte
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/develop%20maven%20CI/badge.svg?branch=develop)
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20master/badge.svg?branch=master)
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20develop/badge.svg?branch=develop)
-![Remote Method Guesser Example](/resources/images/01-rmg-example.gif)
+![Remote Method Guesser Example](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-example.gif)
 
 
 ### Installation
