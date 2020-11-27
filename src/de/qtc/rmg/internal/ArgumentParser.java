@@ -10,6 +10,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.qtc.rmg.utils.Security;
+
 public class ArgumentParser {
 
     private Options options;
@@ -43,6 +45,9 @@ public class ArgumentParser {
             printHelp();
             System.exit(0);
         }
+
+        if( cmd.hasOption("trusted") )
+            Security.trusted();
 
         this.cmdLine = cmd;
         return cmd;
@@ -133,6 +138,10 @@ public class ArgumentParser {
         threads.setArgName("int");
         threads.setRequired(false);
         options.addOption(threads);
+
+        Option trusted = new Option(null, "trusted", false, "disable bound name filtering");
+        trusted.setRequired(false);
+        options.addOption(trusted);
 
         Option update = new Option(null, "update", false, "update wordlist file with method hashes");
         update.setRequired(false);

@@ -7,7 +7,7 @@ import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 
 public abstract class Security {
 
-    public static boolean trusted = false;
+    private static boolean trusted = false;
 
     private static Pattern boundName = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9_-]+");
@@ -74,6 +74,11 @@ public abstract class Security {
         Matcher m = shellInjection.matcher(input);
         if( m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' contains shell injection characters.");
+    }
+
+    public static void trusted()
+    {
+        trusted = true;
     }
 }
 
