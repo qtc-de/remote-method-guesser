@@ -22,4 +22,6 @@ ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
     -Djava.security.policy=/opt/policy \
     -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
 
+EXPOSE 1090/tcp 9010/tcp
+
 CMD ["/opt/start.sh"]
