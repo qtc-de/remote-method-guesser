@@ -116,8 +116,8 @@ rmg_1  | [2020.11.28 - 14:10:52]
 rmg_1  | [2020.11.28 - 14:10:52]     Creating RMI-Registry on port 1090
 rmg_1  | [2020.11.28 - 14:10:52]     
 rmg_1  | [2020.11.28 - 14:10:52]     Creating PlainServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-se $(id)rver
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-se $(id)rver with interface IPlainServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server with interface IPlainServer is ready.
 rmg_1  | [2020.11.28 - 14:10:52]     Creating SSLServer object.
 rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as ssl-server
 rmg_1  | [2020.11.28 - 14:10:52]         Boundname ssl-server with interface ISslServer is ready.
