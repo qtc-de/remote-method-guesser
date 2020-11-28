@@ -2,7 +2,7 @@
 
 ----
 
-If you want to test *remote-method-guesser*, you can do this using the docker container provided in this repository.
+The *example-server* provided by this repository can be used to test all features of *remote-method-guesser*.
 You can either build the container from source or pull it from *GitHub Packages*.
 
 * To build from source, just clone the repository, switch to the [docker directory](/.docker) and run ``docker build .``
@@ -98,11 +98,66 @@ environment:
     -Dde.qtc.rmg.server.disableColor=true
 ```
 
+Each successful method call is logged on the server side. The following listing shows the output after the server
+was started. Additionally, one successful method call on the ``login`` method was logged:
+
+```console
+[qtc@kali .docker]$ sudo docker-compose up
+Starting docker_rmg_1 ... done
+Attaching to docker_rmg_1
+rmg_1  | [+] IP address of the container: 172.18.0.2
+rmg_1  | [+] Adding gateway address to /etc/hosts file...
+rmg_1  | [+] Adding RMI hostname to /etc/hosts file...
+rmg_1  | [+] Starting rmi server...
+rmg_1  | Picked up _JAVA_OPTIONS:  -Djava.rmi.server.hostname=iinsecure.dev -Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.keyStore=/opt/store.p12 -Djavax.net.ssl.keyStoreType=pkcs12 -Djava.rmi.server.useCodebaseOnly=false -Djava.security.policy=/opt/policy -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
+rmg_1  | 
+rmg_1  | [2020.11.28 - 14:10:52] Initializing Java RMI Server:
+rmg_1  | [2020.11.28 - 14:10:52] 
+rmg_1  | [2020.11.28 - 14:10:52]     Creating RMI-Registry on port 1090
+rmg_1  | [2020.11.28 - 14:10:52]     
+rmg_1  | [2020.11.28 - 14:10:52]     Creating PlainServer object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-se $(id)rver
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-se $(id)rver with interface IPlainServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52]     Creating SSLServer object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as ssl-server
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname ssl-server with interface ISslServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52]     Creating SecureServer object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as secure-server
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname secure-server with interface ISecureServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52] 
+rmg_1  | [2020.11.28 - 14:10:52] Server setup finished.
+rmg_1  | [2020.11.28 - 14:10:52] Initializing legacy server.
+rmg_1  | [2020.11.28 - 14:10:52] 
+rmg_1  | [2020.11.28 - 14:10:52]     Creating RMI-Registry on port 9010
+rmg_1  | [2020.11.28 - 14:10:52]     
+rmg_1  | [2020.11.28 - 14:10:52]     Creating LegacyServiceImpl object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding LegacyServiceImpl as legacy-service
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname legacy-service with class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is ready.
+rmg_1  | [2020.11.28 - 14:10:52]     Creating PlainServer object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server with interface IPlainServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52]     Creating another PlainServer object.
+rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server2
+rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server2 with interface IPlainServer is ready.
+rmg_1  | [2020.11.28 - 14:10:52]     
+rmg_1  | [2020.11.28 - 14:10:52] Server setup finished.
+rmg_1  | [2020.11.28 - 14:10:52] Waiting for incoming connections.
+rmg_1  | [2020.11.28 - 14:10:52] 
+rmg_1  | [2020.11.28 - 14:10:52] [SecureServer]: Processing call for String login(HashMap<String, String> credentials)
+```
+
+One core feature of *remote-method-guesser* is that it allows *safe method guessing* without invoking method calls on the server side.
+The above mentioned logging of server-side method calls can be used to verify this. In a usual run of *rmgs* ``guess``, ``attack``
+and ``codebase`` actions, no valid calls should be logged on the server side.
+
 
 ### Remote Interfaces
 
-Each remote object on the example-server implements different kinds of vulnerable remote methods that can be
-detected by *rmg*. In the following, the corresponding interface are listed.
+Each remote object on the *example-server* implements different kinds of vulnerable remote methods that can be
+detected by *rmg*. Some methods are vulnerably by design (e.g. execute operating system commands on invocation)
+other can be exploited by *deserialization* or *codebase* attacks as mentioned in the [README.md](../README.md)
+of this project. In the following, the corresponding interface are listed.
+
 
 #### Plain Server
 
@@ -115,12 +170,10 @@ public interface IPlainServer extends Remote
     String notRelevant() throws RemoteException;
     String execute(String cmd) throws RemoteException;
     String system(String cmd, String[] args) throws RemoteException;
+    String upload(int size, int id, byte[] content) throws RemoteException;
+    int math(int num1, int num2) throws RemoteException;
 }
 ```
-
-Whereas the ``notRelevant`` method just returns a static string, both other methods can be used to execute commands
-on the *Java RMI* server. If you are interested in the implementation of the methods, you can read the source code
-[here](/.docker/resources/example-server/src/de/qtc/rmg/PlainServer.java).
 
 
 #### SSL Server
@@ -134,11 +187,9 @@ public interface ISslServer extends Remote
     String notRelevant() throws RemoteException;
     int execute(String cmd) throws RemoteException;
     String system(String[] args) throws RemoteException;
+    void releaseRecord(int recordID, String tableName, Integer remoteHashCode) throws RemoteException;
 }
 ```
-
-Again, the ``notRelevant`` method just returns a static string, whereas the other two methods can be used to get
-*Remote Code Execution*. The corresponding implementation of the methods can be found [here](/.docker/resources/example-server/src/de/qtc/rmg/PlainServer.java).
 
 
 #### Secure Server
@@ -155,15 +206,23 @@ public interface ISecureServer extends Remote
 }
 ```
 
-In contrast to the other two remote objects, the ``secure-server`` object does not expose any method that looks
-directly exploitable. However, as the server does not use a *deserialization filter* and *ISecureServer* contains
-methods that accept *non primitive types*, it is vulnerable to *deserialization attacks*. A correspondig example will be
-examined below, but if you want to read some background about this type of attack I recommend reading [this great blog post](https://mogwailabs.de/blog/2019/03/attacking-java-rmi-services-after-jep-290/)
-by *Hans-Martin Münch*.
 
-#### Legacy Server
+#### Legacy Service
 
-TODO
+The remote object that is bound as ``legacy-service`` uses a plain *TCP* connection without *SSL*. It implements
+the following interface:
+
+```java
+public interface LegacyService extends Remote
+{
+    public String getMotd() throws RemoteException;
+    String login(HashMap<String, String> credentials) throws RemoteException;
+    void logMessage(int type, String msg) throws RemoteException;
+    void logMessage(int type, StringContainer msg) throws RemoteException;
+    int math(int num1, int num2) throws RemoteException;
+    void releaseRecord(int recordID, String tableName, Integer remoteHashCode) throws RemoteException;
+}
+```
 
 
 ### Example Run
@@ -171,7 +230,7 @@ TODO
 ----
 
 The following listing shows an example run of *remote-method-guessers* ``guess`` action against both of the exposed
-*remiregistry* endpoints:
+*rmiregistry* endpoints:
 
 #### 1090 Registry
 
