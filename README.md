@@ -88,6 +88,7 @@ Optional Arguments:
     --ssl                        use SSL for the rmi-registry connection
     --template-folder <folder>   location of the template folder
     --threads <int>              maximum number of threads (default: 5)
+    --trusted                    disable bound name filtering
     --update                     update wordlist file with method hashes
     --wordlist-file <file>       wordlist file to use for method guessing
     --wordlist-folder <folder>   location of the wordlist folder
