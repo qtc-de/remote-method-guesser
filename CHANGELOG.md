@@ -6,7 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.0.0] - 2020-09-30
+## [3.0.0] - Nov 28, 2020
+
+### Added
+
+*rmg*
+
+* Add support for guessing without invoking (using invalid argument types)
+* Add server-side codebase detection
+* Add codebase operation for *remote-codebase* attacks
+* Add support for *legacy RMI stubs*
+* Add colored output
+
+*Docker*
+
+* Add additional remote method to example server
+* Add non-ssl registry on port 9010
+* Add legacy RMI service using static stubs
+* Add server-codebase and remote-codebase support
+* Add improved logging
+
+### Changed
+
+* Remote classes are now generated dynamically with *Javassist*
+* Different operations are now invoked using actions, no longer command line switches
+* The docker container compiles the *example-server* now during build time
+
+
+## [2.0.0] - Sep 30, 2020
 
 ### Added
 
@@ -27,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove old example server
 
 
-## [1.1.0] - 2020-08-06
+## [1.1.0] - Aug 06, 2020
 
 ### Added
 
@@ -37,6 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add support for primitive types in interfaces
 
 
-## [1.0.0]
+## [1.0.0] - Nov 26, 2020
 
 Initial release :)

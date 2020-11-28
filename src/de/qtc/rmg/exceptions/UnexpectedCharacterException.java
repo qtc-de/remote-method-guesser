@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package de.qtc.rmg.exceptions;
 
 @SuppressWarnings("serial")
 public class UnexpectedCharacterException extends Exception {

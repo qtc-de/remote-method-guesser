@@ -1,4 +1,7 @@
-package de.qtc.rmg.io;
+package de.qtc.rmg.server.utils;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class Logger {
 
@@ -8,6 +11,8 @@ public class Logger {
 
     public static int indent = 0;
     public static boolean verbose = true;
+    public static Calendar cal = Calendar.getInstance();
+    public static SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd - HH:mm:ss");
 
     private static String blue(String msg)
     {
@@ -21,12 +26,12 @@ public class Logger {
 
     private static String prefix()
     {
-        return "[+]" + Logger.getIndent();
+        return "[" + date.format(cal.getTime()) + "]" + Logger.getIndent();
     }
 
     private static String eprefix()
     {
-        return "[-]" + Logger.getIndent();
+        return "[" + date.format(cal.getTime()) + "]" + Logger.getIndent();
     }
 
     private static void log(String msg)
@@ -178,6 +183,11 @@ public class Logger {
         log(prefix() + blue(first) + " " + second + " " + blue(third));
     }
 
+    public static void printlnMixedBlueYellow(String first, String second, String third)
+    {
+        log(prefix() + blue(first) + " " + second + " " + yellow(third));
+    }
+
     public static void printlnMixedYellowFirst(String first, String second)
     {
         log(prefix() + yellow(first) + " " + second);
@@ -207,9 +217,20 @@ public class Logger {
     {
         elog(eprefix() + yellow(first) + " " + second + " " + yellow(third));
     }
+
     public static void printMixedBlue(String first, String second)
     {
         log(prefix() + first + " " + blue(second), false);
+    }
+
+    public static void printlnPlainMixedBlue(String first, String second)
+    {
+        log(first + " " + blue(second), true);
+    }
+
+    public static void printlnPlainMixedBlue(String first, String second, String third)
+    {
+        log(first + " " + blue(second) + " " + third, true);
     }
 
     public static void printMixedBlue(String first, String second, String third)
@@ -300,7 +321,7 @@ public class Logger {
     public static String getIndent()
     {
         if( verbose )
-            return " " + new String(new char[indent]).replace("\0", "\t");
+            return " " + new String(new char[indent]).replace("\0", "    ");
         else
             return " ";
     }

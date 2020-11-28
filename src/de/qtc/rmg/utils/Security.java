@@ -3,18 +3,21 @@ package de.qtc.rmg.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import de.qtc.rmg.exceptions.UnexpectedCharacterException;
+
 public abstract class Security {
 
-    public static boolean trusted = false;
+    private static boolean trusted = false;
 
     private static Pattern boundName = Pattern.compile("[a-zA-Z0-9_-]+");
-    private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9]+");
+    private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9])+\\.jar");
     private static Pattern javaFile = Pattern.compile("([a-zA-Z0-9])+\\.java");
-    private static Pattern packageName = Pattern.compile("([a-zA-Z0-9]\\.?)+");
+    private static Pattern packageName = Pattern.compile("([a-zA-Z0-9_-]\\.?)+");
     private static Pattern shellInjection = Pattern.compile(".*[ '\"#&;`|*?~<>^()\\[\\]{}$\\\\\n].*");
 
-    public static void checkBoundName(String input) throws UnexpectedCharacterException {
+    public static void checkBoundName(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
@@ -23,7 +26,8 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Bound name '" + input + "' contains invalid characters.");
     }
 
-    public static void checkAlphaNumeric(String input) throws UnexpectedCharacterException {
+    public static void checkAlphaNumeric(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
@@ -32,7 +36,8 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Input '" + input + "' contains non alphanumeric characters.");
     }
 
-    public static void checkPackageName(String input) throws UnexpectedCharacterException {
+    public static void checkPackageName(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
@@ -41,7 +46,8 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Package name '" + input + "' contains invalid characters.");
     }
 
-    public static void checkJavaFile(String input) throws UnexpectedCharacterException {
+    public static void checkJavaFile(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
@@ -50,7 +56,8 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Filename '" + input + "' contains invalid characters.");
     }
 
-    public static void checkJarFile(String input) throws UnexpectedCharacterException {
+    public static void checkJarFile(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
@@ -59,13 +66,19 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Jar name '" + input + "' contains invalid characters.");
     }
 
-    public static void checkShellInjection(String input) throws UnexpectedCharacterException {
+    public static void checkShellInjection(String input) throws UnexpectedCharacterException
+    {
         if( trusted )
             return;
 
         Matcher m = shellInjection.matcher(input);
         if( m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' contains shell injection characters.");
+    }
+
+    public static void trusted()
+    {
+        trusted = true;
     }
 }
 

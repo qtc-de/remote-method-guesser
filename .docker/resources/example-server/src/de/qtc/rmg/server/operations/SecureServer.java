@@ -1,8 +1,11 @@
-package de.qtc.rmg;
+package de.qtc.rmg.server.operations;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import de.qtc.rmg.server.interfaces.ISecureServer;
+import de.qtc.rmg.server.utils.Logger;
 
 public class SecureServer implements ISecureServer {
 
@@ -11,7 +14,7 @@ public class SecureServer implements ISecureServer {
 
     public String login(HashMap<String, String> credentials) throws RemoteException
     {
-        System.out.println("[+]\t[Secure Server]: Processing call for 'String login(HashMap<String, String> arg)'...");
+        Logger.printlnMixedBlueYellow("[SecureServer]:", "Processing call for", "String login(HashMap<String, String> credentials)");
         String username = credentials.get("username");
         String password = credentials.get("password");
         if(username != null && password != null && username.equals("admin") && password.equals("admin")) {
@@ -20,9 +23,10 @@ public class SecureServer implements ISecureServer {
         return null;
     }
 
+    @SuppressWarnings("unused")
     public void logMessage(int logLevel, Object message) throws RemoteException
     {
-        System.out.println("[+]\t[Secure Server]: Processing call for 'void logMessage(int arg, Object arg)'...");
+        Logger.printlnMixedBlueYellow("[SecureServer]:", "Processing call for", "void logMessage(int logLevel, Object message)");
 
         String logMessage = "";
         if( logLevel == 1 )
@@ -35,7 +39,7 @@ public class SecureServer implements ISecureServer {
 
     public void updatePreferences(ArrayList<String> preferences) throws RemoteException
     {
-        System.out.println("[+]\t[Secure Server]: Processing call for 'void updatePreferences(ArrayList<String> arg)'...");
+        Logger.printlnMixedBlueYellow("[SecureServer]:", "Processing call for", "void updatePreferences(ArrayList<String> preferences)");
         this.preferences = preferences;
     }
 }

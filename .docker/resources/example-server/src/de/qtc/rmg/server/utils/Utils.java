@@ -1,4 +1,4 @@
-package de.qtc.rmg;
+package de.qtc.rmg.server.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

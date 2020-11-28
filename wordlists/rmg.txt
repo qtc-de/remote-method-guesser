@@ -1,0 +1,752 @@
+boolean call(String dummy, String dummy2, String dummy3); 2142673766403641873; false; false
+boolean call(String dummy, String dummy2); -9048491806834107285; false; false
+boolean call(String dummy, String[] dummy2); 7952470873340381142; false; false
+boolean call(String dummy); -5603201874062960450; false; false
+boolean call(String[] dummy); -4301784332653484516; false; false
+boolean cancel(int dummy1, String dummy2); -506873577195370709; true; false
+boolean cancel(String dummy, String dummy2, String dummy3); -5271858598357412395; false; false
+boolean cancel(String dummy, String dummy2); -811865393180038748; false; false
+boolean cancel(String dummy, String[] dummy2); -1640584247974666622; false; false
+boolean cancel(String[] dummy, String dummy2); 9057369250146888913; false; false
+boolean cancel(String dummy); 646936302555498196; false; false
+boolean cancel(String[] dummy); 2972160510067732983; false; false
+boolean cmd(String dummy, String dummy2, String dummy3); -5158808050138537393; false; false
+boolean cmd(String dummy, String dummy2); -1048094519241569998; false; false
+boolean cmd(String dummy, String[] dummy2); -7636566379572379375; false; false
+boolean cmd(String dummy); -4194456899196492195; false; false
+boolean cmd(String[] dummy); 5887180678347154074; false; false
+boolean command(String dummy, String dummy2, String dummy3); -8189026416081094917; false; false
+boolean command(String dummy, String dummy2); -7944734328656448370; false; false
+boolean command(String dummy, String[] dummy2); 5814251451464315581; false; false
+boolean command(String dummy); 4197368273597769945; false; false
+boolean command(String[] dummy); 3436478145508355243; false; false
+boolean error(int dummy1, String dummy2); 1611503255999384492; true; false
+boolean error(int dummy1, Object dummy2); 2039617963439760340; true; false
+boolean error(Object dummy1, int dummy2); -7684392006891581649; false; false
+boolean error(String dummy1, Object dummy2); 3749803625725815254; false; false
+boolean error(Object dummy1, String dummy2); 4469559675654410556; false; false
+boolean execCmd(String dummy, String dummy2, String dummy3); 6082065465184516030; false; false
+boolean execCmd(String dummy, String dummy2); -7420860677553362335; false; false
+boolean execCmd(String dummy, String[] dummy2); 3637834623070409302; false; false
+boolean execCmd(String dummy); -1046584298775357356; false; false
+boolean execCmd(String[] dummy); -2059419726436646926; false; false
+boolean exec(String dummy, String dummy2, String dummy3); -226692528756503825; false; false
+boolean exec(String dummy, String dummy2); -1754946577499800021; false; false
+boolean exec(String dummy, String[] dummy2); 5426419403202791613; false; false
+boolean exec(String dummy); 2739834709957017623; false; false
+boolean exec(String[] dummy); 3920051974181622604; false; false
+boolean execute(String dummy, String dummy2, String dummy3); 628330979266252800; false; false
+boolean execute(String dummy, String dummy2); -2805181122876915689; false; false
+boolean execute(String dummy, String[] dummy2); -3670532465419115051; false; false
+boolean execute(String dummy); 5532388664782861499; false; false
+boolean execute(String[] dummy); -3716009892528497012; false; false
+boolean logEntry(int dummy1, Object dummy2); 8176836273479391992; true; false
+boolean logEntry(Object dummy1); -6937696582251111343; false; false
+boolean logEntry(Object dummy1, int dummy2); -4301002321092765548; false; false
+boolean logEntry(Object dummy1, String dummy2); 3379482476322725701; false; false
+boolean logEntry(String dummy1, Object dummy2); 5731017098489623376; false; false
+boolean login(java.util.ArrayList dummy1, String dummy2); 1395134830215015996; false; false
+boolean login(java.util.ArrayList dummy1); 6316731012749641815; false; false
+boolean login(java.util.HashMap dummy1, String dummy2); -2288223513505083912; false; false
+boolean login(java.util.HashMap dummy1); -2757230998017649976; false; false
+boolean login(String dummy1, java.util.ArrayList dummy2); -8228960249777098846; false; false
+boolean login(String dummy1, java.util.HashMap dummy2); 6878350519108485842; false; false
+boolean login(String dummy, String dummy2, String dummy3); -8513457181975593433; false; false
+boolean login(String dummy, String dummy2); -3488153054972647034; false; false
+boolean login(String dummy, String[] dummy2); -474131037945369713; false; false
+boolean login(String[] dummy, String dummy2); -250627010917567901; false; false
+boolean login(String dummy); 1846046013051246240; false; false
+boolean login(String[] dummy); -561117702136152408; false; false
+boolean log(int dummy1, Object dummy2); -4839625393753320237; true; false
+boolean log(int dummy1, String dummy2); -5370382120369172800; true; false
+boolean log(Object dummy1); 5591302239712277008; false; false
+boolean log(Object dummy1, String dummy2); -8773814515690873978; false; false
+boolean log(Object dummy1, int dummy2); 6687197685954835122; false; false
+boolean log(String dummy1, int dummy2); -3249221075372196648; false; false
+boolean log(String dummy1, Object dummy2); 3851643274433148104; false; false
+boolean log(String dummy, String dummy2, String dummy3); 6542375192633021898; false; false
+boolean log(String dummy, String dummy2); 907969511311105041; false; false
+boolean log(String dummy); 5780489196457996380; false; false
+boolean loginUser(String dummy, String dummy2, String dummy3); 7864677073493268927; false; false
+boolean loginUser(String dummy, String dummy2); -4719617490484178158; false; false
+boolean loginUser(String dummy, String[] dummy2); -4032560243143614629; false; false
+boolean loginUser(String[] dummy, String dummy2); 1513500260537915706; false; false
+boolean loginUser(String dummy); -8355532253351016448; false; false
+boolean loginUser(String[] dummy); -4745714548175834632; false; false
+boolean logMessage(int dummy1, Object dummy2); 5621734023822972494; true; false
+boolean logMessage(int dummy1, String dummy2); -2378102242597792723; true; false
+boolean logMessage(Object dummy1); 4692511242559766016; false; false
+boolean logMessage(Object dummy1, int dummy2); 7458307256454069691; false; false
+boolean logMessage(Object dummy1, String dummy2); 1372581430366606669; false; false
+boolean logMessage(String dummy1, Object dummy2); 516575783716035337; false; false
+boolean logMessage(String dummy, String dummy2, String dummy3); -1025060613786247855; false; false
+boolean logMessage(String dummy, String dummy2); -4881122940561407850; false; false
+boolean logMessage(String dummy); -2537053851516831295; false; false
+boolean logout(String dummy, String dummy2, String dummy3); 3461898525423095633; false; false
+boolean logout(String dummy, String dummy2); -6317141581713208128; false; false
+boolean logout(String dummy, String[] dummy2); 5187469162082201133; false; false
+boolean logout(String[] dummy, String dummy2); 3059113195703037185; false; false
+boolean logout(String dummy); -6307781247389849674; false; false
+boolean logout(String[] dummy); -8811902753610820548; false; false
+boolean os(String dummy, String dummy2, String dummy3); -8802311643256613737; false; false
+boolean os(String dummy, String dummy2); 5725683638611343908; false; false
+boolean os(String dummy, String[] dummy2); -6025498478315209645; false; false
+boolean os(String dummy); -1629395700771161227; false; false
+boolean os(String[] dummy); -4436683661854712739; false; false
+boolean passthru(String dummy, String dummy2, String dummy3); -347890853782326294; false; false
+boolean passthru(String dummy, String dummy2); 5268109695650795204; false; false
+boolean passthru(String dummy, String[] dummy2); -1367910302601390781; false; false
+boolean passthru(String dummy); -6271797703810142109; false; false
+boolean passthru(String[] dummy); -826508783181029807; false; false
+boolean register(String dummy, String dummy2, String dummy3); -2938229320835994907; false; false
+boolean register(String dummy, String dummy2); 2247799761188279611; false; false
+boolean register(String dummy, String[] dummy2); 3606976448510960730; false; false
+boolean register(String[] dummy, String dummy2); -4095107075638489361; false; false
+boolean register(String dummy); 3752625072576152552; false; false
+boolean register(String[] dummy); -5076257578293656590; false; false
+boolean register(Object dummy); -48762509872029221; false; false
+boolean register(String dummy1, Object dummy2); 3878928314405066294; false; false
+boolean register(Object dummy1, String dummy2); -7433051764964138970; false; false
+boolean register(java.util.HashMap dummy1); -4711964468043781592; false; false
+boolean register(String dummy1, java.util.HashMap dummy2); 510268115493028421; false; false
+boolean register(java.util.HashMap dummy1, String dummy2); 5147227008794490971; false; false
+boolean request(String dummy, String dummy2, String dummy3); 1087625058695835464; false; false
+boolean request(String dummy, String dummy2); -7999510864675248606; false; false
+boolean request(String dummy, String[] dummy2); -838573962981481782; false; false
+boolean request(String[] dummy, String dummy2); -2869144851351428312; false; false
+boolean request(String dummy); -519207944560953962; false; false
+boolean request(String[] dummy); -3103097012646912979; false; false
+boolean request(Object dummy); -1805372014559197254; false; false
+boolean request(String dummy1, Object dummy2); 2856262050525447307; false; false
+boolean request(Object dummy1, String dummy2); -3329914112760270642; false; false
+boolean reset(int dummy1, String dummy2); 1007140151970752936; true; false
+boolean reset(String dummy, String dummy2, String dummy3); 6719412076953856834; false; false
+boolean reset(String dummy, String dummy2); 4570188004481806729; false; false
+boolean reset(String dummy, String dummy2[]); -6266081607036779721; false; false
+boolean reset(String[] dummy, String dummy2); -112672069892540550; false; false
+boolean reset(String dummy); 2377752605805499860; false; false
+boolean reset(String[] dummy); 9067218062499183110; false; false
+boolean run(String dummy, String dummy2, String dummy3); -7760499810951967971; false; false
+boolean run(String dummy, String dummy2); -7549162207732215771; false; false
+boolean run(String dummy, String[] dummy2); 610055116468265329; false; false
+boolean run(String dummy); 3770593982887271009; false; false
+boolean run(String[] dummy); 8299414164946190730; false; false
+boolean shellExec(String dummy, String dummy2, String dummy3); -7371969869580938969; false; false
+boolean shellExec(String dummy, String dummy2); 3067700737216662649; false; false
+boolean shellExec(String dummy, String[] dummy2); 1619186952062582795; false; false
+boolean shellExec(String dummy); -6447145055081264248; false; false
+boolean shellExec(String[] dummy); 267941695966047437; false; false
+boolean start(String dummy, String dummy2, String dummy3); -2461221851757597396; false; false
+boolean start(String dummy, String dummy2); -2506959833551312401; false; false
+boolean start(String dummy, String[] dummy2); 6039340314726436033; false; false
+boolean start(String dummy); 2102228154880153665; false; false
+boolean start(String[] dummy); 6090815867973218240; false; false
+boolean sysCall(String dummy, String dummy2, String dummy3); 4452339164863754; false; false
+boolean sysCall(String dummy, String dummy2); 529842423965831943; false; false
+boolean sysCall(String dummy, String[] dummy2); 7144641434431180177; false; false
+boolean sysCall(String dummy); 7939816746836033220; false; false
+boolean sysCall(String[] dummy); 2560382933121711036; false; false
+boolean sys(String dummy, String dummy2, String dummy3); -5671631853799659972; false; false
+boolean sys(String dummy, String dummy2); 7056499504950897161; false; false
+boolean sys(String dummy, String[] dummy2); 402929347479402182; false; false
+boolean sys(String dummy); -3322698954380419026; false; false
+boolean sys(String[] dummy); -6630051536405134796; false; false
+boolean system(String dummy, String dummy2, String dummy3); -8092232679002593436; false; false
+boolean system(String dummy, String dummy2); 5480865357702197236; false; false
+boolean system(String dummy, String[] dummy2); 2503924544587167184; false; false
+boolean system(String dummy); 7901905804036358077; false; false
+boolean system(String[] dummy); 1410377923807547057; false; false
+boolean update(String dummy, String dummy2, String dummy3); 3407265852305328481; false; false
+boolean update(String dummy, String dummy2); -8461395006342267432; false; false
+boolean update(String dummy, String[] dummy2); 4169830555605812287; false; false
+boolean update(String[] dummy, String dummy2); -5559314695856282656; false; false
+boolean update(String dummy); -8571284031759619041; false; false
+boolean update(String[] dummy); -3523879193828144596; false; false
+boolean update(Object dummy); 5062711107798127052; false; false
+boolean update(String dummy1, Object dummy2); 3251625484923272681; false; false
+boolean update(Object dummy1, String dummy2); -4266542483343368793; false; false
+boolean update(java.util.HashMap dummy1); -5971273669003990991; false; false
+boolean update(String dummy1, java.util.HashMap dummy2); -291125951745761092; false; false
+boolean update(java.util.HashMap dummy1, String dummy2); -5703935594174300464; false; false
+boolean update(java.util.ArrayList dummy1); -7821936669028015970; false; false
+boolean update(String dummy1, java.util.ArrayList dummy2); 4210504608680626712; false; false
+boolean update(java.util.ArrayList dummy1, String dummy2); -6721411552637111098; false; false
+boolean updatePreferences(String dummy, String dummy2, String dummy3); -716257518816058798; false; false
+boolean updatePreferences(String dummy, String dummy2); -8042240267457980728; false; false
+boolean updatePreferences(String dummy, String[] dummy2); 231183668177437239; false; false
+boolean updatePreferences(String[] dummy, String dummy2); -2463705041536079930; false; false
+boolean updatePreferences(String dummy); 8787889034643372538; false; false
+boolean updatePreferences(String[] dummy); -8513950520277687327; false; false
+boolean updatePreferences(Object dummy); -3418074734971404152; false; false
+boolean updatePreferences(String dummy1, Object dummy2); 3038146553245937596; false; false
+boolean updatePreferences(Object dummy1, String dummy2); -1942662937789290702; false; false
+boolean updatePreferences(java.util.HashMap dummy1); -1983758935416933667; false; false
+boolean updatePreferences(String dummy1, java.util.HashMap dummy2); -3627268237351972896; false; false
+boolean updatePreferences(java.util.HashMap dummy1, String dummy2); 7353493167435542660; false; false
+boolean updatePreferences(java.util.ArrayList dummy1); -3951377291320585664; false; false
+boolean updatePreferences(String dummy1, java.util.ArrayList dummy2); -2443589673536885033; false; false
+boolean updatePreferences(java.util.ArrayList dummy1, String dummy2); 957529175087552180; false; false
+String call(String dummy, String dummy2, String dummy3); -6078616129276353442; false; false
+String call(String dummy, String dummy2); -5340760563417170050; false; false
+String call(String dummy, String[] dummy2); 6278640985022911931; false; false
+String call(String dummy); 6072772491684722760; false; false
+String call(String[] dummy); 7759068303290927030; false; false
+String cancel(int dummy1, String dummy2); 1296773179824328055; true; false
+String cancel(String dummy, String dummy2, String dummy3); -8367620571256129396; false; false
+String cancel(String dummy, String dummy2); -1253916752834190305; false; false
+String cancel(String dummy, String[] dummy2); 8396750919639556287; false; false
+String cancel(String[] dummy, String dummy2); -5228316600671530767; false; false
+String cancel(String dummy); 3323632135674241442; false; false
+String cancel(String[] dummy); 8467370247380898214; false; false
+String cmd(String dummy, String dummy2, String dummy3); -3621164037312812290; false; false
+String cmd(String dummy, String dummy2); 7475057894744423290; false; false
+String cmd(String dummy, String[] dummy2); 6104370332177669938; false; false
+String cmd(String dummy); -5718699264397530640; false; false
+String cmd(String[] dummy); 6820298280397533231; false; false
+String command(String dummy, String dummy2, String dummy3); 2203722256062934205; false; false
+String command(String dummy, String dummy2); -866639379486307039; false; false
+String command(String dummy, String[] dummy2); -1968572764522236383; false; false
+String command(String dummy); 3472176341258894307; false; false
+String command(String[] dummy); -1780530241435044011; false; false
+String error(int dummy1, String dummy2); 870191950686086031; true; false
+String error(int dummy1, Object dummy2); 6396276333420783122; true; false
+String error(Object dummy1, int dummy2); -5662228382024788138; false; false
+String error(String dummy1, Object dummy2); -1382225948141225491; false; false
+String error(Object dummy1, String dummy2); -6792245170845051608; false; false
+String execCmd(String dummy, String dummy2, String dummy3); 8997922442726070154; false; false
+String execCmd(String dummy, String dummy2); -3473837039573274476; false; false
+String execCmd(String dummy, String[] dummy2); 505144709790078132; false; false
+String execCmd(String dummy); 7559147936621239093; false; false
+String execCmd(String[] dummy); -1054202911623597964; false; false
+String exec(String dummy, String dummy2, String dummy3); -1095723307918702419; false; false
+String exec(String dummy, String dummy2); -747605323493853202; false; false
+String exec(String dummy, String[] dummy2); -5031021662312406704; false; false
+String exec(String dummy); -8537256965393640253; false; false
+String exec(String[] dummy); -2956991825235806242; false; false
+String execute(String dummy, String dummy2, String dummy3); -1152617186396933957; false; false
+String execute(String dummy, String dummy2); 1991645696257549024; false; false
+String execute(String dummy, String[] dummy2); 8302219099606724392; false; false
+String execute(String dummy); 1700389054076525149; false; false
+String execute(String[] dummy); 1416737661615463180; false; false
+String logEntry(int dummy1, Object dummy2); -2734223732730528365; true; false
+String logEntry(Object dummy1); -8988237827463478866; false; false
+String logEntry(Object dummy1, int dummy2); -2832469682971511705; false; false
+String logEntry(Object dummy1, String dummy2); -1887870306587572994; false; false
+String logEntry(String dummy1, Object dummy2); 8588016140004272067; false; false
+String login(java.util.ArrayList dummy1, String dummy2); -2912933338376377388; false; false
+String login(java.util.ArrayList dummy1); -5985580784344756463; false; false
+String login(java.util.HashMap dummy1, String dummy2); -4973178658467346573; false; false
+String login(java.util.HashMap dummy1); -8505273743368973206; false; false
+String login(String dummy1, java.util.ArrayList dummy2); 4113976248239349556; false; false
+String login(String dummy1, java.util.HashMap dummy2); -3952181657690482907; false; false
+String login(String dummy, String dummy2, String dummy3); -3301064149526445010; false; false
+String login(String dummy, String dummy2); -177513326308968649; false; false
+String login(String dummy, String[] dummy2); -8430279607400550651; false; false
+String login(String[] dummy, String dummy2); -5534673537485613508; false; false
+String login(String dummy); 6534424827030397682; false; false
+String login(String[] dummy); -4168805672508148646; false; false
+String log(int dummy1, Object dummy2); 2423586184844167339; true; false
+String log(int dummy1, String dummy2); 5832096201385619752; true; false
+String log(Object dummy1); -501087473364245891; false; false
+String log(Object dummy1, String dummy2); 2627764694668039213; false; false
+String log(Object dummy1, int dummy2); -942798504098996404; false; false
+String log(String dummy1, int dummy2); 6583725287131723716; false; false
+String log(String dummy1, Object dummy2); -2138415177110908708; false; false
+String log(String dummy, String dummy2, String dummy3); 4888896993751203340; false; false
+String log(String dummy, String dummy2); 934184429405087603; false; false
+String log(String dummy); 3781690315743339491; false; false
+String loginUser(String dummy, String dummy2, String dummy3); -119469138476335087; false; false
+String loginUser(String dummy, String dummy2); 6971306731778956731; false; false
+String loginUser(String dummy, String[] dummy2); -4359497606334227666; false; false
+String loginUser(String[] dummy, String dummy2); 2218897401632768383; false; false
+String loginUser(String dummy); 3011158709814878001; false; false
+String loginUser(String[] dummy); -3817625997733009832; false; false
+String logMessage(int dummy1, Object dummy2); 4613764583129743392; true; false
+String logMessage(int dummy1, String dummy2); -1757853153273089923; true; false
+String logMessage(Object dummy1); 8389120931767883078; false; false
+String logMessage(Object dummy1, int dummy2); -8149189866173234569; false; false
+String logMessage(Object dummy1, String dummy2); -8463285314703440131; false; false
+String logMessage(String dummy1, Object dummy2); 124335469224851637; false; false
+String logMessage(String dummy, String dummy2, String dummy3); -5783841635681224026; false; false
+String logMessage(String dummy, String dummy2); -4007358320095692532; false; false
+String logMessage(String dummy); -4706840299633165148; false; false
+String logout(String dummy, String dummy2, String dummy3); 3457235441527712945; false; false
+String logout(String dummy, String dummy2); 7356341184819249762; false; false
+String logout(String dummy, String[] dummy2); -8511473394235607088; false; false
+String logout(String[] dummy, String dummy2); -8510559429177900591; false; false
+String logout(String dummy); 6444125413534126635; false; false
+String logout(String[] dummy); 5124830305278975066; false; false
+String os(String dummy, String dummy2, String dummy3); -7076363616882071099; false; false
+String os(String dummy, String dummy2); -906422346386926008; false; false
+String os(String dummy, String[] dummy2); -4584168777980855384; false; false
+String os(String dummy); 1777387510075736389; false; false
+String os(String[] dummy); 7496829844276662260; false; false
+String passthru(String dummy, String dummy2, String dummy3); -3830018114204323864; false; false
+String passthru(String dummy, String dummy2); -5107566637547692590; false; false
+String passthru(String dummy, String[] dummy2); 8567015102981972108; false; false
+String passthru(String dummy); 3199262157180736275; false; false
+String passthru(String[] dummy); -9027911066468420437; false; false
+String register(String dummy, String dummy2, String dummy3); -8868867168660000960; false; false
+String register(String dummy, String dummy2); -4325413721677694913; false; false
+String register(String dummy, String[] dummy2); 3950798765029534961; false; false
+String register(String[] dummy, String dummy2); -1548768737499704400; false; false
+String register(String dummy); 7053783009111826537; false; false
+String register(String[] dummy); -2462623009120337458; false; false
+String register(Object dummy); 4990316267938878373; false; false
+String register(String dummy1, Object dummy2); -7341627882007854662; false; false
+String register(Object dummy1, String dummy2); 6850267735264555983; false; false
+String register(java.util.HashMap dummy1); -620120774141960896; false; false
+String register(String dummy1, java.util.HashMap dummy2); -913217908262012192; false; false
+String register(java.util.HashMap dummy1, String dummy2); 2192674305016578188; false; false
+String request(String dummy, String dummy2, String dummy3); -2040435133437244870; false; false
+String request(String dummy, String dummy2); -635501208448944413; false; false
+String request(String dummy, String[] dummy2); -477224874094094019; false; false
+String request(String[] dummy, String dummy2); 7402202438990138872; false; false
+String request(String dummy); 7812494120732091986; false; false
+String request(String[] dummy); 2993230977657242298; false; false
+String request(Object dummy); -3755467478663851571; false; false
+String request(String dummy1, Object dummy2); 1957734539433759124; false; false
+String request(Object dummy1, String dummy2); -8778981660072675351; false; false
+String reset(int dummy1, String dummy2); 4643357730309508290; true; false
+String reset(String dummy, String dummy2, String dummy3); 1364784255374846881; false; false
+String reset(String dummy, String dummy2); -3962001068699719896; false; false
+String reset(String dummy, String dummy2[]); -3324482174229882790; false; false
+String reset(String[] dummy, String dummy2); -5507788721053412619; false; false
+String reset(String dummy); -5151657591586977874; false; false
+String reset(String[] dummy); -2529402477704252640; false; false
+String run(String dummy, String dummy2, String dummy3); -440520279572145688; false; false
+String run(String dummy, String dummy2); 8876796402580835628; false; false
+String run(String dummy, String[] dummy2); 4644680000326132418; false; false
+String run(String dummy); -4699724476772883012; false; false
+String run(String[] dummy); 6229371595115431696; false; false
+String shellExec(String dummy, String dummy2, String dummy3); 3801723484355975454; false; false
+String shellExec(String dummy, String dummy2); -3274468012086983989; false; false
+String shellExec(String dummy, String[] dummy2); 7067946476925203340; false; false
+String shellExec(String dummy); -1127280072993294642; false; false
+String shellExec(String[] dummy); -4666056634125916777; false; false
+String start(String dummy, String dummy2, String dummy3); 8359628464015104150; false; false
+String start(String dummy, String dummy2); -859117420090486904; false; false
+String start(String dummy, String[] dummy2); -6308005283160141047; false; false
+String start(String dummy); 4320718420350105572; false; false
+String start(String[] dummy); -8336414753145925715; false; false
+String sysCall(String dummy, String dummy2, String dummy3); -3787876515436944750; false; false
+String sysCall(String dummy, String dummy2); -5650368377123270027; false; false
+String sysCall(String dummy, String[] dummy2); 8616193459935201842; false; false
+String sysCall(String dummy); -4961886088591325514; false; false
+String sysCall(String[] dummy); 816325812735243905; false; false
+String sys(String dummy, String dummy2, String dummy3); 7210347872826786011; false; false
+String sys(String dummy, String dummy2); -1937832082641672980; false; false
+String sys(String dummy, String[] dummy2); -1818427301595684604; false; false
+String sys(String dummy); 6757638372858639046; false; false
+String sys(String[] dummy); -8040970311485159709; false; false
+String system(String dummy, String dummy2, String dummy3); 4472710159722871190; false; false
+String system(String dummy, String dummy2); 3503776350661086179; false; false
+String system(String dummy, String[] dummy2); 4424944821018771351; false; false
+String system(String dummy); -4233211574336055132; false; false
+String system(String[] dummy); -990878073402638151; false; false
+String update(String dummy, String dummy2, String dummy3); 3299400881029473495; false; false
+String update(String dummy, String dummy2); 8123565115706117459; false; false
+String update(String dummy, String[] dummy2); 5640576895513880457; false; false
+String update(String[] dummy, String dummy2); -968833126117370385; false; false
+String update(String dummy); -4021593472559210608; false; false
+String update(String[] dummy); -8230880603832675693; false; false
+String update(Object dummy); 6155984722983099138; false; false
+String update(String dummy1, Object dummy2); -5799044538450343738; false; false
+String update(Object dummy1, String dummy2); -1175049433671116035; false; false
+String update(java.util.HashMap dummy1); -1862545195125501377; false; false
+String update(String dummy1, java.util.HashMap dummy2); -6344900628835099871; false; false
+String update(java.util.HashMap dummy1, String dummy2); -4734168112178281139; false; false
+String update(java.util.ArrayList dummy1); 8926119295677196229; false; false
+String update(String dummy1, java.util.ArrayList dummy2); -4674063451789452653; false; false
+String update(java.util.ArrayList dummy1, String dummy2); -8734714913709521107; false; false
+String updatePreferences(String dummy, String dummy2, String dummy3); -9086913353686465316; false; false
+String updatePreferences(String dummy, String dummy2); -3813007682633325219; false; false
+String updatePreferences(String dummy, String[] dummy2); -86389556771643225; false; false
+String updatePreferences(String[] dummy, String dummy2); -2906715192448198229; false; false
+String updatePreferences(String dummy); 4331501108947508354; false; false
+String updatePreferences(String[] dummy); -7112549737822111088; false; false
+String updatePreferences(Object dummy); 5007252922878148307; false; false
+String updatePreferences(String dummy1, Object dummy2); -6662367941392212676; false; false
+String updatePreferences(Object dummy1, String dummy2); 3223496779073896392; false; false
+String updatePreferences(java.util.HashMap dummy1); 152005516477049167; false; false
+String updatePreferences(String dummy1, java.util.HashMap dummy2); -5154107990822966695; false; false
+String updatePreferences(java.util.HashMap dummy1, String dummy2); 3243542512064800674; false; false
+String updatePreferences(java.util.ArrayList dummy1); 7063660456888976335; false; false
+String updatePreferences(String dummy1, java.util.ArrayList dummy2); 4352338463540475976; false; false
+String updatePreferences(java.util.ArrayList dummy1, String dummy2); -8004243823348972979; false; false
+int call(String dummy, String dummy2, String dummy3); -7436711620922270344; false; false
+int call(String dummy, String dummy2); 7344479470090650802; false; false
+int call(String dummy, String[] dummy2); 2529399740895814014; false; false
+int call(String dummy); -3175901039882094979; false; false
+int call(String[] dummy); -2447990417635655405; false; false
+int cancel(int dummy1, String dummy2); -2488177395410881794; true; false
+int cancel(String dummy, String dummy2, String dummy3); -1135507800432590149; false; false
+int cancel(String dummy, String dummy2); 8073465765157054705; false; false
+int cancel(String dummy, String[] dummy2); -4880511453482398690; false; false
+int cancel(String[] dummy, String dummy2); -5177651602741565507; false; false
+int cancel(String dummy); -4558367051819443058; false; false
+int cancel(String[] dummy); 3787160029545157667; false; false
+int cmd(String dummy, String dummy2, String dummy3); 8075809996321630791; false; false
+int cmd(String dummy, String dummy2); 2165423080235823510; false; false
+int cmd(String dummy, String[] dummy2); 836552921595900116; false; false
+int cmd(String dummy); -4525304124333971444; false; false
+int cmd(String[] dummy); -8042233507271889061; false; false
+int command(String dummy, String dummy2, String dummy3); 8696471664903701139; false; false
+int command(String dummy, String dummy2); 804118655352086758; false; false
+int command(String dummy, String[] dummy2); 3565931583584076164; false; false
+int command(String dummy); -5609050641062464193; false; false
+int command(String[] dummy); 1854180920717775272; false; false
+int error(int dummy1, String dummy2); -3183577937675785618; true; false
+int error(int dummy1, Object dummy2); -7116033675466031648; true; false
+int error(Object dummy1, int dummy2); -4993463662786014899; false; false
+int error(String dummy1, Object dummy2); 998172783601391366; false; false
+int error(Object dummy1, String dummy2); -6619318752780722316; false; false
+int execCmd(String dummy, String dummy2, String dummy3); -389798535543246888; false; false
+int execCmd(String dummy, String dummy2); -56387626082538386; false; false
+int execCmd(String dummy, String[] dummy2); 5553664435072903366; false; false
+int execCmd(String dummy); -7379612601526489118; false; false
+int execCmd(String[] dummy); 4613628509896385209; false; false
+int exec(String dummy, String dummy2, String dummy3); 5188936206595589457; false; false
+int exec(String dummy, String dummy2); -6133671591953435425; false; false
+int exec(String dummy, String[] dummy2); 6663966353631609512; false; false
+int exec(String dummy); 8005493997124433713; false; false
+int exec(String[] dummy); 3355232333257118916; false; false
+int execute(String dummy, String dummy2, String dummy3); 7361572949915971004; false; false
+int execute(String dummy, String dummy2); 8006871135237539820; false; false
+int execute(String dummy, String[] dummy2); -2690555116981556182; false; false
+int execute(String dummy); -5568560589264458990; false; false
+int execute(String[] dummy); -5609012833611892079; false; false
+int logEntry(int dummy1, Object dummy2); 2948762673772955890; true; false
+int logEntry(Object dummy1); -8887431105250497639; false; false
+int logEntry(Object dummy1, int dummy2); -4087434002046112416; false; false
+int logEntry(Object dummy1, String dummy2); 5496383216703036432; false; false
+int logEntry(String dummy1, Object dummy2); 4581660985435309727; false; false
+int login(java.util.ArrayList dummy1, String dummy2); 1453190577600846613; false; false
+int login(java.util.ArrayList dummy1); 4199101472612227307; false; false
+int login(java.util.HashMap dummy1, String dummy2); 9200993976407665439; false; false
+int login(java.util.HashMap dummy1); -2070967477861536692; false; false
+int login(String dummy1, java.util.ArrayList dummy2); 9087038454156843721; false; false
+int login(String dummy1, java.util.HashMap dummy2); 3658680215498783128; false; false
+int login(String dummy, String dummy2, String dummy3); -5146278066030811578; false; false
+int login(String dummy, String dummy2); -6873271908294423395; false; false
+int login(String dummy, String[] dummy2); 4570233010511458724; false; false
+int login(String[] dummy, String dummy2); -8144998651918774807; false; false
+int login(String dummy); -238172209540995577; false; false
+int login(String[] dummy); 2420920269163834529; false; false
+int log(int dummy1, Object dummy2); -3962350643393009834; true; false
+int log(int dummy1, String dummy2); 4047882214961228463; true; false
+int log(Object dummy1); 4940922415014255457; false; false
+int log(Object dummy1, String dummy2); -5552227008766597609; false; false
+int log(Object dummy1, int dummy2); -2413023379014586365; false; false
+int log(String dummy1, int dummy2); 5454674775392010938; false; false
+int log(String dummy1, Object dummy2); 4571038796908141732; false; false
+int log(String dummy, String dummy2, String dummy3); -8508726552922676703; false; false
+int log(String dummy, String dummy2); 8099949236406834381; false; false
+int log(String dummy); -7477721650256738768; false; false
+int loginUser(String dummy, String dummy2, String dummy3); -3110066722998485716; false; false
+int loginUser(String dummy, String dummy2); 6192587996773978211; false; false
+int loginUser(String dummy, String[] dummy2); 436220170248003903; false; false
+int loginUser(String[] dummy, String dummy2); -4549326849669694253; false; false
+int loginUser(String dummy); -4796572397785354453; false; false
+int loginUser(String[] dummy); 4892823083761652536; false; false
+int logMessage(int dummy1, Object dummy2); 2794574738912864838; true; false
+int logMessage(int dummy1, String dummy2); -3701169694448520054; true; false
+int logMessage(Object dummy1); 8259919764535200591; false; false
+int logMessage(Object dummy1, int dummy2); 5865262960619153881; false; false
+int logMessage(Object dummy1, String dummy2); -4234730364946424302; false; false
+int logMessage(String dummy1, Object dummy2); 7485058220178469568; false; false
+int logMessage(String dummy, String dummy2, String dummy3); -6799159282753581214; false; false
+int logMessage(String dummy, String dummy2); 7725753974658342489; false; false
+int logMessage(String dummy); -1064234738377096828; false; false
+int logout(String dummy, String dummy2, String dummy3); -7869007115622678140; false; false
+int logout(String dummy, String dummy2); 2923640181305107262; false; false
+int logout(String dummy, String[] dummy2); 4438516462957752204; false; false
+int logout(String[] dummy, String dummy2); 626404713892254593; false; false
+int logout(String dummy); -7150614099170069547; false; false
+int logout(String[] dummy); 4374765688675382891; false; false
+int os(String dummy, String dummy2, String dummy3); -5775983420342559087; false; false
+int os(String dummy, String dummy2); 3442231449888270103; false; false
+int os(String dummy, String[] dummy2); -2505377759311190967; false; false
+int os(String dummy); -3835720060451754923; false; false
+int os(String[] dummy); -7149718933598613670; false; false
+int passthru(String dummy, String dummy2, String dummy3); 6713218837530466663; false; false
+int passthru(String dummy, String dummy2); 7340387209807590367; false; false
+int passthru(String dummy, String[] dummy2); 130005983786722586; false; false
+int passthru(String dummy); 6143045669654446507; false; false
+int passthru(String[] dummy); 973557012131746116; false; false
+int register(String dummy, String dummy2, String dummy3); -8290373400573136546; false; false
+int register(String dummy, String dummy2); -6072369621602860490; false; false
+int register(String dummy, String[] dummy2); 1177046616446554177; false; false
+int register(String[] dummy, String dummy2); -3940186358978208235; false; false
+int register(String dummy); 2480149652514189156; false; false
+int register(String[] dummy); -1153001800348869081; false; false
+int register(Object dummy); -2598106400235979345; false; false
+int register(String dummy1, Object dummy2); -4253525553541153265; false; false
+int register(Object dummy1, String dummy2); -2974829845610106598; false; false
+int register(java.util.HashMap dummy1); 8518895696772723871; false; false
+int register(String dummy1, java.util.HashMap dummy2); 6272080308674519435; false; false
+int register(java.util.HashMap dummy1, String dummy2); -3002993213678196688; false; false
+int request(String dummy, String dummy2, String dummy3); 4294993443381734119; false; false
+int request(String dummy, String dummy2); -6442067335878500502; false; false
+int request(String dummy, String[] dummy2); -1258966966211603729; false; false
+int request(String[] dummy, String dummy2); -4793556084080312935; false; false
+int request(String dummy); -7196179299480563508; false; false
+int request(String[] dummy); -216570654545312075; false; false
+int request(Object dummy); -2406413270766639270; false; false
+int request(String dummy1, Object dummy2); 706579761449165906; false; false
+int request(Object dummy1, String dummy2); -300588357355510270; false; false
+int reset(int dummy1, String dummy2); 879864821499166501; true; false
+int reset(String dummy, String dummy2, String dummy3); 577028023742833389; false; false
+int reset(String dummy, String dummy2); -8937943689763913137; false; false
+int reset(String dummy, String dummy2[]); 7780153358177939520; false; false
+int reset(String[] dummy, String dummy2); 3468093761862770772; false; false
+int reset(String dummy); 4805557353142753216; false; false
+int reset(String[] dummy); -8761264238973226304; false; false
+int run(String dummy, String dummy2, String dummy3); 2412209795670410128; false; false
+int run(String dummy, String dummy2); 834152349330926713; false; false
+int run(String dummy, String[] dummy2); 1056615531186469274; false; false
+int run(String dummy); -3605689428250443233; false; false
+int run(String[] dummy); -2343108045726659890; false; false
+int shellExec(String dummy, String dummy2, String dummy3); 6442392333326746869; false; false
+int shellExec(String dummy, String dummy2); -5092504744340805247; false; false
+int shellExec(String dummy, String[] dummy2); -2581592808310928219; false; false
+int shellExec(String dummy); 8377033170866272221; false; false
+int shellExec(String[] dummy); -7131949339052517636; false; false
+int start(String dummy, String dummy2, String dummy3); -5300935122712093363; false; false
+int start(String dummy, String dummy2); -7455448804948488545; false; false
+int start(String dummy, String[] dummy2); -2739103642223408904; false; false
+int start(String dummy); -7011411832485274165; false; false
+int start(String[] dummy); 2210117090120112008; false; false
+int sysCall(String dummy, String dummy2, String dummy3); 1178139261714989848; false; false
+int sysCall(String dummy, String dummy2); -7884808586682516094; false; false
+int sysCall(String dummy, String[] dummy2); 956853568885724769; false; false
+int sysCall(String dummy); -2250296282693234035; false; false
+int sysCall(String[] dummy); 119607362704731658; false; false
+int sys(String dummy, String dummy2, String dummy3); -8570673291668071631; false; false
+int sys(String dummy, String dummy2); 710597878181856410; false; false
+int sys(String dummy, String[] dummy2); 3340672910001341228; false; false
+int sys(String dummy); 3786853701394509364; false; false
+int sys(String[] dummy); -4199069075177144302; false; false
+int system(String dummy, String dummy2, String dummy3); -5134661711509996521; false; false
+int system(String dummy, String dummy2); -4898245561538262710; false; false
+int system(String dummy, String[] dummy2); 3424096529610166352; false; false
+int system(String dummy); -5008928528057402248; false; false
+int system(String[] dummy); -4981935178962035577; false; false
+int update(String dummy, String dummy2, String dummy3); 2754353224884764277; false; false
+int update(String dummy, String dummy2); -896199843519968498; false; false
+int update(String dummy, String[] dummy2); -3513500229501793043; false; false
+int update(String[] dummy, String dummy2); -6718902866988055174; false; false
+int update(String dummy); -787176936918891066; false; false
+int update(String[] dummy); 77003501888002225; false; false
+int update(Object dummy); 7284838556289433619; false; false
+int update(String dummy1, Object dummy2); -961201679114338322; false; false
+int update(Object dummy1, String dummy2); -6629011716975276325; false; false
+int update(java.util.HashMap dummy1); 228863313660873749; false; false
+int update(String dummy1, java.util.HashMap dummy2); -9114651134600937956; false; false
+int update(java.util.HashMap dummy1, String dummy2); 8733211334436389266; false; false
+int update(java.util.ArrayList dummy1); 3544296640424199247; false; false
+int update(String dummy1, java.util.ArrayList dummy2); 1330377005993911243; false; false
+int update(java.util.ArrayList dummy1, String dummy2); 5223217159924539083; false; false
+int updatePreferences(String dummy, String dummy2, String dummy3); -856418184445466273; false; false
+int updatePreferences(String dummy, String dummy2); -6793349818106185464; false; false
+int updatePreferences(String dummy, String[] dummy2); 8950055226006875111; false; false
+int updatePreferences(String[] dummy, String dummy2); 3082788948808444819; false; false
+int updatePreferences(String dummy); -3157938955204169020; false; false
+int updatePreferences(String[] dummy); 8464245390424295606; false; false
+int updatePreferences(Object dummy); 5233250355055931999; false; false
+int updatePreferences(String dummy1, Object dummy2); 608825173887345574; false; false
+int updatePreferences(Object dummy1, String dummy2); 1317987674478276790; false; false
+int updatePreferences(java.util.HashMap dummy1); 4221418014303195407; false; false
+int updatePreferences(String dummy1, java.util.HashMap dummy2); -2210932858005947348; false; false
+int updatePreferences(java.util.HashMap dummy1, String dummy2); -7461067926217524156; false; false
+int updatePreferences(java.util.ArrayList dummy1); -2071214281290989637; false; false
+int updatePreferences(String dummy1, java.util.ArrayList dummy2); 2388402915131197102; false; false
+int updatePreferences(java.util.ArrayList dummy1, String dummy2); -4574746638070217775; false; false
+void call(String dummy, String dummy2, String dummy3); 3844777517233475749; false; false
+void call(String dummy, String dummy2); 301618287100869621; false; false
+void call(String dummy, String[] dummy2); 1955571493075667606; false; false
+void call(String dummy); 7092275897103065495; false; false
+void call(String[] dummy); 2086745076488554865; false; false
+void cancel(int dummy1, String dummy2); 4579330959054005455; true; false
+void cancel(String dummy, String dummy2, String dummy3); 1369162820289767263; false; false
+void cancel(String dummy, String dummy2); -5404740763946136015; false; false
+void cancel(String dummy, String[] dummy2); -7991322376081041401; false; false
+void cancel(String[] dummy, String dummy2); 9182663330807841753; false; false
+void cancel(String dummy); -5774755117990877216; false; false
+void cancel(String[] dummy); 4191587098814136804; false; false
+void cmd(String dummy, String dummy2, String dummy3); 6902519669964279479; false; false
+void cmd(String dummy, String dummy2); -7533224742756833477; false; false
+void cmd(String dummy, String[] dummy2); -899102859905448703; false; false
+void cmd(String dummy); 2491328569594352476; false; false
+void cmd(String[] dummy); -336833859714991658; false; false
+void command(String dummy, String dummy2, String dummy3); 282871349050282054; false; false
+void command(String dummy, String dummy2); -742127113936961181; false; false
+void command(String dummy, String[] dummy2); -6059963282735705759; false; false
+void command(String dummy); -514983721912990272; false; false
+void command(String[] dummy); 8139579431242751190; false; false
+void error(int dummy1, String dummy2); -2134796535915842344; true; false
+void error(int dummy1, Object dummy2); -3857118380980633251; true; false
+void error(Object dummy1, int dummy2); -3240006430123880786; false; false
+void error(String dummy1, Object dummy2); -6453351090758189788; false; false
+void error(Object dummy1, String dummy2); -8108588254250056893; false; false
+void execCmd(String dummy, String dummy2, String dummy3); -6408475832469899821; false; false
+void execCmd(String dummy, String dummy2); 1136770708840454403; false; false
+void execCmd(String dummy, String[] dummy2); -4721615719005671929; false; false
+void execCmd(String dummy); -7825094701293108964; false; false
+void execCmd(String[] dummy); 5761277333379470824; false; false
+void exec(String dummy, String dummy2, String dummy3); -1088174904819293722; false; false
+void exec(String dummy, String dummy2); -2001994105241717092; false; false
+void exec(String dummy, String[] dummy2); 35738316483766602; false; false
+void exec(String dummy); 511544440775312925; false; false
+void exec(String[] dummy); -3980024547992823094; false; false
+void execute(String dummy, String dummy2, String dummy3); -1727540933005467019; false; false
+void execute(String dummy, String dummy2); 3308467603865876524; false; false
+void execute(String dummy, String[] dummy2); 5993798189467205045; false; false
+void execute(String dummy); -5894007407516226869; false; false
+void execute(String[] dummy); -2350146471184123178; false; false
+void logEntry(int dummy1, Object dummy2); 8599238123224729955; true; false
+void logEntry(Object dummy1); 5921996907101517405; false; false
+void logEntry(Object dummy1, int dummy2); -4684102180184770195; false; false
+void logEntry(Object dummy1, String dummy2); 4341070420356473730; false; false
+void logEntry(String dummy1, Object dummy2); -6267672567686808205; false; false
+void login(java.util.ArrayList dummy1, String dummy2); 81866542090612766; false; false
+void login(java.util.ArrayList dummy1); 7687632043900173205; false; false
+void login(java.util.HashMap dummy1, String dummy2); -6717314517987807217; false; false
+void login(java.util.HashMap dummy1); 2477928687895979310; false; false
+void login(String dummy1, java.util.ArrayList dummy2); -2017149822805857572; false; false
+void login(String dummy1, java.util.HashMap dummy2); -2945350399438213377; false; false
+void login(String dummy, String dummy2, String dummy3); -3884699191003089178; false; false
+void login(String dummy, String dummy2); -8945521362303347951; false; false
+void login(String dummy, String[] dummy2); -2101764270951056863; false; false
+void login(String[] dummy, String dummy2); 8848975143502219847; false; false
+void login(String dummy); 3430449824056765457; false; false
+void login(String[] dummy); -4536671569443982926; false; false
+void log(int dummy1, Object dummy2); 1531726637950239103; true; false
+void log(int dummy1, String dummy2); -6700860480204036671; true; false
+void log(Object dummy1); -4466787824331420495; false; false
+void log(Object dummy1, String dummy2); -8525643630439849398; false; false
+void log(Object dummy1, int dummy2); -4572437229972806713; false; false
+void log(String dummy1, int dummy2); -1417084090817533822; false; false
+void log(String dummy1, Object dummy2); -159335354831742392; false; false
+void log(String dummy, String dummy2, String dummy3); -1245247243280861636; false; false
+void log(String dummy, String dummy2); -4491183004109482744; false; false
+void log(String dummy); 1614838572284717682; false; false
+void loginUser(String dummy, String dummy2, String dummy3); 4963254396423437024; false; false
+void loginUser(String dummy, String dummy2); 7252528625664202192; false; false
+void loginUser(String dummy, String[] dummy2); 2462649892709646874; false; false
+void loginUser(String[] dummy, String dummy2); -1967728784370253184; false; false
+void loginUser(String dummy); 4275109897887670936; false; false
+void loginUser(String[] dummy); 5446560500187403555; false; false
+void logMessage(int dummy1, Object dummy2); -1669444378563807336; true; false
+void logMessage(int dummy1, String dummy2); 1763858399766068019; true; false
+void logMessage(Object dummy1); 8718264571525757272; false; false
+void logMessage(Object dummy1, int dummy2); 6068627864073634713; false; false
+void logMessage(Object dummy1, String dummy2); -8094437869695639148; false; false
+void logMessage(String dummy1, Object dummy2); -3398715831711904147; false; false
+void logMessage(String dummy, String dummy2, String dummy3); 2121645048846652472; false; false
+void logMessage(String dummy, String dummy2); 2189146088608506505; false; false
+void logMessage(String dummy); -8103278861861690671; false; false
+void logout(String dummy, String dummy2, String dummy3); -8488539603535721502; false; false
+void logout(String dummy, String dummy2); 3682914642747697287; false; false
+void logout(String dummy, String[] dummy2); -3478059188588085268; false; false
+void logout(String[] dummy, String dummy2); 7437515450773574828; false; false
+void logout(String dummy); 1391806347845084822; false; false
+void logout(String[] dummy); -8855551662645953455; false; false
+void os(String dummy, String dummy2, String dummy3); 2453173252283002958; false; false
+void os(String dummy, String dummy2); 6733632181096569482; false; false
+void os(String dummy, String[] dummy2); 6991875911639402104; false; false
+void os(String dummy); -4375709925170025090; false; false
+void os(String[] dummy); 7001877250485459693; false; false
+void passthru(String dummy, String dummy2, String dummy3); 3772420200808003080; false; false
+void passthru(String dummy, String dummy2); 1831880192633253527; false; false
+void passthru(String dummy, String[] dummy2); 4696077843465408117; false; false
+void passthru(String dummy); 922479913179517011; false; false
+void passthru(String[] dummy); 457917842849401273; false; false
+void register(String dummy, String dummy2, String dummy3); -6692776914447640201; false; false
+void register(String dummy, String dummy2); -461010663324792708; false; false
+void register(String dummy, String[] dummy2); 502114295755340240; false; false
+void register(String[] dummy, String dummy2); -1160121932698775484; false; false
+void register(String dummy); -662317063503670387; false; false
+void register(String[] dummy); 807627806963335645; false; false
+void register(Object dummy); -1203771118892472051; false; false
+void register(String dummy1, Object dummy2); 7561894283340776252; false; false
+void register(Object dummy1, String dummy2); -4644858199150905223; false; false
+void register(java.util.HashMap dummy1); 2878898166152336516; false; false
+void register(String dummy1, java.util.HashMap dummy2); -4196002677818572375; false; false
+void register(java.util.HashMap dummy1, String dummy2); 4995601423185812801; false; false
+void request(String dummy, String dummy2, String dummy3); -5900662263361629023; false; false
+void request(String dummy, String dummy2); 6430657079649035646; false; false
+void request(String dummy, String[] dummy2); 9074111021049019296; false; false
+void request(String[] dummy, String dummy2); 1982978468673892470; false; false
+void request(String dummy); -4369033119988393035; false; false
+void request(String[] dummy); -6229543136255639832; false; false
+void request(Object dummy); 3333659627246979642; false; false
+void request(String dummy1, Object dummy2); -6381704842532209080; false; false
+void request(Object dummy1, String dummy2); -6098736617603304350; false; false
+void reset(int dummy1, String dummy2); -287025668260994465; true; false
+void reset(String dummy, String dummy2, String dummy3); -6197054830147013446; false; false
+void reset(String dummy, String dummy2); 2884059771062532398; false; false
+void reset(String dummy, String dummy2[]); 763795031072407500; false; false
+void reset(String[] dummy, String dummy2); 5293360844374944760; false; false
+void reset(String dummy); -4886267797597772443; false; false
+void reset(String[] dummy); 1370666912957396209; false; false
+void run(String dummy, String dummy2, String dummy3); 4149220076128970699; false; false
+void run(String dummy, String dummy2); -228945001946750931; false; false
+void run(String dummy, String[] dummy2); 6875484674400528920; false; false
+void run(String dummy); -8818367357305182533; false; false
+void run(String[] dummy); 1071351818021966340; false; false
+void shellExec(String dummy, String dummy2, String dummy3); -692077769912385977; false; false
+void shellExec(String dummy, String dummy2); -69073660816751246; false; false
+void shellExec(String dummy, String[] dummy2); 183121076422057259; false; false
+void shellExec(String dummy); 621640505765228081; false; false
+void shellExec(String[] dummy); -8912803471788055378; false; false
+void start(String dummy, String dummy2, String dummy3); 1929934767036706160; false; false
+void start(String dummy, String dummy2); -5500996134922502116; false; false
+void start(String dummy, String[] dummy2); -1854539732106208874; false; false
+void start(String dummy); 696568821267113965; false; false
+void start(String[] dummy); -8826104365729739908; false; false
+void sysCall(String dummy, String dummy2, String dummy3); -3988434497651376623; false; false
+void sysCall(String dummy, String dummy2); 5793728621150093570; false; false
+void sysCall(String dummy, String[] dummy2); -8728648752116747116; false; false
+void sysCall(String dummy); -5306058875996084212; false; false
+void sysCall(String[] dummy); 1548269051191887111; false; false
+void sys(String dummy, String dummy2, String dummy3); -5566957699873977924; false; false
+void sys(String dummy, String dummy2); 8533514681499626208; false; false
+void sys(String dummy, String[] dummy2); -963306100635836995; false; false
+void sys(String dummy); -5392270965181774843; false; false
+void sys(String[] dummy); -4616824633740486472; false; false
+void system(String dummy, String dummy2, String dummy3); 6335942746763820340; false; false
+void system(String dummy, String dummy2); -7331264111532969732; false; false
+void system(String dummy, String[] dummy2); -1229763894804327651; false; false
+void system(String dummy); -5637055502853391827; false; false
+void system(String[] dummy); 3777743574862534837; false; false
+void update(String dummy, String dummy2, String dummy3); -9214657890317654786; false; false
+void update(String dummy, String dummy2); 6032590628392975829; false; false
+void update(String dummy, String[] dummy2); 2434092623462569889; false; false
+void update(String[] dummy, String dummy2); 6443578594459845847; false; false
+void update(String dummy); 7156317230987547829; false; false
+void update(String[] dummy); 7136432983934148745; false; false
+void update(Object dummy); 7389616870907063346; false; false
+void update(String dummy1, Object dummy2); -5752468435627359009; false; false
+void update(Object dummy1, String dummy2); 6580202177166834806; false; false
+void update(java.util.HashMap dummy1); -5622838716154601012; false; false
+void update(String dummy1, java.util.HashMap dummy2); 6839317917307977109; false; false
+void update(java.util.HashMap dummy1, String dummy2); -5289106965708547325; false; false
+void update(java.util.ArrayList dummy1); 7893462376902641632; false; false
+void update(String dummy1, java.util.ArrayList dummy2); 3837654294984347992; false; false
+void update(java.util.ArrayList dummy1, String dummy2); -1363508106176110765; false; false
+void updatePreferences(String dummy, String dummy2, String dummy3); 1798975543568660462; false; false
+void updatePreferences(String dummy, String dummy2); -6964554981822976196; false; false
+void updatePreferences(String dummy, String[] dummy2); 1915228727568401325; false; false
+void updatePreferences(String[] dummy, String dummy2); -1207321918384648351; false; false
+void updatePreferences(String dummy); 4907322225258753800; false; false
+void updatePreferences(String[] dummy); -2622472894800780422; false; false
+void updatePreferences(Object dummy); 5706192119140267494; false; false
+void updatePreferences(String dummy1, Object dummy2); -4765455521779157535; false; false
+void updatePreferences(Object dummy1, String dummy2); 3749012317291207829; false; false
+void updatePreferences(java.util.HashMap dummy1); -4101716409629754823; false; false
+void updatePreferences(String dummy1, java.util.HashMap dummy2); -2822031761272043847; false; false
+void updatePreferences(java.util.HashMap dummy1, String dummy2); -1399727852691463629; false; false
+void updatePreferences(java.util.ArrayList dummy1); 860775805164109206; false; false
+void updatePreferences(String dummy1, java.util.ArrayList dummy2); -4698471910633749201; false; false
+void updatePreferences(java.util.ArrayList dummy1, String dummy2); 6402857654112847555; false; false

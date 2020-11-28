@@ -27,13 +27,14 @@ public final class RMIWhisperer {
     public String host;
     private Registry rmiRegistry;
 
-    public void connect(String host, int port, boolean ssl, boolean followRedirects) {
-
+    public void connect(String host, int port, boolean ssl, boolean followRedirects)
+    {
         this.host = host;
         this.port = port;
 
         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
         RMISocketFactory my = new LoopbackSocketFactory(host, fac, followRedirects);
+
         try {
             RMISocketFactory.setSocketFactory(my);
         } catch (IOException e2) {
@@ -69,41 +70,35 @@ public final class RMIWhisperer {
             Logger.printlnPlain("done.");
 
         } catch( RemoteException e ) {
-
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Could not connect to " + host + "on port " + port);
-            Logger.eprint("Exception Message: ");
-            Logger.eprintlnPlain_ye(e.getMessage());
-            System.exit(1);
+            Logger.eprintlnMixedYellow("Error: Could not connect to " + host + ":" + port, ".");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
     }
 
-
-    public String[] getBoundNames() {
-
+    public String[] getBoundNames()
+    {
         String[] boundNames = null;
         Logger.print("Obtaining a list of bound names... ");
 
         try {
-
             boundNames = rmiRegistry.list();
             Logger.printlnPlain("done.");
-            Logger.println(boundNames.length + " names are bound to the registry.");
+            Logger.printlnMixedBlueFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
 
         } catch( RemoteException e ) {
-
             Logger.printlnPlain("failed.");
-            Logger.eprintln("Error: Remote failure when listing bound names");
-            Logger.eprint("Exception Message: ");
-            Logger.eprintlnPlain_ye(e.getMessage());
-            System.exit(1);
+            Logger.eprintlnYellow("Error: Remote failure when listing bound names");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
         }
+
         return boundNames;
     }
 
-
-    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames) {
-
+    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames)
+    {
         ArrayList<HashMap<String, String>> returnList = new ArrayList<HashMap<String, String>>();
 
         HashMap<String, String> knownClasses = new HashMap<String,String>();
@@ -120,13 +115,23 @@ public final class RMIWhisperer {
 
           } catch( RemoteException e ) {
 
-              String exception = e.toString();
+              Throwable cause = RMGUtils.getCause(e);
+              if( cause instanceof ClassNotFoundException ) {
 
-              int start = exception.indexOf("java.lang.ClassNotFoundException: ") + 34;
-              int end = exception.indexOf(" (no security manager: RMI class loader disabled)");
+                  /*
+                   * Expected exception message is: <CLASSNAME> (no security manager: RMI class loader disabled).
+                   * As classnames cannot contain spaces, cutting on the first space should be sufficient.
+                   */
+                  String message = cause.getMessage();
+                  int end = message.indexOf(" ");
 
-              String missingClass = exception.substring(start, end);
-              unknownClasses.put(className, missingClass);
+                  message = message.substring(0, end);
+                  unknownClasses.put(className, message);
+
+              } else {
+                  Logger.eprintlnMixedYellow("Caught unexpected", "RemoteException", "during RMI lookup.");
+                  RMGUtils.stackTrace(e);
+              }
 
           } catch( NotBoundException e) {
               Logger.eprintln("Error: Failure while looking up '" + className + "'... ");
@@ -138,7 +143,8 @@ public final class RMIWhisperer {
         return returnList;
     }
 
-    public Registry getRegistry() {
+    public Registry getRegistry()
+    {
         return this.rmiRegistry;
     }
 }
