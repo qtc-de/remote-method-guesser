@@ -26,6 +26,10 @@ public class SampleWriter {
     private File sampleFolder;
     private File templateFolder;
 
+    private static String importPlaceholder = "import <IMPORT>;";
+    private static String methodPlaceholder = "    <METHOD> throws RemoteException;";
+    private static String argumentPlaceholder = "            <ARGUMENTTYPE> <ARGUMENT> = TODO;";
+
     public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects, int legacyMode) throws IOException
     {
         this.legacyMode = legacyMode;
@@ -97,7 +101,7 @@ public class SampleWriter {
 
     public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
         if(isLegacy)
             className += "_Interface";
 
@@ -107,59 +111,49 @@ public class SampleWriter {
         String template = loadTemplate("SampleTemplate.java");
         String port = String.valueOf(remotePort);
 
+        CtClass returnType = method.getMethod().getReturnType();
         CtClass[] types = method.getParameterTypes();
         int numberOfArguments = types.length;
 
-        String typeName;
-        String importPlaceholder = "import <IMPORT>;";
         List<String> typeList = new ArrayList<String>();
-
-        for(CtClass type : types) {
-
-            typeName = type.getName();
-            if( typeName.contains(".") && !typeName.startsWith("java.lang") && !typeList.contains(typeName)) {
-                typeList.add(typeName);
-                template = template.replace(importPlaceholder, importPlaceholder + "\n" + importPlaceholder);
-                template = template.replaceFirst("<IMPORT>", typeName);
-            }
-        }
+        template = addImport(template, returnType.getName(), typeList);
 
         String argument = "";
         StringBuilder argumentString = new StringBuilder();
-        String placeholder = "<ARGUMENTTYPE> <ARGUMENT> = TODO;";
 
         for(int ctr = 0; ctr < numberOfArguments; ctr++) {
+            template = addImport(template, types[ctr].getName(), typeList);
             argument = "argument" + ctr;
-            template = template.replace(placeholder, placeholder + "\n            " + placeholder);
+
+            template = duplicate(template, argumentPlaceholder);
             template = template.replaceFirst("<ARGUMENTTYPE>", types[ctr].getName());
             template = template.replaceFirst("<ARGUMENT>", argument);
+
             argument += (ctr == numberOfArguments - 1) ? "" : ", ";
             argumentString.append(argument);
         }
 
+        template = remove(template, importPlaceholder);
+        template = remove(template, argumentPlaceholder);
         String pureClassName = getClassName(className);
         String sampleClassName = method.getName();
 
-        template = template.replace(importPlaceholder, "");
-        template = template.replace("\n            " + placeholder, "");
-        template = template.replace(  "<PACKAGE>",                  className);
-        template = template.replace(  "<SAMPLECLASSNAME>",            sampleClassName);
-        template = template.replace(  "<SSL>",                      this.ssl);
-        template = template.replace(  "<FOLLOW>",                   this.followRedirects);
-        template = template.replace(  "<REMOTEHOST>",               remoteHost);
-        template = template.replace(  "<REMOTEPORT>",               port);
-        template = template.replace(  "<BOUNDNAME>",                boundName);
-        template = template.replace(  "<CLASSNAME>",                pureClassName);
-        template = template.replace(  "<METHODNAME>",               method.getMethod().getName());
-        template = template.replace(  "<ARGUMENTS>",                argumentString.toString());
+        template = template.replace("<PACKAGE>", className);
+        template = template.replace("<SAMPLECLASSNAME>", sampleClassName);
+        template = template.replace("<SSL>", this.ssl);
+        template = template.replace("<FOLLOW>", this.followRedirects);
+        template = template.replace("<REMOTEHOST>", remoteHost);
+        template = template.replace("<REMOTEPORT>", port);
+        template = template.replace("<BOUNDNAME>", boundName);
+        template = template.replace("<CLASSNAME>", pureClassName);
+        template = template.replace("<METHODNAME>", method.getMethod().getName());
+        template = template.replace("<ARGUMENTS>", argumentString.toString());
 
-        String returnType = method.getMethod().getReturnType().getName();
-
-        if( returnType.equals("void") ) {
-            template = template.replace("<RETURNTYPE> response = ", "");
-            template = template.replace("System.out.println(\"[+] The servers response is: \" + response);", "");
+        if( returnType.getName().equals("void") ) {
+            template = remove(template, "<RETURNTYPE> response = ");
+            template = remove(template, "System.out.println(\"[+] The servers response is: \" + response);");
         } else {
-            template = template.replace("<RETURNTYPE>", returnType);
+            template = template.replace("<RETURNTYPE>", returnType.getName());
         }
 
         writeSample(boundName, sampleClassName, template, sampleClassName);
@@ -167,7 +161,7 @@ public class SampleWriter {
 
     public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
 
         if(isLegacy) {
             createInterfaceSample(boundName, className + "_Interface", methods);
@@ -182,36 +176,27 @@ public class SampleWriter {
         Security.checkPackageName(className);
         String template = loadTemplate("InterfaceTemplate.java");
 
-        String typeName;
-        List<String> types = new ArrayList<String>();
-
-        String importPlaceholder = "import <IMPORT>;";
-        String methodPlaceholder = "    <METHOD> throws RemoteException;";
-
         for(MethodCandidate method : methods) {
-            template = template.replaceFirst(methodPlaceholder, methodPlaceholder + "\n" + methodPlaceholder);
+            template = duplicate(template, methodPlaceholder);
             template = template.replaceFirst("<METHOD>", method.getSignature());
 
-            for(CtClass type : method.getParameterTypes()) {
+            List<String> types = new ArrayList<String>();
+            CtClass returnType = method.getMethod().getReturnType();
+            template = addImport(template, returnType.getName(), types);
 
-                typeName = type.getName();
-                if( typeName.contains(".") && !typeName.startsWith("java.lang") && !types.contains(typeName)) {
-                    types.add(typeName);
-                    template = template.replace(importPlaceholder, importPlaceholder + "\n" + importPlaceholder);
-                    template = template.replaceFirst("<IMPORT>", typeName);
-                }
+            for(CtClass type : method.getParameterTypes()) {
+                template = addImport(template, type.getName(), types);
             }
         }
 
-        template = template.replace(importPlaceholder, "");
-        template = template.replace(methodPlaceholder, "");
+        template = remove(template, importPlaceholder);
+        template = remove(template, methodPlaceholder);
 
         String packageName = getPackageName(className);
         className = getClassName(className);
 
         template = template.replace("<PACKAGENAME>", packageName);
         template = template.replace("<CLASSNAME>", className);
-        template = template.replace("<METHOD>", className);
 
         writeSample(boundName, className, template);
     }
@@ -221,7 +206,6 @@ public class SampleWriter {
         Security.checkPackageName(className);
         String stubTemplate = loadTemplate("LegacyTemplate.java");
         String methodTemplate = loadTemplate("LegacyMethodTemplate.java");
-
 
         int count = 0;
         String argName;
@@ -243,7 +227,7 @@ public class SampleWriter {
             stubTemplate = duplicate(stubTemplate, methodLookupPlaceholder);
 
             if( returnType != CtPrimitiveType.voidType) {
-                addImport(stubTemplate, returnType.getName(), types);
+                stubTemplate = addImport(stubTemplate, returnType.getName(), types);
                 currentTemplate = currentTemplate.replaceFirst("<CAST>", RMGUtils.getCast(returnType));
             } else {
                 currentTemplate = remove(currentTemplate, castPlaceholder);
@@ -285,7 +269,7 @@ public class SampleWriter {
             count += 1;
         }
 
-        stubTemplate = remove(stubTemplate, "import <IMPORT>;");
+        stubTemplate = remove(stubTemplate, importPlaceholder);
         stubTemplate = remove(stubTemplate, methodPlaceholder);
         stubTemplate = remove(stubTemplate, methodLookupPlaceholder);
         stubTemplate = remove(stubTemplate, methodVarPlaceholder);
@@ -330,7 +314,7 @@ public class SampleWriter {
     {
         if( typeName.contains(".") && !typeName.startsWith("java.lang") && !types.contains(typeName)) {
             types.add(typeName);
-            template = duplicate(template, "import <IMPORT>;");
+            template = duplicate(template, importPlaceholder);
             template = template.replaceFirst("<IMPORT>", typeName);
         }
 

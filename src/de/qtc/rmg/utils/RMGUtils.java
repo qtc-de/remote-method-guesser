@@ -451,13 +451,15 @@ public class RMGUtils {
         }
     }
 
-    public static boolean isLegacy(String className, int legacyMode)
+    public static boolean isLegacy(String className, int legacyMode, boolean verbose)
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-            Logger.increaseIndent();
-            Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-            Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
-            Logger.decreaseIndent();
+            if( verbose) {
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
+                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
+                Logger.decreaseIndent();
+            }
             return true;
         }
 

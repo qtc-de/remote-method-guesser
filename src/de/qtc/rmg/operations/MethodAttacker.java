@@ -90,7 +90,7 @@ public class MethodAttacker {
             }
 
             Logger.printlnMixedYellow("Found non primitive argument type on position", String.valueOf(attackArgument));
-            boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+            boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, true);
 
             Remote instance = null;
             Class remoteClass = null;
