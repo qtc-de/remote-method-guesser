@@ -52,7 +52,7 @@ $ cp resources/bash_completion.d/rmg ~/bash_completion.d/
 -----
 
 In the following, short examples for each available operation are presented. For a more detailed description
-you should read the [documentation folder](./docs). All presented examples are based on the [rmg-example-server](./.docker)
+you should read the [documentation folder](./docs). All presented examples are based on the [rmg-example-server](https://github.com/qtc-de/remote-method-guesser/packages/414459)
 which is also contained within this project. You can also modify and rebuild the example server yourself, by using
 the sources within the [docker folder](./.docker).
 
