@@ -49,7 +49,7 @@ public class MethodAttacker {
     @SuppressWarnings({ "rawtypes", "deprecation" })
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
-        Logger.printlnMixedYellow("Attacking", this.targetMethod.getSignature());
+        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + "-attack)");
 
         if( boundName != null )
             Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
@@ -179,7 +179,7 @@ public class MethodAttacker {
 
                 } else if( cause instanceof java.lang.ClassNotFoundException ) {
 
-                    Logger.printlnMixedBlue("Caught", "ClassNotFoundException", "during deserialization attack.");
+                    Logger.printlnMixedBlue("Caught", "ClassNotFoundException", "during " + operationMode + " attack.");
                     String exceptionMessage = e.getMessage();
 
                     if( operationMode.equals("ysoserial") ) {
@@ -201,8 +201,12 @@ public class MethodAttacker {
                         }
 
                         else if( exceptionMessage.contains(gadget.getClass().getName()) ) {
-                            Logger.printlnYellow("Target should be vulnerable to codebase attacks.");
-                            Logger.eprintlnMixedYellow("However, class could", "not be loaded", "from the specified remote endpoint.");
+                            Logger.printlnYellow("The target uses a SecurityManager (required for remote class loading)");
+                            Logger.increaseIndent();
+                            Logger.eprintlnMixedYellow("However, the attacking class could", "not be loaded", "from the specified endpoint.");
+                            Logger.eprintlnMixedYellow("The server was probably configured with", "useCodeBaseOnly=true", "(not vulnerable)");
+                            Logger.eprintlnMixedYellow("or the file", gadget.getClass().getName() + ".class", "was not found on the specified endpoint.");
+                            Logger.decreaseIndent();
                         }
 
                         else if( exceptionMessage.contains(randomInstance.getClass().getName()) ) {
@@ -210,9 +214,9 @@ public class MethodAttacker {
                             Logger.printlnMixedYellow("Attack", "probably worked");
 
                             Logger.increaseIndent();
-                            Logger.eprintlnMixedYellow("If you got no callback, loading the attack class", gadget.getClass().getName(), "was skipped.");
-                            Logger.eprintln("This could be either if the class is known by the server or it was already loaded before.");
-                            Logger.eprintln("In this case, you should try a different classname");
+                            Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", gadget.getClass().getName());
+                            Logger.eprintln("The class is probably known by the server or it was already loaded before.");
+                            Logger.eprintln("In this case, you should try a different classname.");
                             Logger.decreaseIndent();
 
                         } else {
@@ -224,6 +228,11 @@ public class MethodAttacker {
                 } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                     Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + operationMode + " attack.");
                     Logger.eprintln("This is usually caused by providing incompatible classes during codebase attacks.");
+                    RMGUtils.stackTrace(e);
+
+                } else if( cause instanceof java.security.AccessControlException ) {
+                    Logger.eprintlnMixedYellow("Caught", "AccessControlException", "during " + operationMode + " attack.");
+                    Logger.eprintln("The SecurityManager on the server-side seems to deny the requested action.");
                     RMGUtils.stackTrace(e);
 
                 } else {
