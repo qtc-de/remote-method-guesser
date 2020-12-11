@@ -49,7 +49,7 @@ public class MethodAttacker {
     @SuppressWarnings({ "rawtypes", "deprecation" })
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
-        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + "-attack)");
+        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + " attack)");
 
         if( boundName != null )
             Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
@@ -211,12 +211,12 @@ public class MethodAttacker {
 
                         else if( exceptionMessage.contains(randomInstance.getClass().getName()) ) {
                             Logger.printlnMixedYellow("Remote class loader attempted to load dummy class", randomInstance.getClass().getName());
-                            Logger.printlnMixedYellow("Attack", "probably worked");
+                            Logger.printlnMixedYellow(operationMode.substring(0, 1).toUpperCase() + operationMode.substring(1) + " attack", "probably worked:");
 
                             Logger.increaseIndent();
-                            Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", gadget.getClass().getName());
+                            Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", gadget.getClass().getName() + ".class");
                             Logger.eprintln("The class is probably known by the server or it was already loaded before.");
-                            Logger.eprintln("In this case, you should try a different classname.");
+                            Logger.eprintlnMixedYellow("In this case, you should try a", "different classname.");
                             Logger.decreaseIndent();
 
                         } else {
@@ -245,14 +245,20 @@ public class MethodAttacker {
                 Logger.eprintln("This could be caused when attacking String parameters on a patched RMI server.");
                 RMGUtils.stackTrace(e);
 
+            } catch( java.security.AccessControlException e ) {
+                Logger.eprintlnMixedYellow("Caught", "AccessControlException", "during " + operationMode + " attack.");
+                Logger.eprintln("The SecurityManager on the server side seems to deny the requested action.");
+                RMGUtils.stackTrace(e);
+
             } catch( Exception e ) {
                 Logger.eprintlnYellow("Caught unexpected Exception during " + operationMode + " attack.");
                 RMGUtils.stackTrace(e);
-                continue;
 
             } finally {
                 Logger.decreaseIndent();
-                Logger.println("");
+
+                if(it.hasNext())
+                    Logger.println("");
             }
         }
     }
