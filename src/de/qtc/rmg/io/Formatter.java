@@ -50,7 +50,7 @@ public class Formatter {
 
     public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
     {
-        Logger.println("Listing bound names in registry:");
+        Logger.printlnBlue("Listing bound names in registry:");
         Logger.println("");
         Logger.increaseIndent();
 
@@ -177,13 +177,13 @@ public class Formatter {
 
     public void listCodeases()
     {
-        Logger.println("RMI server codebase enumeration:");
+        Logger.printlnBlue("RMI server codebase enumeration:");
         Logger.println("");
         Logger.increaseIndent();
 
         HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
         if(codebases.isEmpty()) {
-            Logger.printlnMixedYellow("The remote server", "does not", "expose any codebases.");
+            Logger.printlnMixedYellow("- The remote server", "does not", "expose any codebases.");
             Logger.decreaseIndent();
             return;
         }

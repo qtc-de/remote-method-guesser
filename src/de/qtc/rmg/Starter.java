@@ -248,13 +248,18 @@ public class Starter {
                 Logger.printlnMixedBlue("Performing default action:", "enum");
 
             case "enum":
+                Logger.println("");
                 format.listBoundNames(boundNames, boundClasses);
+
                 Logger.println("");
                 format.listCodeases();
-                Logger.println("");
 
+                Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
-                dgc.enumCleanCall();
+                dgc.enumSecurityManager();
+
+                Logger.println("");
+                dgc.enumJEP290();
         }
     }
 }

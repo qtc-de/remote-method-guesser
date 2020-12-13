@@ -8,6 +8,7 @@ import java.rmi.UnknownHostException;
 import java.rmi.server.ObjID;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteRef;
+import java.util.HashMap;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -44,10 +45,10 @@ public class DGCClient {
         }
     }
 
-    public void enumCleanCall()
+    public void enumSecurityManager()
     {
         try {
-            Logger.println("RMI server SecurityManager enumeration:");
+            Logger.printlnBlue("RMI server SecurityManager enumeration:");
             Logger.println("");
             Logger.increaseIndent();
 
@@ -57,21 +58,49 @@ public class DGCClient {
 
             Throwable t = RMGUtils.getThrowable("ClassNotFoundException", e);
             if( t == null ) {
-                Logger.eprintlnYellow("Caught unexpected exception during SecurityManager enumeration");
-                Logger.eprintln("Please report this to improve rmg :)");
+                Logger.eprintlnYellow("- Caught unexpected exception during SecurityManager enumeration");
+                Logger.eprintln("  Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
 
             if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
-                Logger.printlnMixedYellow("RMI server", "does not", "use a security manager.");
-                Logger.printlnMixedYellow("Remote class loading attacks", "are not", "possible.");
+                Logger.printlnMixedYellow("- RMI server", "does not", "use a security manager.");
+                Logger.printlnMixedYellow("  Remote class loading attacks", "are not", "possible.");
             }
 
             if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printlnMixedYellow("RMI server", "does", "use a security manager.");
-                Logger.printlnMixedYellow("But access to the class loader", "was denied");
-                Logger.println("Codebase attacks may work on the application level.");
+                Logger.printlnMixedYellow("- RMI server", "does", "use a security manager.");
+                Logger.printlnMixedYellow("  But access to the class loader", "was denied.");
+                Logger.println("  Codebase attacks may work on the application level.");
+            }
+        } finally {
+            Logger.decreaseIndent();
+        }
+    }
+
+    public void enumJEP290()
+    {
+        try {
+            Logger.printlnBlue("RMI server JEP290 enumeration:");
+            Logger.println("");
+            Logger.increaseIndent();
+
+            cleanCall(new HashMap<String,String>());
+
+        } catch( Exception e ) {
+
+            Throwable cause = RMGUtils.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
+                Logger.printlnPlainBlue(" java.util.HashMap.");
+                Logger.printlnMixedYellowFirst("  JEP290", "is most likely", "installed.");
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
+                Logger.printlnPlainBlue(" java.util.HashMap.");
+                Logger.printlnMixedYellowFirst("  JEP290", "is most likely", "not installed.");
             }
         }
     }
