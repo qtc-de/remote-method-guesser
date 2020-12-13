@@ -372,6 +372,9 @@ public class RMGUtils {
         return ysoPayload;
     }
 
+    /*
+     * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
+     */
     public static Throwable getCause(Throwable e)
     {
         Throwable cause = null;
@@ -436,6 +439,7 @@ public class RMGUtils {
     /*
      * Taken from https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
      */
+    @SuppressWarnings("restriction")
     public static void disableWarning()
     {
         try {
@@ -464,5 +468,22 @@ public class RMGUtils {
         }
 
         return false;
+    }
+
+    public static Throwable getThrowable(String name, Throwable e)
+    {
+        Throwable exception = e;
+        Throwable cause = e.getCause();
+
+        while((exception != cause) && (cause != null)) {
+
+            if( cause.getClass().getSimpleName().equals(name))
+                return cause;
+
+            exception = cause;
+            cause = exception.getCause();
+        }
+
+        return null;
     }
 }

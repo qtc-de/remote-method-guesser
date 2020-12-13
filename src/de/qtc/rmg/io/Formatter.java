@@ -177,16 +177,20 @@ public class Formatter {
 
     public void listCodeases()
     {
-        HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
-        if(codebases.isEmpty())
-            return;
-
-        Logger.println("RMI servers exposes the following codebase(s):");
+        Logger.println("RMI server codebase enumeration:");
+        Logger.println("");
         Logger.increaseIndent();
+
+        HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
+        if(codebases.isEmpty()) {
+            Logger.printlnMixedYellow("The remote server", "does not", "expose any codebases.");
+            Logger.decreaseIndent();
+            return;
+        }
 
         for( Entry<String,Set<String>> item : codebases.entrySet() ) {
 
-            Logger.println("");
+
             Logger.printlnMixedYellow("-", item.getKey());
             Logger.increaseIndent();
 
@@ -194,6 +198,8 @@ public class Formatter {
             while( iterator.hasNext() ) {
                 Logger.printlnMixedBlue("-->", iterator.next());
             }
+
+            Logger.decreaseIndent();
         }
 
         Logger.decreaseIndent();

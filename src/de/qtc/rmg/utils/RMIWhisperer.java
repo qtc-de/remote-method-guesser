@@ -20,53 +20,58 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.DummyTrustManager;
 import de.qtc.rmg.networking.LoopbackSocketFactory;
 import de.qtc.rmg.networking.LoopbackSslSocketFactory;
+import sun.rmi.transport.tcp.TCPEndpoint;
 
+@SuppressWarnings("restriction")
 public final class RMIWhisperer {
 
     public int port;
     public String host;
+
     private Registry rmiRegistry;
+    private RMIClientSocketFactory csf;
 
-    public void connect(String host, int port, boolean ssl, boolean followRedirects)
+    public RMIWhisperer(String host, int port, boolean ssl, boolean followRedirects)
     {
-        this.host = host;
-        this.port = port;
+         this.host = host;
+         this.port = port;
 
-        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-        RMISocketFactory my = new LoopbackSocketFactory(host, fac, followRedirects);
+         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
+         RMISocketFactory my = new LoopbackSocketFactory(host, fac, followRedirects);
 
-        try {
-            RMISocketFactory.setSocketFactory(my);
-        } catch (IOException e2) {
-            Logger.eprintln("Unable to set RMISocketFactory.");
-            Logger.eprintln("Host redirection will not work.");
-        }
+         try {
+             RMISocketFactory.setSocketFactory(my);
+         } catch (IOException e2) {
+             Logger.eprintln("Unable to set RMISocketFactory.");
+             Logger.eprintln("Host redirection will not work.");
+         }
 
-        try {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
-            SSLContext.setDefault(ctx);
+         try {
+             SSLContext ctx = SSLContext.getInstance("TLS");
+             ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
+             SSLContext.setDefault(ctx);
 
-            LoopbackSslSocketFactory.host = host;
-            LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-            LoopbackSslSocketFactory.followRedirect = followRedirects;
-            java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
+             LoopbackSslSocketFactory.host = host;
+             LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
+             LoopbackSslSocketFactory.followRedirect = followRedirects;
+             java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
 
-        } catch (NoSuchAlgorithmException | KeyManagementException e1) {
-            Logger.eprintln("Unable to set TrustManager for SSL connections.");
-            Logger.eprintln("SSL connections to untrusted hosts might fail.");
-        }
+         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
+             Logger.eprintln("Unable to set TrustManager for SSL connections.");
+             Logger.eprintln("SSL connections to untrusted hosts might fail.");
+         }
 
+         if( ssl )
+             csf = new SslRMIClientSocketFactory();
+         else
+             csf = my;
+    }
+
+    public void connect()
+    {
         Logger.print("Connecting to RMI registry... ");
         try {
-            if( ssl ) {
-
-                RMIClientSocketFactory csf = new SslRMIClientSocketFactory();
-                this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
-
-            } else {
-                this.rmiRegistry = LocateRegistry.getRegistry(host, port);
-            }
+            this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
             Logger.printlnPlain("done.");
 
         } catch( RemoteException e ) {
@@ -87,6 +92,13 @@ public final class RMIWhisperer {
             Logger.printlnPlain("done.");
             Logger.printlnMixedBlueFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
 
+        } catch( java.rmi.NoSuchObjectException e) {
+            Logger.printlnPlain("failed.");
+            Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
+            Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
             Logger.eprintlnYellow("Error: Remote failure when listing bound names");
@@ -95,6 +107,14 @@ public final class RMIWhisperer {
         }
 
         return boundNames;
+    }
+
+    public String[] getBoundNames(String boundName)
+    {
+        if( boundName == null )
+            return getBoundNames();
+
+        return new String[] {boundName};
     }
 
     public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames)
@@ -141,6 +161,11 @@ public final class RMIWhisperer {
         returnList.add(knownClasses);
         returnList.add(unknownClasses);
         return returnList;
+    }
+
+    public TCPEndpoint getEndpoint()
+    {
+        return new TCPEndpoint(host, port, csf, null);
     }
 
     public Registry getRegistry()
