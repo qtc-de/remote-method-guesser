@@ -2,11 +2,9 @@ package de.qtc.rmg.operations;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.net.SocketException;
 import java.rmi.UnknownHostException;
 import java.rmi.server.ObjID;
-import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteRef;
 import java.util.HashMap;
 
@@ -18,31 +16,16 @@ import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.StreamRemoteCall;
 
-
 @SuppressWarnings("restriction")
 public class DGCClient {
 
     private RMIWhisperer rmi;
-
-    private Field proxyField;
-    private Field endpointField;
     private static final long interfaceHash = -669196253586618813L;
 
 
     public DGCClient(RMIWhisperer rmiRegistry)
     {
         this.rmi = rmiRegistry;
-
-        try {
-            this.proxyField = RemoteObject.class.getDeclaredField("ref");
-            this.endpointField = LiveRef.class.getDeclaredField("ep");
-            proxyField.setAccessible(true);
-            endpointField.setAccessible(true);
-
-        } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during DGCClient instantiation:", e.getMessage());
-            RMGUtils.exit();
-        }
     }
 
     public void enumSecurityManager()
