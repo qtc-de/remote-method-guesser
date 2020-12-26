@@ -60,15 +60,15 @@ public class DGCClient {
                 Logger.print("  Codebase attacks may work on the application level");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
             }
-
+            
             else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
+            	Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
                 Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
                 Logger.println("  Exploitability depends on the security policy of the RMI server and the setting");
                 Logger.print("  of 'useCodebaseOnly' during DGC operations");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
             }
-
+            
         } finally {
             Logger.decreaseIndent();
         }
@@ -98,27 +98,33 @@ public class DGCClient {
                 Logger.printlnPlainBlue(" java.util.HashMap.");
                 Logger.printMixedYellowFirst("  JEP290", "is most likely", "not installed");
                 Logger.printlnPlainYellow(" (vulnerable)");
+            
+            } else {
+            	Logger.eprintln("Caught unexpcted exception during JEP290 enumeration.");
+            	Logger.eprintln("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
             }
         }
     }
 
     public void codebaseCleanCall(Object payload)
     {
-        String className = payload.getClass().getName();
-
+    	String className = payload.getClass().getName();
+    	
         try {
             Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
             Logger.print("Sending serialized class ");
             Logger.printlnPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
             Logger.println("");
             Logger.increaseIndent();
-
+            
             cleanCall(payload);
-
+            
         } catch( Exception e ) {
 
             Throwable cause = RMGUtils.getCause(e);
-
+            
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.eprintMixedYellow("DGC", "rejected", "deserialization of class ");
                 Logger.printlnPlainBlue(className + ".");
@@ -136,6 +142,12 @@ public class DGCClient {
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during codebase attack.");
                 Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+            
+            } else {
+            	Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
+            	Logger.eprintln("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
             }
         }
     }
@@ -144,8 +156,11 @@ public class DGCClient {
     {
         try {
             Logger.printlnBlue("Attempting ysoserial attack on DGC endpoint...");
+            Logger.println("");
             Logger.increaseIndent();
+            
             cleanCall(payload);
+            
         } catch( Exception e ) {
 
             Throwable cause = RMGUtils.getCause(e);
@@ -163,6 +178,12 @@ public class DGCClient {
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
                 Logger.printlnMixedYellowFirst("Deserialization attack", "most likely", "worked :)");
+            
+            } else {
+            	Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
+            	Logger.eprintln("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
             }
         }
     }
