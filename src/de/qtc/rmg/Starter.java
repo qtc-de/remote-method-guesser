@@ -45,7 +45,7 @@ public class Starter {
             if( action.equals("attack") || action.contains("codebase")) {
                 parser.checkArgumentCount(5);
 
-                if(!commandLine.hasOption("signature")) {
+                if(action.equals("codebase") && !commandLine.hasOption("signature")) {
                     Logger.eprintlnMixedYellow("The", "--signature", "option is required for " + action + " mode.");
                     RMGUtils.exit();
                 }

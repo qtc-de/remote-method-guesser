@@ -47,16 +47,28 @@ public class DGCClient {
                 RMGUtils.exit();
             }
 
-            if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
-                Logger.printlnMixedYellow("- RMI server", "does not", "use a security manager.");
-                Logger.printlnMixedYellow("  Remote class loading attacks", "are not", "possible.");
+            else if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
+                Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager.");
+                Logger.printMixedYellow("  Remote class loading attacks", "are not", "possible");
+                Logger.printlnPlainYellow(" (not vulnerable)");
             }
 
-            if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printlnMixedYellow("- RMI server", "does", "use a security manager.");
-                Logger.printlnMixedYellow("  But access to the class loader", "was denied.");
-                Logger.println("  Codebase attacks may work on the application level.");
+            else if( t.getMessage().contains("access to class loader denied") ) {
+                Logger.printlnMixedYellow("- RMI server", "does", "use a SecurityManager.");
+                Logger.printlnMixedYellow("  But access to the class loader", "is denied.");
+                Logger.println("  This is usually the case when the DGC uses a separate secuirty policy.");
+                Logger.print("  Codebase attacks may work on the application level");
+                Logger.printlnPlainYellow(" (maybe vulnerable)");
             }
+
+            else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
+                Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
+                Logger.println("  Exploitability depends on the security policy of the RMI server and the setting");
+                Logger.print("  of 'useCodebaseOnly' during DGC operations");
+                Logger.printlnPlainYellow(" (maybe vulnerable)");
+            }
+
         } finally {
             Logger.decreaseIndent();
         }
@@ -78,22 +90,53 @@ public class DGCClient {
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
                 Logger.printlnPlainBlue(" java.util.HashMap.");
-                Logger.printlnMixedYellowFirst("  JEP290", "is most likely", "installed.");
+                Logger.printMixedYellowFirst("  JEP290", "is most likely", "installed");
+                Logger.printlnPlainYellow(" (not vulnerable)");
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
                 Logger.printlnPlainBlue(" java.util.HashMap.");
-                Logger.printlnMixedYellowFirst("  JEP290", "is most likely", "not installed.");
+                Logger.printMixedYellowFirst("  JEP290", "is most likely", "not installed");
+                Logger.printlnPlainYellow(" (vulnerable)");
             }
         }
     }
 
     public void codebaseCleanCall(Object payload)
     {
+        String className = payload.getClass().getName();
+
         try {
+            Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
+            Logger.print("Sending serialized class ");
+            Logger.printlnPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+            Logger.println("");
+            Logger.increaseIndent();
+
             cleanCall(payload);
+
         } catch( Exception e ) {
 
+            Throwable cause = RMGUtils.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                Logger.eprintMixedYellow("DGC", "rejected", "deserialization of class ");
+                Logger.printlnPlainBlue(className + ".");
+                Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
+                Logger.eprintln("Codebase attacks may work at the appliaction layer.");
+
+            } else if( cause instanceof java.lang.ClassNotFoundException) {
+                Logger.eprintMixedYellow("DGC", "accepted", "deserialization of class ");
+                Logger.printlnPlainBlue(className + ".");
+                Logger.eprintlnMixedYellow("However, the attacking class could", "not be loaded", "from the specified endpoint.");
+                Logger.eprintMixedBlue("The DGC is probably configured with", "useCodeBaseOnly=true");
+                Logger.printlnPlainYellow(" (not vulnerable)");
+                Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                Logger.printlnMixedYellow("Caught", "ClassCastException", "during codebase attack.");
+                Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+            }
         }
     }
 

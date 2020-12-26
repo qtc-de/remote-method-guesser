@@ -148,6 +148,11 @@ public class Logger {
         log(prefix() + first + " " + yellow(second) + " " + third);
     }
 
+    public static void printlnPlainMixedYellow(String first, String second)
+    {
+        log(first + " " + yellow(second));
+    }
+
     public static void eprintlnMixedBlue(String first, String second)
     {
         elog(eprefix() + first + " " + blue(second));
@@ -176,6 +181,11 @@ public class Logger {
     public static void printlnMixedBlueFirst(String first, String second, String third)
     {
         log(prefix() + blue(first) + " " + second + " " + blue(third));
+    }
+
+    public static void printlnPlainMixedBlueFirst(String first, String second, String third)
+    {
+        log(blue(first) + " " + second + " " + blue(third));
     }
 
     public static void printlnMixedYellowFirst(String first, String second)
