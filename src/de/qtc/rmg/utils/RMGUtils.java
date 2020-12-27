@@ -371,7 +371,7 @@ public class RMGUtils {
             RMGUtils.exit();
         }
 
-        Logger.printlnPlain("done.");
+        Logger.printlnPlain(" done.");
         return ysoPayload;
     }
 
