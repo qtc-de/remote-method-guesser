@@ -51,24 +51,25 @@ public class DGCClient {
                 Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager.");
                 Logger.printMixedYellow("  Remote class loading attacks", "are not", "possible");
                 Logger.printlnPlainYellow(" (not vulnerable)");
-            }
+                RMGUtils.showStackTrace(e);
 
-            else if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printlnMixedYellow("- RMI server", "does", "use a SecurityManager.");
-                Logger.printlnMixedYellow("  But access to the class loader", "is denied.");
+            } else if( t.getMessage().contains("access to class loader denied") ) {
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager.");
+                Logger.printlnPlainMixedYellow("But access to the class loader", "is denied.");
                 Logger.println("  This is usually the case when the DGC uses a separate secuirty policy.");
                 Logger.print("  Codebase attacks may work on the application level");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
-            }
-            
-            else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
-            	Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
                 Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
                 Logger.println("  Exploitability depends on the security policy of the RMI server and the setting");
                 Logger.print("  of 'useCodebaseOnly' during DGC operations");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
+                RMGUtils.showStackTrace(e);
             }
-            
+
         } finally {
             Logger.decreaseIndent();
         }
@@ -92,16 +93,18 @@ public class DGCClient {
                 Logger.printlnPlainBlue(" java.util.HashMap.");
                 Logger.printMixedYellowFirst("  JEP290", "is most likely", "installed");
                 Logger.printlnPlainYellow(" (not vulnerable)");
+                RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
                 Logger.printlnPlainBlue(" java.util.HashMap.");
                 Logger.printMixedYellowFirst("  JEP290", "is most likely", "not installed");
                 Logger.printlnPlainYellow(" (vulnerable)");
-            
+                RMGUtils.showStackTrace(e);
+
             } else {
-            	Logger.eprintln("Caught unexpcted exception during JEP290 enumeration.");
-            	Logger.eprintln("Please report this to improve rmg :)");
+                Logger.eprintln("Caught unexpcted exception during JEP290 enumeration.");
+                Logger.eprintln("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
@@ -110,26 +113,27 @@ public class DGCClient {
 
     public void codebaseCleanCall(Object payload)
     {
-    	String className = payload.getClass().getName();
-    	
+        String className = payload.getClass().getName();
+
         try {
             Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
             Logger.print("Sending serialized class ");
             Logger.printlnPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
             Logger.println("");
             Logger.increaseIndent();
-            
+
             cleanCall(payload);
-            
+
         } catch( Exception e ) {
 
             Throwable cause = RMGUtils.getCause(e);
-            
+
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.eprintMixedYellow("DGC", "rejected", "deserialization of class ");
                 Logger.printlnPlainBlue(className + ".");
                 Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
                 Logger.eprintln("Codebase attacks may work at the appliaction layer.");
+                RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintMixedYellow("DGC", "accepted", "deserialization of class ");
@@ -138,14 +142,16 @@ public class DGCClient {
                 Logger.eprintMixedBlue("The DGC is probably configured with", "useCodeBaseOnly=true");
                 Logger.printlnPlainYellow(" (not vulnerable)");
                 Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
+                RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during codebase attack.");
                 Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
-            
+                RMGUtils.showStackTrace(e);
+
             } else {
-            	Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
-            	Logger.eprintln("Please report this to improve rmg :)");
+                Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
+                Logger.eprintln("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
@@ -158,9 +164,9 @@ public class DGCClient {
             Logger.printlnBlue("Attempting ysoserial attack on DGC endpoint...");
             Logger.println("");
             Logger.increaseIndent();
-            
+
             cleanCall(payload);
-            
+
         } catch( Exception e ) {
 
             Throwable cause = RMGUtils.getCause(e);
@@ -169,19 +175,22 @@ public class DGCClient {
                 Logger.eprintlnMixedYellow("DGC", "rejected", "deserialization of the supplied gadget.");
                 Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
                 Logger.eprintln("Deserialization attacks may work at the appliaction layer.");
+                RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintlnMixedYellow("DGC", "accepted", "deserialization of the supplied gadget.");
                 Logger.eprintlnMixedYellow("However, the gadget seems", "not", "to be available on the rmi server.");
                 Logger.eprintln("Try a different gadget.");
+                RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
                 Logger.printlnMixedYellowFirst("Deserialization attack", "most likely", "worked :)");
-            
+                RMGUtils.showStackTrace(e);
+
             } else {
-            	Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
-            	Logger.eprintln("Please report this to improve rmg :)");
+                Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
+                Logger.eprintln("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }

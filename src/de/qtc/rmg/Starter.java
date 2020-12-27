@@ -99,13 +99,14 @@ public class Starter {
         RMGUtils.init();
         RMGUtils.enableCodebase();
         RMGUtils.disableWarning();
+        RMGUtils.showStackTrace(commandLine.hasOption("stack-trace"));
 
         String[] boundNames = null;
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
         if( !action.contains("dgc") ) {
-            rmi.connect();
+            rmi.locateRegistry();
             boundNames = rmi.getBoundNames(boundName);
 
             boundClasses = rmi.getClassNames(boundNames);
@@ -121,7 +122,7 @@ public class Starter {
 
             } catch (CannotCompileException | NotFoundException e) {
                 Logger.eprintln("Supplied method signature seems to be invalid.");
-                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
         }
@@ -142,7 +143,8 @@ public class Starter {
                         WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
                         candidates = wlHandler.getWordlistMethods();
                     } catch( IOException e ) {
-                        Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
+                        Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
+                        RMGUtils.stackTrace(e);
                         RMGUtils.exit();
                     }
                 }

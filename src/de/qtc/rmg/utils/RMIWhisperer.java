@@ -41,9 +41,10 @@ public final class RMIWhisperer {
 
          try {
              RMISocketFactory.setSocketFactory(my);
-         } catch (IOException e2) {
-             Logger.eprintln("Unable to set RMISocketFactory.");
-             Logger.eprintln("Host redirection will not work.");
+         } catch (IOException e) {
+             Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
+             RMGUtils.showStackTrace(e);
+             Logger.eprintln("");
          }
 
          try {
@@ -56,9 +57,10 @@ public final class RMIWhisperer {
              LoopbackSslSocketFactory.followRedirect = followRedirects;
              java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
 
-         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
-             Logger.eprintln("Unable to set TrustManager for SSL connections.");
+         } catch (NoSuchAlgorithmException | KeyManagementException e) {
+             Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
              Logger.eprintln("SSL connections to untrusted hosts might fail.");
+             RMGUtils.showStackTrace(e);
          }
 
          if( ssl )
@@ -67,16 +69,16 @@ public final class RMIWhisperer {
              csf = my;
     }
 
-    public void connect()
+    public void locateRegistry()
     {
-        Logger.print("Connecting to RMI registry... ");
+        Logger.print("Creating RMI Registry object... ");
+
         try {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
             Logger.printlnPlain("done.");
 
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
-            Logger.eprintlnMixedYellow("Error: Could not connect to " + host + ":" + port, ".");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
@@ -85,7 +87,7 @@ public final class RMIWhisperer {
     public String[] getBoundNames()
     {
         String[] boundNames = null;
-        Logger.print("Obtaining a list of bound names... ");
+        Logger.print("Obtaining list of bound names... ");
 
         try {
             boundNames = rmiRegistry.list();
@@ -95,14 +97,51 @@ public final class RMIWhisperer {
         } catch( java.rmi.NoSuchObjectException e) {
             Logger.printlnPlain("failed.");
             Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
-            Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry");
+            Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
 
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
-            Logger.eprintlnYellow("Error: Remote failure when listing bound names");
-            RMGUtils.stackTrace(e);
+            Logger.eprintln("");
+            Logger.eprintlnYellow("Remote failure while listing bound names:");
+            Logger.increaseIndent();
+
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.net.NoRouteToHostException ) {
+                Logger.eprintlnMixedBlue("No route to host", this.host + ":" + this.port + ".", "Have you entered the correct target?");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof java.net.ConnectException ) {
+                Logger.eprintlnMixedBlue("Connection refused on", this.host + ":" + this.port + ".", "Have you entered the correct target?");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().equals("non-JRMP server at remote endpoint")) {
+                Logger.eprintlnMixedBlue("Specified endpoint", "does not", "act like an RMI registry.");
+                Logger.eprintlnMixedYellow("You should either specify a different endpoint or retry with the", "--ssl", "option.");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof javax.net.ssl.SSLException ) {
+
+                Logger.eprintlnMixedBlue("Caught unexpected", "SSLException.");
+
+                String message = t.getMessage();
+                if( message.contains("Unrecognized SSL message, plaintext connection?")) {
+                    Logger.eprintlnMixedYellow("You probably used", "--ssl", "on a plaintext connection?");
+                    RMGUtils.showStackTrace(e);
+
+                } else {
+                    RMGUtils.stackTrace(e);
+                }
+
+            } else {
+                Logger.printlnMixedBlue("Caught unexpected", e.getClass().getName());
+                RMGUtils.stackTrace(e);
+            }
+
+            Logger.decreaseIndent();
+            Logger.eprintln("");
             RMGUtils.exit();
         }
 
@@ -140,7 +179,9 @@ public final class RMIWhisperer {
 
                   /*
                    * Expected exception message is: <CLASSNAME> (no security manager: RMI class loader disabled).
-                   * As classnames cannot contain spaces, cutting on the first space should be sufficient.
+                   * This is always true, as long as no security manager is used when starting rmg. As the exception
+                   * is thrown on the client-side, server-side security managers are not important here.
+                   * Since classnames cannot contain spaces, cutting on the first space should be sufficient.
                    */
                   String message = cause.getMessage();
                   int end = message.indexOf(" ");
@@ -154,7 +195,8 @@ public final class RMIWhisperer {
               }
 
           } catch( NotBoundException e) {
-              Logger.eprintln("Error: Failure while looking up '" + className + "'... ");
+              Logger.eprintlnMixedYellow("Caught unexpected", "NotBoundException", "during boundnames enumeration.");
+              RMGUtils.stackTrace(e);
           }
         }
 

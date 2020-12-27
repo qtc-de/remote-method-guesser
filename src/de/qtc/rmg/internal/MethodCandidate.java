@@ -89,13 +89,13 @@ public class MethodCandidate {
         return computeMethodHash(methodSignature);
     }
 
+    // copied from https://github.com/waderwu/attackRmi - License: Apache-2.0 License
     private long computeMethodHash(String methodSignature) {
         long hash = 0;
         ByteArrayOutputStream sink = new ByteArrayOutputStream(127);
         try {
             MessageDigest md = MessageDigest.getInstance("SHA");
-            DataOutputStream out = new DataOutputStream(
-                new DigestOutputStream(sink, md));
+            DataOutputStream out = new DataOutputStream(new DigestOutputStream(sink, md));
 
             out.writeUTF(methodSignature);
 

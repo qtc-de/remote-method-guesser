@@ -46,7 +46,8 @@ public class MethodGuesser {
             remoteField.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodGuesser instantiation:", e.getMessage());
+            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodGuesser", "instantiation.");
+            RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -112,6 +113,7 @@ public class MethodGuesser {
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -130,6 +132,7 @@ public class MethodGuesser {
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", boundName, ".");
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -146,6 +149,7 @@ public class MethodGuesser {
                 rmgInvokePrimitive = remoteClass.getMethod("rmgInvokePrimitive", int.class);
             } catch (NoSuchMethodException | SecurityException e) {
                 Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during method lookup.");
+                Logger.println("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }

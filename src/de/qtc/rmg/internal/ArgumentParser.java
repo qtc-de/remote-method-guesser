@@ -129,6 +129,10 @@ public class ArgumentParser {
         ssl.setRequired(false);
         options.addOption(ssl);
 
+        Option stackTrace = new Option(null, "stack-trace", false, "display stack traces for caught exceptions");
+        stackTrace.setRequired(false);
+        options.addOption(stackTrace);
+
         Option templates = new Option(null, "template-folder", true, "location of the template folder");
         templates.setArgName("folder");
         templates.setRequired(false);

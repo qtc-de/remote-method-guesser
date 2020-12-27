@@ -34,6 +34,8 @@ import javassist.NotFoundException;
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
 
+    private static boolean alwaysShowExceptions = false;
+
     private static ClassPool pool;
     private static CtClass dummyClass;
     private static CtClass remoteClass;
@@ -48,6 +50,7 @@ public class RMGUtils {
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
             Logger.printlnMixedYellow("Caught", "NotFoundException", "during initialisation of RMGUtils.");
+            RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
 
@@ -91,7 +94,7 @@ public class RMGUtils {
             intf.defrost();
 
         } catch (ClassNotFoundException | NotFoundException e) {
-            /*gadget
+            /*
              * className is not known and was not created before. This is usually expected.
              * In this case, we just create the class :)
              */
@@ -485,5 +488,18 @@ public class RMGUtils {
         }
 
         return null;
+    }
+
+    public static void showStackTrace(boolean b)
+    {
+        RMGUtils.alwaysShowExceptions = b;
+    }
+
+    public static void showStackTrace(Exception e)
+    {
+        if(alwaysShowExceptions) {
+            Logger.eprintln("");
+            RMGUtils.stackTrace(e);
+        }
     }
 }
