@@ -54,11 +54,8 @@ public class Starter {
             if( action.contains("codebase" )) {
                 String serverAddress = parser.getPositionalString(3);
 
-                if( !serverAddress.startsWith("http") )
+                if( !serverAddress.startsWith("ftp://") && !serverAddress.startsWith("file://") && !serverAddress.startsWith("http") )
                     serverAddress = "http://" + serverAddress + "/";
-
-                if( !serverAddress.endsWith("/") )
-                    serverAddress = serverAddress + "/";
 
                 System.setProperty("java.rmi.server.codebase", serverAddress);
             }
