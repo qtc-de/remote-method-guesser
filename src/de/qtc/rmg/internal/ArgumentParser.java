@@ -28,6 +28,7 @@ public class ArgumentParser {
         this.helpString = getHelpString();
         this.formatter = new HelpFormatter();
         this.formatter.setWidth(130);
+        this.formatter.setDescPadding(6);
     }
 
     public CommandLine parse(String[] argv)
@@ -178,14 +179,16 @@ public class ArgumentParser {
         String helpString = "rmg [options] <ip> <port> <action>\n"
                 +"Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
-                +"    ip:                          IP address of the target\n"
-                +"    port:                        Port of the RMI registry\n"
-                +"    action:                      One of the possible actions listed below\n\n"
+                +"    ip                              IP address of the target\n"
+                +"    port                            Port of the RMI registry\n"
+                +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
-                +"    attack <gadget> <command>    Perform deserialization attacks\n"
-                +"    codebase <url> <classname>   Perform remote class loading attacks\n"
-                +"    enum                         Enumerate bound names and classes\n"
-                +"    guess                        Guess methods on bound names\n\n"
+                +"    attack <gadget> <command>       Perform deserialization attacks\n"
+                +"    codebase <url> <classname>      Perform remote class loading attacks\n"
+                +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
+                +"    dgc-codebase <url> <classname>  Perform DGC based remote class loading attacks\n"
+                +"    enum                            Enumerate bound names and classes\n"
+                +"    guess                           Guess methods on bound names\n\n"
                 +"Optional Arguments:";
 
         return helpString;
