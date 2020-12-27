@@ -27,19 +27,21 @@ function _rmg() {
 
         # If host and port are specified - complete actions
         elif [[ $args -eq 3 ]]; then
-            opts="enum guess attack codebase"
+            opts="dgc dgc-codebase enum guess attack codebase"
             mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
             return 0
 
         # If host, port and action are specified - complete depending on action
         elif [[ $args -eq 4 ]]; then
 
-            # If action expects an unguessable parameter, complete nothing
-            if _comp_contains "codebase" $prev; then
+            # If action expects a codebase, complete local addresses
+            if _comp_contains "codebase dgc-codebase" $prev; then
+                _ip_addresses
+                compopt -o nospace
                 return 0
 
             # If action expects an gadget, complete gadgets
-            elif _comp_contains "attack" $prev; then
+            elif _comp_contains "attack dgc" $prev; then
                 opts=$gadgets
                 mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
                 return 0
@@ -48,16 +50,8 @@ function _rmg() {
         # If host, port, action and another argument was specified...
         elif [[ $args -eq 5 ]]; then
 
-            # ... and the previous word is a gadget - complete nothing
-            if _comp_contains "$gadgets" $prev; then
-                return 0
-
-            # ... and the action was 'codebase' - complete local addresses
-            elif _comp_contains "codebase" ${words[$(($cword-2))]}; then
-                _ip_addresses
-                compopt -o nospace
-                return 0
-            fi
+            # ... there is currently no action that could be completed here
+            return 0
         fi
     fi
 
@@ -85,6 +79,7 @@ function _rmg() {
 		opts="$opts --sample-folder"
 		opts="$opts --signature"
 		opts="$opts --ssl"
+		opts="$opts --stack-trace"
 		opts="$opts --template-folder"
 		opts="$opts --threads"
 		opts="$opts --update"
