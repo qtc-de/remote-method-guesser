@@ -210,23 +210,24 @@ public class MethodAttacker {
                         }
 
                         else if( exceptionMessage.contains(gadget.getClass().getName()) ) {
-                            Logger.printlnYellow("The target uses a SecurityManager (required for remote class loading)");
                             Logger.increaseIndent();
-                            Logger.eprintlnMixedYellow("However, the attacking class could", "not be loaded", "from the specified endpoint.");
-                            Logger.eprintlnMixedYellow("The server was probably configured with", "useCodeBaseOnly=true", "(not vulnerable)");
+                            Logger.printlnMixedYellow("The target", "uses a SecurityManager", "(required for remote class loading)");
+                            Logger.eprintlnMixedBlue("However, the attacking class could", "not be loaded", "from the specified endpoint.");
+                            Logger.eprintlnMixedBlue("The server was probably configured with", "useCodeBaseOnly=true", "(not vulnerable)");
                             Logger.eprintlnMixedYellow("or the file", gadget.getClass().getName() + ".class", "was not found on the specified endpoint.");
                             RMGUtils.showStackTrace(e);
                             Logger.decreaseIndent();
                         }
 
                         else if( exceptionMessage.contains(randomInstance.getClass().getName()) ) {
-                            Logger.printlnMixedYellow("Remote class loader attempted to load dummy class", randomInstance.getClass().getName());
-                            Logger.printlnMixedYellow(operationMode.substring(0, 1).toUpperCase() + operationMode.substring(1) + " attack", "probably worked:");
-
                             Logger.increaseIndent();
-                            Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", gadget.getClass().getName() + ".class");
+                            Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", randomInstance.getClass().getName());
+                            Logger.printlnMixedYellow(operationMode.substring(0, 1).toUpperCase() + operationMode.substring(1) + " attack", "probably worked :)");
+
+                            Logger.println("");
+                            Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", gadget.getClass().getName() + ".class.");
                             Logger.eprintln("The class is probably known by the server or it was already loaded before.");
-                            Logger.eprintlnMixedYellow("In this case, you should try a", "different classname.");
+                            Logger.eprintlnMixedBlue("In this case, you should try a", "different classname.");
                             RMGUtils.showStackTrace(e);
                             Logger.decreaseIndent();
 
