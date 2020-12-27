@@ -138,7 +138,7 @@ the possibility for remote class loading cannot be fully verified from the clien
 [+] 
 [+] RMI server SecurityManager enumeration:
 [+] 
-[+] 	- RMI server does use a SecurityManager.But access to the class loader is denied.
+[+] 	- RMI server does use a SecurityManager. But access to the class loader is denied.
 [+] 	  This is usually the case when the DGC uses a separate secuirty policy.
 [+] 	  Codebase attacks may work on the application level (maybe vulnerable)
 [+] 

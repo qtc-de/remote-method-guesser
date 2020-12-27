@@ -55,7 +55,7 @@ public class DGCClient {
 
             } else if( t.getMessage().contains("access to class loader denied") ) {
                 Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager.");
-                Logger.printlnPlainMixedYellow("But access to the class loader", "is denied.");
+                Logger.printlnPlainMixedYellow(" But access to the class loader", "is denied.");
                 Logger.println("  This is usually the case when the DGC uses a separate secuirty policy.");
                 Logger.print("  Codebase attacks may work on the application level");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
