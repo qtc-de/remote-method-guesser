@@ -184,6 +184,7 @@ public class ArgumentParser {
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
                 +"    attack <gadget> <command>       Perform deserialization attacks\n"
+                +"    bypass <listener>               Perform deserialization filter bypass (by @_tint0)\n"
                 +"    codebase <url> <classname>      Perform remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    dgc-codebase <url> <classname>  Perform DGC based remote class loading attacks\n"
