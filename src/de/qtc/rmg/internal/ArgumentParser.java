@@ -183,12 +183,12 @@ public class ArgumentParser {
                 +"    port                            Port of the RMI registry\n"
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
-                +"    attack <gadget> <command>       Perform deserialization attacks\n"
+                +"    attack <gadget> <command>       Perform method based deserialization attacks\n"
                 +"    bypass <listener>               Perform deserialization filter bypass (by @_tint0)\n"
-                +"    codebase <url> <classname>      Perform remote class loading attacks\n"
+                +"    codebase <url> <classname>      Perform method based remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    dgc-codebase <url> <classname>  Perform DGC based remote class loading attacks\n"
-                +"    enum                            Enumerate bound names and classes\n"
+                +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
                 +"    guess                           Guess methods on bound names\n\n"
                 +"Optional Arguments:";
 
