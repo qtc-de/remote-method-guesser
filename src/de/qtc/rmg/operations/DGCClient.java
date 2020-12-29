@@ -96,9 +96,8 @@ public class DGCClient {
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
-                Logger.printlnPlainBlue(" java.util.HashMap.");
-                Logger.printMixedYellowFirst("  JEP290", "is most likely", "not installed");
-                Logger.printlnPlainYellow(" (vulnerable)");
+                Logger.printPlainBlue(" java.util.HashMap");
+                Logger.printlnPlainYellow(" (JEP290 is not installed)");
                 RMGUtils.showStackTrace(e);
 
             } else {
