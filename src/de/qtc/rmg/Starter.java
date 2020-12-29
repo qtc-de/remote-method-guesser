@@ -266,7 +266,7 @@ public class Starter {
                 Logger.increaseIndent();
 
                 RegistryClient registryClient = new RegistryClient(rmi);
-                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort);
+                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort, commandLine.hasOption("local"));
 
                 break;
 

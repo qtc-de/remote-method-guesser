@@ -54,6 +54,10 @@ public class Formatter {
         Logger.println("");
         Logger.increaseIndent();
 
+        if( boundNames.length == 0 ) {
+            Logger.println("- No objects are bound to the registry.");
+        }
+
         for( String name : boundNames ) {
 
             Logger.printlnMixedYellow("-", name);

@@ -65,7 +65,7 @@ public class DGCClient {
                 Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
                 Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
                 Logger.println("  Exploitability depends on the security policy of the RMI server and the setting");
-                Logger.print("  of 'useCodebaseOnly' during DGC operations");
+                Logger.printMixedBlue("  of", "useCodebaseOnly", "during DGC operations");
                 Logger.printlnPlainYellow(" (maybe vulnerable)");
                 RMGUtils.showStackTrace(e);
             }
@@ -90,9 +90,8 @@ public class DGCClient {
 
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
-                Logger.printlnPlainBlue(" java.util.HashMap.");
-                Logger.printMixedYellowFirst("  JEP290", "is most likely", "installed");
-                Logger.printlnPlainYellow(" (not vulnerable)");
+                Logger.printPlainBlue(" java.util.HashMap");
+                Logger.printlnPlainYellow(" (JEP290 is installed)");
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
@@ -136,9 +135,7 @@ public class DGCClient {
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
-                Logger.eprintMixedYellow("DGC", "accepted", "deserialization of class ");
-                Logger.printlnPlainBlue(className + ".");
-                Logger.eprintlnMixedYellow("However, the attacking class could", "not be loaded", "from the specified endpoint.");
+                Logger.eprintlnMixedYellow("The attacking class could", "not be loaded", "from the specified endpoint.");
                 Logger.eprintMixedBlue("The DGC is probably configured with", "useCodeBaseOnly=true");
                 Logger.printlnPlainYellow(" (not vulnerable)");
                 Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");

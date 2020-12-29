@@ -108,6 +108,10 @@ public class ArgumentParser {
         jsonOutput.setRequired(false);
         options.addOption(jsonOutput);
 
+        Option local = new Option(null, "local", false, "when used with bypass, use bind call instead of lookup");
+        local.setRequired(false);
+        options.addOption(local);
+
         Option noColor = new Option(null, "no-color", false, "disable colored output");
         noColor.setRequired(false);
         options.addOption(noColor);
