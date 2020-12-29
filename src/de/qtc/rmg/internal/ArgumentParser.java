@@ -104,10 +104,6 @@ public class ArgumentParser {
         help.setRequired(false);
         options.addOption(help);
 
-        Option jsonOutput = new Option(null, "json", false, "output in json format");
-        jsonOutput.setRequired(false);
-        options.addOption(jsonOutput);
-
         Option local = new Option(null, "local", false, "when used with bypass, use bind call instead of lookup");
         local.setRequired(false);
         options.addOption(local);

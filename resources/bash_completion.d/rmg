@@ -73,7 +73,6 @@ function _rmg() {
 		opts="$opts --follow"
 		opts="$opts --force-legacy"
 		opts="$opts --help"
-		opts="$opts --json"
 		opts="$opts --no-color"
 		opts="$opts --no-legacy"
 		opts="$opts --sample-folder"
