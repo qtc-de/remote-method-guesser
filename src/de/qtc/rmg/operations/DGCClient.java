@@ -130,8 +130,8 @@ public class DGCClient {
 
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.eprintMixedYellow("DGC", "rejected", "deserialization of class ");
-                Logger.printlnPlainBlue(className + ".");
-                Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
+                Logger.printPlainBlue(className + ".");
+                Logger.printlnPlainYellow(" (JEP290 is installed)");
                 Logger.eprintln("Codebase attacks may work at the appliaction layer.");
                 RMGUtils.showStackTrace(e);
 
@@ -145,12 +145,17 @@ public class DGCClient {
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
-                Logger.printlnMixedYellow("Caught", "ClassCastException", "during codebase attack.");
+                Logger.printlnMixedYellow("Caught", "ClassCastException", "during dgc-codebase action.");
                 Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
                 RMGUtils.showStackTrace(e);
 
+            } else if( cause instanceof java.security.AccessControlException) {
+                Logger.printlnMixedYellow("Caught unexpected", "AccessControlException", "during dgc-codebase action.");
+                Logger.printlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
+                RMGUtils.showStackTrace(e);
+
             } else {
-                Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during dgc-codebase action.");
                 Logger.eprintln("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
@@ -172,9 +177,9 @@ public class DGCClient {
             Throwable cause = RMGUtils.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                Logger.eprintlnMixedYellow("DGC", "rejected", "deserialization of the supplied gadget.");
-                Logger.eprintlnMixedYellowFirst("JEP290", "is most likely", "installed.");
-                Logger.eprintln("Deserialization attacks may work at the appliaction layer.");
+                Logger.eprintMixedYellow("DGC", "rejected", "deserialization of the supplied gadget");
+                Logger.printlnPlainYellow(" (JEP290 is installed)");
+                Logger.eprintln("Codebase attacks may work at the appliaction layer.");
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
@@ -231,16 +236,51 @@ public class DGCClient {
             remoteRef.done(call);
 
         } catch(java.rmi.ConnectException e) {
-            Logger.eprintlnMixedYellow("Caught", "ConnectException", "during DGC operation.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during cleanCall operation.");
+                Logger.eprintMixedBlue("Target", "refused", "the connection.");
+                Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during cleanCall operation.");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
 
         } catch(java.rmi.ConnectIOException e) {
-            Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during DGC operation.");
-            Logger.eprintlnMixedBlue("Remote endpoint probably uses an", "SSL socket");
-            Logger.eprintlnMixedYellow("Retry with the", "--ssl", "option.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.net.NoRouteToHostException) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during cleanCall operation.");
+                Logger.eprintln("Have you entered the correct target?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during cleanCall operation.");
+                Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
+                Logger.printlnPlainBlue(" SSL socket.");
+                Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during cleanCall operation.");
+                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during cleanCall operation.");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
         }
     }
 

