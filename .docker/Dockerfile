@@ -1,17 +1,24 @@
+###########################################
+###             Build Stage             ###
+###########################################
+FROM maven:3.6.3-openjdk-8 AS builder
+COPY ./resources/example-server /usr/src/app
+WORKDIR /usr/src/app
+RUN mvn clean package
+
+###########################################
+###          Container Stage            ###
+###########################################
 FROM alpine:latest
 
 COPY ./resources/trust/store.p12 /opt/store.p12
 COPY ./resources/scripts/start.sh /opt/start.sh
 COPY ./resources/conf/policy /opt/policy
-COPY ./resources/example-server /opt/server
+
+COPY --from=builder /usr/src/app/target/rmg-example-server-*-jar-with-dependencies.jar /opt/example-server.jar
 
 RUN set -ex \
-    && apk add --no-cache openjdk8 maven \
-    && cd /opt/server \
-    && mvn package \
-    && mv target/rmg-example-server-*.jar /opt/example-server.jar \
-    && apk del maven \
-    && rm -rf ~/.m2 \
+    && apk add --no-cache openjdk8-jre \
     && chmod +x /opt/start.sh
 
 ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \

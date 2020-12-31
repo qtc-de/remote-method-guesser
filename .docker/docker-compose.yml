@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
     rmg:
-      image: docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:2.0
+      image: docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:2.1
       build: .
       environment:
         - > 
@@ -21,4 +21,3 @@ services:
       volumes: 
         - ./resources/trust/store.p12:/opt/store.p12
         - ./resources/conf/policy:/opt/policy
-#        - ./resources/bin/rmg-example-server.jar:/opt/example-server.jar
