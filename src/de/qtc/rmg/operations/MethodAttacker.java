@@ -171,6 +171,7 @@ public class MethodAttacker {
 
             try {
                 Logger.println("Invoking remote method...");
+                Logger.increaseIndent();
                 remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
 
                 Logger.eprintln("Remote method invocation didn't cause any exception.");
@@ -264,12 +265,28 @@ public class MethodAttacker {
                 Logger.eprintln("The SecurityManager on the server side seems to deny the requested action.");
                 RMGUtils.stackTrace(e);
 
+            } catch( java.rmi.UnmarshalException e ) {
+
+                Throwable t = RMGUtils.getCause(e);
+                if( t instanceof java.lang.ClassNotFoundException ) {
+                    Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during " + operationMode + " attack.");
+                    Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
+                    Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                    RMGUtils.showStackTrace(e);
+
+                } else {
+                    Logger.eprintlnMixedYellow("Caught unexpected", "UnmarshalException", "during " + operationMode + " attack.");
+                    Logger.eprintln("Please report this to improve rmg :)");
+                    RMGUtils.stackTrace(e);
+                }
+
             } catch( Exception e ) {
-                Logger.eprintlnYellow("Caught unexpected Exception during " + operationMode + " attack.");
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + operationMode + " attack.");
                 Logger.eprintln("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
 
             } finally {
+                Logger.decreaseIndent();
                 Logger.decreaseIndent();
 
                 if(it.hasNext())
