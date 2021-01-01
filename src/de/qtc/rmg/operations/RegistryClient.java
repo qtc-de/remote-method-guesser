@@ -120,7 +120,33 @@ public class RegistryClient {
             } else if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
                 Logger.eprintlnMixedYellow("Caught", "RemoteException", "during " + callName + " call.");
                 Logger.eprintMixedBlue("Deserialization filter bypass", "failed.", "The targeted server");
-                Logger.printlnPlainYellow(" is patched.");
+                Logger.printlnPlainYellow(" is probably patched.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.io.EOFException ) {
+                Logger.eprintlnMixedYellow("Caught", "EOFException", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("This usually occurs when the bypass succeed, but the listener", "is not answering properly.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.rmi.ConnectIOException && cause.getMessage().contains("non-JRMP server at remote endpoint")) {
+                Logger.eprintlnMixedYellow("Caught", "ConnectIOException", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("This usually occurs when the bypass succeed, but the listener", "is not answering properly.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.net.ConnectException && cause.getMessage().contains("Connection refused")) {
+                Logger.eprintlnMixedYellow("Caught", "ConnectException", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("Bypass", "was successful", "but the specified listener did not accept the connection.");
+                Logger.eprintlnMixedYellow("Have you typed the listener address correctly? The target", "should be vulnerable.");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
+            } else if( cause instanceof java.net.ConnectException && cause.getMessage().contains("Connection timed out")) {
+                Logger.eprintlnMixedYellow("Caught", "ConnectException", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("Bypass", "was successful", "but the target could not reach the specified listener.");
+                Logger.eprintlnMixedYellow("Have you typed the listener address correctly? The target", "should be vulnerable.");
                 RMGUtils.showStackTrace(e);
                 RMGUtils.exit();
 
