@@ -1,7 +1,6 @@
 package de.qtc.rmg.operations;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.SocketException;
 import java.rmi.UnknownHostException;
 import java.rmi.server.ObjID;
@@ -9,6 +8,7 @@ import java.rmi.server.RemoteRef;
 import java.util.HashMap;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import sun.rmi.server.UnicastRef;
@@ -278,9 +278,5 @@ public class DGCClient {
                 RMGUtils.exit();
             }
         }
-    }
-
-    static class DefinitelyNonExistingClass implements Serializable {
-        private final static long serialVersionUID = 2L;
     }
 }

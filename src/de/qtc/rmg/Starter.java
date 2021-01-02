@@ -285,6 +285,10 @@ public class Starter {
                 format.listCodeases();
 
                 Logger.println("");
+                registryClient = new RegistryClient(rmi);
+                registryClient.enumerateStringMarshalling();
+
+                Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
                 dgc.enumSecurityManager();
 

