@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/ash
+
 IP=$(ip a | grep inet | grep -v 127.0.0.1 | grep -o "\([0-9]\{1,3\}\.\?\)\{4\}" | head -n 1)
 echo "[+] IP address of the container: ${IP}" 
 
@@ -10,4 +11,4 @@ echo "[+] Adding RMI hostname to /etc/hosts file..."
 echo "127.0.0.1 iinsecure.dev" >> /etc/hosts
 
 echo "[+] Starting rmi server..."
-exec /usr/lib/jvm/java-1.8-openjdk/bin/java -jar /opt/example-server.jar
+exec /usr/bin/java -jar /opt/example-server.jar
