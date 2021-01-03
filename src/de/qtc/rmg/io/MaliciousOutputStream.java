@@ -26,6 +26,8 @@ public class MaliciousOutputStream extends MarshalOutputStream {
     private Object location;
     private ObjectOutputStream inner;
 
+    private static Object defaultLocation = null;
+
     /**
      * Wraps a MarshalOutputStream into an extending class to overwrite its writeLocation method.
      * Wrapping already existing instances of ObjectOutputStream (or subclasses) is not trivial,
@@ -61,7 +63,10 @@ public class MaliciousOutputStream extends MarshalOutputStream {
             RMGUtils.exit();
         }
 
-        location = new DefinitelyNonExistingClass();
+        if( defaultLocation != null )
+            location = defaultLocation;
+        else
+            location = new DefinitelyNonExistingClass();
     }
 
     /**
@@ -84,5 +89,15 @@ public class MaliciousOutputStream extends MarshalOutputStream {
     protected void writeLocation(String realLocation) throws IOException
     {
         inner.writeObject(location);
+    }
+
+    public static void setDefaultLocation(Object payload)
+    {
+        defaultLocation = payload;
+    }
+
+    public static void resetDefaultLocation()
+    {
+        defaultLocation = null;
     }
 }

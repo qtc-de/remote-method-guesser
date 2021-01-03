@@ -163,6 +163,16 @@ public class Logger {
         log(first + " " + yellow(second) + " " + third);
     }
 
+    public static void printlnPlainMixedYellowFirst(String first, String second)
+    {
+        log(yellow(first) + " " + second);
+    }
+
+    public static void printlnPlainMixedYellowFirst(String first, String second, String third)
+    {
+        log(yellow(first) + " " + second + " " + yellow(third));
+    }
+
     public static void printlnPlainMixedBlue(String first, String second)
     {
         log(first + " " + blue(second));
@@ -171,6 +181,11 @@ public class Logger {
     public static void printlnPlainMixedBlue(String first, String second, String third)
     {
         log(first + " " + blue(second) + " " + third);
+    }
+
+    public static void printPlainMixedBlueFirst(String first, String second, String third)
+    {
+        log(blue(first) + " " + second + " " + blue(third), false);
     }
 
     public static void eprintlnMixedBlue(String first, String second)

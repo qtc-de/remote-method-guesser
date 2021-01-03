@@ -43,16 +43,19 @@ public class Starter {
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
 
-            if( action.equals("attack") || action.contains("codebase")) {
+            if( action.equals("attack") || action.equals("codebase")) {
                 parser.checkArgumentCount(5);
 
                 if(action.equals("codebase") && !commandLine.hasOption("signature")) {
-                    Logger.eprintlnMixedYellow("The", "--signature", "option is required for " + action + " mode.");
+                    Logger.eprintlnMixedBlue("The", "--signature", "option is required for codebase mode.");
+                    Logger.eprintlnMixedYellow("You need either specify a", "valid function signature", "or ");
+                    Logger.eprintMixedYellow("use", "--signature dgc", "or ");
+                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
                     RMGUtils.exit();
                 }
             }
 
-            if( action.contains("codebase" )) {
+            if( action.equals("codebase")) {
                 String serverAddress = parser.getPositionalString(3);
 
                 if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
@@ -120,7 +123,7 @@ public class Starter {
         }
 
         MethodCandidate candidate = null;
-        if( functionSignature != null ) {
+        if( functionSignature != null && !functionSignature.matches("reg|dgc") ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
@@ -224,7 +227,6 @@ public class Starter {
                 break;
 
             case "codebase":
-            case "dgc-codebase":
 
                 String className = parser.getPositionalString(4);
 
@@ -240,12 +242,15 @@ public class Starter {
                     RMGUtils.exit();
                 }
 
-                if( action.equals("codebase") ) {
+                if( candidate != null ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
                     attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
-                } else {
+                } else if( functionSignature.matches("dgc") ) {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.codebaseCleanCall(payload);
+                } else if( functionSignature.matches("reg") ) {
+                    RegistryClient reg = new RegistryClient(rmi);
+                    reg.codebaseCall(payload, commandLine.hasOption("local"));
                 }
 
                 break;
@@ -286,7 +291,10 @@ public class Starter {
 
                 Logger.println("");
                 registryClient = new RegistryClient(rmi);
-                registryClient.enumerateStringMarshalling();
+                boolean marshal = registryClient.enumerateStringMarshalling();
+
+                Logger.println("");
+                registryClient.enumCodebase(marshal);
 
                 Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);

