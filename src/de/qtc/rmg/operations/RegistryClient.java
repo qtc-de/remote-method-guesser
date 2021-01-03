@@ -220,7 +220,8 @@ public class RegistryClient {
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during " + callName + " call.");
-                Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+                Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters,");
+                Logger.printlnMixedYellow("or codebase attack", "was successful :)");
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.security.AccessControlException) {
