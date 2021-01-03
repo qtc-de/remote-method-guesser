@@ -14,7 +14,6 @@ import java.rmi.server.UnicastRemoteObject;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.DummySocketFactory;
-import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import sun.rmi.server.UnicastRef;
