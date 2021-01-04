@@ -187,9 +187,9 @@ public class ArgumentParser {
                 +"    bypass <listener>               Perform deserialization filter bypass (by @_tint0)\n"
                 +"    codebase <url> <classname>      Perform method based remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
-                +"    dgc-codebase <url> <classname>  Perform DGC based remote class loading attacks\n"
                 +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
-                +"    guess                           Guess methods on bound names\n\n"
+                +"    guess                           Guess methods on bound names\n"
+                +"    reg <gadget> <command>          Perform registry based deserialization attacks\n\n"
                 +"Optional Arguments:";
 
         return helpString;

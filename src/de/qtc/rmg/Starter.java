@@ -43,7 +43,7 @@ public class Starter {
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
 
-            if( action.equals("attack") || action.equals("codebase")) {
+            if( action.matches("attack|codebase|dgc|reg")) {
                 parser.checkArgumentCount(5);
 
                 if(action.equals("codebase") && !commandLine.hasOption("signature")) {
@@ -95,6 +95,7 @@ public class Starter {
         boolean updateWordlists = commandLine.hasOption("update");
         boolean createSamples = commandLine.hasOption("create-samples");
         boolean zeroArg = commandLine.hasOption("zero-arg");
+        boolean local = commandLine.hasOption("local");
 
         if( commandLine.hasOption("no-color") ) {
             Logger.disableColor();
@@ -112,7 +113,7 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.contains("dgc") && !action.equals("bypass") ) {
+        if( !action.matches("dgc|bypass|reg") ) {
             rmi.locateRegistry();
 
             boundNames = rmi.getBoundNames(boundName);
@@ -203,6 +204,7 @@ public class Starter {
 
             case "attack":
             case "dgc":
+            case "reg":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
@@ -219,9 +221,12 @@ public class Starter {
                 if( action.equals("attack") ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
                     attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
-                } else {
+                } else if( action.equals("dgc" )) {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.attackCleanCall(payload);
+                } else {
+                    RegistryClient reg = new RegistryClient(rmi);
+                    reg.gadgetCall(payload, local);
                 }
 
                 break;
@@ -250,7 +255,7 @@ public class Starter {
                     dgc.codebaseCleanCall(payload);
                 } else if( functionSignature.matches("reg") ) {
                     RegistryClient reg = new RegistryClient(rmi);
-                    reg.codebaseCall(payload, commandLine.hasOption("local"));
+                    reg.codebaseCall(payload, local);
                 }
 
                 break;
@@ -274,7 +279,7 @@ public class Starter {
                 Logger.increaseIndent();
 
                 RegistryClient registryClient = new RegistryClient(rmi);
-                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort, commandLine.hasOption("local"));
+                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort, local);
 
                 break;
 
