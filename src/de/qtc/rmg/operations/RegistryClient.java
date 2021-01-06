@@ -270,6 +270,18 @@ public class RegistryClient {
                 Logger.printlnPlainYellow("(useCodebaseOnly=true).");
                 RMGUtils.showStackTrace(e);
 
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
+                Logger.eprintlnMixedYellow("Registry", "rejected bind call", "cause it was not send from localhost.");
+
+                if(!localHostBypass)
+                    Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
+                else
+                    Logger.eprintlnMixedBlue("Localhost bypass was used but it", "failed.");
+
+                Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
+
+                RMGUtils.showStackTrace(e);
+
             } else {
                 Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + regMethod + " call.");
                 Logger.println("Please report this to improve rmg :)");
@@ -574,7 +586,7 @@ public class RegistryClient {
     {
         Object[] callArguments = new Object[] {boundName, payloadObject};
         if(bypass)
-            genericCall(-1, callArguments, false, "bind");
+            genericCall(-1, callArguments, maliciousStream, "bind");
         else
             genericCall(0, callArguments, maliciousStream);
     }
@@ -589,7 +601,7 @@ public class RegistryClient {
     {
         Object[] callArguments = new Object[] {boundName, payloadObject};
         if(bypass)
-            genericCall(-1, callArguments, false, "rebind");
+            genericCall(-1, callArguments, maliciousStream, "rebind");
         else
             genericCall(3, callArguments, maliciousStream);
     }
@@ -598,7 +610,7 @@ public class RegistryClient {
     {
         Object[] callArguments = new Object[] {payloadObject};
         if(bypass)
-            genericCall(-1, callArguments, false, "unbind");
+            genericCall(-1, callArguments, maliciousStream, "unbind");
         else
             genericCall(4, callArguments, maliciousStream);
     }
