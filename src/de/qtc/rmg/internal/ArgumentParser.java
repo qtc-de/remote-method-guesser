@@ -195,6 +195,7 @@ public class ArgumentParser {
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
                 +"    guess                           Guess methods on bound names\n"
+                +"    listen <gadget> <command>       Open ysoserials JRMP listener\n"
                 +"    method <gadget> <command>       Perform method based deserialization attacks\n"
                 +"    rebind <boundname> <listener>   Rebinds boundname as object that points to listener\n"
                 +"    reg <gadget> <command>          Perform registry based deserialization attacks\n"
@@ -255,7 +256,7 @@ public class ArgumentParser {
 
     public void prepareAction(String action)
     {
-        if( action.matches("bind|method|codebase|dgc|rebind|reg")) {
+        if( action.matches("bind|method|codebase|dgc|rebind|reg|listen")) {
             this.checkArgumentCount(5);
 
             if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {

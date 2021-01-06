@@ -521,4 +521,33 @@ public class RMGUtils {
             RMGUtils.stackTrace(e);
         }
     }
+
+    public static void createListener(String ysoPath, String port, String gadget, String command)
+    {
+        File ysoJar = new File(ysoPath);
+
+        if( !ysoJar.exists() ) {
+            Logger.eprintlnMixedYellow("Error:", ysoJar.getAbsolutePath(), "does not exist.");
+            RMGUtils.exit();
+        }
+
+        try {
+            URLClassLoader ucl = new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
+
+            Class<?> yso = Class.forName("ysoserial.exploit.JRMPListener", true, ucl);
+            Method method = yso.getDeclaredMethod("main", new Class[] {String[].class});
+
+            Logger.printMixedYellow("Creating a", "JRMPListener", "on port ");
+            Logger.printlnPlainBlue(port + ".");
+            Logger.printlnMixedBlue("Handing of to", "ysoserial...");
+
+            method.invoke(null, new Object[] {new String[] {port, gadget, command}});
+            System.exit(0);
+
+        } catch( Exception e ) {
+            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during JRMPListener creation.");
+            RMGUtils.stackTrace(e);
+            RMGUtils.exit();
+        }
+    }
 }

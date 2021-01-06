@@ -87,7 +87,7 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("bind|dgc|rebind|reg|unbind") && !functionSignature.matches("reg|dgc")) {
+        if( !action.matches("bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
 
             if(action.matches("enum"))
                 RMGUtils.enableCodebase();
@@ -213,6 +213,7 @@ public class Starter {
             case "method":
             case "dgc":
             case "reg":
+            case "listen":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
@@ -222,6 +223,10 @@ public class Starter {
                     Logger.increaseIndent();
                     Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
                     RMGUtils.exit();
+                }
+
+                if( action.equals("listen") ) {
+                    RMGUtils.createListener(ysoserialPath, String.valueOf(port), gadget, command);
                 }
 
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
