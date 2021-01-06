@@ -122,7 +122,7 @@ public class ArgumentParser {
         regMethod.setArgName("method");
         regMethod.setRequired(false);
         options.addOption(regMethod);
-        
+
         Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
         outputs.setArgName("folder");
         outputs.setRequired(false);
@@ -168,7 +168,7 @@ public class ArgumentParser {
         wordlistFolder.setArgName("folder");
         wordlistFolder.setRequired(false);
         options.addOption(wordlistFolder);
-        
+
         Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialization attacks");
         yso.setArgName("file");
         yso.setRequired(false);
@@ -195,10 +195,10 @@ public class ArgumentParser {
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
                 +"    guess                           Guess methods on bound names\n"
+                +"    method <gadget> <command>       Perform method based deserialization attacks\n"
                 +"    rebind <boundname> <listener>   Rebinds boundname as object that points to listener\n"
                 +"    reg <gadget> <command>          Perform registry based deserialization attacks\n"
-                +"    unbind <boundName>              Removes the specified bound name from the registry\n"
-                +"    method <gadget> <command>       Perform method based deserialization attacks\n\n"
+                +"    unbind <boundName>              Removes the specified bound name from the registry\n\n"
                 +"Optional Arguments:";
 
         return helpString;
@@ -252,25 +252,25 @@ public class ArgumentParser {
         else
             return 0;
     }
-    
+
     public void prepareAction(String action)
     {
-    	if( action.matches("bind|method|codebase|dgc|rebind|reg")) {
+        if( action.matches("bind|method|codebase|dgc|rebind|reg")) {
             this.checkArgumentCount(5);
 
             if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {
                 Logger.eprintlnMixedBlue("The", "--signature", "option is required for " + action + " mode.");
-                
+
                 if( action.equals("codebase") ) {
-                	Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
-                	Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
+                    Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
+                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
                 }
-                
+
                 RMGUtils.exit();
             }
-            
+
         } else if( action.matches("ubind") ) {
-        	this.checkArgumentCount(4);
+            this.checkArgumentCount(4);
         }
 
         if( action.equals("codebase")) {
@@ -284,5 +284,16 @@ public class ArgumentParser {
 
             System.setProperty("java.rmi.server.codebase", serverAddress);
         }
+    }
+
+    public String validateRegMethod(String regMethod)
+    {
+        if(!regMethod.matches("lookup|bind|unbind|rebind")) {
+            Logger.printlnPlainMixedYellow("Unsupported registry method:", regMethod);
+            printHelp();
+            System.exit(1);
+        }
+
+        return regMethod;
     }
 }

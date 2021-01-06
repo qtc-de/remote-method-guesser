@@ -62,7 +62,7 @@ public class Starter {
         String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial-path"));
         String functionSignature = commandLine.getOptionValue("signature", "");
         String boundName = commandLine.getOptionValue("bound-name", null);
-        String regMethod = commandLine.getOptionValue("reg-method", "lookup");
+        String regMethod = parser.validateRegMethod(commandLine.getOptionValue("reg-method", "lookup"));
 
         Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
@@ -292,6 +292,8 @@ public class Starter {
 
                 Logger.println("");
                 dgc.enumJEP290();
+
+                break;
 
             default:
                 Logger.printlnPlainMixedYellow("Unknown action:", action);
