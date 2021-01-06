@@ -10,6 +10,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 
 public class ArgumentParser {
@@ -104,7 +106,7 @@ public class ArgumentParser {
         help.setRequired(false);
         options.addOption(help);
 
-        Option local = new Option(null, "local", false, "when used with bypass, use bind call instead of lookup");
+        Option local = new Option(null, "localhost-bypass", false, "attempt localhost bypass for registry operations (CVE-2019-2684)");
         local.setRequired(false);
         options.addOption(local);
 
@@ -116,6 +118,11 @@ public class ArgumentParser {
         noLegacy.setRequired(false);
         options.addOption(noLegacy);
 
+        Option regMethod = new Option(null, "reg-method", true, "method to use during registry operations (bind|lookup|unbind|rebind)");
+        regMethod.setArgName("method");
+        regMethod.setRequired(false);
+        options.addOption(regMethod);
+        
         Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
         outputs.setArgName("folder");
         outputs.setRequired(false);
@@ -161,7 +168,7 @@ public class ArgumentParser {
         wordlistFolder.setArgName("folder");
         wordlistFolder.setRequired(false);
         options.addOption(wordlistFolder);
-
+        
         Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialization attacks");
         yso.setArgName("file");
         yso.setRequired(false);
@@ -183,13 +190,15 @@ public class ArgumentParser {
                 +"    port                            Port of the RMI registry\n"
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
-                +"    attack <gadget> <command>       Perform method based deserialization attacks\n"
-                +"    bypass <listener>               Perform deserialization filter bypass (by @_tint0)\n"
-                +"    codebase <url> <classname>      Perform method based remote class loading attacks\n"
+                +"    bind <boundname> <listener>     Binds an object to the registry thats points to listener\n"
+                +"    codebase <url> <classname>      Perform remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
                 +"    guess                           Guess methods on bound names\n"
-                +"    reg <gadget> <command>          Perform registry based deserialization attacks\n\n"
+                +"    rebind <boundname> <listener>   Rebinds boundname as object that points to listener\n"
+                +"    reg <gadget> <command>          Perform registry based deserialization attacks\n"
+                +"    unbind <boundName>              Removes the specified bound name from the registry\n"
+                +"    method <gadget> <command>       Perform method based deserialization attacks\n\n"
                 +"Optional Arguments:";
 
         return helpString;
@@ -242,5 +251,38 @@ public class ArgumentParser {
 
         else
             return 0;
+    }
+    
+    public void prepareAction(String action)
+    {
+    	if( action.matches("bind|method|codebase|dgc|rebind|reg")) {
+            this.checkArgumentCount(5);
+
+            if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {
+                Logger.eprintlnMixedBlue("The", "--signature", "option is required for " + action + " mode.");
+                
+                if( action.equals("codebase") ) {
+                	Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
+                	Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
+                }
+                
+                RMGUtils.exit();
+            }
+            
+        } else if( action.matches("ubind") ) {
+        	this.checkArgumentCount(4);
+        }
+
+        if( action.equals("codebase")) {
+            String serverAddress = this.getPositionalString(3);
+
+            if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
+                serverAddress = "http://" + serverAddress;
+
+            if( !serverAddress.matches("^.+(.class|.jar|/)$") )
+                serverAddress += "/";
+
+            System.setProperty("java.rmi.server.codebase", serverAddress);
+        }
     }
 }

@@ -21,6 +21,7 @@ import java.util.UUID;
 import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.operations.RegistryClient;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -339,6 +340,24 @@ public class RMGUtils {
     }
 
     public static Object getPayloadObject(String ysoPath, String gadget, String command) {
+
+        if(gadget.equals("JRMPClient2") || gadget.equals("AnTrinh")) {
+
+            String[] split = command.split(":");
+            if(split.length != 2 || !split[1].matches("\\d+")) {
+                Logger.eprintMixedYellow("The gadget", gadget, "expects its command in ");
+                Logger.eprintlnMixedBlueFirst("host:port", "format.");
+                RMGUtils.exit();
+            }
+
+            try {
+                return RegistryClient.generateBypassObject(split[0], Integer.valueOf(split[1]));
+            } catch (Exception e) {
+                Logger.eprintlnYellow("Internal error: Caught unexpected " + e.getClass().getName() + " during generateBypassObject().");
+                RMGUtils.stackTrace(e);
+                RMGUtils.exit();
+            }
+        }
 
         Object ysoPayload = null;
         File ysoJar = new File(ysoPath);

