@@ -89,18 +89,24 @@ public class DGCClient {
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
-                Logger.printlnPlainYellow(" (JEP290 is installed)");
+                Logger.printlnPlainYellow(" (JEP290 is installed).");
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
-                Logger.printlnPlainYellow(" (JEP290 is not installed)");
+                Logger.printlnPlainYellow(" (JEP290 is not installed).");
                 RMGUtils.showStackTrace(e);
 
             } else {
                 ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
             }
+
+        } catch( java.lang.ClassCastException e ) {
+            Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
+            Logger.printPlainBlue(" java.util.HashMap");
+            Logger.printlnPlainYellow(" (JEP290 is not installed).");
+            RMGUtils.showStackTrace(e);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);

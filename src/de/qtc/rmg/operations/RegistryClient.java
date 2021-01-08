@@ -92,6 +92,9 @@ public class RegistryClient {
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "bind", localhostBypass);
 
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
+                ExceptionHandler.singleEntryRegistry(e, "bind");
+
             } else if( t instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
                 Logger.eprintlnMixedBlue("But the class", "RMIServerImpl_Stub", "was not found.");
@@ -140,6 +143,9 @@ public class RegistryClient {
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "rebind", localhostBypass);
 
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
+                ExceptionHandler.singleEntryRegistry(e, "rebind");
+
             } else if( t instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintlnMixedYellow("Rebind operation", "was accepted", "by the server.");
                 Logger.eprintlnMixedBlue("But the class", "RMIServerImpl_Stub", "was not found.");
@@ -171,6 +177,9 @@ public class RegistryClient {
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "unbind", localhostBypass);
+
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
+                ExceptionHandler.singleEntryRegistry(e, "unbind");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "unbind", "call", false);
@@ -318,6 +327,9 @@ public class RegistryClient {
                 Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
                 Logger.eprintlnMixedBlue("  --> Localhost bypass", "was patched", "on this registry server.");
                 RMGUtils.showStackTrace(e);
+
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
+                ExceptionHandler.singleEntryRegistry(e, "unbind");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "unbind", "call", false);
