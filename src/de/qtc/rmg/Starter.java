@@ -247,7 +247,7 @@ public class Starter {
 
             case "codebase":
 
-                String className = parser.getPositionalString(4);
+                String className = parser.getPositionalString(3);
 
                 payload = null;
 

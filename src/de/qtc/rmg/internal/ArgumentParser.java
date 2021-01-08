@@ -191,7 +191,7 @@ public class ArgumentParser {
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
                 +"    bind <boundname> <listener>     Binds an object to the registry thats points to listener\n"
-                +"    codebase <url> <classname>      Perform remote class loading attacks\n"
+                +"    codebase <classname> <url>      Perform remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
                 +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
                 +"    guess                           Guess methods on bound names\n"
@@ -270,12 +270,12 @@ public class ArgumentParser {
                 RMGUtils.exit();
             }
 
-        } else if( action.matches("ubind") ) {
+        } else if( action.matches("unbind") ) {
             this.checkArgumentCount(4);
         }
 
         if( action.equals("codebase")) {
-            String serverAddress = this.getPositionalString(3);
+            String serverAddress = this.getPositionalString(4);
 
             if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
                 serverAddress = "http://" + serverAddress;
