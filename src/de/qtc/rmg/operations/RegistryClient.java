@@ -381,6 +381,9 @@ public class RegistryClient {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
 
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, regMethod, "call", false);
         }
@@ -421,10 +424,7 @@ public class RegistryClient {
                 ExceptionHandler.codebaseClassNotFound(e, className);
 
             } else if( cause instanceof java.lang.ClassCastException) {
-                Logger.printlnMixedYellow("Caught", "ClassCastException", "during " + regMethod + " call.");
-                Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters,");
-                Logger.printlnMixedYellow("or codebase attack", "was successful :)");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
 
             } else if( cause instanceof java.security.AccessControlException) {
                 ExceptionHandler.accessControl(e, regMethod, "call");
@@ -432,6 +432,9 @@ public class RegistryClient {
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, regMethod, "call", false);

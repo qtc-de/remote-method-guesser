@@ -138,9 +138,7 @@ public class DGCClient {
                 ExceptionHandler.codebaseClassNotFound(e, className);
 
             } else if( cause instanceof java.lang.ClassCastException) {
-                Logger.printlnMixedYellow("Caught", "ClassCastException", "during dgc-codebase action.");
-                Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.codebaseClassCast(e, false);
 
             } else if( cause instanceof java.security.AccessControlException) {
                 ExceptionHandler.accessControl(e, "clean", "call");
@@ -148,6 +146,9 @@ public class DGCClient {
             } else {
                 ExceptionHandler.unexpectedException(e, "clean", "call", false);
             }
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "clean", "call", false);
@@ -179,6 +180,9 @@ public class DGCClient {
             } else {
                 ExceptionHandler.unexpectedException(e, "clean", "call", false);
             }
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.deserlializeClassCast(e, false);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "clean", "call", false);

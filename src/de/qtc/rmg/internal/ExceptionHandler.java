@@ -106,6 +106,17 @@ public class ExceptionHandler {
         RMGUtils.showStackTrace(e);
     }
 
+    public static void codebaseClassCast(Exception e, boolean wasString)
+    {
+        Logger.printlnMixedYellow("Caught", "ClassCastException", "during codebase attack.");
+
+        if(wasString)
+            Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters, or");
+
+        Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+        RMGUtils.showStackTrace(e);
+    }
+
     public static void connectionRefused(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + during1 + " " + during2 + ".");
