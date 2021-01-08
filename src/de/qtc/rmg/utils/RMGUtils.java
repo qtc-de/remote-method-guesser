@@ -346,7 +346,7 @@ public class RMGUtils {
             String[] split = command.split(":");
             if(split.length != 2 || !split[1].matches("\\d+")) {
                 Logger.eprintMixedYellow("The gadget", gadget, "expects its command in ");
-                Logger.eprintlnMixedBlueFirst("host:port", "format.");
+                Logger.printlnPlainMixedBlueFirst("host:port", "format.", "");
                 RMGUtils.exit();
             }
 
