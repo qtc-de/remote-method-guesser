@@ -7,6 +7,7 @@ import java.rmi.server.ObjID;
 import java.rmi.server.RemoteRef;
 import java.util.HashMap;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
@@ -28,48 +29,44 @@ public class DGCClient {
         this.rmi = rmiRegistry;
     }
 
-    public void enumSecurityManager()
+    public void enumDGC()
     {
         try {
-            Logger.printlnBlue("RMI server SecurityManager enumeration:");
+            Logger.printlnBlue("RMI server DGC enumeration:");
             Logger.println("");
             Logger.increaseIndent();
 
             cleanCall(new DefinitelyNonExistingClass());
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable t = RMGUtils.getThrowable("ClassNotFoundException", e);
 
             if( t == null ) {
-                Logger.eprintlnYellow("- Caught unexpected exception during SecurityManager enumeration");
-                Logger.eprintln("  Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
             }
 
             else if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
-                Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager.");
-                Logger.printMixedYellow("  Remote class loading attacks", "are not", "possible");
-                Logger.printlnPlainYellow(" (not vulnerable)");
+                Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
+                Logger.printMixedYellow("  Remote class loading attacks", "are not", "possible.");
                 RMGUtils.showStackTrace(e);
 
             } else if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager.");
-                Logger.printlnPlainMixedYellow(" But access to the class loader", "is denied.");
-                Logger.println("  This is usually the case when the DGC uses a separate secuirty policy.");
-                Logger.print("  Codebase attacks may work on the application level");
-                Logger.printlnPlainYellow(" (maybe vulnerable)");
+                Logger.printlnMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations.");
+                Logger.printlnMixedYellow("  But access to the class loader", "is denied.");
+                Logger.printlnMixedBlue("  The DGC uses most likely a", "separate security policy.");
                 RMGUtils.showStackTrace(e);
 
             } else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager and");
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations and");
                 Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
-                Logger.println("  Exploitability depends on the security policy of the RMI server and the setting");
-                Logger.printMixedBlue("  of", "useCodebaseOnly", "during DGC operations");
-                Logger.printlnPlainYellow(" (maybe vulnerable)");
+                Logger.printMixedBlue("  Exploitability depends on the", "security policy", "and the configuration of ");
+                Logger.printlnBlue("useCodebaseOnly.");
                 RMGUtils.showStackTrace(e);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
 
         } finally {
             Logger.decreaseIndent();
@@ -85,7 +82,7 @@ public class DGCClient {
 
             cleanCall(new HashMap<String,String>());
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable cause = RMGUtils.getCause(e);
 
@@ -102,11 +99,11 @@ public class DGCClient {
                 RMGUtils.showStackTrace(e);
 
             } else {
-                Logger.eprintln("Caught unexpcted exception during JEP290 enumeration.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
         }
     }
 
@@ -123,23 +120,16 @@ public class DGCClient {
 
             cleanCall(payload);
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable cause = RMGUtils.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                Logger.eprintMixedYellow("DGC", "rejected", "deserialization of class ");
-                Logger.printPlainBlue(className + ".");
-                Logger.printlnPlainYellow(" (JEP290 is installed)");
-                Logger.eprintln("Codebase attacks may work at the appliaction layer.");
+                ExceptionHandler.invalidClass(e, "DGC", className);
                 RMGUtils.showStackTrace(e);
 
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                Logger.eprintlnMixedYellow("The attacking class could", "not be loaded", "from the specified endpoint.");
-                Logger.eprintMixedBlue("The DGC is probably configured with", "useCodeBaseOnly=true");
-                Logger.printlnPlainYellow(" (not vulnerable)");
-                Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
-                RMGUtils.showStackTrace(e);
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
+                ExceptionHandler.codebaseClassNotFound(e, className);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during dgc-codebase action.");
@@ -147,16 +137,14 @@ public class DGCClient {
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.security.AccessControlException) {
-                Logger.printlnMixedYellow("Caught unexpected", "AccessControlException", "during dgc-codebase action.");
-                Logger.printlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.accessControl(e, "clean", "call");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during dgc-codebase action.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "clean", "call", false);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "clean", "call", false);
         }
     }
 
@@ -169,33 +157,25 @@ public class DGCClient {
 
             cleanCall(payload);
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable cause = RMGUtils.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                Logger.eprintMixedYellow("DGC", "rejected", "deserialization of the supplied gadget");
-                Logger.printlnPlainYellow(" (JEP290 is installed)");
-                Logger.eprintln("Codebase attacks may work at the appliaction layer.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.invalidClass(e, "DGC", "gadget-class");
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
-                Logger.eprintlnMixedYellow("DGC", "accepted", "deserialization of the supplied gadget.");
-                Logger.eprintlnMixedYellow("However, the gadget seems", "not", "to be available on the rmi server.");
-                Logger.eprintln("Try a different gadget.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.deserializeClassNotFound(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
-                Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
-                Logger.printlnMixedYellowFirst("Deserialization attack", "most likely", "worked :)");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.deserlializeClassCast(e, false);
 
             } else {
-                Logger.eprintln("Caught unexpcted exception during dgc-codebase action.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "clean", "call", false);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "clean", "call", false);
         }
     }
 
@@ -237,16 +217,10 @@ public class DGCClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during cleanCall operation.");
-                Logger.eprintMixedBlue("Target", "refused", "the connection.");
-                Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.connectionRefused(e, "clean", "call");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during cleanCall operation.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "clean", "call", true);
             }
 
         } catch(java.rmi.ConnectIOException e) {
@@ -254,29 +228,16 @@ public class DGCClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during cleanCall operation.");
-                Logger.eprintln("Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.noRouteToHost(e, "clean", "call");
 
             } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during cleanCall operation.");
-                Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
-                Logger.printlnPlainBlue(" SSL socket.");
-                Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.noJRMPServer(e, "clean", "call");
 
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during cleanCall operation.");
-                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.sslError(e, "clean", "call");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during cleanCall operation.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "clean", "call", true);
             }
         }
     }

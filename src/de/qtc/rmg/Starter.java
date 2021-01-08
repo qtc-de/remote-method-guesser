@@ -293,7 +293,7 @@ public class Starter {
 
                 Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
-                dgc.enumSecurityManager();
+                dgc.enumDGC();
 
                 Logger.println("");
                 dgc.enumJEP290();

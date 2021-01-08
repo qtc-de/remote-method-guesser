@@ -395,9 +395,7 @@ public class RegistryClient {
             Throwable cause = RMGUtils.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                Logger.eprintMixedYellow("Registry", "rejected", "deserialization of class ");
-                Logger.printPlainBlue(className);
-                Logger.printlnPlainYellow(" (JEP290 is installed)");
+                ExceptionHandler.invalidClass(e, "Registry", className);
                 Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
                 RMGUtils.showStackTrace(e);
 
@@ -417,9 +415,7 @@ public class RegistryClient {
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.security.AccessControlException) {
-                Logger.printlnMixedYellow("Caught unexpected", "AccessControlException", "during " + regMethod + " call.");
-                Logger.printlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.accessControl(e, regMethod, "call");
 
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
