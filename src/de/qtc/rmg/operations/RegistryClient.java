@@ -13,6 +13,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import javax.management.remote.rmi.RMIServerImpl_Stub;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.DummySocketFactory;
@@ -76,9 +77,7 @@ public class RegistryClient {
         try {
             payloadObject = generateRMIServerImpl(host, port);
         } catch(Exception e) {
-            Logger.printlnYellow("Internal error: Unexpected " + e.getClass().getName() + "during bindObject call.");
-            RMGUtils.showStackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.internalException(e, "RegistryClient.bindObject", true);
         }
 
         try {
@@ -91,14 +90,7 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("Registry", "rejected bind call", "cause it was not send from localhost.");
-
-                if(!localhostBypass)
-                    Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
-                else
-                    Logger.eprintlnMixedBlue("Localhost bypass", "failed.");
-
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.nonLocalhost(e, "bind", localhostBypass);
 
             } else if( t instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
@@ -106,25 +98,17 @@ public class RegistryClient {
                 Logger.eprintln("The server probably runs on a JRE with limited module access.");
 
             } else if( t instanceof java.rmi.AlreadyBoundException) {
-                Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
-                Logger.eprintlnMixedBlue("But the boundname", boundName, "is already bound.");
-                Logger.eprintlnMixedYellow("Use the", "rebind", "action instead.");
+                ExceptionHandler.alreadyBoundException(e, boundName);
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during bind call.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "bind", "call", false);
             }
 
         } catch( java.rmi.AlreadyBoundException e ) {
-            Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
-            Logger.eprintlnMixedBlue("But the boundname", boundName, "is already bound.");
-            Logger.eprintlnMixedYellow("Use the", "rebind", "action instead.");
+            ExceptionHandler.alreadyBoundException(e, boundName);
 
         } catch( Exception e  ) {
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during bind call.");
-            Logger.eprintln("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "bind", "call", false);
         }
     }
 
@@ -141,9 +125,7 @@ public class RegistryClient {
             payloadObject = generateRMIServerImpl(host, port);
 
         } catch(Exception e) {
-            Logger.printlnYellow("Internal error: Unexpected " + e.getClass().getName() + "during bindObject call.");
-            RMGUtils.showStackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.internalException(e, "RegistryClient.rebindObject", true);
         }
 
         try {
@@ -156,14 +138,7 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("Registry", "rejected rebind call", "cause it was not send from localhost.");
-
-                if(!localhostBypass)
-                    Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
-                else
-                    Logger.eprintlnMixedBlue("Localhost bypass", "failed.");
-
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.nonLocalhost(e, "rebind", localhostBypass);
 
             } else if( t instanceof java.lang.ClassNotFoundException) {
                 Logger.eprintlnMixedYellow("Rebind operation", "was accepted", "by the server.");
@@ -171,15 +146,11 @@ public class RegistryClient {
                 Logger.eprintln("The server probably runs on a JRE with limited module access.");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during rebind call.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "rebind", "call", false);
             }
 
         } catch( Exception e  ) {
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during rebind call.");
-            Logger.eprintln("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "rebind", "call", false);
         }
     }
 
@@ -199,19 +170,10 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("Registry", "rejected unbind call", "cause it was not send from localhost.");
-
-                if(!localhostBypass)
-                    Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
-                else
-                    Logger.eprintlnMixedBlue("Localhost bypass", "failed.");
-
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.nonLocalhost(e, "unbind", localhostBypass);
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during unbind call.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "unbind", "call", false);
             }
 
         } catch( java.rmi.NotBoundException e ) {
@@ -219,9 +181,7 @@ public class RegistryClient {
             Logger.printlnMixedBlue("The name", boundName, "seems not to be bound to the registry.");
 
         } catch( Exception e  ) {
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during unbind call.");
-            Logger.eprintln("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "unbind", "call", false);
         }
     }
 
@@ -271,21 +231,11 @@ public class RegistryClient {
                 RMGUtils.showStackTrace(e);
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("Registry", "rejected bind call", "cause it was not send from localhost.");
-
-                if(!localHostBypass)
-                    Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
-                else
-                    Logger.eprintlnMixedBlue("Localhost bypass was used but it", "failed.");
-
                 Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
-
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.nonLocalhost(e, regMethod, localHostBypass);
 
             } else {
-                Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + regMethod + " call.");
-                Logger.println("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
 
         } catch( java.lang.ClassCastException e ) {
@@ -295,9 +245,7 @@ public class RegistryClient {
             RMGUtils.showStackTrace(e);
 
         } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + regMethod + " call.");
-            Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
 
         } finally {
             Logger.decreaseIndent();
@@ -340,15 +288,11 @@ public class RegistryClient {
                 RMGUtils.showStackTrace(e);
 
             } else {
-                Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
-                Logger.println("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }
 
         } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during lookup call.");
-            Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "lookup", "call", false);
 
         } finally {
             Logger.decreaseIndent();
@@ -376,9 +320,7 @@ public class RegistryClient {
                 RMGUtils.showStackTrace(e);
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during unbind call.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "unbind", "call", false);
             }
 
         } catch( java.rmi.NotBoundException e ) {
@@ -387,9 +329,7 @@ public class RegistryClient {
             RMGUtils.showStackTrace(e);
 
         } catch( Exception e  ) {
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during unbind call.");
-            Logger.eprintln("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "unbind", "call", false);
 
         } finally {
             Logger.decreaseIndent();
@@ -407,29 +347,18 @@ public class RegistryClient {
 
             callByName(regMethod, payloadObject, false, localHostBypass, "");
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable cause = RMGUtils.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget");
-                Logger.printlnPlainYellow(" (JEP290 is installed).");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.jep290(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
-                Logger.eprintlnMixedYellow("RMI registry", "accepted", "deserialization of the supplied gadget.");
-                Logger.eprintlnMixedYellow("However, the gadget seems to be", "not available", "on the servers classpath.");
-                Logger.eprintln("Try a different gadget.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.deserializeClassNotFound(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
-                Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
-
-                if(regMethod.equals("lookup"))
-                    Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters, or");
-
-                Logger.printlnMixedYellowFirst("Deserialization attack", "was successful :)");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
 
             } else if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
                 Logger.printlnMixedYellow("Caught", "RemoteException", "during deserialization attack.");
@@ -437,11 +366,11 @@ public class RegistryClient {
                 Logger.printlnPlainYellow("is patched.");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpcted exception during", regMethod, "call.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
         }
     }
 
@@ -461,7 +390,7 @@ public class RegistryClient {
 
             callByName(regMethod, payloadObject, false, localHostBypass, "");
 
-        } catch( Exception e ) {
+        } catch( java.rmi.ServerException e ) {
 
             Throwable cause = RMGUtils.getCause(e);
 
@@ -478,12 +407,8 @@ public class RegistryClient {
                 Logger.eprintln("Original error: " + e.getMessage());
                 RMGUtils.showStackTrace(e);
 
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                Logger.eprintlnMixedYellow("The payload class could", "not be loaded", "from the specified endpoint.");
-                Logger.eprintMixedBlue("The registry is probably configured with", "useCodeBaseOnly=true");
-                Logger.printlnPlainYellow(" (not vulnerable)");
-                Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
-                RMGUtils.showStackTrace(e);
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
+                ExceptionHandler.codebaseClassNotFound(e, className);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printlnMixedYellow("Caught", "ClassCastException", "during " + regMethod + " call.");
@@ -497,11 +422,11 @@ public class RegistryClient {
                 RMGUtils.showStackTrace(e);
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during " + regMethod + " action.");
-                Logger.eprintln("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
         }
     }
 
@@ -577,8 +502,7 @@ public class RegistryClient {
                 break;
 
             default:
-                Logger.printlnMixedYellow("Interal error within the", "callByName(...)", "function.");
-                RMGUtils.exit();
+                ExceptionHandler.internalError("RegistryClient.callByName", "The function was called with an unknown callname");
         }
     }
 
@@ -638,14 +562,11 @@ public class RegistryClient {
             }
 
             if( hash == interfaceHash ) {
-                Logger.eprintlnMixedYellow("Unable to find method hash for method", callName);
-                RMGUtils.exit();
+                ExceptionHandler.internalError("RegistryClient.genericCall", "Unable to find method hash for method '" + callName + "'.");
             }
 
         } else {
-            Logger.eprintlnMixedYellow("Internal error in", "genericCall", "function.");
-            Logger.eprintlnMixedBlue("Unable to obtain method hash for method", callName);
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RegistryClient.genericCall", "Violation in the calling convention of the function.");
         }
 
         try {
@@ -675,16 +596,10 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + callName + " call.");
-                Logger.eprintMixedBlue("Target", "refused", "the connection.");
-                Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.connectionRefused(e, callName, "call");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + callName + " call.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
             }
 
         } catch(java.rmi.ConnectIOException e) {
@@ -692,29 +607,16 @@ public class RegistryClient {
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "NoRouteToHostException", "during " + callName + " call.");
-                Logger.eprintln("Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.noRouteToHost(e, callName, "call");
 
             } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + callName + " call.");
-                Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
-                Logger.printlnPlainBlue(" SSL socket.");
-                Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.noJRMPServer(e, callName, "call");
 
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during " + callName + " call.");
-                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.sslError(e, callName, "call");
 
             } else {
-                Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + callName + " call.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
             }
         }
     }

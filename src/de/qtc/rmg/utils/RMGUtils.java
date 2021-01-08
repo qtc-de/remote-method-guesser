@@ -539,7 +539,7 @@ public class RMGUtils {
 
             Logger.printMixedYellow("Creating a", "JRMPListener", "on port ");
             Logger.printlnPlainBlue(port + ".");
-            Logger.printlnMixedBlue("Handing of to", "ysoserial...");
+            Logger.printlnMixedBlue("Handing off to", "ysoserial...");
 
             method.invoke(null, new Object[] {new String[] {port, gadget, command}});
             System.exit(0);
