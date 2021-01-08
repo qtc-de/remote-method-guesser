@@ -3,23 +3,26 @@
 type _comp_filter &> /dev/null || return
 type _comp_contains &> /dev/null || return
 type _comp_filter_shorts &> /dev/null || return
+type _comp_get_parameter &> /dev/null || return
 
 function _rmg() {
 
-    local cur prev words cword opts args gadgets
+    local cur prev words opts arg args gadgets value_options
     _init_completion || return
 
-    _count_args "" "@(--argument-position|--bound-name|--config|--sample-folder|--signature|--threads|--template-folder|--wordlist-file|--wordlist-folder|--yso)"
+    value_options="--argument-position --bound-name --config --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+    _count_args "" "@(${value_options// /|})"
+    _comp_get_parameter 3
     COMPREPLY=()
 
     gadgets="BeanShell1 C3P0 Clojure CommonsBeanutils1 CommonsCollections1 CommonsCollections2"
     gadgets="$gadgets CommonsCollections3 CommonsCollections4 CommonsCollections5 CommonsCollections6"
     gadgets="$gadgets CommonsCollections7 FileUpload1 Groovy1 Hibernate1 Hibernate2 JBossInterceptors1"
     gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
-    gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1"
+    gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
-    # If the cursor is at the last word
-    if [[ $(($cword+1)) -eq ${#words[@]} ]]; then
+    # Only complete positionals when prev is no option that expects a value and current word doesn't starts with -*
+    if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then
 
         # If only host was specified so far - complete nothing
         if [[ $args -eq 2 ]]; then
@@ -27,31 +30,35 @@ function _rmg() {
 
         # If host and port are specified - complete actions
         elif [[ $args -eq 3 ]]; then
-            opts="dgc dgc-codebase enum guess attack codebase bypass"
+            opts="bind codebase dgc enum guess listen method rebind reg unbind"
             mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
             return 0
 
-        # If host, port and action are specified - complete depending on action
+        # If host, port and action are specified - complete depending on action (stored in ${arg} by _comp_get_parameter 3)
         elif [[ $args -eq 4 ]]; then
 
-            # If action expects a codebase or listener, complete local addresses
-            if _comp_contains "codebase dgc-codebase bypass" $prev; then
-                _ip_addresses
-                compopt -o nospace
-                return 0
-
             # If action expects an gadget, complete gadgets
-            elif _comp_contains "attack dgc" $prev; then
+            if _comp_contains "dgc listen method reg" $arg; then
                 opts=$gadgets
                 mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+                return 0
+
+            # If action expects something non guessable, complete nothing
+            elif _comp_contains "bind codebase rebind unbind" $arg; then
                 return 0
             fi
 
         # If host, port, action and another argument was specified...
         elif [[ $args -eq 5 ]]; then
 
+            # ... and action expects a listener as second arg, complete local addresses
+            if _comp_contains "bind codebase rebind" $arg; then
+                _ip_addresses
+                compopt -o nospace
+                return 0
+
             # ... and the next argument cannot be guessed, complete nothing
-            if _comp_contains "attack codebase dgc dgc-codebase" ${words[$(($cword-2))]}; then
+            elif _comp_contains "dgc listen metho reg" $arg; then
                 return 0
             fi
 
@@ -63,6 +70,14 @@ function _rmg() {
 	if _comp_contains "--config --sample-folder --template-folder --wordlist-file --wordlist-folder --yso" $prev; then
         _filedir
 		return 0
+
+	# signature completions
+	elif _comp_contains "--signature" $prev; then
+        opts="reg dgc"
+
+	# registry method completions
+	elif _comp_contains "--reg-method" $prev; then
+        opts="bind lookup rebind unbind"
 
 	# No completions
 	elif _comp_contains "--argument-position --bound-name --signature --threads" $prev; then
@@ -77,17 +92,18 @@ function _rmg() {
 		opts="$opts --follow"
 		opts="$opts --force-legacy"
 		opts="$opts --help"
-		opts="$opts --local"
+		opts="$opts --localhost-bypass"
 		opts="$opts --no-color"
 		opts="$opts --no-legacy"
+		opts="$opts --reg-method"
 		opts="$opts --sample-folder"
 		opts="$opts --signature"
 		opts="$opts --ssl"
 		opts="$opts --stack-trace"
 		opts="$opts --template-folder"
 		opts="$opts --threads"
-		opts="$opts --update"
 		opts="$opts --trusted"
+		opts="$opts --update"
 		opts="$opts --wordlist-file"
 		opts="$opts --wordlist-folder"
 		opts="$opts --yso"
