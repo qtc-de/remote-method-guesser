@@ -48,7 +48,7 @@ public class DGCClient {
 
             else if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
                 Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
-                Logger.printMixedYellow("  Remote class loading attacks", "are not", "possible.");
+                Logger.printlnMixedYellow("  Remote class loading attacks", "are not", "possible.");
                 RMGUtils.showStackTrace(e);
 
             } else if( t.getMessage().contains("access to class loader denied") ) {
