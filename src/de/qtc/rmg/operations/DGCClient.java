@@ -66,6 +66,7 @@ public class DGCClient {
 
             } else {
                 ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
+            }
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
