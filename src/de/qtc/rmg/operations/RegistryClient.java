@@ -296,6 +296,12 @@ public class RegistryClient {
                 Logger.printlnPlainYellow("readString().");
                 RMGUtils.showStackTrace(e);
 
+            } else if( t instanceof java.io.InvalidClassException ) {
+                Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer");
+                Logger.printlnPlainYellow(" (SingleEntryRegistry?).");
+                Logger.println("  --> Unable to detect String marshalling on this registry type.");
+                RMGUtils.showStackTrace(e);
+
             } else {
                 ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }

@@ -63,7 +63,9 @@ public class DGCClient {
                 Logger.printMixedBlue("  Exploitability depends on the", "security policy", "and the configuration of ");
                 Logger.printlnBlue("useCodebaseOnly.");
                 RMGUtils.showStackTrace(e);
-            }
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
