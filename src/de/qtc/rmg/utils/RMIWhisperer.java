@@ -16,6 +16,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.DummyTrustManager;
 import de.qtc.rmg.networking.LoopbackSocketFactory;
@@ -98,8 +99,21 @@ public final class RMIWhisperer {
             Logger.printlnPlain("failed.");
             Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
             Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
-            RMGUtils.stackTrace(e);
+            RMGUtils.showStackTrace(e);
             RMGUtils.exit();
+
+        } catch( java.rmi.ConnectIOException e ) {
+
+            Throwable t = RMGUtils.getCause(e);
+            if( t instanceof java.io.EOFException) {
+                Logger.printlnPlain("failed.");
+                Logger.eprintlnMixedYellow("Caugth", "EOFException", "while listing bound names.");
+                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+            } else {
+                ExceptionHandler.unexpectedException(e, "list", "call", true);
+            }
 
         } catch( RemoteException e ) {
             Logger.printlnPlain("failed.");
