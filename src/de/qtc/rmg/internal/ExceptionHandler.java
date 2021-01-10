@@ -168,8 +168,9 @@ public class ExceptionHandler {
 
     public static void singleEntryRegistry(Exception e, String during1)
     {
-        Logger.printlnMixedYellow("Caught", "AccessException", "during " + during1 + "call.");
-        Logger.printlnMixedBlue("The servers seems to use a", "SingleEntryRegistry", "(probably JMX based).");
+        Logger.printlnMixedYellow("- Caught", "AccessException", "during " + during1 + "call.");
+        Logger.printlnMixedBlue("  --> The servers seems to use a", "SingleEntryRegistry", "(probably JMX based).");
+        Logger.statusUndecided("Vulnerability");
         RMGUtils.showStackTrace(e);
     }
 }

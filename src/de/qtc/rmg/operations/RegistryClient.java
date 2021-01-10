@@ -231,12 +231,14 @@ public class RegistryClient {
                 Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during " + regMethod + " call.");
                 Logger.printMixedBlue("  --> The server", "attempted to parse", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=false).");
+                Logger.statusNonDefault();
                 RMGUtils.showStackTrace(e);
 
             } else if( t instanceof java.lang.ClassCastException ) {
                 Logger.printlnMixedYellow("- Caught", "ClassCastException", "during " + regMethod + " call.");
                 Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=true).");
+                Logger.statusDefault();
                 RMGUtils.showStackTrace(e);
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
@@ -251,6 +253,7 @@ public class RegistryClient {
             Logger.printlnMixedYellow("- Caught", "ClassCastException", "during " + regMethod + " call.");
             Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
             Logger.printlnPlainYellow("(useCodebaseOnly=true).");
+            Logger.statusDefault();
             RMGUtils.showStackTrace(e);
 
         } catch( Exception e ) {
@@ -287,6 +290,7 @@ public class RegistryClient {
                 Logger.printlnMixedBlue("- Server", "attempted to deserialize", "object locations during lookup call.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
                 RMGUtils.showStackTrace(e);
                 marshal = true;
 
@@ -294,12 +298,14 @@ public class RegistryClient {
                 Logger.printlnMixedBlue("- Server complained that", "object cannot be casted to java.lang.String.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readString().");
+                Logger.statusDefault();
                 RMGUtils.showStackTrace(e);
 
             } else if( t instanceof java.io.InvalidClassException ) {
                 Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer");
                 Logger.printlnPlainYellow(" (SingleEntryRegistry?).");
                 Logger.println("  --> Unable to detect String marshalling on this registry type.");
+                Logger.statusUndecided("Configuration");
                 RMGUtils.showStackTrace(e);
 
             } else {
@@ -332,6 +338,7 @@ public class RegistryClient {
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
                 Logger.eprintlnMixedBlue("  --> Localhost bypass", "was patched", "on this registry server.");
+                Logger.statusOk();
                 RMGUtils.showStackTrace(e);
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
@@ -344,6 +351,7 @@ public class RegistryClient {
         } catch( java.rmi.NotBoundException e ) {
             Logger.eprintlnMixedYellow("- Caught", "NotBoundException", "during unbind call.");
             Logger.printlnMixedYellow("  --> RMI registry processed the unbind call and", "is vulnerable.");
+            Logger.statusVulnerable();
             RMGUtils.showStackTrace(e);
 
         } catch( Exception e  ) {

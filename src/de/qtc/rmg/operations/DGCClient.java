@@ -48,20 +48,23 @@ public class DGCClient {
 
             else if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
                 Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
-                Logger.printlnMixedYellow("  Remote class loading attacks", "are not", "possible.");
+                Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
+                Logger.statusOutdated();
                 RMGUtils.showStackTrace(e);
 
             } else if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printlnMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations.");
-                Logger.printlnMixedYellow("  But access to the class loader", "is denied.");
-                Logger.printlnMixedBlue("  The DGC uses most likely a", "separate security policy.");
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations but ");
+                Logger.printlnPlainYellow("access is denied.");
+                Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
+                Logger.statusDefault();
                 RMGUtils.showStackTrace(e);
 
             } else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations and");
-                Logger.printlnPlainMixedYellow(" access to the class loader", "is allowed.");
-                Logger.printMixedBlue("  Exploitability depends on the", "security policy", "and the configuration of ");
+                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations and ");
+                Logger.printlnPlainYellow("access is allowed.");
+                Logger.printMixedBlue("  --> Exploitability depends on the", "security policy", "and the configuration of ");
                 Logger.printlnBlue("useCodebaseOnly.");
+                Logger.statusNonDefault();
                 RMGUtils.showStackTrace(e);
 
             } else {
@@ -93,12 +96,14 @@ public class DGCClient {
                 Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
                 Logger.printlnPlainYellow(" (JEP290 is installed).");
+                Logger.statusOk();
                 RMGUtils.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
                 Logger.printlnPlainYellow(" (JEP290 is not installed).");
+                Logger.statusVulnerable();
                 RMGUtils.showStackTrace(e);
 
             } else {
@@ -109,6 +114,7 @@ public class DGCClient {
             Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
             Logger.printPlainBlue(" java.util.HashMap");
             Logger.printlnPlainYellow(" (JEP290 is not installed).");
+            Logger.statusVulnerable();
             RMGUtils.showStackTrace(e);
 
         } catch( Exception e ) {
