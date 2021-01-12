@@ -298,6 +298,8 @@ public class Starter {
                 Logger.println("");
                 dgc.enumJEP290();
 
+                Logger.println("");
+                registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
                 break;
 
             default:

@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
@@ -36,34 +37,42 @@ public class DGCClient {
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(new DefinitelyNonExistingClass());
+            MaliciousOutputStream.setDefaultLocation("InvalidURL");
+            cleanCall(new DefinitelyNonExistingClass(), true);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getThrowable("ClassNotFoundException", e);
+            Throwable t = RMGUtils.getCause(e);
 
-            if( t == null ) {
-                ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
-            }
+            if( t instanceof ClassNotFoundException ) {
 
-            else if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
-                Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
-                Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
-                Logger.statusOutdated();
-                RMGUtils.showStackTrace(e);
+                if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
+                    Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
+                    Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
+                    Logger.statusDefault();
+                    RMGUtils.showStackTrace(e);
 
-            } else if( t.getMessage().contains("access to class loader denied") ) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations but ");
-                Logger.printlnPlainYellow("access is denied.");
-                Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
-                Logger.statusDefault();
-                RMGUtils.showStackTrace(e);
+                } else if( t.getMessage().contains("access to class loader denied") ) {
+                    Logger.printMixedYellow("- Security Manager", "rejected access", "to the class loader ");
+                    Logger.printlnPlainYellow("(useCodebaseOnly=false).");
+                    Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
+                    Logger.statusNonDefault();
+                    RMGUtils.showStackTrace(e);
 
-            } else if( t.getMessage().equals("de.qtc.rmg.operations.DGCClient$DefinitelyNonExistingClass")) {
-                Logger.printMixedYellow("- RMI server", "does", "use a SecurityManager for DGC operations and ");
-                Logger.printlnPlainYellow("access is allowed.");
-                Logger.printMixedBlue("  --> Exploitability depends on the", "security policy", "and the configuration of ");
-                Logger.printlnBlue("useCodebaseOnly.");
+                } else if( t.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
+                    Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
+                    Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=false.");
+                    Logger.statusDefault();
+                    RMGUtils.showStackTrace(e);
+
+                } else {
+                    ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
+                }
+
+            } else if( t instanceof java.net.MalformedURLException) {
+                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during clean call.");
+                Logger.printMixedBlue("  --> The DGC", "attempted to parse", "the provided codebase ");
+                Logger.printlnPlainYellow("(useCodebaseOnly=false).");
                 Logger.statusNonDefault();
                 RMGUtils.showStackTrace(e);
 
@@ -76,6 +85,7 @@ public class DGCClient {
 
         } finally {
             Logger.decreaseIndent();
+            MaliciousOutputStream.resetDefaultLocation();
         }
     }
 
@@ -86,7 +96,7 @@ public class DGCClient {
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(new HashMap<String,String>());
+            cleanCall(new HashMap<String,String>(), false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -119,6 +129,9 @@ public class DGCClient {
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
+
+        } finally {
+            Logger.decreaseIndent();
         }
     }
 
@@ -133,7 +146,7 @@ public class DGCClient {
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(payload);
+            cleanCall(payload, false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -171,7 +184,7 @@ public class DGCClient {
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(payload);
+            cleanCall(payload, false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -210,7 +223,7 @@ public class DGCClient {
      * @throws SocketException
      */
     @SuppressWarnings("deprecation")
-    public void cleanCall(Object payloadObject) throws Exception
+    public void cleanCall(Object payloadObject, boolean maliciousStream) throws Exception
     {
         try {
             Endpoint endpoint = rmi.getEndpoint();

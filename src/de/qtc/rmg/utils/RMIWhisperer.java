@@ -104,18 +104,27 @@ public final class RMIWhisperer {
 
         } catch( java.rmi.ConnectIOException e ) {
 
+            Logger.printlnPlain("failed.");
+            Logger.eprintln("");
             Throwable t = RMGUtils.getCause(e);
+
             if( t instanceof java.io.EOFException) {
-                Logger.printlnPlain("failed.");
                 Logger.eprintlnMixedYellow("Caugth", "EOFException", "while listing bound names.");
                 Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
                 RMGUtils.showStackTrace(e);
                 RMGUtils.exit();
+
+            } else if( t instanceof java.net.NoRouteToHostException) {
+                Logger.eprintlnMixedBlue("No route to host", this.host + ":" + this.port + ".", "Have you entered the correct target?");
+                RMGUtils.showStackTrace(e);
+                RMGUtils.exit();
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
 
         } catch( RemoteException e ) {
+
             Logger.printlnPlain("failed.");
             Logger.eprintln("");
             Logger.eprintlnYellow("Remote failure while listing bound names:");

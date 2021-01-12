@@ -362,6 +362,70 @@ public class RegistryClient {
         }
     }
 
+    public void enumJEP290Bypass(String regMethod, boolean localhostBypass, boolean marshal)
+    {
+        Logger.printlnBlue("RMI server JEP290 bypass enmeration:");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        Object payloadObject = null;
+
+        if(!marshal && regMethod == "lookup") {
+            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.eprintlnMixedBlue("  This prevents", "JEP 290 bypass", "enumeration from remote.");
+            Logger.decreaseIndent();
+            return;
+        }
+
+        try {
+            payloadObject = generateBypassObject("127.0.0.1", 1234567);
+        } catch(Exception e) {
+            ExceptionHandler.unexpectedException(e, "pyload", "creation", true);
+        }
+
+        try {
+            callByName(regMethod, payloadObject, false, localhostBypass, "");
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable t = RMGUtils.getCause(e);
+
+            if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
+                ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
+
+            } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
+                ExceptionHandler.singleEntryRegistry(e, regMethod);
+
+            } else if( t instanceof java.rmi.RemoteException ) {
+                Logger.printMixedYellow("- Caught", "RemoteException", "after sending An Trinh gadget ");
+                Logger.printlnPlainYellow("(An Trinh bypass patched).");
+                RMGUtils.showStackTrace(e);
+                Logger.statusOk();
+
+            } else {
+                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
+            }
+
+        } catch( java.lang.IllegalArgumentException e && e.getMessage().contains("1234567") ) {
+            Logger.printlnMixedYellow("- Caught", "IllegalArgumentException", "after sending An Trinh gadget.");
+            Logger.printlnMixedBlue("  --> RMI server", "accepted", "the bypass gadget.");
+            Logger.statusVulnerable();
+            RMGUtils.showStackTrace(e);
+
+        } catch( java.rmi.NotBoundException e ) {
+            Logger.eprintlnMixedYellow("- Caught", "NotBoundException", "during unbind call.");
+            Logger.printlnMixedYellow("  --> RMI registry processed the unbind call and", "is vulnerable.");
+            Logger.statusVulnerable();
+            RMGUtils.showStackTrace(e);
+
+        } catch( Exception e  ) {
+            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
+
+        } finally {
+            Logger.decreaseIndent();
+        }
+    }
+
     public void gadgetCall(Object payloadObject, String regMethod, boolean localHostBypass)
     {
         Logger.println("");
