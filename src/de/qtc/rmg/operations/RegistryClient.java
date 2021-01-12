@@ -406,7 +406,7 @@ public class RegistryClient {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
 
-        } catch( java.lang.IllegalArgumentException e && e.getMessage().contains("1234567") ) {
+        } catch( java.lang.IllegalArgumentException e ) {
             Logger.printlnMixedYellow("- Caught", "IllegalArgumentException", "after sending An Trinh gadget.");
             Logger.printlnMixedBlue("  --> RMI server", "accepted", "the bypass gadget.");
             Logger.statusVulnerable();
