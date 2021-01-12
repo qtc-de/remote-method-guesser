@@ -173,4 +173,28 @@ public class ExceptionHandler {
         Logger.statusUndecided("Vulnerability");
         RMGUtils.showStackTrace(e);
     }
+
+    public static void eofException(Exception e, String during1, String during2)
+    {
+        Logger.printlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
+        RMGUtils.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void invalidListenerFormat(boolean gadget)
+    {
+        if(gadget)
+            Logger.printlnMixedBlue("Selected gadget expects a", "listener", "as command input.");
+
+        Logger.eprintlnMixedYellow("Listener must be specified in", "host:port", "format.");
+        RMGUtils.exit();
+    }
+
+    public static void invalidSignature(String signature)
+    {
+        Logger.eprintlnMixedYellow("Encountered invalid function signature:", signature);
+        Logger.eprintln("Correct the format and try again :)");
+        RMGUtils.exit();
+    }
 }

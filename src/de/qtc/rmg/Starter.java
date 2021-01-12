@@ -11,6 +11,7 @@ import org.apache.commons.cli.CommandLine;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.ArgumentParser;
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
@@ -108,9 +109,7 @@ public class Starter {
                 candidate = new MethodCandidate(functionSignature);
 
             } catch (CannotCompileException | NotFoundException e) {
-                Logger.eprintln("Supplied method signature seems to be invalid.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.invalidSignature(functionSignature);
             }
         }
 
@@ -123,8 +122,7 @@ public class Starter {
                 String[] split = listener.split(":");
 
                 if( split.length != 2 || !split[1].matches("\\d+") ) {
-                    Logger.eprintlnMixedYellow("Listener must be specified as", "host:port");
-                    RMGUtils.exit();
+                    ExceptionHandler.invalidListenerFormat(false);
                 }
 
                 String listenerHost = split[0];
@@ -195,9 +193,7 @@ public class Starter {
                     }
 
                 } catch (IOException | CannotCompileException | NotFoundException e) {
-                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during sample creation.");
-                    RMGUtils.stackTrace(e);
-                    RMGUtils.exit();
+                    ExceptionHandler.unexpectedException(e, "sample", "creation", true);
 
                 } catch (UnexpectedCharacterException e) {
                     Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
@@ -219,7 +215,7 @@ public class Starter {
                 String command = parser.getPositionalString(4);
 
                 if(ysoserialPath == null) {
-                    Logger.eprintlnMixedYellow("Path for", "ysoserial.jar", "is null.");
+                    Logger.eprintlnMixedYellow("Path for", "ysoserial JAR", "is null.");
                     Logger.increaseIndent();
                     Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
                     RMGUtils.exit();
@@ -256,9 +252,7 @@ public class Starter {
                     payload = ((Class)payload).newInstance();
 
                 } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
-                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during payload creation.");
-                    RMGUtils.stackTrace(e);
-                    RMGUtils.exit();
+                    ExceptionHandler.unexpectedException(e, "payload", "creation", true);
                 }
 
                 if( candidate != null ) {

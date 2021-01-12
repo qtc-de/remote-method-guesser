@@ -19,6 +19,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import de.qtc.rmg.Starter;
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.RegistryClient;
@@ -50,9 +51,7 @@ public class RMGUtils {
             remoteClass = pool.getCtClass(Remote.class.getName());
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
-            Logger.printlnMixedYellow("Caught", "NotFoundException", "during initialisation of RMGUtils.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RMGUtils.init", "Caught unexpected NotFoundException.");
         }
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
@@ -195,6 +194,9 @@ public class RMGUtils {
         int functionStart = signature.indexOf(' ');
         int argumentsStart = signature.indexOf('(') + 1;
         int argumentsEnd = signature.indexOf(')');
+
+        if(functionStart <= 0 || argumentsStart <= 1 || argumentsEnd <= 0)
+            ExceptionHandler.invalidSignature(signature);
 
         List<String> types = new ArrayList<String>();
         types.add(signature.substring(0, functionStart));
@@ -345,17 +347,13 @@ public class RMGUtils {
 
             String[] split = command.split(":");
             if(split.length != 2 || !split[1].matches("\\d+")) {
-                Logger.eprintMixedYellow("The gadget", gadget, "expects its command in ");
-                Logger.printlnPlainMixedBlueFirst("host:port", "format.", "");
-                RMGUtils.exit();
+                ExceptionHandler.invalidListenerFormat(true);
             }
 
             try {
                 return RegistryClient.generateBypassObject(split[0], Integer.valueOf(split[1]));
             } catch (Exception e) {
-                Logger.eprintlnYellow("Internal error: Caught unexpected " + e.getClass().getName() + " during generateBypassObject().");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "bypass object", "generation", true);
             }
         }
 
@@ -363,8 +361,7 @@ public class RMGUtils {
         File ysoJar = new File(ysoPath);
 
         if( !ysoJar.exists() ) {
-            Logger.eprintlnMixedYellow("Error:", ysoJar.getAbsolutePath(), "does not exist.");
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RMGUtils.getPayloadObject", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
         }
 
         Logger.print("Creating ysoserial payload...");
@@ -380,14 +377,7 @@ public class RMGUtils {
         } catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException |
                 IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 
-            Throwable ex = e;
-            if( e instanceof InvocationTargetException )
-                ex = e.getCause();
-
-            Logger.eprintlnMixedYellow("Error: Unable to create ysoserial gadget", gadget);
-            Logger.eprintlnMixedYellow("Error message is:", ex.getMessage());
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "gadget", "generation", true);
         }
 
         Logger.printlnPlain(" done.");
@@ -429,9 +419,7 @@ public class RMGUtils {
             configStream.close();
 
         } catch( IOException e ) {
-            Logger.eprintlnMixedYellow("Unable to load properties file", filename);
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
         }
     }
 
@@ -527,8 +515,7 @@ public class RMGUtils {
         File ysoJar = new File(ysoPath);
 
         if( !ysoJar.exists() ) {
-            Logger.eprintlnMixedYellow("Error:", ysoJar.getAbsolutePath(), "does not exist.");
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RMGUtils.createListener", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
         }
 
         try {
@@ -545,9 +532,7 @@ public class RMGUtils {
             System.exit(0);
 
         } catch( Exception e ) {
-            Logger.printlnMixedYellow("Caught unexpected", e.getClass().getName(), "during JRMPListener creation.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
         }
     }
 }

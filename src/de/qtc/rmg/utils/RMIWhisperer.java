@@ -108,16 +108,11 @@ public final class RMIWhisperer {
             Logger.eprintln("");
             Throwable t = RMGUtils.getCause(e);
 
-            if( t instanceof java.io.EOFException) {
-                Logger.eprintlnMixedYellow("Caugth", "EOFException", "while listing bound names.");
-                Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+            if( t instanceof java.io.EOFException ) {
+                ExceptionHandler.eofException(e, "list", "call");
 
             } else if( t instanceof java.net.NoRouteToHostException) {
-                Logger.eprintlnMixedBlue("No route to host", this.host + ":" + this.port + ".", "Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.noRouteToHost(e, "list", "call");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
@@ -127,45 +122,23 @@ public final class RMIWhisperer {
 
             Logger.printlnPlain("failed.");
             Logger.eprintln("");
-            Logger.eprintlnYellow("Remote failure while listing bound names:");
-            Logger.increaseIndent();
-
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException ) {
-                Logger.eprintlnMixedBlue("No route to host", this.host + ":" + this.port + ".", "Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.noRouteToHost(e, "list", "call");
 
             } else if( t instanceof java.net.ConnectException ) {
-                Logger.eprintlnMixedBlue("Connection refused on", this.host + ":" + this.port + ".", "Have you entered the correct target?");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.connectionRefused(e, "list", "call");
 
             } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().equals("non-JRMP server at remote endpoint")) {
-                Logger.eprintlnMixedBlue("Specified endpoint", "does not", "act like an RMI registry.");
-                Logger.eprintlnMixedYellow("You should either specify a different endpoint or retry with the", "--ssl", "option.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.noJRMPServer(e, "list", "call");
 
-            } else if( t instanceof javax.net.ssl.SSLException ) {
-
-                Logger.eprintlnMixedBlue("Caught unexpected", "SSLException.");
-
-                String message = t.getMessage();
-                if( message.contains("Unrecognized SSL message, plaintext connection?")) {
-                    Logger.eprintlnMixedYellow("You probably used", "--ssl", "on a plaintext connection?");
-                    RMGUtils.showStackTrace(e);
-
-                } else {
-                    RMGUtils.stackTrace(e);
-                }
+            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message") ) {
+                ExceptionHandler.sslError(e, "list", "call");
 
             } else {
-                Logger.printlnMixedBlue("Caught unexpected", e.getClass().getName());
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
-
-            Logger.decreaseIndent();
-            Logger.eprintln("");
-            RMGUtils.exit();
         }
 
         return boundNames;
@@ -213,13 +186,11 @@ public final class RMIWhisperer {
                   unknownClasses.put(className, message);
 
               } else {
-                  Logger.eprintlnMixedYellow("Caught unexpected", "RemoteException", "during RMI lookup.");
-                  RMGUtils.stackTrace(e);
+                  ExceptionHandler.unexpectedException(e, "lookup", "call", false);
               }
 
           } catch( NotBoundException e) {
-              Logger.eprintlnMixedYellow("Caught unexpected", "NotBoundException", "during boundnames enumeration.");
-              RMGUtils.stackTrace(e);
+              ExceptionHandler.unexpectedException(e, "lookup", "call", false);
           }
         }
 
