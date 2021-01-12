@@ -408,13 +408,6 @@ public class RegistryClient {
 
         } catch( java.lang.IllegalArgumentException e ) {
             Logger.printlnMixedYellow("- Caught", "IllegalArgumentException", "after sending An Trinh gadget.");
-            Logger.printlnMixedBlue("  --> RMI server", "accepted", "the bypass gadget.");
-            Logger.statusVulnerable();
-            RMGUtils.showStackTrace(e);
-
-        } catch( java.rmi.NotBoundException e ) {
-            Logger.eprintlnMixedYellow("- Caught", "NotBoundException", "during unbind call.");
-            Logger.printlnMixedYellow("  --> RMI registry processed the unbind call and", "is vulnerable.");
             Logger.statusVulnerable();
             RMGUtils.showStackTrace(e);
 
