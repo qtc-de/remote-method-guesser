@@ -337,7 +337,6 @@ public class RegistryClient {
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
-                Logger.eprintlnMixedBlue("  --> Localhost bypass", "was patched", "on this registry server.");
                 Logger.statusOk();
                 RMGUtils.showStackTrace(e);
 
@@ -349,8 +348,8 @@ public class RegistryClient {
             }
 
         } catch( java.rmi.NotBoundException e ) {
-            Logger.eprintlnMixedYellow("- Caught", "NotBoundException", "during unbind call.");
-            Logger.printlnMixedYellow("  --> RMI registry processed the unbind call and", "is vulnerable.");
+            Logger.eprintMixedYellow("- Caught", "NotBoundException", "during unbind call ");
+            Logger.printlnPlainBlue("(unbind was accepeted).");
             Logger.statusVulnerable();
             RMGUtils.showStackTrace(e);
 
