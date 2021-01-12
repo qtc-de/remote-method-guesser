@@ -43,23 +43,24 @@ public class DGCClient {
         } catch( java.rmi.ServerException e ) {
 
             Throwable t = RMGUtils.getCause(e);
+            Throwable c = RMGUtils.getThrowable("ClassNotFoundException", e);
 
-            if( t instanceof ClassNotFoundException ) {
+            if( c != null ) {
 
-                if( t.getMessage().contains("no security manager: RMI class loader disabled") ) {
+                if( c.getMessage().contains("no security manager: RMI class loader disabled") ) {
                     Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
                     Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
                     Logger.statusDefault();
                     RMGUtils.showStackTrace(e);
 
-                } else if( t.getMessage().contains("access to class loader denied") ) {
+                } else if( c.getMessage().contains("access to class loader denied") ) {
                     Logger.printMixedYellow("- Security Manager", "rejected access", "to the class loader ");
                     Logger.printlnPlainYellow("(useCodebaseOnly=false).");
                     Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
                     Logger.statusNonDefault();
                     RMGUtils.showStackTrace(e);
 
-                } else if( t.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
+                } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
                     Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
                     Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=false.");
                     Logger.statusDefault();
