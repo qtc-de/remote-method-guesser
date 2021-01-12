@@ -190,7 +190,9 @@ public final class RMIWhisperer {
               }
 
           } catch( NotBoundException e) {
-              ExceptionHandler.unexpectedException(e, "lookup", "call", false);
+              Logger.eprintMixedYellow("Caught", "NotBoundException", "on boundname ");
+              Logger.printlnPlainBlue(className + ".");
+              Logger.eprintln("Boundname seems to be no longer available.");
           }
         }
 
