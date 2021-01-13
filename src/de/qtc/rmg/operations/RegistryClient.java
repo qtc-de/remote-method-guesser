@@ -448,7 +448,7 @@ public class RegistryClient {
                 Logger.printlnPlainYellow("is patched.");
 
             } else {
-                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
+                ExceptionHandler.unknownDeserializationException(e);
             }
 
         } catch( java.lang.ClassCastException e ) {
@@ -463,7 +463,6 @@ public class RegistryClient {
     {
         String className = payloadObject.getClass().getName();
 
-        Logger.println("");
         Logger.printlnBlue("Attempting codebase attack on RMI registry endpoint...");
         Logger.print("Using class ");
         Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
@@ -484,11 +483,11 @@ public class RegistryClient {
                 Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
                 RMGUtils.showStackTrace(e);
 
-            } else if( cause instanceof java.lang.UnsupportedClassVersionError) {
-                Logger.eprintlnMixedYellow("Caught", "UnsupportedClassVersionError", "during " + regMethod + " call.");
-                Logger.eprintlnMixedBlue("You probably used an", "incompatible compiler", "for class generation.");
-                Logger.eprintln("Original error: " + e.getMessage());
-                RMGUtils.showStackTrace(e);
+            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
+                ExceptionHandler.unsupportedClassVersion(e, regMethod, "call");
+
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
+                ExceptionHandler.codebaseSecurityManager(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
                 ExceptionHandler.codebaseClassNotFound(e, className);

@@ -61,17 +61,19 @@ public class ExceptionHandler {
 
     public static void deserializeClassNotFound(Exception e)
     {
-        Logger.eprintlnMixedYellow("RMI registry", "accepted", "deserialization of the supplied gadget, but");
+        Logger.eprintlnMixedYellow("Server", "accepted", "deserialization of the supplied gadget, but");
         Logger.eprintlnMixedBlue("during the deserialization, a", "ClassNotFoundException", "was encountered.");
         Logger.eprintMixedYellow("The supplied gadget may have", "worked anyway", "or it is ");
         Logger.printlnPlainMixedBlueFirst("not available", "on the servers classpath.", "");
         RMGUtils.showStackTrace(e);
     }
 
-    public static void deserializeClassNotFoundRandom(Exception e, String className)
+    public static void deserializeClassNotFoundRandom(Exception e, String during1, String during2, String className)
     {
-        Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", className);
+        Logger.printlnMixedYellow("Caught", "ClassNotFoundException", "during " + during1 + " " + during2 + ".");
+        Logger.printlnMixedBlue("Server attempted to deserialize dummy class", className + ".");
         Logger.printlnMixedYellow("Deserialization attack", "probably worked :)");
+        RMGUtils.showStackTrace(e);
     }
 
     public static void deserlializeClassCast(Exception e, boolean wasString)
@@ -87,10 +89,17 @@ public class ExceptionHandler {
 
     public static void codebaseClassNotFound(Exception e, String className)
     {
-        Logger.eprintlnMixedYellow("The payload class could", "not be loaded", "from the specified endpoint.");
-        Logger.eprintMixedBlue("The registry is probably configured with", "useCodeBaseOnly=true");
+        Logger.eprintlnMixedYellow("Caught", "ClassNotFoundException", "during codebase attack.");
+        Logger.eprintlnMixedBlue("The payload class could", "not be loaded", "from the specified endpoint.");
+        Logger.eprintMixedYellow("The endpoint is probably configured with", "useCodeBaseOnly=true");
         Logger.printlnPlainYellow(" (not vulnerable)");
-        Logger.eprintlnMixedYellow("or the file", className + ".class", "was not found on the specified endpoint.");
+        Logger.eprintlnMixedBlue("or the file", className + ".class", "was not found on the specified endpoint.");
+        RMGUtils.showStackTrace(e);
+    }
+
+    public static void codebaseSecurityManager(Exception e)
+    {
+        Logger.eprintlnMixedYellow("The class loader of the specified target is", "disabled.");
         RMGUtils.showStackTrace(e);
     }
 
@@ -196,5 +205,23 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Encountered invalid function signature:", signature);
         Logger.eprintln("Correct the format and try again :)");
         RMGUtils.exit();
+    }
+
+    public static void unknownDeserializationException(Exception e)
+    {
+        Throwable cause = RMGUtils.getCause(e);
+
+        Logger.printlnMixedYellow("Caught", cause.getClass().getName(), "during deserialization attack.");
+        Logger.eprintlnMixedBlue("This could be caused by your gadget an the attack", "probably worked anyway.");
+        Logger.eprintlnMixedYellow("If it did not work, you can retry with", "--stack-trace", "to see the details.");
+        RMGUtils.showStackTrace(e);
+    }
+
+    public static void unsupportedClassVersion(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("You probably used an", "incompatible compiler version", "for class generation.");
+        Logger.eprintln("Exception Message: " + e.getMessage());
+        RMGUtils.showStackTrace(e);
     }
 }

@@ -142,8 +142,9 @@ public class DGCClient {
 
         try {
             Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
-            Logger.print("Sending serialized class ");
-            Logger.printlnPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+            Logger.print("Using class ");
+            Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+            Logger.printlnPlainMixedYellow(" during", "clean", "call.");
             Logger.println("");
             Logger.increaseIndent();
 
@@ -156,6 +157,12 @@ public class DGCClient {
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "DGC", className);
                 RMGUtils.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
+                ExceptionHandler.unsupportedClassVersion(e, "clean", "call");
+
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
+                ExceptionHandler.codebaseSecurityManager(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
                 ExceptionHandler.codebaseClassNotFound(e, className);
@@ -201,7 +208,7 @@ public class DGCClient {
                 ExceptionHandler.deserlializeClassCast(e, false);
 
             } else {
-                ExceptionHandler.unexpectedException(e, "clean", "call", false);
+                ExceptionHandler.unknownDeserializationException(e);
             }
 
         } catch( java.lang.ClassCastException e ) {
