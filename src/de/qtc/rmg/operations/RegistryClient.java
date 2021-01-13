@@ -348,7 +348,7 @@ public class RegistryClient {
             }
 
         } catch( java.rmi.NotBoundException e ) {
-            Logger.eprintMixedYellow("- Caught", "NotBoundException", "during unbind call ");
+            Logger.printMixedYellow("- Caught", "NotBoundException", "during unbind call ");
             Logger.printlnPlainBlue("(unbind was accepeted).");
             Logger.statusVulnerable();
             RMGUtils.showStackTrace(e);
