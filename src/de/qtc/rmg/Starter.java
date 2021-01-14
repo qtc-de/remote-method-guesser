@@ -182,7 +182,7 @@ public class Starter {
 
                     for(String name : results.keySet()) {
 
-                        Logger.printlnMixedYellow("Creating samples for bound name", name);
+                        Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
                         Logger.increaseIndent();
 
                         className = boundClasses.get(1).get(name);

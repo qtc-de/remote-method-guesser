@@ -26,7 +26,7 @@ public class LoopbackSocketFactory extends RMISocketFactory {
 
     public Socket createSocket(String host, int port) throws IOException {
         if(!this.host.equals(host)) {
-            printInfos("RMI object tries to connect to different remote host: " + host);
+            printInfos("RMI object tries to connect to different remote host: " + host + ".");
 
             if( this.followRedirect ) {
                 printInfos("\tFollowing connection to new target... ");
