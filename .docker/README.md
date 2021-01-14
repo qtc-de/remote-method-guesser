@@ -16,11 +16,14 @@ You can either build the container from source or pull it from *GitHub Packages*
   Password:
 
   Login Succeeded
-  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:2.0
+  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.0-jdk9
   ```
 
 To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/.docker/docker-compose.yml)
-and start the container using ``docker-compose up``.
+and start the container using ``docker-compose up``. From container version *v3.0* on, the container is available in two different versions: *jdk9* and *jdk11*.
+As the names suggest, the first one is build based on *openjdk-9*, whereas the second one is based on *openjdk-11*. Since *openjdk-9* is no longer maintained,
+this container version is vulnerable against some older *RMI* vulnerabilities (e.g. localhost and An Trinh bypass). The *jdk11* version, on the other hand,
+is fully patched at the time of building.
 
 
 ### Configuration Details
@@ -32,15 +35,10 @@ The registry on port ``1090`` is *SSL* protected and contains three available bo
 
 ```console
 [qtc@kali ~]$ rmg --ssl 172.18.0.2 1090
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the ssl connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
+[+] 
 [+] Listing bound names in registry:
 [+] 
 [+] 	- plain-server
@@ -50,13 +48,46 @@ The registry on port ``1090`` is *SSL* protected and contains three available bo
 [+] 	- secure-server
 [+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
 [+] 
-[+] RMI servers exposes the following codebase(s):
-[+] 	
+[+] RMI server codebase enumeration:
+[+] 
 [+] 	- http://iinsecure.dev/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.interfaces.ISslServer
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+] 		--> javax.rmi.ssl.SslRMIClientSocketFactory
 [+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
+[+] 
+[+] RMI server String unmarshalling enumeration:
+[+] 
+[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+[+] 
+[+] RMI server useCodebaseOnly enumeration:
+[+] 
+[+] 	- Caught ClassCastException during lookup call.
+[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
+[+] 	  Configuration Status: Current Default
+[+] 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+] 
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+[+] 
+[+] RMI server DGC enumeration:
+[+] 
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The DGC uses most likely a separate security policy.
+[+] 	  Configuration Status: Outdated
+[+] 
+[+] RMI server JEP290 enumeration:
+[+] 
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+[+] 
+[+] RMI server JEP290 bypass enmeration:
+[+] 
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 ```
 
 The registry on port ``9010`` can be contacted without *SSL* and exposes also three bound names. In contrast to the previous setup, two of
@@ -65,12 +96,10 @@ the exposed bound names belong to the same remote interface. Furthermore, the la
 
 ```console
 [qtc@kali ~]$ rmg 172.18.0.2 9010
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
+[+] 
 [+] Listing bound names in registry:
 [+] 
 [+] 	- plain-server2
@@ -80,11 +109,44 @@ the exposed bound names belong to the same remote interface. Furthermore, the la
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 
-[+] RMI servers exposes the following codebase(s):
-[+] 	
+[+] RMI server codebase enumeration:
+[+] 
 [+] 	- http://iinsecure.dev/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
+[+] 
+[+] RMI server String unmarshalling enumeration:
+[+] 
+[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+[+] 
+[+] RMI server useCodebaseOnly enumeration:
+[+] 
+[+] 	- Caught ClassCastException during lookup call.
+[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
+[+] 	  Configuration Status: Current Default
+[+] 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+] 
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+[+] 
+[+] RMI server DGC enumeration:
+[+] 
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The DGC uses most likely a separate security policy.
+[+] 	  Configuration Status: Outdated
+[+] 
+[+] RMI server JEP290 enumeration:
+[+] 
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+[+] 
+[+] RMI server JEP290 bypass enmeration:
+[+] 
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 ```
 
 The corresponding remote objects get assigned a random port during the server startup. By default, the
@@ -147,16 +209,18 @@ rmg_1  | [2020.11.28 - 14:10:52] [SecureServer]: Processing call for String logi
 ```
 
 One core feature of *remote-method-guesser* is that it allows *safe method guessing* without invoking method calls on the server side.
-The above mentioned logging of server-side method calls can be used to verify this. In a usual run of *rmgs* ``guess``, ``attack``
+The above mentioned logging of server-side method calls can be used to verify this. In a usual run of *rmg's* ``guess``, ``attack``
 and ``codebase`` actions, no valid calls should be logged on the server side.
 
 
 ### Remote Interfaces
 
+----
+
 Each remote object on the *example-server* implements different kinds of vulnerable remote methods that can be
 detected by *rmg*. Some methods are vulnerably by design (e.g. execute operating system commands on invocation)
-other can be exploited by *deserialization* or *codebase* attacks as mentioned in the [README.md](../README.md)
-of this project. In the following, the corresponding interface are listed.
+others can be exploited by *deserialization* or *codebase* attacks as mentioned in the [README.md](../README.md)
+of this project. In the following, the corresponding interfaces are listed.
 
 
 #### Plain Server
@@ -235,193 +299,111 @@ The following listing shows an example run of *remote-method-guessers* ``guess``
 #### 1090 Registry
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the connection back to 172.18.0.2...
-[+] 	This is done for all further requests. This message is not shown again.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the ssl connection back to 172.18.0.2...
-[+] 	This is done for all further requests. This message is not shown again.
-[+] 3 wordlist files found.
+[+] 2 wordlist files found.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom_wordlist.txt
-[+] 	1 methods were successfully parsed.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
 [+] 	2550 methods were successfully parsed.
-[+]
-[+] Starting RMG Attack
+[+] 
+[+] Starting Method Guessing:
 [+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3303 method signature(s).
-[+]
-[+] 	Current bound name: ssl-server
+[+] 	Guessing 3294 method signature(s).
+[+] 	
+[+] 	Current bound name: ssl-server.
+[+] 		RMI object tries to connect to different remote host: iinsecure.dev
+[+] 			Redirecting the ssl connection back to 172.18.0.2... 
+[+] 			This is done for all further requests. This message is not shown again. 
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
 [+] 			HIT! Method with signature String system(String[] dummy) exists!
 [+] 			HIT! Method with signature int execute(String dummy) exists!
 [+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+]
-[+] 	Current bound name: plain-server
+[+] 		
+[+] 	Current bound name: plain-server.
+[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
+[+] 			Redirecting the connection back to 172.18.0.2... 
+[+] 			This is done for all further requests. This message is not shown again. 
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
-[+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]
-[+] 	Current bound name: secure-server
+[+] 			HIT! Method with signature String execute(String dummy) exists!
+[+] 		
+[+] 	Current bound name: secure-server.
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
-[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
 [+] 			HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+]
-[+]
+[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		
+[+] 
 [+] Listing successfully guessed methods:
-[+] 	•  ssl-server
+[+] 	-  ssl-server
 [+] 		--> String system(String[] dummy)
 [+] 		--> int execute(String dummy)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-[+] 	•  plain-server
-[+] 		--> String execute(String dummy)
+[+] 	-  plain-server
 [+] 		--> String system(String dummy, String[] dummy2)
-[+] 	•  secure-server
-[+] 		--> String login(java.util.HashMap dummy1)
-[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String execute(String dummy)
+[+] 	-  secure-server
 [+] 		--> void updatePreferences(java.util.ArrayList dummy1)
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String login(java.util.HashMap dummy1)
 ```
 
 #### 9010 Registry
 
 ```console
-[qtc@kali ~]$ rmg 172.18.0.2 9010 guess
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[qtc@kali ~]$ rmg --zero-arg 172.18.0.2 9010 guess
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-[+] 3 wordlist files found.
+[+] 2 wordlist files found.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom_wordlist.txt
-[+] 	1 methods were successfully parsed.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
 [+] 	2550 methods were successfully parsed.
-[+] 
-[+] Starting RMG Attack
+[+]
+[+] Starting Method Guessing:
 [+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3303 method signature(s).
-[+] 	
-[+] 	Current bound name: plain-server2
+[+] 	Guessing 3294 method signature(s).
+[+]
+[+] 	Current bound name: plain-server2.
+[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
+[+] 			Redirecting the connection back to 172.18.0.2...
+[+] 			This is done for all further requests. This message is not shown again.
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
-[+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 		
-[+] 	Current bound name: plain-server
-[+] 		Guessing methods...
-[+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
 [+] 			HIT! Method with signature String execute(String dummy) exists!
-[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 		
-[+] 	Current bound name: legacy-service
-[+] 			Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+] 			You can use --no-legacy to prevent this.
+[+]
+[+] 	Current bound name: plain-server.
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[+] 			Skipping zero arguments method: int getFwPort()
-[+] 			Skipping zero arguments method: int getVersionCount()
-[+] 			Skipping zero arguments method: java.lang.String getDbHost()
-[+] 			Skipping zero arguments method: java.lang.String getDbName()
-[+] 			Skipping zero arguments method: java.lang.String getDbPwd()
-[+] 			Skipping zero arguments method: java.lang.String getDbType()
-[+] 			Skipping zero arguments method: java.lang.String getDbUid()
-[+] 			Skipping zero arguments method: java.lang.String getFwHost()
-[+] 			Skipping zero arguments method: java.lang.String getMainVersion()
-[+] 			Skipping zero arguments method: java.lang.String getStatus()
-[+] 			Skipping zero arguments method: java.util.Collection selectALLWindowSheet()
+[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 			HIT! Method with signature String execute(String dummy) exists!
+[+]
+[+] 	Current bound name: legacy-service.
+[+] 		Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
+[+] 		You can use --no-legacy to prevent this.
+[+] 		Guessing methods...
+[+]
 [+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
 [+] 			HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
 [+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 		
-[+] 
+[+]
+[+]
 [+] Listing successfully guessed methods:
-[+] 	•  plain-server2
-[+] 		--> String execute(String dummy)
+[+] 	-  plain-server2
 [+] 		--> String system(String dummy, String[] dummy2)
-[+] 	•  plain-server
 [+] 		--> String execute(String dummy)
+[+] 	-  plain-server
 [+] 		--> String system(String dummy, String[] dummy2)
-[+] 	•  legacy-service
+[+] 		--> String execute(String dummy)
+[+] 	-  legacy-service
 [+] 		--> String login(java.util.HashMap dummy1)
 [+] 		--> void logMessage(int dummy1, String dummy2)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
