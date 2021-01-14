@@ -378,7 +378,7 @@ public class Logger {
 
     public static void statusOutdated()
     {
-        printlnMixedRed("  Configuration Status:", "Outdated");
+        printlnMixedPurple("  Configuration Status:", "Outdated");
     }
 
     public static void statusDefault()

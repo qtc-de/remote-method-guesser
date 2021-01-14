@@ -50,14 +50,13 @@ public class DGCClient {
                 if( c.getMessage().contains("no security manager: RMI class loader disabled") ) {
                     Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
                     Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
-                    Logger.statusDefault();
+                    Logger.statusOutdated();
                     RMGUtils.showStackTrace(e);
 
                 } else if( c.getMessage().contains("access to class loader denied") ) {
-                    Logger.printMixedYellow("- Security Manager", "rejected access", "to the class loader ");
-                    Logger.printlnPlainYellow("(useCodebaseOnly=false).");
+                    Logger.printlnMixedYellow("- Security Manager", "rejected access", "to the class loader.");
                     Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
-                    Logger.statusNonDefault();
+                    Logger.statusDefault();
                     RMGUtils.showStackTrace(e);
 
                 } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
