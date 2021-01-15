@@ -72,14 +72,11 @@ public final class RMIWhisperer {
 
     public void locateRegistry()
     {
-        Logger.print("Creating RMI Registry object... ");
-
         try {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
-            Logger.printlnPlain("done.");
 
         } catch( RemoteException e ) {
-            Logger.printlnPlain("failed.");
+            ExceptionHandler.internalError("RMGWhisperer.locateRegistry", "Caught unexpected RemoteException.");
             RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
@@ -88,15 +85,11 @@ public final class RMIWhisperer {
     public String[] getBoundNames()
     {
         String[] boundNames = null;
-        Logger.print("Obtaining list of bound names... ");
 
         try {
             boundNames = rmiRegistry.list();
-            Logger.printlnPlain("done.");
-            Logger.printlnMixedBlueFirst(String.valueOf(boundNames.length), "names are bound to the registry.");
 
         } catch( java.rmi.NoSuchObjectException e) {
-            Logger.printlnPlain("failed.");
             Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
             Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
             RMGUtils.showStackTrace(e);
@@ -104,8 +97,6 @@ public final class RMIWhisperer {
 
         } catch( java.rmi.ConnectIOException e ) {
 
-            Logger.printlnPlain("failed.");
-            Logger.eprintln("");
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.io.EOFException ) {
@@ -114,14 +105,15 @@ public final class RMIWhisperer {
             } else if( t instanceof java.net.NoRouteToHostException) {
                 ExceptionHandler.noRouteToHost(e, "list", "call");
 
+            } else if( e.getMessage().equals("non-JRMP server at remote endpoint")) {
+                ExceptionHandler.noJRMPServer(e, "list", "call");
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
 
         } catch( RemoteException e ) {
 
-            Logger.printlnPlain("failed.");
-            Logger.eprintln("");
             Throwable t = RMGUtils.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException ) {

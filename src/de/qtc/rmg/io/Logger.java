@@ -251,6 +251,11 @@ public class Logger {
         log(prefix() + blue(first) + " " + second + " " + blue(third));
     }
 
+    public static void printlnPlainMixedBlueFirst(String first, String second)
+    {
+        log(blue(first) + " " + second);
+    }
+
     public static void printlnPlainMixedBlueFirst(String first, String second, String third)
     {
         log(blue(first) + " " + second + " " + blue(third));

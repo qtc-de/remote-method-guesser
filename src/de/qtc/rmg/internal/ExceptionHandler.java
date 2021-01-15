@@ -25,7 +25,7 @@ public class ExceptionHandler {
     public static void unexpectedException(Exception e, String during1, String during2, boolean exit)
     {
         Logger.printMixedYellow("Caught unexpected", e.getClass().getName(), "during ");
-        Logger.printlnPlainMixedBlue(during1, during2);
+        Logger.printlnPlainMixedBlueFirst(during1, during2 + ".");
         Logger.eprintln("Please report this to improve rmg :)");
         RMGUtils.stackTrace(e);
 

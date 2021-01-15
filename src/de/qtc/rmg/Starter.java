@@ -269,7 +269,6 @@ public class Starter {
                 break;
 
             case "enum":
-                Logger.println("");
                 format.listBoundNames(boundNames, boundClasses);
 
                 Logger.println("");

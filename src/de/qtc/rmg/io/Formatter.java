@@ -50,7 +50,7 @@ public class Formatter {
 
     public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
     {
-        Logger.printlnBlue("Listing bound names in registry:");
+        Logger.printlnBlue("Listing bound names:");
         Logger.println("");
         Logger.increaseIndent();
 
