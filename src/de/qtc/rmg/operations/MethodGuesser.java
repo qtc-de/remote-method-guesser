@@ -46,7 +46,8 @@ public class MethodGuesser {
             remoteField.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodGuesser instantiation:", e.getMessage());
+            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodGuesser", "instantiation.");
+            RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -68,17 +69,17 @@ public class MethodGuesser {
             return results;
         }
 
-        Logger.println("\n[+] Starting RMG Attack");
+        Logger.println("\n[+] Starting Method Guessing:");
         Logger.increaseIndent();
 
         if( targetName != null )
-            Logger.printlnMixedBlue("Target name specified. Only guessing on bound name:", targetName);
+            Logger.printlnMixedBlue("Target name specified. Only guessing on bound name:", targetName + ".");
         else
             Logger.printlnMixedBlue("No target name specified. Guessing on", "all", "available bound names.");
 
         Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signature(s).");
         if( count == 1 ) {
-            Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature());
+            Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
         }
         Logger.println("");
 
@@ -90,11 +91,11 @@ public class MethodGuesser {
             String className = (String)pair.getValue();
 
             if( targetName != null && !targetName.equals(boundName) ) {
-                Logger.printlnMixedBlue("Skipping bound name", boundName);
+                Logger.printlnMixedBlue("Skipping bound name", boundName + ".");
                 continue;
             }
 
-            Logger.printlnMixedYellow("Current bound name:", boundName);
+            Logger.printlnMixedYellow("Current bound name:", boundName + ".");
             boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, true);
             Logger.increaseIndent();
 
@@ -112,6 +113,7 @@ public class MethodGuesser {
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -130,6 +132,7 @@ public class MethodGuesser {
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", boundName, ".");
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -146,6 +149,7 @@ public class MethodGuesser {
                 rmgInvokePrimitive = remoteClass.getMethod("rmgInvokePrimitive", int.class);
             } catch (NoSuchMethodException | SecurityException e) {
                 Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during method lookup.");
+                Logger.println("Please report this to improve rmg :)");
                 RMGUtils.stackTrace(e);
                 RMGUtils.exit();
             }

@@ -5,6 +5,9 @@ public class Logger {
     private static String ANSI_RESET = "\u001B[0m";
     private static String ANSI_YELLOW = "\u001B[33m";
     private static String ANSI_BLUE = "\u001B[34m";
+    private static String ANSI_RED = "\u001B[31m";
+    private static String ANSI_GREEN = "\u001B[32m";
+    private static String ANSI_PURPLE = "\u001B[35m";
 
     public static int indent = 0;
     public static boolean verbose = true;
@@ -17,6 +20,21 @@ public class Logger {
     private static String yellow(String msg)
     {
         return ANSI_YELLOW + msg + ANSI_RESET;
+    }
+
+    private static String red(String msg)
+    {
+        return ANSI_RED + msg + ANSI_RESET;
+    }
+
+    private static String purple(String msg)
+    {
+        return ANSI_PURPLE + msg + ANSI_RESET;
+    }
+
+    private static String green(String msg)
+    {
+        return ANSI_GREEN + msg + ANSI_RESET;
     }
 
     private static String prefix()
@@ -113,6 +131,11 @@ public class Logger {
         log(blue(msg));
     }
 
+    public static void printPlainBlue(String msg)
+    {
+        log(blue(msg), false);
+    }
+
     public static void eprintlnPlainBlue(String msg)
     {
         elog(blue(msg));
@@ -126,6 +149,21 @@ public class Logger {
     public static void eprintlnPlainYellow(String msg)
     {
         elog(yellow(msg));
+    }
+
+    public static void printlnMixedRed(String first, String second)
+    {
+        log(prefix() + first + " " + red(second));
+    }
+
+    public static void printlnMixedGreen(String first, String second)
+    {
+        log(prefix() + first + " " + green(second));
+    }
+
+    public static void printlnMixedPurple(String first, String second)
+    {
+        log(prefix() + first + " " + purple(second));
     }
 
     public static void printlnMixedBlue(String first, String second)
@@ -146,6 +184,41 @@ public class Logger {
     public static void printlnMixedYellow(String first, String second, String third)
     {
         log(prefix() + first + " " + yellow(second) + " " + third);
+    }
+
+    public static void printlnPlainMixedYellow(String first, String second)
+    {
+        log(first + " " + yellow(second));
+    }
+
+    public static void printlnPlainMixedYellow(String first, String second, String third)
+    {
+        log(first + " " + yellow(second) + " " + third);
+    }
+
+    public static void printlnPlainMixedYellowFirst(String first, String second)
+    {
+        log(yellow(first) + " " + second);
+    }
+
+    public static void printlnPlainMixedYellowFirst(String first, String second, String third)
+    {
+        log(yellow(first) + " " + second + " " + yellow(third));
+    }
+
+    public static void printlnPlainMixedBlue(String first, String second)
+    {
+        log(first + " " + blue(second));
+    }
+
+    public static void printlnPlainMixedBlue(String first, String second, String third)
+    {
+        log(first + " " + blue(second) + " " + third);
+    }
+
+    public static void printPlainMixedBlueFirst(String first, String second, String third)
+    {
+        log(blue(first) + " " + second + " " + blue(third), false);
     }
 
     public static void eprintlnMixedBlue(String first, String second)
@@ -178,6 +251,16 @@ public class Logger {
         log(prefix() + blue(first) + " " + second + " " + blue(third));
     }
 
+    public static void printlnPlainMixedBlueFirst(String first, String second)
+    {
+        log(blue(first) + " " + second);
+    }
+
+    public static void printlnPlainMixedBlueFirst(String first, String second, String third)
+    {
+        log(blue(first) + " " + second + " " + blue(third));
+    }
+
     public static void printlnMixedYellowFirst(String first, String second)
     {
         log(prefix() + yellow(first) + " " + second);
@@ -207,6 +290,7 @@ public class Logger {
     {
         elog(eprefix() + yellow(first) + " " + second + " " + yellow(third));
     }
+
     public static void printMixedBlue(String first, String second)
     {
         log(prefix() + first + " " + blue(second), false);
@@ -285,6 +369,36 @@ public class Logger {
     public static void eprintMixedYellowFirst(String first, String second, String third)
     {
         elog(eprefix() + yellow(first) + " " + second + " " + yellow(third), false);
+    }
+
+    public static void statusVulnerable()
+    {
+        printlnMixedRed("  Vulnerability Status:", "Vulnerable");
+    }
+
+    public static void statusOk()
+    {
+        printlnMixedGreen("  Vulnerability Status:", "Non Vulnerable");
+    }
+
+    public static void statusOutdated()
+    {
+        printlnMixedPurple("  Configuration Status:", "Outdated");
+    }
+
+    public static void statusDefault()
+    {
+        printlnMixedGreen("  Configuration Status:", "Current Default");
+    }
+
+    public static void statusNonDefault()
+    {
+        printlnMixedRed("  Configuration Status:", "Non Default");
+    }
+
+    public static void statusUndecided(String statusType)
+    {
+        printlnMixedPurple("  " + statusType + " Status:", "Undecided");
     }
 
     public static void increaseIndent()

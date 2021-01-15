@@ -10,6 +10,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 
 public class ArgumentParser {
@@ -28,6 +30,7 @@ public class ArgumentParser {
         this.helpString = getHelpString();
         this.formatter = new HelpFormatter();
         this.formatter.setWidth(130);
+        this.formatter.setDescPadding(6);
     }
 
     public CommandLine parse(String[] argv)
@@ -103,9 +106,9 @@ public class ArgumentParser {
         help.setRequired(false);
         options.addOption(help);
 
-        Option jsonOutput = new Option(null, "json", false, "output in json format");
-        jsonOutput.setRequired(false);
-        options.addOption(jsonOutput);
+        Option local = new Option(null, "localhost-bypass", false, "attempt localhost bypass for registry operations (CVE-2019-2684)");
+        local.setRequired(false);
+        options.addOption(local);
 
         Option noColor = new Option(null, "no-color", false, "disable colored output");
         noColor.setRequired(false);
@@ -114,6 +117,11 @@ public class ArgumentParser {
         Option noLegacy = new Option(null, "no-legacy", false, "disable automatic legacy stub detection");
         noLegacy.setRequired(false);
         options.addOption(noLegacy);
+
+        Option regMethod = new Option(null, "reg-method", true, "method to use during registry operations (bind|lookup|unbind|rebind)");
+        regMethod.setArgName("method");
+        regMethod.setRequired(false);
+        options.addOption(regMethod);
 
         Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
         outputs.setArgName("folder");
@@ -128,6 +136,10 @@ public class ArgumentParser {
         Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
         ssl.setRequired(false);
         options.addOption(ssl);
+
+        Option stackTrace = new Option(null, "stack-trace", false, "display stack traces for caught exceptions");
+        stackTrace.setRequired(false);
+        options.addOption(stackTrace);
 
         Option templates = new Option(null, "template-folder", true, "location of the template folder");
         templates.setArgName("folder");
@@ -174,14 +186,20 @@ public class ArgumentParser {
         String helpString = "rmg [options] <ip> <port> <action>\n"
                 +"Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
-                +"    ip:                          IP address of the target\n"
-                +"    port:                        Port of the RMI registry\n"
-                +"    action:                      One of the possible actions listed below\n\n"
+                +"    ip                              IP address of the target\n"
+                +"    port                            Port of the RMI registry\n"
+                +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
-                +"    attack <gadget> <command>    Perform deserialization attacks\n"
-                +"    codebase <url> <classname>   Perform remote class loading attacks\n"
-                +"    enum                         Enumerate bound names and classes\n"
-                +"    guess                        Guess methods on bound names\n\n"
+                +"    bind <boundname> <listener>     Binds an object to the registry thats points to listener\n"
+                +"    codebase <classname> <url>      Perform remote class loading attacks\n"
+                +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
+                +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
+                +"    guess                           Guess methods on bound names\n"
+                +"    listen <gadget> <command>       Open ysoserials JRMP listener\n"
+                +"    method <gadget> <command>       Perform method based deserialization attacks\n"
+                +"    rebind <boundname> <listener>   Rebinds boundname as object that points to listener\n"
+                +"    reg <gadget> <command>          Perform registry based deserialization attacks\n"
+                +"    unbind <boundName>              Removes the specified bound name from the registry\n\n"
                 +"Optional Arguments:";
 
         return helpString;
@@ -234,5 +252,49 @@ public class ArgumentParser {
 
         else
             return 0;
+    }
+
+    public void prepareAction(String action)
+    {
+        if( action.matches("bind|method|codebase|dgc|rebind|reg|listen")) {
+            this.checkArgumentCount(5);
+
+            if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {
+                Logger.eprintlnMixedBlue("The", "--signature", "option is required for " + action + " mode.");
+
+                if( action.equals("codebase") ) {
+                    Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
+                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
+                }
+
+                RMGUtils.exit();
+            }
+
+        } else if( action.matches("unbind") ) {
+            this.checkArgumentCount(4);
+        }
+
+        if( action.equals("codebase")) {
+            String serverAddress = this.getPositionalString(4);
+
+            if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
+                serverAddress = "http://" + serverAddress;
+
+            if( !serverAddress.matches("^.+(.class|.jar|/)$") )
+                serverAddress += "/";
+
+            System.setProperty("java.rmi.server.codebase", serverAddress);
+        }
+    }
+
+    public String validateRegMethod(String regMethod)
+    {
+        if(!regMethod.matches("lookup|bind|unbind|rebind")) {
+            Logger.printlnPlainMixedYellow("Unsupported registry method:", regMethod);
+            printHelp();
+            System.exit(1);
+        }
+
+        return regMethod;
     }
 }

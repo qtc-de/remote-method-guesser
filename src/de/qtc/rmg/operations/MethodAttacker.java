@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -41,7 +42,8 @@ public class MethodAttacker {
             remoteField.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during MethodAttacker instantiation:", e.getMessage());
+            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodAttacker", "instantiation.");
+            RMGUtils.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -49,7 +51,7 @@ public class MethodAttacker {
     @SuppressWarnings({ "rawtypes", "deprecation" })
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
-        Logger.printlnMixedYellow("Attacking", this.targetMethod.getSignature());
+        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + " attack)");
 
         if( boundName != null )
             Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
@@ -107,6 +109,7 @@ public class MethodAttacker {
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -125,6 +128,7 @@ public class MethodAttacker {
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -143,18 +147,21 @@ public class MethodAttacker {
             } catch (CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
 
             } catch (InstantiationException | IllegalAccessException e) {
                 Logger.eprintlnMixedYellow("Caught", "InstantiationException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
 
             } catch (NotFoundException e) {
                 Logger.eprintlnMixedYellow("Caught", "NotFoundException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
+                RMGUtils.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -165,6 +172,8 @@ public class MethodAttacker {
 
             try {
                 Logger.println("Invoking remote method...");
+                Logger.println("");
+                Logger.increaseIndent();
                 remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
 
                 Logger.eprintln("Remote method invocation didn't cause any exception.");
@@ -175,75 +184,88 @@ public class MethodAttacker {
                 Throwable cause = RMGUtils.getCause(e);
                 if( cause instanceof java.rmi.UnmarshalException ) {
                     Logger.eprintlnMixedYellow("Method", this.targetMethod.getSignature(), "does not exist on this bound name.");
+                    RMGUtils.showStackTrace(e);
                     continue;
 
                 } else if( cause instanceof java.lang.ClassNotFoundException ) {
 
-                    Logger.printlnMixedBlue("Caught", "ClassNotFoundException", "during deserialization attack.");
                     String exceptionMessage = e.getMessage();
+                    String randomClassName = randomInstance.getClass().getName();
 
                     if( operationMode.equals("ysoserial") ) {
 
-                        if( exceptionMessage.contains(randomInstance.getClass().getName())) {
-                            Logger.printlnYellow("Deserialization attack most likely worked :)");
+                        if( exceptionMessage.contains(randomClassName) ) {
+                            ExceptionHandler.deserializeClassNotFoundRandom(e, "deserialization", "attack", randomClassName);
 
                         } else {
-                            Logger.eprintlnYellow("Deserialization attack probably failed.");
-                            RMGUtils.stackTrace(e);
+                            ExceptionHandler.deserializeClassNotFound(e);
                         }
                     }
 
                     else if( operationMode.equals("codebase") ) {
 
                         if( exceptionMessage.contains("RMI class loader disabled") ) {
-                            Logger.eprintlnYellow("Codebase attack failed.");
-                            Logger.eprintlnMixedYellow("RMI class loader is", "disabled");
+                            ExceptionHandler.codebaseSecurityManager(e);
                         }
 
                         else if( exceptionMessage.contains(gadget.getClass().getName()) ) {
-                            Logger.printlnYellow("Target should be vulnerable to codebase attacks.");
-                            Logger.eprintlnMixedYellow("However, class could", "not be loaded", "from the specified remote endpoint.");
+                            ExceptionHandler.codebaseClassNotFound(e, gadget.getClass().getName());
                         }
 
-                        else if( exceptionMessage.contains(randomInstance.getClass().getName()) ) {
-                            Logger.printlnMixedYellow("Remote class loader attempted to load dummy class", randomInstance.getClass().getName());
-                            Logger.printlnMixedYellow("Attack", "probably worked");
-
-                            Logger.increaseIndent();
-                            Logger.eprintlnMixedYellow("If you got no callback, loading the attack class", gadget.getClass().getName(), "was skipped.");
-                            Logger.eprintln("This could be either if the class is known by the server or it was already loaded before.");
-                            Logger.eprintln("In this case, you should try a different classname");
-                            Logger.decreaseIndent();
+                        else if( exceptionMessage.contains(randomClassName) ) {
+                            ExceptionHandler.codebaseClassNotFoundRandom(e, randomClassName, gadget.getClass().getName());
 
                         } else {
-                            Logger.eprintlnMixedYellow("Caught", "ClassNotFoundException", "with unexpected content.");
-                            RMGUtils.stackTrace(e);
+                            ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
                         }
                     }
 
                 } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                    Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + operationMode + " attack.");
-                    Logger.eprintln("This is usually caused by providing incompatible classes during codebase attacks.");
-                    RMGUtils.stackTrace(e);
+                    ExceptionHandler.unsupportedClassVersion(e, operationMode, "attack");
+
+                } else if( cause instanceof java.security.AccessControlException ) {
+                    ExceptionHandler.accessControl(e, operationMode, "attack");
 
                 } else {
-                    Logger.eprintlnMixedYellow("Caught", "java.rmi.ServerException", "with unknown cause.");
-                    RMGUtils.stackTrace(e);
+                    ExceptionHandler.unexpectedException(e, operationMode, "attack", false);
                 }
 
             } catch( java.lang.ClassCastException e ) {
-                Logger.eprintlnMixedYellow("Caught", "ClassCastException", "during " + operationMode + " attack.");
-                Logger.eprintln("This could be caused when attacking String parameters on a patched RMI server.");
-                RMGUtils.stackTrace(e);
+
+                if( operationMode.equals("ysoserial") )
+                    ExceptionHandler.deserlializeClassCast(e, true);
+                else
+                    ExceptionHandler.codebaseClassCast(e, true);
+
+            } catch( java.security.AccessControlException e ) {
+                ExceptionHandler.accessControl(e, operationMode, "attack");
+
+            } catch( java.rmi.UnmarshalException e ) {
+
+                Throwable t = RMGUtils.getCause(e);
+                if( t instanceof java.lang.ClassNotFoundException ) {
+                    Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during " + operationMode + " attack.");
+                    Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
+                    Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                    RMGUtils.showStackTrace(e);
+
+                } else {
+                    ExceptionHandler.unexpectedException(e, operationMode, "attack", false);
+                }
 
             } catch( Exception e ) {
-                Logger.eprintlnYellow("Caught unexpected Exception during " + operationMode + " attack.");
-                RMGUtils.stackTrace(e);
-                continue;
+
+                if(operationMode.equals("ysoserial"))
+                    ExceptionHandler.unknownDeserializationException(e);
+                else
+                    ExceptionHandler.unexpectedException(e, operationMode, "attack", false);
 
             } finally {
                 Logger.decreaseIndent();
-                Logger.println("");
+                Logger.decreaseIndent();
+
+                if(it.hasNext())
+                    Logger.println("");
             }
         }
     }

