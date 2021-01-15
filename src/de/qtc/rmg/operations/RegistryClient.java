@@ -287,7 +287,7 @@ public class RegistryClient {
 
             Throwable t = RMGUtils.getCause(e);
             if( t instanceof ClassNotFoundException && t.getMessage().contains("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
-                Logger.printlnMixedBlue("- Server", "attempted to deserialize", "object locations during lookup call.");
+                Logger.printlnMixedYellow("- Server", "attempted to deserialize", "object locations during lookup call.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readObject().");
                 Logger.statusOutdated();
@@ -295,7 +295,7 @@ public class RegistryClient {
                 marshal = true;
 
             } else if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
-                Logger.printlnMixedBlue("- Server complained that", "object cannot be casted to java.lang.String.");
+                Logger.printlnMixedYellow("- Server complained that", "object cannot be casted to java.lang.String.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readString().");
                 Logger.statusDefault();
