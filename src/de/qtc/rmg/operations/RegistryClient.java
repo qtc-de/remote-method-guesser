@@ -363,7 +363,7 @@ public class RegistryClient {
 
     public void enumJEP290Bypass(String regMethod, boolean localhostBypass, boolean marshal)
     {
-        Logger.printlnBlue("RMI server JEP290 bypass enmeration:");
+        Logger.printlnBlue("RMI registry JEP290 bypass enmeration:");
         Logger.println("");
         Logger.increaseIndent();
 

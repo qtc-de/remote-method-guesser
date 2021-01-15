@@ -33,7 +33,7 @@ public class DGCClient {
     public void enumDGC()
     {
         try {
-            Logger.printlnBlue("RMI server DGC enumeration:");
+            Logger.printlnBlue("RMI DGC enumeration:");
             Logger.println("");
             Logger.increaseIndent();
 
