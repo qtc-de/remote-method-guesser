@@ -223,7 +223,7 @@ public class Starter {
                 }
 
                 if( action.equals("listen") ) {
-                    YsoIntegration.createJRMPListener(ysoserialPath, String.valueOf(port), gadget, command);
+                    YsoIntegration.createJRMPListener(ysoserialPath, host, port, gadget, command);
                 }
 
                 Object payload = YsoIntegration.getPayloadObject(ysoserialPath, gadget, command);

