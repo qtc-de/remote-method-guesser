@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import sun.rmi.server.MarshalOutputStream;
@@ -59,7 +60,7 @@ public class MaliciousOutputStream extends MarshalOutputStream {
             Logger.eprintMixedYellow("Caught unexpected", e.getClass().getName(), "during creation of");
             Logger.printlnPlainBlue("MaliciousOutputStream.");
             Logger.eprintln("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
         }
 

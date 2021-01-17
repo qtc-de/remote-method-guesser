@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package de.qtc.rmg.networking;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
@@ -18,9 +18,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.DummyTrustManager;
-import de.qtc.rmg.networking.LoopbackSocketFactory;
-import de.qtc.rmg.networking.LoopbackSslSocketFactory;
+import de.qtc.rmg.utils.RMGUtils;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 @SuppressWarnings("restriction")
@@ -44,7 +42,7 @@ public final class RMIWhisperer {
              RMISocketFactory.setSocketFactory(my);
          } catch (IOException e) {
              Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
-             RMGUtils.showStackTrace(e);
+             ExceptionHandler.showStackTrace(e);
              Logger.eprintln("");
          }
 
@@ -61,7 +59,7 @@ public final class RMIWhisperer {
          } catch (NoSuchAlgorithmException | KeyManagementException e) {
              Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
              Logger.eprintln("SSL connections to untrusted hosts might fail.");
-             RMGUtils.showStackTrace(e);
+             ExceptionHandler.showStackTrace(e);
          }
 
          if( ssl )
@@ -77,7 +75,7 @@ public final class RMIWhisperer {
 
         } catch( RemoteException e ) {
             ExceptionHandler.internalError("RMGWhisperer.locateRegistry", "Caught unexpected RemoteException.");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -92,12 +90,12 @@ public final class RMIWhisperer {
         } catch( java.rmi.NoSuchObjectException e) {
             Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
             Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
-            RMGUtils.showStackTrace(e);
+            ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
 
         } catch( java.rmi.ConnectIOException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.io.EOFException ) {
                 ExceptionHandler.eofException(e, "list", "call");
@@ -114,7 +112,7 @@ public final class RMIWhisperer {
 
         } catch( RemoteException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException ) {
                 ExceptionHandler.noRouteToHost(e, "list", "call");
@@ -162,7 +160,7 @@ public final class RMIWhisperer {
 
           } catch( RemoteException e ) {
 
-              Throwable cause = RMGUtils.getCause(e);
+              Throwable cause = ExceptionHandler.getCause(e);
               if( cause instanceof ClassNotFoundException ) {
 
                   /*

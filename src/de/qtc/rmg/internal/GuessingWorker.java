@@ -6,7 +6,6 @@ import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
 
 public class GuessingWorker implements Runnable {
 
@@ -30,7 +29,7 @@ public class GuessingWorker implements Runnable {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
             if( cause != null ) {
 
                 if( cause instanceof java.rmi.UnmarshalException) {
@@ -42,12 +41,12 @@ public class GuessingWorker implements Runnable {
 
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
                     Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
                     return;
 
                 } else if( cause instanceof java.rmi.ConnectException  ) {
                     Logger.eprintln((cause.getMessage().split(";"))[0]);
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
                     return;
                 }
             }
@@ -67,7 +66,7 @@ public class GuessingWorker implements Runnable {
             Logger.eprintlnMixedBlue("Caught unexpected Exception while guessing:", e.getMessage());
             Logger.eprintlnMixedBlue("Method is marked as", "existent", "but this is probably not true.");
             Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
         }
 
         /*

@@ -17,11 +17,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.GuessingWorker;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
 import javassist.CannotCompileException;
 
 public class MethodGuesser {
@@ -47,7 +48,7 @@ public class MethodGuesser {
 
         } catch(NoSuchFieldException | SecurityException e) {
             Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodGuesser", "instantiation.");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -113,7 +114,7 @@ public class MethodGuesser {
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -132,7 +133,7 @@ public class MethodGuesser {
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", boundName, ".");
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -150,7 +151,7 @@ public class MethodGuesser {
             } catch (NoSuchMethodException | SecurityException e) {
                 Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during method lookup.");
                 Logger.println("Please report this to improve rmg :)");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.stackTrace(e);
                 RMGUtils.exit();
             }
 

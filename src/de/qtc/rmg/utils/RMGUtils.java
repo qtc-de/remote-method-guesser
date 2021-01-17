@@ -1,15 +1,10 @@
 package de.qtc.rmg.utils;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
@@ -22,7 +17,6 @@ import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.operations.RegistryClient;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -35,8 +29,6 @@ import javassist.NotFoundException;
 
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
-
-    private static boolean alwaysShowExceptions = false;
 
     private static ClassPool pool;
     private static CtClass dummyClass;
@@ -341,63 +333,6 @@ public class RMGUtils {
         return classString.substring(0, index);
     }
 
-    public static Object getPayloadObject(String ysoPath, String gadget, String command) {
-
-        if(gadget.equals("JRMPClient2") || gadget.equals("AnTrinh")) {
-
-            String[] split = command.split(":");
-            if(split.length != 2 || !split[1].matches("\\d+")) {
-                ExceptionHandler.invalidListenerFormat(true);
-            }
-
-            try {
-                return RegistryClient.generateBypassObject(split[0], Integer.valueOf(split[1]));
-            } catch (Exception e) {
-                ExceptionHandler.unexpectedException(e, "bypass object", "generation", true);
-            }
-        }
-
-        Object ysoPayload = null;
-        File ysoJar = new File(ysoPath);
-
-        if( !ysoJar.exists() ) {
-            ExceptionHandler.internalError("RMGUtils.getPayloadObject", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
-        }
-
-        Logger.print("Creating ysoserial payload...");
-
-        try {
-            URLClassLoader ucl = new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
-
-            Class<?> yso = Class.forName("ysoserial.payloads.ObjectPayload$Utils", true, ucl);
-            Method method = yso.getDeclaredMethod("makePayloadObject", new Class[] {String.class, String.class});
-
-            ysoPayload = method.invoke(null, new Object[] {gadget, command});
-
-        } catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException |
-                IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-
-            ExceptionHandler.unexpectedException(e, "gadget", "generation", true);
-        }
-
-        Logger.printlnPlain(" done.");
-        return ysoPayload;
-    }
-
-    /*
-     * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
-     */
-    public static Throwable getCause(Throwable e)
-    {
-        Throwable cause = null;
-        Throwable result = e;
-
-        while(null != (cause = result.getCause())  && (result != cause) ) {
-            result = cause;
-        }
-        return result;
-    }
-
     public static void exit()
     {
         Logger.eprintln("Cannot continue from here.");
@@ -432,12 +367,6 @@ public class RMGUtils {
         }
 
         return true;
-    }
-
-    public static void stackTrace(Exception e)
-    {
-        Logger.eprintln("StackTrace:");
-        e.printStackTrace();
     }
 
     public static void enableCodebase()
@@ -478,61 +407,5 @@ public class RMGUtils {
         }
 
         return false;
-    }
-
-    public static Throwable getThrowable(String name, Throwable e)
-    {
-        Throwable exception = e;
-        Throwable cause = e.getCause();
-
-        while((exception != cause) && (cause != null)) {
-
-            if( cause.getClass().getSimpleName().equals(name))
-                return cause;
-
-            exception = cause;
-            cause = exception.getCause();
-        }
-
-        return null;
-    }
-
-    public static void showStackTrace(boolean b)
-    {
-        RMGUtils.alwaysShowExceptions = b;
-    }
-
-    public static void showStackTrace(Exception e)
-    {
-        if(alwaysShowExceptions) {
-            Logger.eprintln("");
-            RMGUtils.stackTrace(e);
-        }
-    }
-
-    public static void createListener(String ysoPath, String port, String gadget, String command)
-    {
-        File ysoJar = new File(ysoPath);
-
-        if( !ysoJar.exists() ) {
-            ExceptionHandler.internalError("RMGUtils.createListener", "Error: " + ysoJar.getAbsolutePath() + " does not exist.");
-        }
-
-        try {
-            URLClassLoader ucl = new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
-
-            Class<?> yso = Class.forName("ysoserial.exploit.JRMPListener", true, ucl);
-            Method method = yso.getDeclaredMethod("main", new Class[] {String[].class});
-
-            Logger.printMixedYellow("Creating a", "JRMPListener", "on port ");
-            Logger.printlnPlainBlue(port + ".");
-            Logger.printlnMixedBlue("Handing off to", "ysoserial...");
-
-            method.invoke(null, new Object[] {new String[] {port, gadget, command}});
-            System.exit(0);
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
-        }
     }
 }

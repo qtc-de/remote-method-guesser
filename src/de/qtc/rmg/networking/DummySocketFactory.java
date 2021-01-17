@@ -6,8 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.server.RMISocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
 
 public class DummySocketFactory extends RMISocketFactory implements Serializable{
 
@@ -36,7 +36,7 @@ class DummyServerSocket extends ServerSocket {
             Logger.eprintMixedYellow("Caught unexpected", "InterruptedException", "in");
             Logger.eprintlnBlue("DummyServerSocket.accept()");
             Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
         }
         return null;
     }

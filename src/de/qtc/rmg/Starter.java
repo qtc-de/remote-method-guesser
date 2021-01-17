@@ -15,14 +15,15 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.SampleWriter;
 import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
-import de.qtc.rmg.utils.SampleWriter;
+import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
@@ -82,7 +83,7 @@ public class Starter {
 
         RMGUtils.init();
         RMGUtils.disableWarning();
-        RMGUtils.showStackTrace(commandLine.hasOption("stack-trace"));
+        ExceptionHandler.showStackTrace(commandLine.hasOption("stack-trace"));
 
         String[] boundNames = null;
         HashMap<String,String> allClasses = null;
@@ -158,7 +159,7 @@ public class Starter {
                         candidates = wlHandler.getWordlistMethods();
                     } catch( IOException e ) {
                         Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
-                        RMGUtils.stackTrace(e);
+                        ExceptionHandler.stackTrace(e);
                         RMGUtils.exit();
                     }
                 }
@@ -222,10 +223,10 @@ public class Starter {
                 }
 
                 if( action.equals("listen") ) {
-                    RMGUtils.createListener(ysoserialPath, String.valueOf(port), gadget, command);
+                    YsoIntegration.createJRMPListener(ysoserialPath, String.valueOf(port), gadget, command);
                 }
 
-                Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
+                Object payload = YsoIntegration.getPayloadObject(ysoserialPath, gadget, command);
 
                 if( action.equals("method") ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);

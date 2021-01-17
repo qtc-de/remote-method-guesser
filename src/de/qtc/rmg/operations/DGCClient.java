@@ -10,9 +10,8 @@ import java.util.HashMap;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
@@ -42,8 +41,8 @@ public class DGCClient {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
-            Throwable c = RMGUtils.getThrowable("ClassNotFoundException", e);
+            Throwable t = ExceptionHandler.getCause(e);
+            Throwable c = ExceptionHandler.getThrowable("ClassNotFoundException", e);
 
             if( c != null ) {
 
@@ -51,19 +50,19 @@ public class DGCClient {
                     Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
                     Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
                     Logger.statusOutdated();
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
 
                 } else if( c.getMessage().contains("access to class loader denied") ) {
                     Logger.printlnMixedYellow("- Security Manager", "rejected access", "to the class loader.");
                     Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
                     Logger.statusDefault();
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
 
                 } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
                     Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
                     Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=false.");
                     Logger.statusDefault();
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
 
                 } else {
                     ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
@@ -74,7 +73,7 @@ public class DGCClient {
                 Logger.printMixedBlue("  --> The DGC", "attempted to parse", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=false).");
                 Logger.statusNonDefault();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else {
                 ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
@@ -100,21 +99,21 @@ public class DGCClient {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
                 Logger.printMixedYellow("- DGC", "rejected", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
                 Logger.printlnPlainYellow(" (JEP290 is installed).");
                 Logger.statusOk();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassCastException) {
                 Logger.printMixedYellow("- DGC", "accepted", "deserialization of");
                 Logger.printPlainBlue(" java.util.HashMap");
                 Logger.printlnPlainYellow(" (JEP290 is not installed).");
                 Logger.statusVulnerable();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else {
                 ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
@@ -125,7 +124,7 @@ public class DGCClient {
             Logger.printPlainBlue(" java.util.HashMap");
             Logger.printlnPlainYellow(" (JEP290 is not installed).");
             Logger.statusVulnerable();
-            RMGUtils.showStackTrace(e);
+            ExceptionHandler.showStackTrace(e);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
@@ -151,11 +150,11 @@ public class DGCClient {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "DGC", className);
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                 ExceptionHandler.unsupportedClassVersion(e, "clean", "call");
@@ -195,7 +194,7 @@ public class DGCClient {
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "DGC", "gadget-class");
@@ -253,7 +252,7 @@ public class DGCClient {
 
         } catch(java.rmi.ConnectException e) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
                 ExceptionHandler.connectionRefused(e, "clean", "call");
@@ -264,7 +263,7 @@ public class DGCClient {
 
         } catch(java.rmi.ConnectIOException e) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.net.NoRouteToHostException) {
                 ExceptionHandler.noRouteToHost(e, "clean", "call");

@@ -15,8 +15,8 @@ import java.util.Map.Entry;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
@@ -43,7 +43,7 @@ public class MethodAttacker {
 
         } catch(NoSuchFieldException | SecurityException e) {
             Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodAttacker", "instantiation.");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
         }
     }
@@ -79,7 +79,7 @@ public class MethodAttacker {
                 attackArgument = this.targetMethod.getPrimitive(argumentPosition);
             } catch (CannotCompileException | NotFoundException e) {
                 Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while searching for primitives.");
-                RMGUtils.stackTrace(e);
+                ExceptionHandler.stackTrace(e);
                 RMGUtils.exit();
             }
 
@@ -109,7 +109,7 @@ public class MethodAttacker {
             } catch(CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -128,7 +128,7 @@ public class MethodAttacker {
             } catch( Exception e ) {
                 Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
                 Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -147,21 +147,21 @@ public class MethodAttacker {
             } catch (CannotCompileException e) {
                 Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
 
             } catch (InstantiationException | IllegalAccessException e) {
                 Logger.eprintlnMixedYellow("Caught", "InstantiationException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
 
             } catch (NotFoundException e) {
                 Logger.eprintlnMixedYellow("Caught", "NotFoundException", "during random class creation.");
                 Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -181,10 +181,10 @@ public class MethodAttacker {
 
             } catch (java.rmi.ServerException e) {
 
-                Throwable cause = RMGUtils.getCause(e);
+                Throwable cause = ExceptionHandler.getCause(e);
                 if( cause instanceof java.rmi.UnmarshalException ) {
                     Logger.eprintlnMixedYellow("Method", this.targetMethod.getSignature(), "does not exist on this bound name.");
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
                     continue;
 
                 } else if( cause instanceof java.lang.ClassNotFoundException ) {
@@ -242,12 +242,12 @@ public class MethodAttacker {
 
             } catch( java.rmi.UnmarshalException e ) {
 
-                Throwable t = RMGUtils.getCause(e);
+                Throwable t = ExceptionHandler.getCause(e);
                 if( t instanceof java.lang.ClassNotFoundException ) {
                     Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during " + operationMode + " attack.");
                     Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
                     Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
 
                 } else {
                     ExceptionHandler.unexpectedException(e, operationMode, "attack", false);
