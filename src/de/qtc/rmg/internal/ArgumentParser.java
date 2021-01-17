@@ -23,6 +23,8 @@ public class ArgumentParser {
     private CommandLine cmdLine;
     private List<String> argList;
 
+    private static String rmg_version = "rmg v3.1.0";
+
     public ArgumentParser()
     {
         this.parser = new DefaultParser();
@@ -183,8 +185,9 @@ public class ArgumentParser {
 
     private String getHelpString()
     {
-        String helpString = "rmg [options] <ip> <port> <action>\n"
-                +"Identify common misconfigurations on Java RMI endpoints.\n\n"
+        String helpString = "rmg [options] <ip> <port> <action>\n\n"
+                +rmg_version
+                +" - Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
                 +"    ip                              IP address of the target\n"
                 +"    port                            Port of the RMI registry\n"
