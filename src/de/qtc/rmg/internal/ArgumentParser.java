@@ -96,6 +96,11 @@ public class ArgumentParser {
         samples.setRequired(false);
         options.addOption(samples);
 
+        Option dgcMethod = new Option(null, "dgc-method", true, "method to use during dgc operations (clean|dirty)");
+        dgcMethod.setArgName("method");
+        dgcMethod.setRequired(false);
+        options.addOption(dgcMethod);
+
         Option follow = new Option(null, "follow", false, "follow redirects to different servers");
         follow.setRequired(false);
         options.addOption(follow);
@@ -299,5 +304,16 @@ public class ArgumentParser {
         }
 
         return regMethod;
+    }
+
+    public String validateDgcMethod(String dgcMethod)
+    {
+        if(!dgcMethod.matches("clean|dirty")) {
+            Logger.printlnPlainMixedYellow("Unsupported DGC method:", dgcMethod);
+            printHelp();
+            System.exit(1);
+        }
+
+        return dgcMethod;
     }
 }

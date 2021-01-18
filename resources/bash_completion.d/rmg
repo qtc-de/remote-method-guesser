@@ -10,7 +10,7 @@ function _rmg() {
     local cur prev words opts arg args gadgets value_options
     _init_completion || return
 
-    value_options="--argument-position --bound-name --config --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+    value_options="--argument-position --bound-name --config --dgc-method --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
     _count_args "" "@(${value_options// /|})"
     _comp_get_parameter 3
     COMPREPLY=()
@@ -79,6 +79,10 @@ function _rmg() {
 	elif _comp_contains "--reg-method" $prev; then
         opts="bind lookup rebind unbind"
 
+	# dgc method completions
+	elif _comp_contains "--dgc-method" $prev; then
+        opts="clean dirty"
+
 	# No completions
 	elif _comp_contains "--argument-position --bound-name --signature --threads" $prev; then
 		return 0
@@ -89,6 +93,7 @@ function _rmg() {
 		opts="$opts --bound-name"
 		opts="$opts --config"
 		opts="$opts --create-samples"
+		opts="$opts --dgc-method"
 		opts="$opts --follow"
 		opts="$opts --force-legacy"
 		opts="$opts --help"

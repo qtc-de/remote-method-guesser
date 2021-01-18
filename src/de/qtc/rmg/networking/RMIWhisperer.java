@@ -1,12 +1,15 @@
 package de.qtc.rmg.networking;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
+import java.rmi.server.RemoteRef;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -18,7 +21,12 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.utils.RMGUtils;
+import sun.rmi.server.UnicastRef;
+import sun.rmi.transport.Endpoint;
+import sun.rmi.transport.LiveRef;
+import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 @SuppressWarnings("restriction")
@@ -199,5 +207,67 @@ public final class RMIWhisperer {
     public Registry getRegistry()
     {
         return this.rmiRegistry;
+    }
+
+    @SuppressWarnings("deprecation")
+    public void genericCall(ObjID objID, int callID, long methodHash, Object[] callArguments, boolean locationStream, String callName) throws Exception
+    {
+        try {
+            Endpoint endpoint = this.getEndpoint();
+            RemoteRef remoteRef = new UnicastRef(new LiveRef(objID, endpoint, false));
+
+            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, methodHash);
+            try {
+                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
+
+                if(locationStream)
+                    out = new MaliciousOutputStream(out);
+
+                for(Object o : callArguments) {
+                    if(o.getClass() == Long.class)
+                        out.writeLong((long) o);
+
+                    else if(o.getClass() == Boolean.class)
+                        out.writeBoolean((boolean) o);
+
+                    else
+                        out.writeObject(o);
+                }
+
+            } catch(java.io.IOException e) {
+                throw new java.rmi.MarshalException("error marshalling arguments", e);
+            }
+
+            remoteRef.invoke(call);
+            remoteRef.done(call);
+
+        } catch(java.rmi.ConnectException e) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+                ExceptionHandler.connectionRefused(e, callName, "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
+            }
+
+        } catch(java.rmi.ConnectIOException e) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.net.NoRouteToHostException) {
+                ExceptionHandler.noRouteToHost(e, callName, "call");
+
+            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+                ExceptionHandler.noJRMPServer(e, callName, "call");
+
+            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+                ExceptionHandler.sslError(e, callName, "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
+            }
+        }
     }
 }

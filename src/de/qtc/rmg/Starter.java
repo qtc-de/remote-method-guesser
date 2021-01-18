@@ -65,6 +65,7 @@ public class Starter {
         String functionSignature = commandLine.getOptionValue("signature", "");
         String boundName = commandLine.getOptionValue("bound-name", null);
         String regMethod = parser.validateRegMethod(commandLine.getOptionValue("reg-method", "lookup"));
+        String dgcMethod = parser.validateDgcMethod(commandLine.getOptionValue("dgc-method", "clean"));
 
         Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
@@ -233,7 +234,7 @@ public class Starter {
                     attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
                 } else if( action.equals("dgc" )) {
                     DGCClient dgc = new DGCClient(rmi);
-                    dgc.attackCleanCall(payload);
+                    dgc.gadgetCall(dgcMethod, payload);
                 } else {
                     reg = new RegistryClient(rmi);
                     reg.gadgetCall(payload, regMethod, localhostBypass);
@@ -261,7 +262,7 @@ public class Starter {
                     attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
                 } else if( functionSignature.matches("dgc") ) {
                     DGCClient dgc = new DGCClient(rmi);
-                    dgc.codebaseCleanCall(payload);
+                    dgc.codebaseCall(dgcMethod, payload);
                 } else if( functionSignature.matches("reg") ) {
                     reg = new RegistryClient(rmi);
                     reg.codebaseCall(payload, regMethod, localhostBypass);
@@ -287,10 +288,10 @@ public class Starter {
 
                 Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
-                dgc.enumDGC();
+                dgc.enumDGC(dgcMethod);
 
                 Logger.println("");
-                dgc.enumJEP290();
+                dgc.enumJEP290(dgcMethod);
 
                 Logger.println("");
                 registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
