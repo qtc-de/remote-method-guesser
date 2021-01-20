@@ -400,10 +400,7 @@ public class RegistryClient {
 
     public void gadgetCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
-        Logger.println("");
-        Logger.printlnBlue("Attempting deserialization attack on RMI registry endpoint...");
-        Logger.println("");
-        Logger.increaseIndent();
+        Logger.printGadgetCallIntro("RMI Registry");
 
         try {
 
@@ -442,16 +439,9 @@ public class RegistryClient {
     public void codebaseCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
         String className = payloadObject.getClass().getName();
-
-        Logger.printlnBlue("Attempting codebase attack on RMI registry endpoint...");
-        Logger.print("Using class ");
-        Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
-        Logger.printlnPlainMixedYellow(" during", regMethod, "call.");
-        Logger.println("");
-        Logger.increaseIndent();
+        Logger.printCodebaseAttackIntro("RMI Registry", regMethod, className);
 
         try {
-
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {

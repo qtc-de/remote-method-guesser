@@ -129,15 +129,9 @@ public class DGCClient {
     public void codebaseCall(String callName, Object payloadObject)
     {
         String className = payloadObject.getClass().getName();
+        Logger.printCodebaseAttackIntro("DGC", callName, className);
 
         try {
-            Logger.printlnBlue("Attempting codebase attack on DGC endpoint...");
-            Logger.print("Using class ");
-            Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
-            Logger.printlnPlainMixedYellow(" during", callName, "call.");
-            Logger.println("");
-            Logger.increaseIndent();
-
             dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
         } catch( java.rmi.ServerException e ) {
@@ -177,11 +171,9 @@ public class DGCClient {
 
     public void gadgetCall(String callName, Object payloadObject)
     {
-        try {
-            Logger.printlnBlue("Attempting ysoserial attack on DGC endpoint...");
-            Logger.println("");
-            Logger.increaseIndent();
+        Logger.printGadgetCallIntro("DGC");
 
+        try {
             dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
         } catch( java.rmi.ServerException e ) {

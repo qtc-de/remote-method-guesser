@@ -91,7 +91,7 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("act|bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
+        if( !action.matches("act|bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc|act")) {
 
             if(action.matches("enum"))
                 RMGUtils.enableCodebase();
@@ -106,7 +106,7 @@ public class Starter {
         }
 
         MethodCandidate candidate = null;
-        if( functionSignature != "" && !functionSignature.matches("reg|dgc") ) {
+        if( functionSignature != "" && !functionSignature.matches("reg|dgc|act") ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
@@ -271,6 +271,9 @@ public class Starter {
                 } else if( functionSignature.matches("reg") ) {
                     reg = new RegistryClient(rmi);
                     reg.codebaseCall(payload, regMethod, localhostBypass);
+                } else if( functionSignature.matches("act") ) {
+                    ActivationClient act = new ActivationClient(rmi);
+                    act.codebaseCall(payload);
                 }
 
                 break;

@@ -135,7 +135,7 @@ public class ArgumentParser {
         outputs.setRequired(false);
         options.addOption(outputs);
 
-        Option signature = new Option(null, "signature", true, "function signature for guessing or attacking");
+        Option signature = new Option(null, "signature", true, "function signature or one of (dgc|reg|act)");
         signature.setArgName("method");
         signature.setRequired(false);
         options.addOption(signature);
@@ -272,8 +272,10 @@ public class ArgumentParser {
                 Logger.eprintlnMixedBlue("The", "--signature", "option is required for " + action + " mode.");
 
                 if( action.equals("codebase") ) {
-                    Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
-                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
+                    Logger.eprint("Specify a valid signature");
+                    Logger.printlnPlainMixedYellow(" like", "--signature \"void login(String password)\"");
+                    Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
+                    Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
                 }
 
                 RMGUtils.exit();
