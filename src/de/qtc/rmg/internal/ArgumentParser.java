@@ -198,6 +198,7 @@ public class ArgumentParser {
                 +"    port                            Port of the RMI registry\n"
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
+                +"    act <gadget> <command>          Performs Activator based deserialization attacks\n"
                 +"    bind <boundname> <listener>     Binds an object to the registry thats points to listener\n"
                 +"    codebase <classname> <url>      Perform remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
@@ -264,7 +265,7 @@ public class ArgumentParser {
 
     public void prepareAction(String action)
     {
-        if( action.matches("bind|method|codebase|dgc|rebind|reg|listen")) {
+        if( action.matches("act|bind|method|codebase|dgc|rebind|reg|listen")) {
             this.checkArgumentCount(5);
 
             if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {

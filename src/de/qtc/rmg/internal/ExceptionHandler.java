@@ -227,6 +227,13 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void illegalArgument(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during deserialization attack.");
+        Logger.printlnMixedYellowFirst("Deserialization attack", "was probably successful :)");
+        showStackTrace(e);
+    }
+
     public static Throwable getThrowable(String name, Throwable e)
     {
         Throwable exception = e;

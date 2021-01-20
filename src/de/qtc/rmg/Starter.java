@@ -18,6 +18,7 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.SampleWriter;
 import de.qtc.rmg.io.WordlistHandler;
 import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.operations.ActivationClient;
 import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
@@ -90,7 +91,7 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
+        if( !action.matches("act|bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
 
             if(action.matches("enum"))
                 RMGUtils.enableCodebase();
@@ -212,6 +213,7 @@ public class Starter {
             case "dgc":
             case "reg":
             case "listen":
+            case "act":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
@@ -232,12 +234,15 @@ public class Starter {
                 if( action.equals("method") ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
                     attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
-                } else if( action.equals("dgc" )) {
+                } else if( action.equals("dgc") ) {
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.gadgetCall(dgcMethod, payload);
-                } else {
+                } else if( action.equals("reg") ) {
                     reg = new RegistryClient(rmi);
                     reg.gadgetCall(payload, regMethod, localhostBypass);
+                } else if( action.equals("act") ) {
+                    ActivationClient act = new ActivationClient(rmi);
+                    act.gadgetCall(payload);
                 }
 
                 break;
@@ -295,6 +300,10 @@ public class Starter {
 
                 Logger.println("");
                 registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+
+                Logger.println("");
+                ActivationClient activationClient = new ActivationClient(rmi);
+                activationClient.enumActivator();
                 break;
 
             default:
