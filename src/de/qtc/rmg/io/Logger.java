@@ -445,7 +445,7 @@ public class Logger {
     {
         Logger.printlnBlue("Attempting codebase attack on " + endpointName + " endpoint...");
         Logger.print("Using class ");
-        Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
+        Logger.printPlainMixedBlueFirst(className, "with codebase", MaliciousOutputStream.getDefaultLocation());
         Logger.printlnPlainMixedYellow(" during", callName, "call.");
         Logger.println("");
         Logger.increaseIndent();

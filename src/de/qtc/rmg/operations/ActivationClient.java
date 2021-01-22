@@ -135,7 +135,7 @@ public class ActivationClient {
         Logger.printCodebaseAttackIntro("Activator", "activate", className);
 
         try {
-            activateCall(new Object[] {payloadObject, false}, false);
+            activateCall(new Object[] {payloadObject, false}, true);
 
         } catch( java.rmi.ServerException e ) {
 

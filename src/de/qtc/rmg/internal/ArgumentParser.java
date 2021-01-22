@@ -11,6 +11,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 
@@ -294,7 +295,7 @@ public class ArgumentParser {
             if( !serverAddress.matches("^.+(.class|.jar|/)$") )
                 serverAddress += "/";
 
-            System.setProperty("java.rmi.server.codebase", serverAddress);
+            MaliciousOutputStream.setDefaultLocation(serverAddress);
         }
     }
 

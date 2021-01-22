@@ -209,12 +209,20 @@ public final class RMIWhisperer {
         return this.rmiRegistry;
     }
 
-    @SuppressWarnings("deprecation")
     public void genericCall(ObjID objID, int callID, long methodHash, Object[] callArguments, boolean locationStream, String callName) throws Exception
     {
+        genericCall(objID, callID, methodHash, callArguments, locationStream, callName, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    public void genericCall(ObjID objID, int callID, long methodHash, Object[] callArguments, boolean locationStream, String callName, RemoteRef remoteRef) throws Exception
+    {
         try {
-            Endpoint endpoint = this.getEndpoint();
-            RemoteRef remoteRef = new UnicastRef(new LiveRef(objID, endpoint, false));
+
+            if(remoteRef == null) {
+                Endpoint endpoint = this.getEndpoint();
+                remoteRef = new UnicastRef(new LiveRef(objID, endpoint, false));
+            }
 
             StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, methodHash);
             try {

@@ -234,6 +234,15 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during " + during1 + " " + during2 + ".");
+        ExceptionHandler.showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
     public static Throwable getThrowable(String name, Throwable e)
     {
         Throwable exception = e;

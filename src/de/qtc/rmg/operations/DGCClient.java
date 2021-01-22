@@ -132,7 +132,7 @@ public class DGCClient {
         Logger.printCodebaseAttackIntro("DGC", callName, className);
 
         try {
-            dgcCall(callName, packArgsByName(callName, payloadObject), false);
+            dgcCall(callName, packArgsByName(callName, payloadObject), true);
 
         } catch( java.rmi.ServerException e ) {
 

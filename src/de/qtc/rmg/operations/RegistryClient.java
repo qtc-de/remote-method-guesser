@@ -259,13 +259,15 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         try {
+            MaliciousOutputStream.setDefaultLocation("InvalidURL");
             registryCall("lookup", new Object[] {0}, true, false);
 
         } catch( java.rmi.ServerException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
-            if( t instanceof ClassNotFoundException && t.getMessage().contains("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
-                Logger.printlnMixedYellow("- Server", "attempted to deserialize", "object locations during lookup call.");
+
+            if( t instanceof java.net.MalformedURLException ) {
+                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during lookup call.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readObject().");
                 Logger.statusOutdated();
@@ -442,7 +444,7 @@ public class RegistryClient {
         Logger.printCodebaseAttackIntro("RMI Registry", regMethod, className);
 
         try {
-            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), true, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 

@@ -82,19 +82,31 @@ public class MaliciousOutputStream extends MarshalOutputStream {
 
     /**
      * Overwrites the writeLocation method of MarshalOutputStream. Allows
-     * to pass arbitrary objects as the 'location' of an object. This needs to
-     * be done directly on the inner stream, as otherwise the method would be
-     * called recursively (only twice, as the second call generates a reference,
-     * but this would already break the stream).
+     * to pass arbitrary objects as the 'location' of an object. Depending on
+     * the specified type, This needs to be done directly on the inner stream.
+     * I'm not 100% sure, but I guess the problem is that for non primitive and
+     * non String objects, the method would be called twice which causes a malformed
+     * stream.
      */
     protected void writeLocation(String realLocation) throws IOException
     {
-        inner.writeObject(location);
+        if(location.getClass().isPrimitive() || location instanceof String)
+            writeObject(location);
+        else
+            inner.writeObject(location);
     }
 
     public static void setDefaultLocation(Object payload)
     {
         defaultLocation = payload;
+    }
+
+    public static String getDefaultLocation()
+    {
+        if(defaultLocation instanceof String)
+            return (String)defaultLocation;
+        else
+            return defaultLocation.getClass().getName();
     }
 
     public static void resetDefaultLocation()
