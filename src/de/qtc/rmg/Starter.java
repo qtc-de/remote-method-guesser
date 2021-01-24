@@ -80,7 +80,7 @@ public class Starter {
             Logger.disableColor();
         }
 
-        Formatter format = new Formatter(commandLine.hasOption("json"));
+        Formatter format = new Formatter();
         RMIWhisperer rmi = new RMIWhisperer(host, port, sslValue, followRedirect);
 
         RMGUtils.init();

@@ -7,30 +7,26 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
 
+/**
+ * The Formatter class is basically a legacy class. In previous versions, rmg supported JSON
+ * output and the formatter was used to print results either as plain text or as JSON. In
+ * current versions, JSON support was removed, which make the class basically no longer required.
+ * It will be probably removed in future.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class Formatter {
 
-    private boolean json = false;
-
-    public Formatter(boolean json) {
-        this.json = json;
-    }
-
-    public void listBoundNames(String[] boundNames)
-    {
-        if( this.json ) {
-            this.listBoundNamesJson(boundNames, null, null);
-        } else {
-            this.listBoundNamesPlain(boundNames, null, null);
-        }
-    }
-
+    /**
+     * Basically a wrapper for the listBoundNames functions specified below.
+     *
+     * @param boundNames list of available bound names
+     * @param classes known and unknown classes of the corresponding bound names
+     */
     public void listBoundNames(String[] boundNames, ArrayList<HashMap<String,String>> classes)
     {
         HashMap<String,String> knownClasses = null;
@@ -41,14 +37,19 @@ public class Formatter {
             unknownClasses = classes.get(1);
         }
 
-        if( this.json ) {
-            this.listBoundNamesJson(boundNames, knownClasses, unknownClasses);
-        } else {
-            this.listBoundNamesPlain(boundNames, knownClasses, unknownClasses);
-        }
+        this.listBoundNames(boundNames, knownClasses, unknownClasses);
     }
 
-    public void listBoundNamesPlain(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
+    /**
+     * Creates a formatted list of available bound names and their corresponding classes. Classes
+     * are divided in known classes (classes that are available on the current class path) and
+     * unknown classes (not available on the current class path).
+     *
+     * @param boundNames list of available bound names
+     * @param knownClasses list of known classes
+     * @param unknownClasses list of unknown classes
+     */
+    public void listBoundNames(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
     {
         Logger.printlnBlue("RMI registry bound names:");
         Logger.println("");
@@ -82,55 +83,12 @@ public class Formatter {
         Logger.decreaseIndent();
     }
 
-    public void listBoundNamesJson(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
-    {
-        JSONObject json = new JSONObject();
-        JSONArray knownArray = new JSONArray();
-        JSONArray unknownArray = new JSONArray();
-
-        for( String name : boundNames ) {
-
-            if( knownClasses == null || unknownClasses == null ) {
-                knownArray.add(name);
-                continue;
-            }
-
-            if( knownClasses.containsKey(name) ) {
-                JSONObject subJson = new JSONObject();
-                subJson.put(name, knownClasses.get(name));
-                knownArray.add(subJson);
-            }
-
-            if( unknownClasses.containsKey(name) ) {
-                JSONObject subJson = new JSONObject();
-                subJson.put(name, unknownClasses.get(name));
-                unknownArray.add(subJson);
-            }
-        }
-
-        if( knownClasses == null || unknownClasses == null ) {
-            json.put("bound-names", knownArray);
-        } else {
-            JSONObject subJson = new JSONObject();
-            subJson.put("known-classes", knownArray);
-            subJson.put("unknown-classes", unknownArray);
-            json.put("bound-names", subJson);
-        }
-
-        System.out.println(json.toJSONString());
-    }
-
-
+    /**
+     * Prints a formatted list of successfully guessed remote methods.
+     *
+     * @param results HashMap that contains the guessed MethodCandidates for each bound name
+     */
     public void listGuessedMethods(HashMap<String,ArrayList<MethodCandidate>> results)
-    {
-        if(this.json) {
-            this.listGuessedMethodsJson(results);
-        } else {
-            this.listGuessedMethodsPlain(results);
-        }
-    }
-
-    public void listGuessedMethodsPlain(HashMap<String,ArrayList<MethodCandidate>> results)
     {
         Logger.println("");
         Logger.println("Listing successfully guessed methods:");
@@ -157,28 +115,11 @@ public class Formatter {
         Logger.decreaseIndent();
     }
 
-    public void listGuessedMethodsJson(HashMap<String,ArrayList<MethodCandidate>> results)
-    {
-        JSONObject json = new JSONObject();
-        Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
-        while(it.hasNext()) {
-
-            JSONArray methodArray = new JSONArray();
-
-            Map.Entry pair = (Map.Entry)it.next();
-            String boundName = (String) pair.getKey();
-            ArrayList<MethodCandidate> methods = ((ArrayList<MethodCandidate>) pair.getValue());
-
-            for( MethodCandidate method : methods) {
-                methodArray.add(method.getSignature());
-            }
-
-            json.put(boundName, methodArray);
-
-        }
-        System.out.println(json.toJSONString());
-    }
-
+    /**
+     * Lists enumerated codebases exposed by the RMI server. The corresponding information is fetched
+     * from a static method on the CodebaseCollector class. It returns a HashMap that maps codebases
+     * to classes that their annotated with the corresponding codebase during RMI communication.
+     */
     public void listCodeases()
     {
         Logger.printlnBlue("RMI server codebase enumeration:");
@@ -193,7 +134,6 @@ public class Formatter {
         }
 
         for( Entry<String,Set<String>> item : codebases.entrySet() ) {
-
 
             Logger.printlnMixedYellow("-", item.getKey());
             Logger.increaseIndent();
