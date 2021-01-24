@@ -3,6 +3,18 @@ package de.qtc.rmg.internal;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
 
+/**
+ * During the different RMI operations you have always a roughly same set of exceptions
+ * that can occur. To have a unified error handling and to avoid too much duplicate code,
+ * the most common exceptions are handled by this class.
+ *
+ * The overall exception handling could be improved even more by defining exception handlers
+ * that automatically handle the exceptions that could be thrown by a specific type of attack
+ * (e.g. codebase, deserialize, ...). This may be implemented in future and will remove much
+ * more duplicate code.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class ExceptionHandler {
 
     private static boolean alwaysShowExceptions = false;
@@ -243,6 +255,14 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    /**
+     * Walks down a stacktrace and searches for a specific exception name.
+     * If it finds the corresponding name, the corresponding Throwable is returned.
+     *
+     * @param name Exception name to look for.
+     * @param e stack trace to search in.
+     * @return identified Throwable.
+     */
     public static Throwable getThrowable(String name, Throwable e)
     {
         Throwable exception = e;
@@ -260,11 +280,24 @@ public class ExceptionHandler {
         return null;
     }
 
+    /**
+     * Sets the value of the alwaysShowExceptions option.
+     *
+     * @param b show stack traces?
+     */
     public static void showStackTrace(boolean b)
     {
         alwaysShowExceptions = b;
     }
 
+    /**
+     * By using the --stack-trace option, uses can always display stack traces if they
+     * want to. This is handled by this function. It checks whether --stack-trace was used
+     * (in this case alwaysShowExceptions is true) and prints the stacktrace if desired.
+     * This function should be used in most of the error handling code of rmg.
+     *
+     * @param e Exception that was caught.
+     */
     public static void showStackTrace(Exception e)
     {
         if(alwaysShowExceptions) {
@@ -273,14 +306,23 @@ public class ExceptionHandler {
         }
     }
 
+    /**
+     * Helper function that prints a stacktrace with a prefixed Logger item.
+     *
+     * @param e Exception that was caught.
+     */
     public static void stackTrace(Exception e)
     {
         Logger.eprintln("StackTrace:");
         e.printStackTrace();
     }
 
-    /*
+    /**
      * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
+     * Returns the actual cause of an exception.
+     *
+     * @param e Exception that should be handeled.
+     * @return cause of the Exception.
      */
     public static Throwable getCause(Throwable e)
     {

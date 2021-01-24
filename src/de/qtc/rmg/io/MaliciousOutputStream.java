@@ -17,7 +17,13 @@ import sun.rmi.server.MarshalOutputStream;
  * this can be used to enumerate how the String type is unmarshalled by the remote server. If the String
  * type is unmarshalled via 'readObject', the 'resolveClass' method will be called which tries to deserialize
  * the 'location' via another 'readObject'. If 'readString' is used to unmarshall the String type, the location
- * is just ignored. During a RMI lookup call.
+ * is just ignored during a RMI lookup call.
+ *
+ * Technically speaking, the above mentioned unmarshal behavior could also be enumerated easier (which is also
+ * done in current versions) by just specifying a malformed URL an catching the corresponding exception. However,
+ * passing arbitrary objects has initially been an idea to bypass the new marshalling of the String type. For this
+ * purpose, this class was used. Although bypassing String marshalling does not work (cause resolve class is never
+ * called as explained above), this class is kept as it may be useful for other ideas on the subject.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -36,7 +42,7 @@ public class MaliciousOutputStream extends MarshalOutputStream {
      * invalid block boundaries. In this implementation, it was tried to prevent this by cloning
      * the underlying BlockDataOutputStream.
      *
-     * @param out  inner OutputStream. Needs to be declared as OutputStream because of inheritance.
+     * @param out inner OutputStream. Needs to be declared as OutputStream because of inheritance.
      *                However, actually requires a MarshalOutputStream.
      * @throws IOException if the constructor of a super class throws this exception.
      */
@@ -57,11 +63,7 @@ public class MaliciousOutputStream extends MarshalOutputStream {
             bout.set(this, bout.get(inner));
 
         } catch (Exception e) {
-            Logger.eprintMixedYellow("Caught unexpected", e.getClass().getName(), "during creation of");
-            Logger.printlnPlainBlue("MaliciousOutputStream.");
-            Logger.eprintln("Please report this to improve rmg :)");
-            ExceptionHandler.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "creation", "of MaliciousOutputStream", true);
         }
 
         if( defaultLocation != null )
@@ -79,7 +81,6 @@ public class MaliciousOutputStream extends MarshalOutputStream {
     {
     }
 
-
     /**
      * Overwrites the writeLocation method of MarshalOutputStream. Allows
      * to pass arbitrary objects as the 'location' of an object. Depending on
@@ -87,6 +88,12 @@ public class MaliciousOutputStream extends MarshalOutputStream {
      * I'm not 100% sure, but I guess the problem is that for non primitive and
      * non String objects, the method would be called twice which causes a malformed
      * stream.
+     *
+     * Notice that the method needs to accept only String types as arguments because
+     * of inheritance. However, only the 'location' attribute is used for the stream,
+     * while 'realLocation' is completely ignored.
+     *
+     * @param realLocation is completely ignored
      */
     protected void writeLocation(String realLocation) throws IOException
     {

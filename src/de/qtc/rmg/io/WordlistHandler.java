@@ -13,12 +13,26 @@ import de.qtc.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
+/**
+ * The WordlistHandler is responsible for reading and writing wordlist files. During read operations,
+ * it also creates the corresponding MethodCandidates right away and during write operations, it
+ * writes method hashes and meta information into the corresponding wordlist.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class WordlistHandler {
 
     private String wordlistFile;
     private String wordlistFolder;
     private boolean updateWordlists;
 
+    /**
+     * Create a new WordlistHandler.
+     *
+     * @param wordlistFile wordlist file to use (if not null, takes priority over wordlist Folder)
+     * @param wordlistFolder wordlist folder to look for wordlist files
+     * @param updateWordlists whether wordlists should be updated to the advanced format
+     */
     public WordlistHandler(String wordlistFile, String wordlistFolder, boolean updateWordlists)
     {
         this.wordlistFile = wordlistFile;
@@ -26,6 +40,13 @@ public class WordlistHandler {
         this.updateWordlists = updateWordlists;
     }
 
+    /**
+     * Read the specified wordlist and return the corresponding MethodCandidates. Only uses a wordlist
+     * file, if one was specified. Otherwise, it searches the specified wordlist folder.
+     *
+     * @return HashSet of MethodCandidates build from the wordlist
+     * @throws IOException if an IO operation fails
+     */
     public HashSet<MethodCandidate> getWordlistMethods() throws IOException
     {
         if( this.wordlistFile != null && !this.wordlistFile.isEmpty() ) {
@@ -37,12 +58,24 @@ public class WordlistHandler {
         }
     }
 
+    /**
+     * Reads all specified methods from a wordlist file and returns the corresponding MethodCandidates.
+     *
+     * @return HashSet of MethodCandidates build from the wordlist file
+     * @throws IOException if an IO operation fails
+     */
     public HashSet<MethodCandidate> getWordlistMethodsFromFile() throws IOException
     {
         File wordlistFile = new File(this.wordlistFile);
         return getWordlistMethods(wordlistFile);
     }
 
+    /**
+     * Reads all files ending with .txt within the wordlist folder and returns the corresponding MethodCandidates.
+     *
+     * @return HashSet of MethodCandidates build from the wordlist files
+     * @throws IOException if an IO operation fails
+     */
     public HashSet<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
     {
         File wordlistFolder = new File(this.wordlistFolder);
@@ -61,6 +94,17 @@ public class WordlistHandler {
         return methods;
     }
 
+    /**
+     * Parses a wordlist file for available methods and creates the corresponding MethodCandidates. Comments prefixed with '#'
+     * within wordlist files are ignored. Each non comment line is split on the ';' character. If the split has a length of 1,
+     * the ordinary wordlist format (that just contains the method signature) is assumed. If the length is 4 instead, it should
+     * be the advanced format. Otherwise, we have an unknown format and print a warning. If updateWordlists was set within the
+     * constructor, each wordlist file is updated to the advanced format after the parsing.
+     *
+     * @param file wordlist file to read in
+     * @return HashSet of MethodCandidates build from the wordlist file
+     * @throws IOException if an IO operation fails
+     */
     public HashSet<MethodCandidate> getWordlistMethods(File file) throws IOException
     {
         Logger.printlnMixedBlue("Reading method candidates from file", file.getCanonicalPath());
@@ -107,6 +151,13 @@ public class WordlistHandler {
         return methods;
     }
 
+    /**
+     * Write MethodCandidates with their advanced format to a wordlist.
+     *
+     * @param file destination to write the advanced wordlist file
+     * @param methods MethodCandidates to write into the wordlist
+     * @throws IOException if an IO operation fails
+     */
     public void updateWordlist(File file, HashSet<MethodCandidate> methods) throws IOException
     {
         List<String> signatures = new ArrayList<String>();

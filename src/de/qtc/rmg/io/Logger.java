@@ -1,5 +1,14 @@
 package de.qtc.rmg.io;
 
+/**
+ * The Logger class exposes static methods that can be used to create colored output.
+ * Additionally, most of the methods add a '[+]' or '[-]' prefix. The Logger class
+ * also handles a unified indent that can be increased or decreased by invoking classes.
+ * This saves invoking classes from handle indentation manually. It is probably not the
+ * prettiest approach, but it works quite nice :D
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class Logger {
 
     private static String ANSI_RESET = "\u001B[0m";

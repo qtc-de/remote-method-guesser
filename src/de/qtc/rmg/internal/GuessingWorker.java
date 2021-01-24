@@ -7,6 +7,13 @@ import java.util.ArrayList;
 
 import de.qtc.rmg.io.Logger;
 
+/**
+ * Remote method guessing is a time consuming processes that usually benefits from
+ * threading. Therefore, each guessing call is executed within a separate thread.
+ * The GuessingWorker class implements Runnable and can be used for this purpose.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class GuessingWorker implements Runnable {
 
     private Method method;
@@ -15,6 +22,15 @@ public class GuessingWorker implements Runnable {
     private MethodCandidate candidate;
     private ArrayList<MethodCandidate> existingMethods;
 
+    /**
+     * Initialize the guessing worker with all the required information.
+     *
+     * @param method remote method that should be invoked (different from the methods that is guessed :D)
+     * @param remote remote object to invoke the method on
+     * @param instance remote reference (usually UnicastRef) to dispatch the call
+     * @param existingMethods array of existing methods. Identified methods need to be appended
+     * @param candidate method that is actually guessed
+     */
     public GuessingWorker(Method method, Remote remote, RemoteRef instance, ArrayList<MethodCandidate> existingMethods, MethodCandidate candidate) {
         this.method = method;
         this.instance = instance;
@@ -22,6 +38,19 @@ public class GuessingWorker implements Runnable {
         this.candidate = candidate;
     }
 
+    /**
+     * Starts the method invocation. The RemoteObject that is used by this worker is actually a dummy
+     * object. It pretends to implement the remote class/interface, but actually has only two dummy methods
+     * defined. One of these dummy methods get invoked during this call, but with an exchanged method hash
+     * of the actual method in question.
+     *
+     * The selected method for the guessing expects either a primitive or non primitive type. This decision
+     * is made based on the MethodCandidate in question and with the goal of always causing a type confusion.
+     * E.g. when the MethodCandidate expects a primitive type as first argument, the method that expects a
+     * non primitive type is selected. Therefore, when the remote object attempts to unmarshal the call
+     * arguments, it will always find a type mismatch on the first argument, which causes an exception.
+     * This exception is used to identify valid methods.
+     */
     public void run() {
 
         try {
@@ -40,7 +69,7 @@ public class GuessingWorker implements Runnable {
                     return;
 
                 } else if( cause instanceof java.rmi.UnknownHostException  ) {
-                    Logger.eprintln("Warning! Object tries to connect to unknown host: " + cause.getCause().getMessage());
+                    Logger.eprintlnMixedYellow("Warning! Object tries to connect to unknown host:", cause.getCause().getMessage());
                     ExceptionHandler.showStackTrace(e);
                     return;
 
