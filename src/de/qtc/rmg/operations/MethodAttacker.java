@@ -20,6 +20,17 @@ import de.qtc.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
+/**
+ * The method attacker is used to invoke RMI methods on the application level with user controlled
+ * objects as method arguments. It can be used to attempt codebase and deserialization attacks on
+ * known remote methods. Usually, you use first the *guess* operation to enumerate remote methods and
+ * then you use the *method* operation to check them for codebase and deserialization vulnerabilities.
+ *
+ * The MethodAttacker was one of the first operation classes in rmg and is therefore not fully optimized
+ * to the currently available other utility classes. It may be restructured in future.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class MethodAttacker {
 
     private RMIWhisperer rmi;
@@ -29,6 +40,17 @@ public class MethodAttacker {
     private Field proxyField;
     private Field remoteField;
 
+    /**
+     * The MethodAttacker makes use of the official RMI api to obtain the RemoteObject from the RMI registry.
+     * Afterwards, it needs access to the underlying UnicastRemoteRef to perform customized RMi calls. Depending
+     * on the RMI version of the server (current proxy approach or legacy stub objects), this requires access to
+     * a different field within the Proxy or RemoteObject class. Both fields are made accessible within the constructor
+     * to make the actual attacking code more clean.
+     *
+     * @param rmiRegistry registry to perform lookup operations
+     * @param classes list of unknown classes per bound name
+     * @param targetMethod the remote method to target
+     */
     public MethodAttacker(RMIWhisperer rmiRegistry, HashMap<String,String> classes, MethodCandidate targetMethod)
     {
         this.rmi = rmiRegistry;
@@ -46,6 +68,32 @@ public class MethodAttacker {
         }
     }
 
+    /**
+     * This lengthy method performs the actual method call. If no bound name was specified, it iterates
+     * over all available bound names on the registry. After some initialization, the function checks the
+     * specified MethodCandidate for non primitive arguments and determines whether the remote endpoint
+     * uses legacy stubs. Non primitive arguments are required for codebase and deserialization attacks,
+     * whereas the legacy status of the server is required to decide whether to create the remote classes
+     * as interface or stub classes on the client side. Within legacy RMI, stub classes are required on the
+     * client side, but current RMI implementations only need an interface that is assigned to a Proxy.
+     *
+     * Depending on the determined legacy status, an interface or legacy stub class is now created dynamically.
+     * With the corresponding class now available on the class path, the RemoteObject can be looked up on the
+     * registry. From the obtained object, the RemoteRef is then extracted by using reflection. With this remote
+     * reference, a customized RMI call can now be dispatched.
+     *
+     * This low level RMI access is required to call methods with invalid argument types. During deserialization
+     * attacks you may want to call a method that expects a HashMap with some other serialized object. When using
+     * ordinary RMI to make the call, Java would refuse to use anything other that a HashMap during the call, as
+     * it would violate the interface definition. With low level RMI access, the call arguments can be manually
+     * written to the stream which allows to use arbitrary arguments for the call.
+     *
+     * @param gadget object to use during the RMI call. Usually a payload object created by ysoserial
+     * @param boundName optional bound name to target. If null, target all bound names
+     * @param argumentPosition specify the argument position to attack. If negative, automatically search for non primitive
+     * @param operationMode the function was upgraded to support two operations 'codebase' or 'attack'
+     * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
+     */
     @SuppressWarnings({ "rawtypes", "deprecation" })
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
