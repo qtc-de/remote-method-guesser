@@ -84,7 +84,7 @@ public class MethodAttacker {
      *
      * This low level RMI access is required to call methods with invalid argument types. During deserialization
      * attacks you may want to call a method that expects a HashMap with some other serialized object. When using
-     * ordinary RMI to make the call, Java would refuse to use anything other that a HashMap during the call, as
+     * ordinary RMI to make the call, Java would refuse to use anything other than a HashMap during the call, as
      * it would violate the interface definition. With low level RMI access, the call arguments can be manually
      * written to the stream which allows to use arbitrary arguments for the call.
      *

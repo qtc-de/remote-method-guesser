@@ -167,7 +167,7 @@ public class Starter {
                 }
 
                 MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg, legacyMode);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, zeroArg, legacyMode);
 
                 format.listGuessedMethods(results);
                 if( !createSamples )

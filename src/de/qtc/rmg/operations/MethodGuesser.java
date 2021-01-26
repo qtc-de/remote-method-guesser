@@ -25,6 +25,33 @@ import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 
+/**
+ * The method guesser is used to brute force available remote methods on a Java RMI endpoint. It
+ * uses the regular Java RMI API to obtain a RemoteObject from the RMI registry, but then uses
+ * low level Java RMI calls to enumerate valid methods.
+ *
+ * When a RMI client calls a remote method, it establishes a TCP connection to the remote endpoint
+ * and sends (among others) the following information:
+ *
+ *         - The ObjID of the RemoteObject that should receive the call
+ *         - A method hash, that identifies the remote method to be called
+ *         - A collection of method arguments to be used for the call
+ *
+ * During method guessing, remote-method-guesser uses a wordlist of Java methods and computes their hash
+ * values. The corresponding hashes are then sent to the server, together with an collection of argument types
+ * that do NOT match the expected argument types by the actual remote method. If a remote method does not
+ * exist, the server throws an exception complaining about an unknown hash value. On the other hand, if the
+ * remote method exists, the server will complain about the mismatch of argument types.
+ *
+ * This allows to reliably detect remote methods without the risk of causing unwanted actions on the server
+ * side by actually invoking them. The idea for such a guessing approach was not invented by remote-method-guesser,
+ * but was, to the best of our knowledge first implemented by the rmi-scout project.
+ *
+ * The MethodGuesser class was one of the first operation classes in rmg and is therefore not fully optimized
+ * to the currently available other utility classes. It may be restructured in future.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class MethodGuesser {
 
     private RMIWhisperer rmi;
@@ -34,6 +61,17 @@ public class MethodGuesser {
     private Field proxyField;
     private Field remoteField;
 
+    /**
+     * The MethodGuesser makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
+     * Afterwards, it needs access to the underlying UnicastRemoteRef to perform customized RMi calls. Depending
+     * on the RMI version of the server (current proxy approach or legacy stub objects), this requires access to
+     * a different field within the Proxy or RemoteObject class. Both fields are made accessible within the constructor
+     * to make the actual guessing code more clean.
+     *
+     * @param rmiRegistry registry to perform lookup operations
+     * @param unknownClasses list of unknown classes per bound name
+     * @param candidates list of method candidates to guess
+     */
     public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, HashSet<MethodCandidate> candidates)
     {
         this.rmi = rmiRegistry;
@@ -53,13 +91,42 @@ public class MethodGuesser {
         }
     }
 
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(int threads, boolean writeSamples, boolean zeroArg)
-    {
-        return this.guessMethods(null, threads, writeSamples, zeroArg, 0);
-    }
-
+    /**
+     * This lengthy function is used for method guessing. If targetName is not null, guessing is only performed on
+     * the specified bound name, otherwise all bound names within the registry are targeted. The function starts of
+     * with some initialization and then tries to determine the legacy status of the server. This status is required
+     * to decide whether to create the remote classes as interface or stub classes on the client side. Within legacy
+     * RMI, stub classes are required on the client side, but current RMI implementations only need an interface that
+     * is assigned to a Proxy.
+     *
+     * Depending on the determined legacy status, an interface or legacy stub class is now created dynamically.
+     * With the corresponding class now available on the class path, the RemoteObject can be looked up on the
+     * registry. From the obtained object, the RemoteRef is then extracted by using reflection. With this remote
+     * reference, customized RMI calls can now be dispatched.
+     *
+     * This low level RMI access is required to call methods with invalid argument types. During method guessing,
+     * you want to call possibly existing remote methods with invalid argument types to prevent their actual execution.
+     * When using ordinary RMI to make a call, Java would refuse to use anything other than the expected argument types,
+     * as it would violate the interface or method definition. With low level RMI access, the call arguments can be
+     * manually written to the OutputStream which allows to use arbitrary arguments for a call.
+     *
+     * To implement this confusion of argument types, the dynamically created classes for the RemoteObjects are
+     * constructed with two (interface)methods. The first, rmgInvokeObject, expects a String as first parameter,
+     * whereas the second, rmgInvokePrimitive, expects an int. Depending on the method signature that is currently
+     * guessed, rmgInvokeObject or rmgInvokePrimitive is used for the call. If the method signature expects a
+     * primitive as its first argument, rmgInvokeObject is used to cause the confusion. Otherwise, rmgInvokePrimitive
+     * will be used. During the call, the methodHash of rmgInvokeObject or rmgInvokePrimitive is replaced by the
+     * methodHash of the currently guessed method signature. This approach allows testing for arbitrary method signatures
+     * without manually exchanging the call parameters.
+     *
+     * @param targetName bound name to target. If null, target all available bound names
+     * @param threads number of threads to use for the operation
+     * @param zeroArg whether or not to also guess zero argument methods (are really invoked)
+     * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
+     * @return List of successfully guessed methods per bound name
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean writeSamples, boolean zeroArg, int legacyMode)
+    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean zeroArg, int legacyMode)
     {
         HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
