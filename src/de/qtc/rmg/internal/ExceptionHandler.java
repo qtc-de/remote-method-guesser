@@ -21,14 +21,14 @@ public class ExceptionHandler {
 
     public static void internalError(String functionName, String message)
     {
-        Logger.printMixedYellow("Internal error within the", functionName, "function.");
-        Logger.println(message);
+        Logger.eprintlnMixedYellow("Internal error within the", functionName, "function.");
+        Logger.eprintln(message);
         RMGUtils.exit();
     }
 
     public static void internalException(Exception e, String functionName, boolean exit)
     {
-        Logger.printMixedYellow("Internal error. Caught unexpected", e.getClass().getName(), "within the ");
+        Logger.eprintMixedYellow("Internal error. Caught unexpected", e.getClass().getName(), "within the ");
         Logger.printlnPlainMixedBlue(functionName, "function.");
         stackTrace(e);
 
@@ -38,7 +38,7 @@ public class ExceptionHandler {
 
     public static void unexpectedException(Exception e, String during1, String during2, boolean exit)
     {
-        Logger.printMixedYellow("Caught unexpected", e.getClass().getName(), "during ");
+        Logger.eprintMixedYellow("Caught unexpected", e.getClass().getName(), "during ");
         Logger.printlnPlainMixedBlueFirst(during1, during2 + ".");
         Logger.eprintln("Please report this to improve rmg :)");
         stackTrace(e);
@@ -123,9 +123,9 @@ public class ExceptionHandler {
         Logger.printlnMixedYellow("Codebase attack", "probably worked :)");
 
         Logger.println("");
-        Logger.eprintlnMixedYellow("If where was no callback, the server did not load the attack class", payloadName + ".class.");
-        Logger.eprintln("The class is probably known by the server or it was already loaded before.");
-        Logger.eprintlnMixedBlue("In this case, you should try a", "different classname.");
+        Logger.printlnMixedYellow("If where was no callback, the server did not load the attack class", payloadName + ".class.");
+        Logger.println("The class is probably known by the server or it was already loaded before.");
+        Logger.printlnMixedBlue("In this case, you should try a", "different classname.");
         showStackTrace(e);
     }
 
@@ -184,22 +184,22 @@ public class ExceptionHandler {
 
     public static void accessControl(Exception e, String during1, String during2)
     {
-        Logger.printlnMixedYellow("Caught unexpected", "AccessControlException", "during " + during1 + " " + during2 + ".");
-        Logger.printlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
+        Logger.eprintlnMixedYellow("Caught unexpected", "AccessControlException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
         showStackTrace(e);
     }
 
     public static void singleEntryRegistry(Exception e, String during1)
     {
-        Logger.printlnMixedYellow("- Caught", "AccessException", "during " + during1 + "call.");
-        Logger.printlnMixedBlue("  --> The servers seems to use a", "SingleEntryRegistry", "(probably JMX based).");
+        Logger.eprintlnMixedYellow("- Caught", "AccessException", "during " + during1 + "call.");
+        Logger.eprintlnMixedBlue("  --> The servers seems to use a", "SingleEntryRegistry", "(probably JMX based).");
         Logger.statusUndecided("Vulnerability");
         showStackTrace(e);
     }
 
     public static void eofException(Exception e, String during1, String during2)
     {
-        Logger.printlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
         showStackTrace(e);
         RMGUtils.exit();
@@ -208,7 +208,7 @@ public class ExceptionHandler {
     public static void invalidListenerFormat(boolean gadget)
     {
         if(gadget)
-            Logger.printlnMixedBlue("Selected gadget expects a", "listener", "as command input.");
+            Logger.eprintlnMixedBlue("Selected gadget expects a", "listener", "as command input.");
 
         Logger.eprintlnMixedYellow("Listener must be specified in", "host:port", "format.");
         RMGUtils.exit();
@@ -226,8 +226,8 @@ public class ExceptionHandler {
         Throwable cause = getCause(e);
 
         Logger.printlnMixedYellow("Caught", cause.getClass().getName(), "during deserialization attack.");
-        Logger.eprintlnMixedBlue("This could be caused by your gadget an the attack", "probably worked anyway.");
-        Logger.eprintlnMixedYellow("If it did not work, you can retry with", "--stack-trace", "to see the details.");
+        Logger.printlnMixedBlue("This could be caused by your gadget an the attack", "probably worked anyway.");
+        Logger.printlnMixedYellow("If it did not work, you can retry with", "--stack-trace", "to see the details.");
         showStackTrace(e);
     }
 
