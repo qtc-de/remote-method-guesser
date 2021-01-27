@@ -255,6 +255,16 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    public static void unknownHost(Exception e, String during1, String during2, String host, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("The IP address of the specified endpoint", host, "could not be resolved.");
+        ExceptionHandler.showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
     /**
      * Walks down a stacktrace and searches for a specific exception name.
      * If it finds the corresponding name, the corresponding Throwable is returned.

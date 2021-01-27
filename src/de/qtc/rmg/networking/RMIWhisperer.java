@@ -136,6 +136,9 @@ public final class RMIWhisperer {
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
 
+        } catch( java.rmi.UnknownHostException e) {
+            ExceptionHandler.unknownHost(e, "list", "operation", host, true);
+
         } catch( java.rmi.ConnectIOException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
@@ -351,6 +354,9 @@ public final class RMIWhisperer {
             } else {
                 ExceptionHandler.unexpectedException(e, callName, "call", true);
             }
+
+        } catch( java.rmi.UnknownHostException e) {
+            ExceptionHandler.unknownHost(e, callName, "call", host, true);
 
         } catch(java.rmi.ConnectIOException e) {
 
