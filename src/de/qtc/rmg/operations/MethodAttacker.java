@@ -162,8 +162,8 @@ public class MethodAttacker {
                 else
                     remoteClass = RMGUtils.makeLegacyStub(className, this.targetMethod);
 
-            } catch(CannotCompileException e) {
-                ExceptionHandler.cannotCompile(e, "interface", "creation", false);
+            } catch(Exception e) {
+                ExceptionHandler.unexpectedException(e, "interface", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }

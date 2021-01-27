@@ -23,7 +23,6 @@ import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
-import javassist.CannotCompileException;
 
 /**
  * The method guesser is used to brute force available remote methods on a Java RMI endpoint. It
@@ -178,10 +177,8 @@ public class MethodGuesser {
                 else
                     remoteClass = RMGUtils.makeLegacyStub(className);
 
-            } catch(CannotCompileException e) {
-                Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
+            } catch(Exception e) {
+                ExceptionHandler.unexpectedException(e, "interface", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -198,9 +195,7 @@ public class MethodGuesser {
                 }
 
             } catch( Exception e ) {
-                Logger.eprintlnMixedYellow("Error: Unable to get instance for", boundName, ".");
-                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                ExceptionHandler.showStackTrace(e);
+                ExceptionHandler.unexpectedException(e, "lookup", "operation", false);
                 Logger.decreaseIndent();
                 continue;
             }

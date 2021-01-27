@@ -27,6 +27,14 @@ import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
+/**
+ * The RMGUtils class defines static helper functions that do not really fit into other categories.
+ * Like it is always the case with such classes, it is quite overblown and may be separated in future.
+ * Most of the functions in it are concerned about dynamic class creation via javassist. But over the
+ * time many other utilities were included within this class.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
 
@@ -35,6 +43,12 @@ public class RMGUtils {
     private static CtClass remoteClass;
     private static CtClass remoteStubClass;
 
+    /**
+     * The init function has to be called before the javassist library can be utilized via RMGUtils.
+     * It initializes the class pool and creates CtClass objects for the Remote and RemoteStub classes.
+     * Furthermore, it creates a Dummy interface that is used for method creation. All this stuff is stored
+     * within static variables and can be used by RMGUtils after initialization.
+     */
     public static void init()
     {
         pool = ClassPool.getDefault();
@@ -49,16 +63,23 @@ public class RMGUtils {
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
     }
 
+    /**
+     * Creates the specified class dynamically as an interface. The interfaces created by this function always
+     * extend the Remote class and contain the rmgInvokeObject and rmgInvokePrimitive functions. These functions
+     * are used during method guessing, as described in the MethodGuesser class documentation.
+     *
+     * If the specified class already exists, the class is resolved via Class.forName and is then just returned.
+     * This case can occur when multiple bound names use the same RemoteObject class.
+     *
+     * @param className full qualified name of the class to create
+     * @return created Class instance
+     * @throws CannotCompileException can be thrown when e.g. the class name is invalid
+     */
     public static Class makeInterface(String className) throws CannotCompileException
     {
         try {
             return Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            /*
-             * className is not known and was not created before. This is usually expected.
-             * In this case, we just create the class :)
-             */
-        }
+        } catch (ClassNotFoundException e) {}
 
         CtClass intf = pool.makeInterface(className, remoteClass);
         CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
@@ -70,6 +91,23 @@ public class RMGUtils {
         return intf.toClass();
     }
 
+    /**
+     * This function is basically equivalent to the previous makeInterface function, apart that it creates the interface
+     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
+     * remote interfaces that contain a user specified method signature.
+     *
+     * The function first checks whether the specified class does already exist and contains the requested method. If
+     * this is the case, the corresponding Class object is simply returned. If the class exists, but the method is not
+     * available, the class needs to be defrosted to allow modifications to it.
+     *
+     * For non existing and defrosted classes, the requested MethodCandidate is then added to the interface and the corresponding
+     * interface class Object is returned by the function.
+     *
+     * @param className full qualified name of the class to create
+     * @param candidate MethodCandidate to include within the created interface
+     * @return Class object of the dynamically created class
+     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
+     */
     public static Class makeInterface(String className, MethodCandidate candidate) throws CannotCompileException
     {
         CtClass intf = null;
@@ -99,45 +137,30 @@ public class RMGUtils {
         return intf.toClass();
     }
 
-    public static Class makeLegacyStub(String className) throws CannotCompileException
-    {
-        try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            /*
-             * className is not known and was not created before. This is usually expected.
-             * In this case, we just create the class :)
-             */
-        }
-
-        CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
-        CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
-
-        intf.addMethod(dummyMethod);
-        dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
-        intf.toClass();
-
-        CtClass ctClass = pool.makeClass(className, remoteStubClass);
-        ctClass.setInterfaces(new CtClass[] { intf });
-
-        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
-        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
-
-        return ctClass.toClass();
-    }
-
-    public static Class makeLegacyStub(String className, MethodCandidate candidate) throws CannotCompileException
+    /**
+     * This function is basically like the makeInterface function, but for the legacy RMI stub mechanism. First,
+     * it also creates an interface class that contains the methods rmgInvokeObject and rmgInvokePrimitive. However,
+     * the interface class is not created with the actual specified class name, but with the name 'className + "Interface"'.
+     * The actual specified class name is then created as a regular class that extends the RemoteStub class. Furthermore,
+     * this class is configured to implement the previously created interface.
+     *
+     * Interestingly, it is not required to provide implementations for the interface methods when using javassist. However,
+     * what needs to be done is adding a serialVersionUID of 2L, as this default value is expected for RMI RemoteStubs.
+     * After everything is setup, the function returns the class object that extends RemoteStub.
+     *
+     * @param className full qualified class name to create the stub object for
+     * @return dynamically created stub Class object
+     * @throws CannotCompileException may be thrown when the specified class name is invalid
+     * @throws NotFoundException should never be thrown in practice
+     */
+    public static Class makeLegacyStub(String className) throws CannotCompileException, NotFoundException
     {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {}
 
-        CtClass intf = pool.makeInterface(className + "Interface", remoteClass);
-        CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
-        Class intfClass = intf.toClass();
+        Class intfClass = RMGUtils.makeInterface(className + "Interface");
+        CtClass intf = pool.getCtClass(className);
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
@@ -147,7 +170,42 @@ public class RMGUtils {
         ctClass.addField(serialID, CtField.Initializer.constant(2L));
 
         ctClass.toClass();
+        return intfClass;
+    }
 
+    /**
+     * Basically the same function as the previously defined makeLegacyStub function, apart that it creates the interface
+     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
+     * remote interfaces that contain a user specified method signature.
+     *
+     * As the remote interface is created using the makeInterface method, we may do not need to care about defrosting. I'm
+     * not totally sure how Java behaves when a class already exists and you change the interface that it implements.
+     * However, at the current state of the remote-method-guesser, this should not happen anyway, as this method is only
+     * used by MethodAttacker, which only accepts a single function signature.
+     *
+     * @param className full qualified name of the stub class to create
+     * @param candidate MethodCandidate to include within the created interface
+     * @return Class object of the dynamically created stub class
+     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
+     * @throws NotFoundException should never be thrown in practice
+     */
+    public static Class makeLegacyStub(String className, MethodCandidate candidate) throws CannotCompileException, NotFoundException
+    {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {}
+
+        Class intfClass = RMGUtils.makeInterface(className + "Interface", candidate);
+        CtClass intf = pool.getCtClass(className);
+
+        CtClass ctClass = pool.makeClass(className, remoteStubClass);
+        ctClass.setInterfaces(new CtClass[] { intf });
+
+        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
+        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+
+        ctClass.toClass();
         return intfClass;
     }
 
