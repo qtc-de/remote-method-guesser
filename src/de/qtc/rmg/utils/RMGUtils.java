@@ -160,7 +160,7 @@ public class RMGUtils {
         } catch (ClassNotFoundException e) {}
 
         Class intfClass = RMGUtils.makeInterface(className + "Interface");
-        CtClass intf = pool.getCtClass(className);
+        CtClass intf = pool.getCtClass(className + "Interface");
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
@@ -196,7 +196,7 @@ public class RMGUtils {
         } catch (ClassNotFoundException e) {}
 
         Class intfClass = RMGUtils.makeInterface(className + "Interface", candidate);
-        CtClass intf = pool.getCtClass(className);
+        CtClass intf = pool.getCtClass(className + "Interface");
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
