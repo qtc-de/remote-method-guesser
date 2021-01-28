@@ -50,10 +50,7 @@ public class Starter {
 
         Properties config = new Properties();
         RMGUtils.loadConfig(defaultConfiguration, config, false);
-
-        String additionalConfig = commandLine.getOptionValue("config", null);
-        if( additionalConfig != null )
-            RMGUtils.loadConfig(additionalConfig, config, true);
+        RMGUtils.loadConfig(commandLine.getOptionValue("config", null), config, true);
 
         int legacyMode = parser.getLegacyMode();
         int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "-1"));
@@ -258,7 +255,7 @@ public class Starter {
                     payload = RMGUtils.makeSerializableClass(className);
                     payload = ((Class)payload).newInstance();
 
-                } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
+                } catch (CannotCompileException | InstantiationException | IllegalAccessException e) {
                     ExceptionHandler.unexpectedException(e, "payload", "creation", true);
                 }
 

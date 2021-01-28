@@ -41,13 +41,14 @@ public class RMGUtils {
     private static ClassPool pool;
     private static CtClass dummyClass;
     private static CtClass remoteClass;
+    private static CtClass serializable;
     private static CtClass remoteStubClass;
 
     /**
      * The init function has to be called before the javassist library can be utilized via RMGUtils.
-     * It initializes the class pool and creates CtClass objects for the Remote and RemoteStub classes.
-     * Furthermore, it creates a Dummy interface that is used for method creation. All this stuff is stored
-     * within static variables and can be used by RMGUtils after initialization.
+     * It initializes the class pool and creates CtClass objects for the Remote, RemoteStub and Serializable
+     * classes. Furthermore, it creates a Dummy interface that is used for method creation. All this stuff
+     * is stored within static variables and can be used by RMGUtils after initialization.
      */
     public static void init()
     {
@@ -55,6 +56,7 @@ public class RMGUtils {
 
         try {
             remoteClass = pool.getCtClass(Remote.class.getName());
+            serializable = pool.getCtClass("java.io.Serializable");
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
         } catch (NotFoundException e) {
             ExceptionHandler.internalError("RMGUtils.init", "Caught unexpected NotFoundException.");
@@ -164,10 +166,7 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
-
-        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
-        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+        addSerialVersionUID(ctClass);
 
         ctClass.toClass();
         return intfClass;
@@ -200,45 +199,79 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
-
-        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
-        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+        addSerialVersionUID(ctClass);
 
         ctClass.toClass();
         return intfClass;
     }
 
-    public static Class makeRandomClass() throws CannotCompileException, NotFoundException
+    /**
+     * Dynamically creates a class with random class name. The class implements the Serializable interface
+     * and can therefore be used during RMI calls. Random classes are used as canaries during method attacks.
+     * The MethodAttacker sends gadgets always as an array of Object. The first item within this arrays is the
+     * actual payload object, while the second one is a canary (random class). When the RMI server complains
+     * about not knowing the random class name, one can be sure that the previous class was successfully loaded.
+     * Furthermore, this also makes sure that even during method attacks, server side calls will not be dispatched
+     * due to missing classes.
+     *
+     * @return Class object of a serializable class with random class name.
+     * @throws CannotCompileException should never be thrown in practice
+     */
+    public static Class makeRandomClass() throws CannotCompileException
     {
         String classname = UUID.randomUUID().toString().replaceAll("-", "");
         CtClass ctClass = pool.makeClass(classname);
-        ctClass.addInterface(pool.get("java.io.Serializable"));
+        ctClass.addInterface(serializable);
         return ctClass.toClass();
     }
 
-    public static Class makeSerializableClass(String classname) throws CannotCompileException, NotFoundException
+    /**
+     * Dynamically creates a serializable class that can be used within RMI calls. This function is used
+     * to perform codebase attacks, where a serializale class with user controlled class name needs to be send
+     * to the remote RMI server.
+     *
+     * @param className name of the serializable class to generate
+     * @return Class object of a serializable class with specified class name
+     * @throws CannotCompileException may be thrown if the specified class name is invalid
+     */
+    public static Class makeSerializableClass(String className) throws CannotCompileException
     {
         try {
-            return Class.forName(classname);
+            return Class.forName(className);
         } catch (ClassNotFoundException e) {}
 
-        CtClass ctClass = pool.makeClass(classname);
-        ctClass.addInterface(pool.get("java.io.Serializable"));
-
-        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
-        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+        CtClass ctClass = pool.makeClass(className);
+        ctClass.addInterface(serializable);
+        addSerialVersionUID(ctClass);
 
         return ctClass.toClass();
     }
 
+    /**
+     * Creates a method from a signature string. Methods need to be assigned to a class, therefore the static
+     * dummyClass is used that is created during the initialization of RMGUtils. The class relationship of the
+     * created method is not really important, as the method is mainly used to compute the method hash and to
+     * obtain the argument types.
+     *
+     * @param signature method signature as String
+     * @return CtMethod compiled from the signature
+     * @throws CannotCompileException is thrown when signature is invalid
+     */
     public static CtMethod makeMethod(String signature) throws CannotCompileException
     {
         CtMethod method = CtNewMethod.make("public " + signature + ";", dummyClass);
         return method;
     }
 
+    /**
+     * This function is a pretty primitive way to obtain the different Java classes (types) that are
+     * contained within a method signature. This is required, as javassist needs all classes contained
+     * in a method definition to be present before the compilation. Therefore, we need to create dummy
+     * implementations for each class that is not already on the class path.
+     *
+     * @param signature method signature to collect the types from
+     * @return List of types that were identified
+     */
     public static List<String> getTypesFromSignature(String signature)
     {
         int functionStart = signature.indexOf(' ');
@@ -264,12 +297,14 @@ public class RMGUtils {
         return types;
     }
 
-    public static void createTypesFromSignature(String signature) throws CannotCompileException
-    {
-        List<String> types = getTypesFromSignature(signature);
-        createTypesFromList(types);
-    }
-
+    /**
+     * Takes a list of strings that represent Java class names and replaces array and vararg definitions within
+     * of it. When it tries to lookup each full qualified class name within the list. If the class is found,
+     * just continues. If the class is not found, it dynamically creates the class using javassist.
+     *
+     * @param types list of Java class names
+     * @throws CannotCompileException may be thrown when encountering invalid class names
+     */
     public static void createTypesFromList(List<String> types) throws CannotCompileException
     {
         for(String type : types) {
@@ -288,6 +323,27 @@ public class RMGUtils {
         }
     }
 
+    /**
+     * Just a helper function that combines geTypesFromSignature and createTypesFrom list. This function should
+     * be called before a method signature is compiled, as it makes sure that all required classes are on the
+     * class path.
+     *
+     * @param signature method signature to create types for
+     * @throws CannotCompileException may be thrown when specifying invalid signatures
+     */
+    public static void createTypesFromSignature(String signature) throws CannotCompileException
+    {
+        List<String> types = getTypesFromSignature(signature);
+        createTypesFromList(types);
+    }
+
+    /**
+     * Takes a Class object and returns a valid instance for the corresponding class. For primitive types,
+     * preconfigured default values will be returned. Non primitive types create always a null instance.
+     *
+     * @param type Class to create the instance for
+     * @return instance depending on the value of type
+     */
     public static Object getArgument(Class type)
     {
         if (type.isPrimitive()) {
@@ -316,6 +372,13 @@ public class RMGUtils {
         }
     }
 
+    /**
+     * Construct an argument array for the specified method. Returns an array of Objects, each being an instance
+     * of the type that is expected by the method.
+     *
+     * @param method method to create the argument array for
+     * @return argument array that can be used to invoke the method
+     */
     public static Object[] getArgumentArray(Method method)
     {
         Class[] types = method.getParameterTypes();
@@ -328,6 +391,18 @@ public class RMGUtils {
         return argumentArray;
     }
 
+    /**
+     * This function is used to generate method argument strings that are used in samples. Actually, it is only required
+     * for legacy stub samples, as the call arguments need to be packed manually for stubs. This means, that the Object array
+     * needs to be manually constructed.
+     *
+     * When one of the argument types is a primitive like e.g. int, you cannot put it into an Object array without wrapping it
+     * into an Integer. Therefore, this function replaces primitives by their corresponding Object compatible representations.
+     *
+     * @param type the type of the argument in question
+     * @param argName the name of the argument in question
+     * @return string that can be used for the argument within the Object array
+     */
     public static String getSampleArgument(CtClass type, String argName)
     {
         if (type.isPrimitive()) {
@@ -397,13 +472,30 @@ public class RMGUtils {
         System.exit(1);
     }
 
+    /**
+     * Loads the remote-method-guesser configuration file from the specified destination. This function may be used
+     * twice during the startup of rmg. First it is used to load the default configuration, which is done via
+     * getResourceAsStream. In this case extern should be set to false and the prop argument is an empty Properties
+     * object.
+     *
+     * Afterwards, the function may be called again with a user defined configuration file. In this case, extern should
+     * be set to true and the prop arguments should contain a Properties object that already contains the default
+     * configuration.
+     *
+     * @param filename file system path to load the configuration file from
+     * @param prop a Properties object to store the parsed properties
+     * @param extern whether to use FileInputStream (true) or getResourceAsStream (false) to read the properties file
+     */
     public static void loadConfig(String filename, Properties prop, boolean extern)
     {
-        InputStream configStream = null;
+        if(filename == null)
+            return;
+
         try {
 
-            if( extern )
+            InputStream configStream = null;
 
+            if( extern )
                 configStream = new FileInputStream(filename);
             else
                 configStream = Starter.class.getResourceAsStream(filename);
@@ -416,6 +508,13 @@ public class RMGUtils {
         }
     }
 
+    /**
+     * Small helper function that checks whether a HashMap contains items and returns an error message that fits
+     * for the desired situation.
+     *
+     * @param unknownClasses HashMap to investigate
+     * @return true if the HashMap contains items, false otherwise
+     */
     public static boolean containsUnknown(HashMap<String,String> unknownClasses)
     {
         if( unknownClasses.size() <= 0 ) {
@@ -427,14 +526,39 @@ public class RMGUtils {
         return true;
     }
 
+    /**
+     * Sets the useCodebaseOnly setting to false and configures the CodebaseCollector class as the RMIClassLoaderSpi.
+     * This is required to get access to server side exposed codebases, which is one of the things that rmg reports during
+     * its enum action.
+     *
+     * Setting useCodebaseOnly to false is generally dangerous, as it could potentially allow remote class loading. It
+     * tells the RMI runtime that you are interested in server side codebases and want to load unknown classes from an URL
+     * that may be specified by the server. Therefore, this setting can easily lead to remote code execution.
+     *
+     * In the case of remote-method-guesser, a remote class loading attack is prevented by two mechanisms:
+     *
+     *      1. Remote class loading is not allowed when no SecurityManager is defined. As rmg does not create a SecurityManager
+     *         on its own, the code is in principle not vulnerable. Furthermore, even when the user specifies a SecurityManager
+     *         manually, it would still require a security policy that allows class loading from the server side specified
+     *         codebase. If you manually enable a SecurityManager with such a policy, it isn't really rmg's fault.
+     *
+     *      2. remote-method-guesser replaces the RMIClassLoaderSpi class with a custom implementation. RMIClassLoaderSpi is
+     *         normally used to resolve unknown classes during RMI calls. It obtains the unknown class name and a reference
+     *         to the codebase of the server that exposes the class. Within rmg, the codebase reference is simply collected and
+     *         returned back to the user. Afterwards, it is set to null before continuing with the usual RMI functionality.
+     *         This way, even when a codebase is used by the server, the client side RMI call should never notice anything
+     *         of it.
+     */
     public static void enableCodebase()
     {
         System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
     }
 
-    /*
-     * Taken from https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
+    /**
+     * This code was copied from the following link and is just used to disable the annoying reflection warnings:
+     *
+     * https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
      */
     @SuppressWarnings("restriction")
     public static void disableWarning()
@@ -447,11 +571,24 @@ public class RMGUtils {
             Class cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
             Field logger = cls.getDeclaredField("logger");
             u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
-        } catch (Exception e) {
-            // ignore
-        }
+        } catch (Exception e) {}
     }
 
+    /**
+     * Determines the legacy mode setting. Legacy mode decides whether to detect usage of legacy RMI objects automatically
+     * (legacyMode = 0), to enforce usage of legacy objects (legacyMode = 1) or to treat all classes as non legacy classes
+     * (legacyMode = 2).
+     *
+     * When automatic detection is used, the function checks for the "_Stub" suffix, which is usually present for legacy
+     * stub objects. Otherwise, it just returns true or false depending on the value of legacyMode.
+     *
+     * Whenever legacyMode is enabled, a warning is printed to the user, as it might not be intended.
+     *
+     * @param className the class name to determine the legacy status from
+     * @param legacyMode the user defined setting of legacyMode (0 is the default)
+     * @param verbose whether or not to print the warning message
+     * @return true if legacy mode should be used, false otherwise
+     */
     public static boolean isLegacy(String className, int legacyMode, boolean verbose)
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
@@ -465,5 +602,18 @@ public class RMGUtils {
         }
 
         return false;
+    }
+
+    /**
+     * Helper function that adds the serialVersionUID of 2L to a class. This is required for certain RMI classes.
+     *
+     * @param ctClass class where the serialVersionUID should be added to
+     * @throws CannotCompileException should never be thrown in practice
+     */
+    private static void addSerialVersionUID(CtClass ctClass) throws CannotCompileException
+    {
+        CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
+        serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        ctClass.addField(serialID, CtField.Initializer.constant(2L));
     }
 }
