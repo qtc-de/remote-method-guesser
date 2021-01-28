@@ -152,6 +152,9 @@ public final class RMIWhisperer {
             } else if( e.getMessage().equals("non-JRMP server at remote endpoint")) {
                 ExceptionHandler.noJRMPServer(e, "list", "call");
 
+            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
+                ExceptionHandler.networkUnreachable(e, "list", "call");
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
@@ -370,6 +373,9 @@ public final class RMIWhisperer {
 
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
                 ExceptionHandler.sslError(e, callName, "call");
+
+            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
+                ExceptionHandler.networkUnreachable(e, callName, "call");
 
             } else {
                 ExceptionHandler.unexpectedException(e, callName, "call", true);

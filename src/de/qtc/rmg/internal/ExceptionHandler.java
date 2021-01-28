@@ -265,6 +265,14 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    public static void networkUnreachable(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caugth", "SocketException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("The specified target is", "not reachable", "with your current network configuration.");
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
     /**
      * Walks down a stacktrace and searches for a specific exception name.
      * If it finds the corresponding name, the corresponding Throwable is returned.
