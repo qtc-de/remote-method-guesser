@@ -398,6 +398,9 @@ public class RMGUtils {
      *
      * When one of the argument types is a primitive like e.g. int, you cannot put it into an Object array without wrapping it
      * into an Integer. Therefore, this function replaces primitives by their corresponding Object compatible representations.
+     * During ordinary RMI calls, this is done automatically by using the Proxy object, which also wraps primitive types into
+     * their corresponding Object compatible representations before passing them to the invoke method. However, as legacy stubs
+     * are'nt invoked via a Proxy, we have to implement the wrapping ourself.
      *
      * @param type the type of the argument in question
      * @param argName the name of the argument in question
@@ -431,6 +434,18 @@ public class RMGUtils {
         }
     }
 
+    /**
+     * Another function that is required when creating samples for legacy stubs. It takes a CtClass and returns a
+     * string that can be used to represent the corresponding class within of Java code. When CtClass is e.g. int,
+     * the return string would be "Integer.TYPE". This function is required to generate the reflection lookups
+     * within of legacy samples.
+     *
+     * Legacy samples use reflection to get access to the interface methods and need to know the argument types in
+     * order to lookup methods. The strings returned by this function can just be used during this lookup operation.
+     *
+     * @param type argument type to create a class string for
+     * @return class string for the specified type
+     */
     public static String getTypeString(CtClass type)
     {
         if (type.isPrimitive()) {
@@ -459,6 +474,18 @@ public class RMGUtils {
         }
     }
 
+    /**
+     * Takes a CtClass and returns a string that can be used within Java code to cast an object to the type
+     * of the specified CtClass. This is another function required for creating legacy stubs.
+     *
+     * Legacy stubs use the invoke method of UnicastRemoteRef directly, which just returns an Object as result
+     * of the RMI call. However, as the actual stub method most of the time asks for a different return type,
+     * it is required to cast the result to the appropriate type. To get the correct string for this cast, this
+     * function is used.
+     *
+     * @param type type to generate the cast string for
+     * @return cast string for the specified type
+     */
     public static String getCast(CtClass type)
     {
         String classString = getTypeString(type);
@@ -466,6 +493,9 @@ public class RMGUtils {
         return classString.substring(0, index);
     }
 
+    /**
+     * Just a wrapper around Syste.exit(1) that prints an information before quitting.
+     */
     public static void exit()
     {
         Logger.eprintln("Cannot continue from here.");

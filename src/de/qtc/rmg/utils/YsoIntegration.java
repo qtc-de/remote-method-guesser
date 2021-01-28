@@ -33,10 +33,10 @@ import sun.rmi.transport.tcp.TCPEndpoint;
  * remote-method-guesser does not include the ysoserial library as one of its dependencies. This is on purpose
  * for the following reasons:
  *
- *         1. The ysoserial library is quite big in file size (~55MB). If each offensive tool includes it within
- *            its own .jar file, you loose a non neglectable amount of disc space to duplicate stuff.
- *         2. Including ysoserial as a dependency means that you have all available gadgets within your own classpath,
- *            which make you vulnerable against deserialization attacks on the client side.
+ *      1. The ysoserial library is quite big in file size (~55MB). If each offensive tool includes it within
+ *         its own .jar file, you loose a non neglectable amount of disc space to duplicate stuff.
+ *      2. Including ysoserial as a dependency means that you have all available gadgets within your own classpath,
+ *         which make you vulnerable against deserialization attacks on the client side.
  *      3. Each security professional is expected to has a ysoserial.jar on his machine anyway, so why shipping
  *         an additional one?
  *

@@ -318,9 +318,9 @@ public class ArgumentParser {
      * rmg allows uses to specify whether RMI calls should be made by using the legacy
      * Stub-Skeleton approach. Internally, these modes are represented by an integer:
      *
-     *         2    ->     Never use legacy Stub-Skeleton approach
+     *         2    ->    Never use legacy Stub-Skeleton approach
      *         1    ->    Always use legacy Stub-Skeleton approach
-     *         0    -> Automatically decide whether using Stub-Skeleton approach
+     *         0    ->    Automatically decide whether using Stub-Skeleton approach
      *
      * This function returns the corresponding integer depending on the specified arguments.
      *
