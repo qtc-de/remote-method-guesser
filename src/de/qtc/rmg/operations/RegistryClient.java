@@ -346,6 +346,19 @@ public class RegistryClient {
                 ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }
 
+        } catch( ClassCastException e ) {
+
+            if( e.getMessage().contains("java.lang.Integer cannot be cast to java.lang.String") ) {
+                Logger.printlnMixedYellow("- Caught", "ClassCastException", "during lookup call.");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
+                ExceptionHandler.showStackTrace(e);
+                marshal = true;
+            } else {
+                ExceptionHandler.unexpectedException(e, "lookup", "call", false);
+            }
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "lookup", "call", false);
 
