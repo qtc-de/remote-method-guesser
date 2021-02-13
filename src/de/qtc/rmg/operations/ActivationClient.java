@@ -219,6 +219,9 @@ public class ActivationClient {
         } catch( java.lang.ClassCastException e ) {
             ExceptionHandler.codebaseClassCast(e, false);
 
+        } catch( java.security.AccessControlException e ) {
+            ExceptionHandler.accessControl(e, "activate", "call");
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);
         }

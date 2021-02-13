@@ -94,7 +94,7 @@ public class MethodAttacker {
      * @param operationMode the function was upgraded to support two operations 'codebase' or 'attack'
      * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
      */
-    @SuppressWarnings({ "rawtypes", "deprecation" })
+    @SuppressWarnings({"rawtypes"})
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
         String methodName = "";
