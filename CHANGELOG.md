@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [3.1.0] - Feb XX, 2021
+## [3.1.0] - Feb 14, 2021
 
 ### Added
 
@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add ``--stack-trace`` options for easier debugging
 * Add improved error and exception handling
 * Add options to use different *registry* / *DGC* methods during enum action
+* Add documentation to the source code Oo
+* Add some other RMI related documentation
 
 ### Removed
 
