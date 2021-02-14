@@ -11,9 +11,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 
+/**
+ * This is a helper class that handles all the argument parsing related stuff
+ * during an execution of rmg. In future we may move to an module based
+ * argument parser, as the amount of options and actions has become quite
+ * high. However, for now the current parsing should be sufficient.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class ArgumentParser {
 
     private Options options;
@@ -23,6 +32,12 @@ public class ArgumentParser {
     private CommandLine cmdLine;
     private List<String> argList;
 
+    private static String rmg_version = "rmg v3.1.0";
+
+    /**
+     * Creates the actual parser object and initializes it with some default
+     * options.
+     */
     public ArgumentParser()
     {
         this.parser = new DefaultParser();
@@ -33,6 +48,14 @@ public class ArgumentParser {
         this.formatter.setDescPadding(6);
     }
 
+    /**
+     * Parses the specified command line arguments and handles some shortcuts.
+     * The --help option and --trusted are already caught at this level and
+     * do not need to be processed later on.
+     *
+     * @param argv arguments specified on the command line
+     * @return
+     */
     public CommandLine parse(String[] argv)
     {
         CommandLine cmd = null;
@@ -56,21 +79,20 @@ public class ArgumentParser {
         return cmd;
     }
 
+    /**
+     * Prints the help menu of rmg.
+     */
     public void printHelp()
     {
         formatter.printHelp(helpString, options);
     }
 
-    public void checkArgumentCount(int expectedCount)
-    {
-         List<String> remainingArgs = cmdLine.getArgList();
-         if( remainingArgs.size() < expectedCount ) {
-             System.err.println("Error: insufficient number of arguments.\n");
-             printHelp();
-             System.exit(1);
-         }
-    }
-
+    /**
+     * This function constructs all required parser options. rmg uses long options
+     * only and does not define short versions for any option.
+     *
+     * @return parser options.
+     */
     private Options getParserOptions()
     {
         Options options = new Options();
@@ -93,6 +115,11 @@ public class ArgumentParser {
         Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
         samples.setRequired(false);
         options.addOption(samples);
+
+        Option dgcMethod = new Option(null, "dgc-method", true, "method to use during dgc operations (clean|dirty)");
+        dgcMethod.setArgName("method");
+        dgcMethod.setRequired(false);
+        options.addOption(dgcMethod);
 
         Option follow = new Option(null, "follow", false, "follow redirects to different servers");
         follow.setRequired(false);
@@ -128,7 +155,7 @@ public class ArgumentParser {
         outputs.setRequired(false);
         options.addOption(outputs);
 
-        Option signature = new Option(null, "signature", true, "function signature for guessing or attacking");
+        Option signature = new Option(null, "signature", true, "function signature or one of (dgc|reg|act)");
         signature.setArgName("method");
         signature.setRequired(false);
         options.addOption(signature);
@@ -181,15 +208,22 @@ public class ArgumentParser {
         return options;
     }
 
+    /**
+     * Returns the help string that is used by rmg.
+     *
+     * @return help string.
+     */
     private String getHelpString()
     {
-        String helpString = "rmg [options] <ip> <port> <action>\n"
-                +"Identify common misconfigurations on Java RMI endpoints.\n\n"
+        String helpString = "rmg [options] <ip> <port> <action>\n\n"
+                +rmg_version
+                +" - Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
                 +"    ip                              IP address of the target\n"
                 +"    port                            Port of the RMI registry\n"
                 +"    action                          One of the possible actions listed below\n\n"
                 +"Possible Actions:\n"
+                +"    act <gadget> <command>          Performs Activator based deserialization attacks\n"
                 +"    bind <boundname> <listener>     Binds an object to the registry thats points to listener\n"
                 +"    codebase <classname> <url>      Perform remote class loading attacks\n"
                 +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
@@ -205,6 +239,14 @@ public class ArgumentParser {
         return helpString;
     }
 
+    /**
+     * Takes a number that represents the position of a positional argument and
+     * returns the corresponding argument as String. Currently, no error handling
+     * is implemented. The checkArgumentCount should therefore be called first.
+     *
+     * @param position number of the requested positional argument
+     * @return String value of the requested positional argument
+     */
     public String getPositionalString(int position)
     {
         if( this.argList != null ) {
@@ -215,6 +257,14 @@ public class ArgumentParser {
         }
     }
 
+    /**
+     * Takes a number that represents the position of a positional argument and
+     * returns the corresponding argument as Integer. Currently, no error handling
+     * is implemented. The checkArgumentCount should therefore be called first.
+     *
+     * @param position number of the requested positional argument
+     * @return Integer value of the requested positional argument
+     */
     public int getPositionalInt(int position)
     {
         try {
@@ -232,6 +282,11 @@ public class ArgumentParser {
         return 0;
     }
 
+    /**
+     * Returns the number of specified positional arguments.
+     *
+     * @return number of positional arguments.
+     */
     public int getArgumentCount()
     {
         if( this.argList != null ) {
@@ -242,6 +297,35 @@ public class ArgumentParser {
         }
     }
 
+    /**
+     * Checks whether the specified amount of positional arguments is sufficiently high.
+     * If the number of actual positional arguments is lower than the specified counter,
+     * the program exists with an error.
+     *
+     * @param expectedCount minimum number of arguments
+     */
+    public void checkArgumentCount(int expectedCount)
+    {
+         List<String> remainingArgs = cmdLine.getArgList();
+         if( remainingArgs.size() < expectedCount ) {
+             System.err.println("Error: insufficient number of arguments.\n");
+             printHelp();
+             System.exit(1);
+         }
+    }
+
+    /**
+     * rmg allows uses to specify whether RMI calls should be made by using the legacy
+     * Stub-Skeleton approach. Internally, these modes are represented by an integer:
+     *
+     *         2    ->    Never use legacy Stub-Skeleton approach
+     *         1    ->    Always use legacy Stub-Skeleton approach
+     *         0    ->    Automatically decide whether using Stub-Skeleton approach
+     *
+     * This function returns the corresponding integer depending on the specified arguments.
+     *
+     * @return legacy mode.
+     */
     public int getLegacyMode()
     {
         if( this.cmdLine.hasOption("--no-legacy") )
@@ -254,17 +338,27 @@ public class ArgumentParser {
             return 0;
     }
 
+    /**
+     * Depending on the selected rmg action, different sets of parameters and arguments are
+     * required and different pre-configurations have to be done. This is all done by this
+     * function. It checks the argument counts, checks the required parameters and sets up
+     * additional configurations if required.
+     *
+     * @param action selected by the user.
+     */
     public void prepareAction(String action)
     {
-        if( action.matches("bind|method|codebase|dgc|rebind|reg|listen")) {
+        if( action.matches("act|bind|method|codebase|dgc|rebind|reg|listen")) {
             this.checkArgumentCount(5);
 
             if(action.matches("codebase|method") && !cmdLine.hasOption("signature")) {
                 Logger.eprintlnMixedBlue("The", "--signature", "option is required for " + action + " mode.");
 
                 if( action.equals("codebase") ) {
-                    Logger.eprintMixedYellow("Use", "--signature dgc", "or ");
-                    Logger.printlnPlainMixedYellowFirst("--signature reg", "to target the DGC or the registry directly.");
+                    Logger.eprint("Specify a valid signature");
+                    Logger.printlnPlainMixedYellow(" like", "--signature \"void login(String password)\"");
+                    Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
+                    Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
                 }
 
                 RMGUtils.exit();
@@ -283,10 +377,19 @@ public class ArgumentParser {
             if( !serverAddress.matches("^.+(.class|.jar|/)$") )
                 serverAddress += "/";
 
-            System.setProperty("java.rmi.server.codebase", serverAddress);
+            MaliciousOutputStream.setDefaultLocation(serverAddress);
         }
     }
 
+    /**
+     * During registry related rmg operations, users can select the registry method
+     * that is used for the different RMI calls. This function validates whether
+     * the registry method is actually available. An invalid method specification
+     * causes an error and closes the program.
+     *
+     * @param regMethod requested by the user.
+     * @return regMethod if valid.
+     */
     public String validateRegMethod(String regMethod)
     {
         if(!regMethod.matches("lookup|bind|unbind|rebind")) {
@@ -296,5 +399,25 @@ public class ArgumentParser {
         }
 
         return regMethod;
+    }
+
+    /**
+     * During DGC related rmg operations, users can select the DGC method
+     * that is used for the different RMI calls. This function validates whether
+     * the DGC method is actually available. An invalid method specification
+     * causes an error and closes the program.
+     *
+     * @param dgcMethod requested by the user.
+     * @return dgcMethod if valid.
+     */
+    public String validateDgcMethod(String dgcMethod)
+    {
+        if(!dgcMethod.matches("clean|dirty")) {
+            Logger.printlnPlainMixedYellow("Unsupported DGC method:", dgcMethod);
+            printHelp();
+            System.exit(1);
+        }
+
+        return dgcMethod;
     }
 }

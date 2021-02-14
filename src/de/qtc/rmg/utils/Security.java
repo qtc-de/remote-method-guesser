@@ -5,6 +5,19 @@ import java.util.regex.Pattern;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 
+/**
+ * During sample creation, remote-method-guesser creates sample files with filenames and contents controlled by
+ * the remote RMI server. Especially the bound names registered within the registry are dangerous, as they can
+ * contain arbitrary characters. To prevent path traversal attacks or injections into the generated Java code,
+ * the Security class implements some filtering mechanisms that restrict the allowed characters during sample
+ * generation.
+ *
+ * The filtering is very restrictive and should cause problems with bound names that contain special characters.
+ * After reviewing the exposed bound names and their class names carefully, one can run the sample creation
+ * with the --trusted flag, which disables the Security filtering.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public abstract class Security {
 
     private static boolean trusted = false;

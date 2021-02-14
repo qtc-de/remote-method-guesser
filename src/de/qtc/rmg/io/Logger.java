@@ -1,5 +1,14 @@
 package de.qtc.rmg.io;
 
+/**
+ * The Logger class exposes static methods that can be used to create colored output.
+ * Additionally, most of the methods add a '[+]' or '[-]' prefix. The Logger class
+ * also handles a unified indent that can be increased or decreased by invoking classes.
+ * This saves invoking classes from handle indentation manually. It is probably not the
+ * prettiest approach, but it works quite nice :D
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class Logger {
 
     private static String ANSI_RESET = "\u001B[0m";
@@ -156,14 +165,29 @@ public class Logger {
         log(prefix() + first + " " + red(second));
     }
 
+    public static void printlnPlainMixedRed(String first, String second)
+    {
+        log(first + " " + red(second));
+    }
+
     public static void printlnMixedGreen(String first, String second)
     {
         log(prefix() + first + " " + green(second));
     }
 
+    public static void printlnPlainMixedGreen(String first, String second)
+    {
+        log(first + " " + green(second));
+    }
+
     public static void printlnMixedPurple(String first, String second)
     {
         log(prefix() + first + " " + purple(second));
+    }
+
+    public static void printlnPlainMixedPurple(String first, String second)
+    {
+        log(first + " " + purple(second));
     }
 
     public static void printlnMixedBlue(String first, String second)
@@ -424,5 +448,23 @@ public class Logger {
         ANSI_RESET = "";
         ANSI_YELLOW = "";
         ANSI_BLUE = "";
+    }
+
+    public static void printCodebaseAttackIntro(String endpointName, String callName, String className)
+    {
+        Logger.printlnBlue("Attempting codebase attack on " + endpointName + " endpoint...");
+        Logger.print("Using class ");
+        Logger.printPlainMixedBlueFirst(className, "with codebase", MaliciousOutputStream.getDefaultLocation());
+        Logger.printlnPlainMixedYellow(" during", callName, "call.");
+        Logger.println("");
+        Logger.increaseIndent();
+    }
+
+    public static void printGadgetCallIntro(String endpointName)
+    {
+        Logger.println("");
+        Logger.printlnBlue("Attempting deserialization attack on " + endpointName + " endpoint...");
+        Logger.println("");
+        Logger.increaseIndent();
     }
 }

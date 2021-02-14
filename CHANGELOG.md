@@ -6,19 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [3.1.0] - JAN XX, 2021
+## [3.1.0] - Feb 14, 2021
 
 ### Added
 
-*rmg*
+*New Enumeration Techniques*
 
-* Add *SecurityManager* enumeration during ``enum`` action
 * Add *JEP290* enumeration during ``enum`` operation
-* Add support for deserialization attacks on the *DGC* level
-* Add support for codebase attacks on the DGC level
+* Add *JEP290* bypass enumeration during ``enum`` action
+* Add *String marshalling* enumeration during ``enum`` operation
+* Add ``useCodebaseOnly`` enumeration during ``enum`` operation
+* Add *localhost bypass* (CVE-2019-2684) enumeration during ``enum`` operation
+* Add *DGC* enumeration during ``enum`` action
+* Add *Activator* enumeration during ``enum`` action
+
+*New Actions*
+
+* Add support for deserialization attacks on *Activator*, *DGC* and *registry* objects
+* Add support for codebase attacks on *Activator*, *DGC* and *registry* objects
 * Add support for deserialization filter bypass (credits: @\_tint0 & @h0ng10)
-* Add improved error and exception handling
+* Add ``bind``, ``rebind`` and ``unbind`` operations
+  * Add *localhost-bypass* option for ``bind``, ``rebind`` and ``unbind`` operations (CVE-2019-2684)
+* Add ``listen`` operation to spawn a *JRMP listener* (based on [ysoserial](https://github.com/frohoff/ysoserial))
+
+*Other*
+
+* Global refactoring - Some action names changed
 * Add ``--stack-trace`` options for easier debugging
+* Add improved error and exception handling
+* Add options to use different *registry* / *DGC* methods during enum action
+* Add documentation to the source code Oo
+* Add some other RMI related documentation
 
 ### Removed
 

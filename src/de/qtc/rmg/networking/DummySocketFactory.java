@@ -6,9 +6,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.internal.ExceptionHandler;
 
+/**
+ * During the creation of the An Trinh registry whitelist bypass gadget, the creation of a
+ * UnicastRemoteObject is required. There are several different ways to achieve this. One of
+ * them is to access the 'official' constructor via reflection. This approach is used by rmg,
+ * but it has the downside that RMI tries to export the object within the constructor directly.
+ * Therefore, when blindly using the constructor, a port will open on your machine.
+ *
+ * To avoid this, rmg uses a dummy socket factory with the constructed UnicastRemoteObject.
+ * This dummy socket factory returns a dummy ServerSocket with an overwritten accept method.
+ * Calls to accept just cause a sleep. In this time, rmg has already unexported the object,
+ * which closes the socket.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class DummySocketFactory extends RMISocketFactory implements Serializable{
 
     private static final long serialVersionUID = 1L;
@@ -33,10 +46,7 @@ class DummyServerSocket extends ServerSocket {
         try {
             Thread.sleep(Long.MAX_VALUE);
         } catch (InterruptedException e) {
-            Logger.eprintMixedYellow("Caught unexpected", "InterruptedException", "in");
-            Logger.eprintlnBlue("DummyServerSocket.accept()");
-            Logger.println("Please report this to improve rmg :)");
-            RMGUtils.stackTrace(e);
+            ExceptionHandler.unexpectedException(e, "DummyServerSocket.accept", "call", false);
         }
         return null;
     }

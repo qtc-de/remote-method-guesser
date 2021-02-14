@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package de.qtc.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,13 +9,22 @@ import java.util.List;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.Security;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 
+/**
+ * The SampleWriter class handles the dynamic creation of RMI code. It uses samples defined within the template folder
+ * of the project and replaces some place holders that are defined within them. The result should be compilable Java
+ * code that can be used to perform RMI operations.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class SampleWriter {
 
     private int legacyMode;
@@ -30,6 +39,17 @@ public class SampleWriter {
     private static String methodPlaceholder = "    <METHOD> throws RemoteException;";
     private static String argumentPlaceholder = "            <ARGUMENTTYPE> <ARGUMENT> = TODO;";
 
+    /**
+     * Creates a SmapleWriter object. During the creation, a samples folder may be generated if not
+     * already present. The template folder needs to already exist for the creation of this object.
+     *
+     * @param templateFolder folder where template files are stored
+     * @param sampleFolder folder where created samples should be created
+     * @param ssl whether the targeted RMI endpoint uses ssl on the registry
+     * @param followRedirects whether redirects of remote objects should be followed
+     * @param legacyMode whether to use legacy stubs or proxy objects for invocation
+     * @throws IOException may be thrown when one of the required folders is not present
+     */
     public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects, int legacyMode) throws IOException
     {
         this.legacyMode = legacyMode;
@@ -53,6 +73,13 @@ public class SampleWriter {
         }
     }
 
+    /**
+     * Reads a template from the template folder and returns the corresponding content.
+     *
+     * @param templateName name of the template file
+     * @return template content
+     * @throws IOException is thrown when an IO operation fails.
+     */
     public String loadTemplate(String templateName) throws IOException
     {
         File templateFile = new File(this.templateFolder, templateName);
@@ -71,10 +98,21 @@ public class SampleWriter {
         writeSample(sampleFolder, sampleName, sampleContent, null);
     }
 
+    /**
+     * Writes a sample file into the sample folder. Performs basic security checks on the filenames.
+     *
+     * @param sampleFolder sub folder within the sample folder to write the files in.
+     * @param sampleName name of the sample file
+     * @param sampleContent content of the sample file
+     * @param subfolder sub folder within the sub folder of the sample folder
+     * @throws UnexpectedCharacterException is thrown if the filenames are violating the security settings
+     * @throws IOException is thrown if an IO operation fails
+     */
     public void writeSample(String sampleFolder, String sampleName, String sampleContent, String subfolder) throws UnexpectedCharacterException, IOException
     {
         Security.checkAlphaNumeric(sampleName);
         Security.checkAlphaNumeric(sampleFolder);
+        Security.checkAlphaNumeric(subfolder);
 
         File destinationFolder = new File(this.sampleFolder, sampleFolder);
         if( subfolder != null ) {
@@ -92,6 +130,18 @@ public class SampleWriter {
         writer.close();
     }
 
+    /**
+     * Creates samples for a bound name and the corresponding available remote methods.
+     *
+     * @param boundName bound name to create the sample for
+     * @param className underlying class name of the corresponding bound name (usually an interface)
+     * @param methods available remote methods represented by MethodCandidates
+     * @param rmi RMIWhisperer to the currently targeted RMI endpoint.
+     * @throws UnexpectedCharacterException is thrown if class or bound names violate the security policies
+     * @throws NotFoundException should not occur
+     * @throws IOException if an IO operation fails
+     * @throws CannotCompileException should not occur
+     */
     public void createSamples(String boundName, String className, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         for(MethodCandidate method : methods) {
@@ -99,6 +149,20 @@ public class SampleWriter {
         }
     }
 
+    /**
+     * Creates a sample to invoke the specified MethodCandidate on the specified remoteHost. Creating the sample
+     * is basically an ugly find an replace over the template files.
+     *
+     * @param className class name of the remote interface or the RMI stub (if legacy is used)
+     * @param boundName bound name where the corresponding class name is available
+     * @param method MethodCandidate to create the sample for
+     * @param remoteHost currently targeted RMI host
+     * @param remotePort currently targeted RMI registry port
+     * @throws UnexpectedCharacterException is thrown if bound names or class names violate security policies
+     * @throws NotFoundException should not occur
+     * @throws IOException if an IO operation fails
+     * @throws CannotCompileException should not occur
+     */
     public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
@@ -159,6 +223,18 @@ public class SampleWriter {
         writeSample(boundName, sampleClassName, template, sampleClassName);
     }
 
+    /**
+     * Creates an interface file for the remote method call. In the case of currently used RMI techniques (proxy invocation)
+     * an interface file is sufficient. For legacy RMI we also need to create the Java code for the corresponding stub object.
+     *
+     * @param boundName targeted bound name
+     * @param className class name of the remote interface or stub
+     * @param methods MethodCandidates that should be part of the interface
+     * @throws UnexpectedCharacterException is thrown if bound names or class names violate security policies
+     * @throws IOException if an IO operation fails
+     * @throws CannotCompileException should never occur
+     * @throws NotFoundException should never occur
+     */
     public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
         boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
@@ -171,6 +247,17 @@ public class SampleWriter {
         }
     }
 
+    /**
+     * Create Java code for an remote interface. This interface extends Remote and contains all specified MethodCandidates.
+     *
+     * @param boundName targeted bound name (only used for the file name)
+     * @param className class name of the remote interface
+     * @param methods MethodCandidates that should be included
+     * @throws UnexpectedCharacterException is thrown if bound or class names violate the security policies
+     * @throws IOException if an IO operation fails
+     * @throws CannotCompileException should never occur
+     * @throws NotFoundException should never occur
+     */
     public void createInterfaceSample(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
         Security.checkPackageName(className);
@@ -201,6 +288,21 @@ public class SampleWriter {
         writeSample(boundName, className, template);
     }
 
+    /**
+     * Creates Java code for a legacy Stub object. These code samples are a little bit harder to create,
+     * as each remote method needs to be hardcoded into the corresponding stub object. Theoretically, you
+     * could also create this stub code using rmic, but rmic is no longer shipped with current Java releases.
+     * When facing a legacy RMI server and only having e.g. Java11 installed, this method can be handy to
+     * create the corresponding stub code.
+     *
+     * @param boundName currently targeted bound name
+     * @param className class name of the remote stub
+     * @param methods MethodCandidates that should be included
+     * @throws UnexpectedCharacterException is thrown when bound or class names violate the security policies
+     * @throws IOException if an IO operation fails
+     * @throws CannotCompileException should never occur
+     * @throws NotFoundException should never occur
+     */
     public void createLegacyStub(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
         Security.checkPackageName(className);
@@ -286,6 +388,12 @@ public class SampleWriter {
         writeSample(boundName, pureClassName, stubTemplate);
     }
 
+    /**
+     * Takes a full qualified class name and returns only the actual class name.
+     *
+     * @param fullName full qualified class name
+     * @return simple class name
+     */
     private static String getClassName(String fullName)
     {
         int index = fullName.lastIndexOf(".");
@@ -293,6 +401,12 @@ public class SampleWriter {
         return className;
     }
 
+    /**
+     * Takes a full qualified class name and returns only the package name.
+     *
+     * @param fullName full qualified class name
+     * @return package name
+     */
     private static String getPackageName(String fullName)
     {
         int index = fullName.lastIndexOf(".");
@@ -300,16 +414,42 @@ public class SampleWriter {
         return packageName;
     }
 
+    /**
+     * Takes a String representing a template and a expression that should be matched.
+     * Duplicates the expression within the corresponding template (if found).
+     *
+     * @param template content of a template file
+     * @param match expression to look for
+     * @return modified template
+     */
     private static String duplicate(String template, String match)
     {
         return template.replace(match, match + "\n" + match);
     }
 
+    /**
+     * Removes an expression from the specified template content.
+     *
+     * @param template content of a template file
+     * @param match expression to look for
+     * @return modified template
+     */
     private static String remove(String template, String match)
     {
         return template.replace(match, "");
     }
 
+    /**
+     * Takes the content of a template, a type name and a list of type names. Checks whether
+     * type is contained in type list. If not, duplicates the import statement of the template
+     * and transforms one of the duplicated statements in an import for the corresponding type.
+     * Finally, adds the type to the type list.
+     *
+     * @param template content of a template file
+     * @param typeName name of the type to import
+     * @param types names of already important types
+     * @return modified template
+     */
     private static String addImport(String template, String typeName, List<String> types)
     {
         if( typeName.contains(".") && !typeName.startsWith("java.lang") && !types.contains(typeName)) {

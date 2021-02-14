@@ -10,7 +10,7 @@ function _rmg() {
     local cur prev words opts arg args gadgets value_options
     _init_completion || return
 
-    value_options="--argument-position --bound-name --config --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+    value_options="--argument-position --bound-name --config --dgc-method --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
     _count_args "" "@(${value_options// /|})"
     _comp_get_parameter 3
     COMPREPLY=()
@@ -30,7 +30,7 @@ function _rmg() {
 
         # If host and port are specified - complete actions
         elif [[ $args -eq 3 ]]; then
-            opts="bind codebase dgc enum guess listen method rebind reg unbind"
+            opts="act bind codebase dgc enum guess listen method rebind reg unbind"
             mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
             return 0
 
@@ -38,7 +38,7 @@ function _rmg() {
         elif [[ $args -eq 4 ]]; then
 
             # If action expects an gadget, complete gadgets
-            if _comp_contains "dgc listen method reg" $arg; then
+            if _comp_contains "act dgc listen method reg" $arg; then
                 opts=$gadgets
                 mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
                 return 0
@@ -58,7 +58,7 @@ function _rmg() {
                 return 0
 
             # ... and the next argument cannot be guessed, complete nothing
-            elif _comp_contains "dgc listen metho reg" $arg; then
+            elif _comp_contains "act dgc listen metho reg" $arg; then
                 return 0
             fi
 
@@ -73,11 +73,15 @@ function _rmg() {
 
 	# signature completions
 	elif _comp_contains "--signature" $prev; then
-        opts="reg dgc"
+        opts="act reg dgc"
 
 	# registry method completions
 	elif _comp_contains "--reg-method" $prev; then
         opts="bind lookup rebind unbind"
+
+	# dgc method completions
+	elif _comp_contains "--dgc-method" $prev; then
+        opts="clean dirty"
 
 	# No completions
 	elif _comp_contains "--argument-position --bound-name --signature --threads" $prev; then
@@ -89,6 +93,7 @@ function _rmg() {
 		opts="$opts --bound-name"
 		opts="$opts --config"
 		opts="$opts --create-samples"
+		opts="$opts --dgc-method"
 		opts="$opts --follow"
 		opts="$opts --force-legacy"
 		opts="$opts --help"

