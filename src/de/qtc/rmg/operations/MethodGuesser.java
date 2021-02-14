@@ -148,9 +148,11 @@ public class MethodGuesser {
         if( count == 1 ) {
             Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
         }
-        Logger.println("");
 
         Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
+        if(it.hasNext())
+            Logger.println("");
+
         while (it.hasNext()) {
 
             Map.Entry pair = (Map.Entry)it.next();

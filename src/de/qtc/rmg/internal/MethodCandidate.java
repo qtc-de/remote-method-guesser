@@ -78,6 +78,31 @@ public class MethodCandidate {
     }
 
     /**
+     * This constructor allows creating a MethodCandidate based on an already present CtMethod.
+     * This is currently only used in the case of already known classes that are encountered
+     * during method guessing.
+     *
+     * @param method CtMethod object
+     * @throws NotFoundException
+     */
+    public MethodCandidate(CtMethod method) throws NotFoundException
+    {
+        this.signature = RMGUtils.getSimpleSignature(method);
+
+        CtClass[] types = method.getParameterTypes();
+        this.hash = getCtMethodHash(method);
+
+        if( types.length == 0 ) {
+            this.isVoid = true;
+            this.isPrimitive = false;
+
+        } else {
+            this.isVoid = false;
+            this.isPrimitive = types[0].isPrimitive();
+        }
+    }
+
+    /**
      * Two MethodCandidates are equal when their method hash is equal.
      */
     @Override

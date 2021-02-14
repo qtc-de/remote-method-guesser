@@ -545,10 +545,10 @@ public class RMGUtils {
      * @param unknownClasses HashMap to investigate
      * @return true if the HashMap contains items, false otherwise
      */
-    public static boolean containsUnknown(HashMap<String,String> unknownClasses)
+    public static boolean containsObjects(HashMap<String,String> availableClasses)
     {
-        if( unknownClasses.size() <= 0 ) {
-            Logger.eprintln("No unknown classes identified.");
+        if( availableClasses.size() <= 0 ) {
+            Logger.eprintln("There are no remote objects present on the registry.");
             Logger.eprintln("Guessing methods not necessary.");
             return false;
         }
@@ -645,5 +645,62 @@ public class RMGUtils {
         CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
         serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
         ctClass.addField(serialID, CtField.Initializer.constant(2L));
+    }
+
+    /**
+     * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
+     *
+     * @param knownClasses list of boundName - className pairs of known classes
+     * @param guessedMethods list of successfully guessed methods
+     */
+    public static void addKnownMethods(HashMap<String,String> knownClasses, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
+    {
+        try {
+            for(String boundName: knownClasses.keySet()) {
+                CtClass knownClass = pool.getCtClass(knownClasses.get(boundName));
+                CtMethod[] knownMethods = knownClass.getDeclaredMethods();
+
+                ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
+                for(CtMethod knownMethod: knownMethods) {
+                    knownMethodCandidates.add(new MethodCandidate(knownMethod));
+                }
+
+                guessedMethods.put(boundName, knownMethodCandidates);
+            }
+        } catch(Exception e) {
+            ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
+        }
+    }
+
+    /**
+     * Returns a human readable method signature of a CtMethod. Builtin methods only return the signature in
+     * a non well formatted format. This function is used to display known remote methods as the result of a
+     * guessing operation.
+     *
+     * @param method CtMethod to create the signature for
+     * @return human readable method signature as String
+     */
+    public static String getSimpleSignature(CtMethod method)
+    {
+        StringBuilder simpleSignature = new StringBuilder();
+
+        try {
+            simpleSignature.append(method.getReturnType().getName() + " ");
+            simpleSignature.append(method.getName() + "(");
+
+            for(CtClass ct : method.getParameterTypes()) {
+                simpleSignature.append(ct.getName() + " arg, ");
+            }
+
+            if(method.getParameterTypes().length > 0)
+                simpleSignature.setLength(simpleSignature.length() - 2);
+
+            simpleSignature.append(")");
+
+        } catch(Exception e) {
+            ExceptionHandler.unexpectedException(e, "signature", "generation", false);
+        }
+
+        return simpleSignature.toString();
     }
 }

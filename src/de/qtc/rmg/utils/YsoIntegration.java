@@ -81,7 +81,7 @@ public class YsoIntegration {
         File ysoJar = new File(ysoPath);
 
         if( !ysoJar.exists() ) {
-            ExceptionHandler.internalError("RMGUtils.createListener", "Error: The file system path " + ysoJar.getAbsolutePath() + " does not exist.");
+            ExceptionHandler.ysoNotPresent(ysoPath);
         }
 
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
