@@ -420,4 +420,36 @@ public class ArgumentParser {
 
         return dgcMethod;
     }
+
+    /**
+     * Determines whether the combination of action and function signature requires
+     * a list of bound names on the registry. Actions that target well known remote
+     * objects or that bind, rebind and unbind remote objects does not need this for
+     * example.
+     *
+     * @param action the action specified on the command line
+     * @param functionSignature the function signature specified on the command line
+     * @return true if bound names are required, false otherwise
+     */
+    public boolean requiresBoundNames(String action, String functionSignature)
+    {
+        boolean result = !action.matches("act|bind|dgc|rebind|reg|unbind|listen");
+        result = result && !functionSignature.matches("reg|dgc|act");
+        return result;
+    }
+    /**
+     *
+     * Determines whether the specified function signature is one of reg, dgc or act.
+     * These do not require the creation of a MethodCandidate and are therefore handeled
+     * in a special way.
+     *
+     * @param functionSignature the function signature specified on the command line
+     * @return true if the specified function signature is valid (not reg, dgc, act or empty)
+     */
+    public boolean isMethodSignature(String functionSignature)
+    {
+        boolean result = !functionSignature.equals("");
+        result = result && !functionSignature.matches("reg|dgc|act");
+        return result;
+    }
 }

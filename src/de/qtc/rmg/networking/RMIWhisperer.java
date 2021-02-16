@@ -330,7 +330,11 @@ public final class RMIWhisperer {
                     out = new MaliciousOutputStream(out);
 
                 for(Object o : callArguments) {
-                    if(o.getClass() == Long.class)
+
+                    if( o == null )
+                        out.writeObject(o);
+
+                    else if(o.getClass() == Long.class)
                         out.writeLong((long) o);
 
                     else if(o.getClass() == Boolean.class)

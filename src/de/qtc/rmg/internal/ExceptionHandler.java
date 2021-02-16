@@ -273,6 +273,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void ysoNotPresent(String location)
+    {
+        Logger.eprintlnMixedYellow("Unable to find ysoserial library in path", location);
+        Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
+        RMGUtils.exit();
+    }
+
     /**
      * Walks down a stacktrace and searches for a specific exception name.
      * If it finds the corresponding name, the corresponding Throwable is returned.

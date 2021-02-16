@@ -32,7 +32,7 @@ public class Starter {
 
     private static String defaultConfiguration = "/config.properties";
 
-    @SuppressWarnings({ "rawtypes", "deprecation", "unchecked" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public static void main(String[] argv) {
 
         ArgumentParser parser = new ArgumentParser();
@@ -88,13 +88,12 @@ public class Starter {
         HashMap<String,String> allClasses = null;
         ArrayList<HashMap<String,String>> boundClasses = null;
 
-        if( !action.matches("act|bind|dgc|rebind|reg|unbind|listen") && !functionSignature.matches("reg|dgc|act")) {
+        if( parser.requiresBoundNames(action, functionSignature) ) {
 
             if(action.matches("enum"))
                 RMGUtils.enableCodebase();
 
             rmi.locateRegistry();
-
             boundNames = rmi.getBoundNames(boundName);
 
             boundClasses = rmi.getClassNames(boundNames);
@@ -103,7 +102,7 @@ public class Starter {
         }
 
         MethodCandidate candidate = null;
-        if( functionSignature != "" && !functionSignature.matches("reg|dgc|act") ) {
+        if( parser.isMethodSignature(functionSignature) ) {
 
             try {
                 candidate = new MethodCandidate(functionSignature);
@@ -144,7 +143,7 @@ public class Starter {
 
 
             case "guess":
-                if( !RMGUtils.containsUnknown(boundClasses.get(1)) )
+                if( !RMGUtils.containsObjects(allClasses) )
                     break;
 
                 HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
@@ -165,6 +164,7 @@ public class Starter {
 
                 MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
                 HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, zeroArg, legacyMode);
+                RMGUtils.addKnownMethods(boundClasses.get(0), results);
 
                 format.listGuessedMethods(results);
                 if( !createSamples )
@@ -214,13 +214,6 @@ public class Starter {
 
                 String gadget = parser.getPositionalString(3);
                 String command = parser.getPositionalString(4);
-
-                if(ysoserialPath == null) {
-                    Logger.eprintlnMixedYellow("Path for", "ysoserial JAR", "is null.");
-                    Logger.increaseIndent();
-                    Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
-                    RMGUtils.exit();
-                }
 
                 if( action.equals("listen") ) {
                     YsoIntegration.createJRMPListener(ysoserialPath, host, port, gadget, command);

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.1.1] - Feb 16, 2021
+
+### Changed
+
+* Fixed bug in ``RMIWhisperer.java`` that lead to nullpointer exceptions during the
+  ``method`` operation. The bugfix is basically a workaround for a more general problem
+  that will be resolved in version ``v3.2.0``.
+
+
 ## [3.1.0] - Feb 14, 2021
 
 ### Added
