@@ -9,7 +9,9 @@ import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -376,12 +378,67 @@ public class RMGUtils {
      * Construct an argument array for the specified method. Returns an array of Objects, each being an instance
      * of the type that is expected by the method.
      *
-     * @param method method to create the argument array for
+     * @param method Method to create the argument array for
      * @return argument array that can be used to invoke the method
      */
     public static Object[] getArgumentArray(Method method)
     {
         Class[] types = method.getParameterTypes();
+        Object[] argumentArray = new Object[types.length];
+
+        for(int ctr = 0; ctr < types.length; ctr++) {
+            argumentArray[ctr] = getArgument(types[ctr]);
+        }
+
+        return argumentArray;
+    }
+
+    /**
+     * Takes a CtClass object and returns a valid instance for the corresponding class. For primitive types,
+     * preconfigured default values will be returned. Non primitive types create always a null instance.
+     *
+     * @param type Class to create the instance for
+     * @return instance depending on the value of type
+     */
+    public static Object getArgument(CtClass type)
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return 1;
+            } else if (type == CtPrimitiveType.booleanType) {
+                return true;
+            } else if (type == CtPrimitiveType.byteType) {
+                return Byte.MAX_VALUE;
+            } else if (type == CtPrimitiveType.charType) {
+                return Character.MAX_HIGH_SURROGATE;
+            } else if (type == CtPrimitiveType.shortType) {
+                return Short.MAX_VALUE;
+            } else if (type == CtPrimitiveType.longType) {
+                return Long.MAX_VALUE;
+            } else if (type == CtPrimitiveType.floatType) {
+                return Float.MAX_VALUE;
+            } else if (type == CtPrimitiveType.doubleType) {
+                return Double.MAX_VALUE;
+            } else {
+                throw new Error("unrecognized primitive type: " + type);
+            }
+
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Construct an argument array for the specified method. Returns an array of Objects, each being an instance
+     * of the type that is expected by the method.
+     *
+     * @param method CtMethod to create the argument array for
+     * @return argument array that can be used to invoke the method
+     * @throws NotFoundException
+     */
+    public static Object[] getArgumentArray(CtMethod method) throws NotFoundException
+    {
+        CtClass[] types = method.getParameterTypes();
         Object[] argumentArray = new Object[types.length];
 
         for(int ctr = 0; ctr < types.length; ctr++) {
@@ -702,5 +759,55 @@ public class RMGUtils {
         }
 
         return simpleSignature.toString();
+    }
+
+    public static Map<Object,Class<?>> applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
+    {
+        CtClass type;
+        CtClass[] types = method.getParameterTypes();
+        LinkedHashMap<Object,Class<?>> parameterMap = new LinkedHashMap<Object,Class<?>>();
+
+        for(int ctr = 0; ctr < parameterArray.length; ctr++) {
+
+            type = types[ctr];
+
+            if (type.isPrimitive()) {
+                if (type == CtPrimitiveType.intType) {
+                    parameterMap.put(parameterArray[ctr], int.class);
+                } else if (type == CtPrimitiveType.booleanType) {
+                    parameterMap.put(parameterArray[ctr], boolean.class);
+                } else if (type == CtPrimitiveType.byteType) {
+                    parameterMap.put(parameterArray[ctr], byte.class);
+                } else if (type == CtPrimitiveType.charType) {
+                    parameterMap.put(parameterArray[ctr], char.class);
+                } else if (type == CtPrimitiveType.shortType) {
+                    parameterMap.put(parameterArray[ctr], short.class);
+                } else if (type == CtPrimitiveType.longType) {
+                    parameterMap.put(parameterArray[ctr], long.class);
+                } else if (type == CtPrimitiveType.floatType) {
+                    parameterMap.put(parameterArray[ctr], float.class);
+                } else if (type == CtPrimitiveType.doubleType) {
+                    parameterMap.put(parameterArray[ctr], double.class);
+                } else {
+                    throw new Error("unrecognized primitive type: " + type);
+                }
+
+            } else {
+                parameterMap.put(parameterArray[ctr], Object.class);
+            }
+        }
+
+        return parameterMap;
+    }
+
+    public static String[] splitListener(String listener)
+    {
+        String[] split = listener.split(":");
+
+        if( split.length != 2 || !split[1].matches("\\d+") ) {
+            ExceptionHandler.invalidListenerFormat(false);
+        }
+
+        return split;
     }
 }

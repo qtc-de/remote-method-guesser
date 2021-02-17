@@ -2,6 +2,7 @@ package de.qtc.rmg.io;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,7 +28,7 @@ public class Formatter {
      * @param boundNames list of available bound names
      * @param classes known and unknown classes of the corresponding bound names
      */
-    public void listBoundNames(String[] boundNames, ArrayList<HashMap<String,String>> classes)
+    public void listBoundNames(ArrayList<HashMap<String,String>> classes)
     {
         HashMap<String,String> knownClasses = null;
         HashMap<String,String> unknownClasses = null;
@@ -37,7 +38,7 @@ public class Formatter {
             unknownClasses = classes.get(1);
         }
 
-        this.listBoundNames(boundNames, knownClasses, unknownClasses);
+        this.listBoundNames(knownClasses, unknownClasses);
     }
 
     /**
@@ -49,13 +50,17 @@ public class Formatter {
      * @param knownClasses list of known classes
      * @param unknownClasses list of unknown classes
      */
-    public void listBoundNames(String[] boundNames, HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
+    public void listBoundNames(HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
     {
         Logger.printlnBlue("RMI registry bound names:");
         Logger.println("");
         Logger.increaseIndent();
 
-        if( boundNames.length == 0 ) {
+        Set<String> boundNames = new HashSet<String>();
+        boundNames.addAll(knownClasses.keySet());
+        boundNames.addAll(unknownClasses.keySet());
+
+        if( boundNames.size() == 0 ) {
             Logger.println("- No objects are bound to the registry.");
         }
 

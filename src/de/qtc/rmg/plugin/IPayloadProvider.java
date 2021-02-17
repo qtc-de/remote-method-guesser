@@ -1,5 +1,5 @@
 package de.qtc.rmg.plugin;
 
 public interface IPayloadProvider {
-    Object getPayloadObject(String name, String args);
+    Object getPayloadObject(String action, String name, String args);
 }

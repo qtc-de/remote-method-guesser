@@ -1,6 +1,8 @@
 package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.management.remote.rmi.RMIServerImpl_Stub;
 
@@ -62,24 +64,19 @@ public class RegistryClient {
      * @param port the port that is referenced by the bound RemoteObejct. Clients will connect here
      * @param localhostBypass whether to use CVE-2019-268 for the bind operation
      */
-    public void bindObject(String boundName, String host, int port, boolean localhostBypass)
+    public void bindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
-        Logger.printMixedBlue("Binding name", boundName, "to TCPEndpoint ");
-        Logger.printlnPlainBlue(host + ":" + port);
+        Logger.printMixedBlue("Binding name", boundName, "to ");
+        Logger.printlnPlainBlue(payloadObject.getClass().getName());
         Logger.println("");
         Logger.increaseIndent();
 
-        Object payloadObject = null;
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        callArguments.put(boundName, String.class);
+        callArguments.put(payloadObject, Object.class);
 
         try {
-            payloadObject = prepareRMIServerImpl(host, port);
-
-        } catch(Exception e) {
-            ExceptionHandler.internalException(e, "RegistryClient.bindObject", true);
-        }
-
-        try {
-            registryCall("bind", new Object[] {boundName, payloadObject}, false, localhostBypass);
+            registryCall("bind", callArguments, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during bind call.");
             Logger.printlnMixedYellow("Bind operation", "was probably successful.");
 
@@ -125,24 +122,19 @@ public class RegistryClient {
      * @param port the port that is referenced by the rebound RemoteObejct. Clients will connect here
      * @param localhostBypass whether to use CVE-2019-268 for the rebind operation
      */
-    public void rebindObject(String boundName, String host, int port, boolean localhostBypass)
+    public void rebindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
-        Logger.printMixedBlue("Rebinding name", boundName, "to TCPEndpoint ");
-        Logger.printlnPlainBlue(host + ":" + port);
+        Logger.printMixedBlue("Binding name", boundName, "to ");
+        Logger.printlnPlainBlue(payloadObject.getClass().getName());
         Logger.println("");
         Logger.increaseIndent();
 
-        Object payloadObject = null;
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        callArguments.put(boundName, String.class);
+        callArguments.put(payloadObject, Object.class);
 
         try {
-            payloadObject = prepareRMIServerImpl(host, port);
-
-        } catch(Exception e) {
-            ExceptionHandler.internalException(e, "RegistryClient.rebindObject", true);
-        }
-
-        try {
-            registryCall("rebind", new Object[] {boundName, payloadObject}, false, localhostBypass);
+            registryCall("rebind", callArguments, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during rebind call.");
             Logger.printlnMixedYellow("Rebind operation", "was probably successful.");
 
@@ -183,8 +175,11 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        callArguments.put(boundName, String.class);
+
         try {
-            registryCall("unbind", new Object[] {boundName}, false, localhostBypass);
+            registryCall("unbind", callArguments, false, localhostBypass);
             Logger.printlnMixedBlue("Encountered", "no Exception", "during unbind call.");
             Logger.printlnMixedYellow("Unbind operation", "was probably successful.");
 
@@ -312,9 +307,12 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        callArguments.put(0, Integer.class);
+
         try {
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
-            registryCall("lookup", new Object[] {0}, true, false);
+            registryCall("lookup", callArguments, true, false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -381,10 +379,11 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        Object[] payload = new Object[] {"If this name exists on the registry, it is definitely the maintainers fault..."};
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        callArguments.put("If this name exists on the registry, it is definitely the maintainers fault...", String.class);
 
         try {
-            registryCall("unbind", payload, false, true);
+            registryCall("unbind", callArguments, false, true);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -594,7 +593,7 @@ public class RegistryClient {
      * @param bypass whether to use CVE-2019-268 for the operation
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */
-    private void registryCall(String callName, Object[] callArguments, boolean maliciousStream, boolean bypass) throws Exception
+    private void registryCall(String callName, Map<Object,Class<?>> callArguments, boolean maliciousStream, boolean bypass) throws Exception
     {
         if(bypass)
             rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
@@ -666,24 +665,27 @@ public class RegistryClient {
      * @param payloadObject payload object to include into the argument array
      * @return argument array that can be used for the specified registry call
      */
-    private Object[] packArgsByName(String callName, Object payloadObject)
+    private LinkedHashMap<Object,Class<?>> packArgsByName(String callName, Object payloadObject)
     {
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+
         switch(callName) {
             case "bind":
-                return new Object[] {"rmg", payloadObject};
-            case "list":
-                return new Object[] {};
-            case "lookup":
-                return new Object[] {payloadObject};
             case "rebind":
-                return new Object[] {"rmg", payloadObject};
+                callArguments.put("rmg", String.class);
+                callArguments.put(payloadObject, Object.class);
+                break;
+
+            case "lookup":
             case "unbind":
-                return new Object[] {payloadObject};
+                callArguments.put(payloadObject, Object.class);
+                break;
+
             default:
-                ExceptionHandler.internalError("RegistryClient.packArgsByName", "Unable to find pack strategie for method '" + callName + "'.");
+                ExceptionHandler.internalError("RegistryClient.packArgsByName", "Unable to find pack strategy for method '" + callName + "'.");
         }
 
-        return null;
+        return callArguments;
     }
 
     /**
@@ -695,7 +697,7 @@ public class RegistryClient {
      * @param port listener port for the outgoing JRMP connection
      * @return RMIServerImpl_Stub object as used by JMX
      */
-    private Object prepareRMIServerImpl(String host, int port)
+    public static Object prepareRMIServerImpl(String host, int port)
     {
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
         UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(), endpoint, false));

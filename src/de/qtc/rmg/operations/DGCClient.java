@@ -2,6 +2,8 @@ package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
@@ -260,7 +262,7 @@ public class DGCClient {
      * @param maliciousStream whether to use the MaliciousOutputStream, required for custom codebase values
      * @throws Exception all connection related exceptions are caught, but anything other is thrown
      */
-    private void dgcCall(String callName, Object[] callArguments, boolean maliciousStream) throws Exception
+    private void dgcCall(String callName, Map<Object,Class<?>> callArguments, boolean maliciousStream) throws Exception
     {
         rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
     }
@@ -294,17 +296,28 @@ public class DGCClient {
      * @param payloadObject object to use during the DGC call
      * @return argument array that can be used for the corresponding call
      */
-    private Object[] packArgsByName(String callName, Object payloadObject)
+    private LinkedHashMap<Object,Class<?>> packArgsByName(String callName, Object payloadObject)
     {
+        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+
         switch(callName) {
             case "clean":
-                return new Object[] {new ObjID[]{}, 0L, payloadObject, true};
+                callArguments.put(new ObjID[]{}, Object.class);
+                callArguments.put(0L, long.class);
+                callArguments.put(payloadObject, Object.class);
+                callArguments.put(true, boolean.class);
+                break;
             case "dirty":
-                return new Object[] {new ObjID[]{}, 0L, payloadObject};
+
+                callArguments.put(new ObjID[]{}, Object.class);
+                callArguments.put(0L, long.class);
+                callArguments.put(payloadObject, Object.class);
+                break;
+
             default:
-                ExceptionHandler.internalError("DGCClient.packArgsByName", "Unable to find pack strategie for method '" + callName + "'.");
+                ExceptionHandler.internalError("DGCClient.packArgsByName", "Unable to find pack strategy for method '" + callName + "'.");
         }
 
-        return null;
+        return callArguments;
     }
 }

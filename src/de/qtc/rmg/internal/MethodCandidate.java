@@ -300,4 +300,23 @@ public class MethodCandidate {
     {
         return this.signature + "; " + this.hash + "; " + this.isPrimitive + "; " + this.isVoid;
     }
+
+    /**
+     * Returns the name of the parameter type in the specified position of the argument array.
+     *
+     * @param position Position in the argument array to obtain the type from
+     * @return name of the requested type
+     */
+    public String getArgumentTypeName(int position)
+    {
+        String typeName = "None";
+
+        try {
+            typeName = this.method.getParameterTypes()[position].getName();
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "parameter type", "determination", true);
+        }
+
+        return typeName;
+    }
 }
