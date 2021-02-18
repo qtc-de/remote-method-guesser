@@ -34,9 +34,6 @@ public class Dispatcher {
         this.p = p;
         rmi = new RMIWhisperer(p.getHost(), p.getPort(), (boolean)p.get("ssl"), (boolean)p.get("follow"));
 
-        if(p.requiresBoundNames())
-            this.obtainBoundNames();
-
         if(p.containsMethodSignature())
             this.createMethodCandidate();
     }
@@ -69,10 +66,15 @@ public class Dispatcher {
         int objID = (int)p.get("objid");
         String boundName = (String)p.get("bound-name");
 
+        if(candidate == null)
+            ExceptionHandler.missingSignature(false);
+
         if(objID > 0) {
             return new RemoteObjectClient(rmi, objID, candidate, p.getLegacyMode());
 
         } else if(boundName != null) {
+
+            obtainBoundNames();
 
             if(!allClasses.containsKey(boundName)) {
                 Logger.eprintlnMixedYellow("Specified bound name", boundName, "is not available.");
@@ -135,6 +137,8 @@ public class Dispatcher {
 
     public void dispatchListen()
     {
+        p.checkArgumentCount(4);
+
         String gadget = p.getPositionalString(3);
         String command = p.getPositionalString(4);
         YsoIntegration.createJRMPListener(p.getHost(), p.getPort(), gadget, command);
@@ -142,13 +146,17 @@ public class Dispatcher {
 
     public void dispatchActivator()
     {
+        p.checkArgumentCount(4);
+
         ActivationClient act = new ActivationClient(rmi);
         act.gadgetCall(p.getGadget());
     }
 
     public void dispatchRegistry()
     {
-        String regMethod = (String)p.get("reg-method");
+        p.checkArgumentCount(4);
+
+        String regMethod = p.validateRegMethod();
         boolean localhostBypass = (boolean)p.get("localhost-bypass");
 
         RegistryClient reg = new RegistryClient(rmi);
@@ -157,7 +165,9 @@ public class Dispatcher {
 
     public void dispatchDGC()
     {
-        String dgcMethod = (String)p.get("dgc-method");
+        p.checkArgumentCount(4);
+
+        String dgcMethod = p.validateDgcMethod();
 
         DGCClient dgc = new DGCClient(rmi);
         dgc.gadgetCall(dgcMethod, p.getGadget());
@@ -165,6 +175,8 @@ public class Dispatcher {
 
     public void dispatchMethod()
     {
+        p.checkArgumentCount(4);
+
         int argumentPosition = (int)p.get("argument-position");
 
         RemoteObjectClient client = getRemoteObjecClient();
@@ -173,6 +185,8 @@ public class Dispatcher {
 
     public void dispatchCall()
     {
+        p.checkArgumentCount(3);
+
         Object[] argumentArray = p.getCallArguments();
 
         RemoteObjectClient client = getRemoteObjecClient();
@@ -181,7 +195,11 @@ public class Dispatcher {
 
     public void dispatchCodebase()
     {
+        p.checkArgumentCount(4);
+
         String className = p.getPositionalString(3);
+        RMGUtils.setCodebase(p.getPositionalString(4));
+
         String signature = (String)p.get("signature");
         int argumentPosition = (int)p.get("argument-position");
 
@@ -211,12 +229,17 @@ public class Dispatcher {
         } else if( signature.matches("act") ) {
             ActivationClient act = new ActivationClient(rmi);
             act.codebaseCall(payload);
+
+        } else {
+            ExceptionHandler.missingSignature(true);
         }
     }
 
     public void dispatchBind()
     {
-        String boundName = (String)p.get("bound-name");
+        p.checkArgumentCount(4);
+
+        String boundName = p.requireBoundName();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.bindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
@@ -224,7 +247,9 @@ public class Dispatcher {
 
     public void dispatchRebind()
     {
-        String boundName = (String)p.get("bound-name");
+        p.checkArgumentCount(4);
+
+        String boundName = p.requireBoundName();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.rebindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
@@ -232,15 +257,19 @@ public class Dispatcher {
 
     public void dispatchUnbind()
     {
-        String boundName = p.getPositionalString(3);
+        String boundName = p.requireBoundName();
+
         RegistryClient reg = new RegistryClient(rmi);
         reg.unbindObject(boundName, (boolean)p.get("localhost-bypass"));
     }
 
     public void dispatchEnum()
     {
-        String regMethod = (String)p.get("reg-method");
-        String dgcMethod = (String)p.get("dgc-method");
+        RMGUtils.enableCodebase();
+        obtainBoundNames();
+
+        String regMethod = p.validateRegMethod();
+        String dgcMethod = p.validateDgcMethod();
         boolean localhostBypass = (boolean)p.get("localhost-bypass");
 
         Formatter format = new Formatter();

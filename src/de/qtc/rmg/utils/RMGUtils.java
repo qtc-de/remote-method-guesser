@@ -19,6 +19,7 @@ import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -809,5 +810,16 @@ public class RMGUtils {
         }
 
         return split;
+    }
+
+    public static void setCodebase(String serverAddress)
+    {
+        if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
+            serverAddress = "http://" + serverAddress;
+
+        if( !serverAddress.matches("^.+(.class|.jar|/)$") )
+            serverAddress += "/";
+
+        MaliciousOutputStream.setDefaultLocation(serverAddress);
     }
 }

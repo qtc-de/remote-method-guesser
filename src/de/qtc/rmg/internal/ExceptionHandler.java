@@ -280,6 +280,19 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void missingSignature(boolean codebase)
+    {
+        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the specified action.");
+        Logger.eprintlnMixedBlue("Specify a valid signature like", "--signature \"void login(String password)\"");
+
+        if( codebase ) {
+            Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
+            Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
+        }
+
+        RMGUtils.exit();
+    }
+
     /**
      * Walks down a stacktrace and searches for a specific exception name.
      * If it finds the corresponding name, the corresponding Throwable is returned.
