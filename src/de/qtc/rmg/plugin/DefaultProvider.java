@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.YsoIntegration;
@@ -16,29 +17,39 @@ import javassist.CtNewMethod;
 public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
 
     @Override
-    public Object getPayloadObject(String action, String name, String args)
+    public Object getPayloadObject(Operation action, String name, String args)
     {
-    	if(action.matches("bind|rebind|unbind")) {
-	        
-    		if(name.equalsIgnoreCase("jmx")) {
-	            String[] split = RMGUtils.splitListener(args);
-	            return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
-	            
-	        } else if(args == null) {
-	        	String[] split = RMGUtils.splitListener(name);
-	            return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
-	        
-	        } else {
-	        	Logger.eprintlnMixedYellow("The specified gadget", name, "is not supported for this action.");
-	        	RMGUtils.exit();
-	        }
-    	}
-    	
-    	if(args == null) {
-        	Logger.eprintlnMixedBlue("Specifying a", "gadget argument", "is required for this action.");
-        	RMGUtils.exit();
-    	}
-        return YsoIntegration.getPayloadObject(name, args);
+        switch(action) {
+
+            case BIND:
+            case REBIND:
+            case UNBIND:
+
+                if(name.equalsIgnoreCase("jmx")) {
+                    String[] split = RMGUtils.splitListener(args);
+                    return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
+
+                } else if(args == null) {
+                    String[] split = RMGUtils.splitListener(name);
+                    return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
+
+                } else {
+                    Logger.eprintlnMixedYellow("The specified gadget", name, "is not supported for this action.");
+                    RMGUtils.exit();
+                }
+
+                break;
+
+            default:
+
+                if(args == null) {
+                    Logger.eprintlnMixedBlue("Specifying a", "gadget argument", "is required for this action.");
+                    RMGUtils.exit();
+                }
+                return YsoIntegration.getPayloadObject(name, args);
+        }
+
+        return null;
     }
 
     @Override

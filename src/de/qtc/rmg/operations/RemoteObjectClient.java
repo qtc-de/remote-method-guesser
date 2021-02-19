@@ -268,7 +268,7 @@ public class RemoteObjectClient {
             rmi.genericCall(null, -1, this.targetMethod.getHash(), callArguemnts, false, this.methodName, remoteRef, rtype);
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+            ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
         }
     }
 

@@ -90,6 +90,11 @@ public class Logger {
         log(prefix() + msg, false);
     }
 
+    public static void printPlain(String msg)
+    {
+        log(msg, false);
+    }
+
     public static void println(String msg)
     {
         log(prefix() + msg);
@@ -153,6 +158,11 @@ public class Logger {
     public static void printlnPlainYellow(String msg)
     {
         log(yellow(msg));
+    }
+
+    public static void printPlainYellow(String msg)
+    {
+        log(yellow(msg), false);
     }
 
     public static void eprintlnPlainYellow(String msg)
@@ -467,4 +477,6 @@ public class Logger {
         Logger.println("");
         Logger.increaseIndent();
     }
+
+
 }

@@ -10,6 +10,7 @@ import java.util.jar.Manifest;
 import de.qtc.rmg.exceptions.MalformedPluginException;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.utils.RMGUtils;
 
 public class PluginSystem {
@@ -94,7 +95,7 @@ public class PluginSystem {
         responseHandler.handleResponse(o);
     }
 
-    public static Object getPayloadObject(String action, String name, String args)
+    public static Object getPayloadObject(Operation action, String name, String args)
     {
         return payloadProvider.getPayloadObject(action, name, args);
     }

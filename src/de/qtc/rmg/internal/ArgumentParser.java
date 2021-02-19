@@ -1,5 +1,6 @@
 package de.qtc.rmg.internal;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -12,7 +13,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
@@ -28,7 +31,7 @@ import de.qtc.rmg.utils.YsoIntegration;
  */
 public class ArgumentParser {
 
-    private String action = null;
+    private Operation action = null;
 
     private Options options;
     private String helpString;
@@ -71,8 +74,7 @@ public class ArgumentParser {
         } catch(ParseException e) {
             Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", name);
             System.out.println("");
-            this.printHelp();
-            System.exit(1);
+            printHelpAndExit(1);
         }
 
         if( returnValue == null )
@@ -91,9 +93,9 @@ public class ArgumentParser {
         parameters.put("wordlist-file", cmdLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file")));
         parameters.put("template-folder", cmdLine.getOptionValue("template-folder", config.getProperty("template-folder")));
         parameters.put("wordlist-folder", cmdLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder")));
-        parameters.put("signature", cmdLine.getOptionValue("signature", ""));
-        parameters.put("bound-name", cmdLine.getOptionValue("bound-name", null));
-        parameters.put("objid", this.parseOption("objid", -1));
+        parameters.put("signature", cmdLine.getOptionValue("signature"));
+        parameters.put("bound-name", cmdLine.getOptionValue("bound-name"));
+        parameters.put("objid", this.parseOption("objid", null));
         parameters.put("reg-method", cmdLine.getOptionValue("reg-method", "lookup"));
         parameters.put("dgc-method", cmdLine.getOptionValue("dgc-method", "clean"));
 
@@ -253,22 +255,20 @@ public class ArgumentParser {
                 +"    ip                              IP address of the target\n"
                 +"    port                            Port of the RMI registry\n"
                 +"    action                          One of the possible actions listed below\n\n"
-                +"Possible Actions:\n"
-                +"    call <arguments>                Regulary calls a method with the specified arguments\n"
-                +"    act <gadget> <command>          Performs Activator based deserialization attacks\n"
-                +"    bind [gadget] <command>         Binds an object to the registry thats points to listener\n"
-                +"    codebase <classname> <url>      Perform remote class loading attacks\n"
-                +"    dgc <gadget> <command>          Perform DGC based deserialization attacks\n"
-                +"    enum                            Enumerate bound names, classes, SecurityManger and JEP290\n"
-                +"    guess                           Guess methods on bound names\n"
-                +"    listen <gadget> <command>       Open ysoserials JRMP listener\n"
-                +"    method <gadget> <command>       Perform method based deserialization attacks\n"
-                +"    rebind [gadget] <command>       Rebinds boundname as object that points to listener\n"
-                +"    reg <gadget> <command>          Perform registry based deserialization attacks\n"
-                +"    unbind                          Removes the specified bound name from the registry\n\n"
-                +"Optional Arguments:";
+                +"Possible Actions:\n";
 
+        for(Operation op : Operation.values()) {
+            helpString += "    "
+                    + padRight(op.toString().toLowerCase() + " " + op.getArgs(), 32)
+                    + op.getDescription() + "\n";
+        }
+
+        helpString += "\nOptional Arguments:";
         return helpString;
+    }
+
+    private String padRight(String s, int n) {
+        return String.format("%-" + n + "s", s);
     }
 
     /**
@@ -285,8 +285,7 @@ public class ArgumentParser {
             cmdLine = parser.parse(this.options, argv);
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage() + "\n");
-            printHelp();
-            System.exit(1);
+            printHelpAndExit(1);
         }
 
         this.config = new Properties();
@@ -294,8 +293,7 @@ public class ArgumentParser {
         RMGUtils.loadConfig(cmdLine.getOptionValue("config", null), config, true);
 
         if( cmdLine.hasOption("help") ) {
-            printHelp();
-            System.exit(0);
+            printHelpAndExit(0);
         }
 
         if( cmdLine.hasOption("trusted") )
@@ -317,6 +315,12 @@ public class ArgumentParser {
     public void printHelp()
     {
         formatter.printHelp(helpString, options);
+    }
+
+    public void printHelpAndExit(int code)
+    {
+        formatter.printHelp(helpString, options);
+        System.exit(code);
     }
 
     public Object get(String name)
@@ -361,8 +365,7 @@ public class ArgumentParser {
             }
         } catch( Exception e ) {
             System.err.println("Error: Unable to parse " + this.argList.get(position) + " as integer.");
-            printHelp();
-            System.exit(1);
+            printHelpAndExit(1);
         }
         return 0;
     }
@@ -394,8 +397,7 @@ public class ArgumentParser {
          List<String> remainingArgs = cmdLine.getArgList();
          if( remainingArgs.size() < expectedCount ) {
              System.err.println("Error: insufficient number of arguments.\n");
-             printHelp();
-             System.exit(1);
+             printHelpAndExit(1);
          }
     }
 
@@ -427,18 +429,24 @@ public class ArgumentParser {
      * Simply returns the specified action on the command line. If no action was specified, returns
      * 'enum' as the default action.
      */
-    public String getAction()
+    public Operation getAction()
     {
         if(this.action != null)
             return this.action;
 
         else if( this.getArgumentCount() < 3 ) {
-            this.action = "enum";
+            this.action = Operation.ENUM;
 
         } else {
-            this.action = this.getPositionalString(2);
+            this.action = Operation.getByName(this.getPositionalString(2));
         }
 
+        if(this.action == null) {
+            Logger.eprintlnMixedYellow("Error: Specified operation", this.getPositionalString(2), "is not supported.");
+            printHelpAndExit(1);
+        }
+
+        validateOperation(action);
         return action;
     }
 
@@ -457,8 +465,7 @@ public class ArgumentParser {
 
         if(!regMethod.matches("lookup|bind|unbind|rebind")) {
             Logger.printlnPlainMixedYellow("Unsupported registry method:", regMethod);
-            printHelp();
-            System.exit(1);
+            printHelpAndExit(1);
         }
 
         return regMethod;
@@ -479,8 +486,7 @@ public class ArgumentParser {
 
         if(!dgcMethod.matches("clean|dirty")) {
             Logger.printlnPlainMixedYellow("Unsupported DGC method:", dgcMethod);
-            printHelp();
-            System.exit(1);
+            printHelpAndExit(1);
         }
 
         return dgcMethod;
@@ -499,10 +505,10 @@ public class ArgumentParser {
     {
         String signature = (String)this.get("signature");
 
-        boolean result = !signature.equals("");
-        result = result && !signature.matches("reg|dgc|act");
+        if(signature == null)
+            return false;
 
-        return result;
+        return !signature.matches("reg|dgc|act");
     }
 
     public String getHost()
@@ -532,15 +538,45 @@ public class ArgumentParser {
         return PluginSystem.getArgumentArray(argumentString);
     }
 
-    public String requireBoundName()
+    public void validateOperation(Operation operation)
     {
-        String boundName = (String)this.get("bound-name");
+        Method m = operation.getMethod();
+        Parameters paramRequirements = (Parameters)m.getAnnotation(Parameters.class);
 
-        if(boundName == null) {
-            Logger.eprintlnMixedYellow("The", "--bound-name", "argument is required for this action");
-            RMGUtils.exit();
+        if(paramRequirements == null)
+            return;
+
+        this.checkArgumentCount(paramRequirements.count());
+
+        for(String requiredOption: paramRequirements.requires()) {
+
+            Object optionValue = null;
+            String[] possibleOptions = requiredOption.split("\\|");
+
+            for(String possibleOption: possibleOptions) {
+                if((optionValue = this.get(possibleOption)) != null) {
+                    break;
+                }
+            }
+
+            if(optionValue == null) {
+
+                Logger.eprint("Error: The ");
+
+                for(int ctr = 0; ctr < possibleOptions.length - 1; ctr++) {
+                    Logger.printPlainYellow("--" + possibleOptions[ctr]);
+
+                    if(ctr == possibleOptions.length - 2)
+                        Logger.printPlain(" or ");
+
+                    else
+                        Logger.printPlain(", ");
+                }
+
+                Logger.printPlainYellow("--" + possibleOptions[possibleOptions.length - 1]);
+                Logger.printlnPlainMixedBlue(" option is required for the", operation.toString().toLowerCase(), "operation.");
+                RMGUtils.exit();
+            }
         }
-
-        return boundName;
     }
 }
