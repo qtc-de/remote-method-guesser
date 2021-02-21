@@ -8,7 +8,7 @@
     <artifactId>remote-method-guesser</artifactId>
     <name>remote-method-guesser</name>
     <packaging>jar</packaging>
-    <version>3.1.1</version>
+    <version>3.2.0</version>
     <description>Identify common misconfigurations on Java RMI endpoints</description>
 
     <properties>
@@ -68,6 +68,7 @@
                 <archive>
                     <manifest>
                         <mainClass>de.qtc.rmg.Starter</mainClass>
+                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                     </manifest>
                 </archive>
                 <descriptorRefs>

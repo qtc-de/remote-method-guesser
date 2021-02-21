@@ -13,6 +13,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.qtc.rmg.Starter;
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.Operation;
@@ -42,7 +43,6 @@ public class ArgumentParser {
     private Properties config;
     private HashMap<String,Object> parameters;
 
-    private static String rmg_version = "rmg v3.2.0";
     private static String defaultConfiguration = "/config.properties";
 
     /**
@@ -249,7 +249,7 @@ public class ArgumentParser {
     private String getHelpString()
     {
         String helpString = "rmg [options] <ip> <port> <action>\n\n"
-                +rmg_version
+                +"rmg v" + Starter.class.getPackage().getImplementationVersion()
                 +" - Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
                 +"    ip                              IP address of the target\n"
