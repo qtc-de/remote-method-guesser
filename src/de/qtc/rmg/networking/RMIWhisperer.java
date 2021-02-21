@@ -256,9 +256,9 @@ public final class RMIWhisperer {
               }
 
           } catch( NotBoundException e) {
-              Logger.eprintMixedYellow("Caught", "NotBoundException", "on boundname ");
+              Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
               Logger.printlnPlainBlue(className + ".");
-              Logger.eprintln("Boundname seems to be no longer available.");
+              Logger.eprintln("The corresponding bound name is not bound to the registry.");
           }
         }
 
@@ -361,7 +361,7 @@ public final class RMIWhisperer {
                 }
 
             } catch(java.io.IOException e) {
-                ExceptionHandler.unexpectedException(e, "marshalling", "call arguments", true);
+                throw new java.rmi.MarshalException("error marshalling arguments", e);
             }
 
             remoteRef.invoke(call);
@@ -372,8 +372,17 @@ public final class RMIWhisperer {
                     ObjectInputStream in = (ObjectInputStream)call.getInputStream();
                     Object returnValue = unmarshalValue(rtype, in);
                     PluginSystem.handleResponse(returnValue);
+
                 } catch( IOException | ClassNotFoundException e ) {
-                    ExceptionHandler.unexpectedException(e, "unmarshalling", "return value", true);
+                    ((StreamRemoteCall)call).discardPendingRefs();
+                    throw new java.rmi.UnmarshalException("error unmarshalling return", e);
+
+                } finally {
+                    try {
+                        remoteRef.done(call);
+                    } catch (IOException e) {
+                        ExceptionHandler.unexpectedException(e, "done", "operation", true);
+                    }
                 }
             }
 

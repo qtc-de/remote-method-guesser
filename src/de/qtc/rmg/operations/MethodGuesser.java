@@ -1,27 +1,16 @@
 package de.qtc.rmg.operations;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.rmi.Remote;
-import java.rmi.server.RemoteObject;
-import java.rmi.server.RemoteObjectInvocationHandler;
-import java.rmi.server.RemoteRef;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.GuessingWorker;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
 
 /**
@@ -53,12 +42,10 @@ import de.qtc.rmg.utils.RMGUtils;
  */
 public class MethodGuesser {
 
-    private RMIWhisperer rmi;
-    private HashMap<String,String> classes;
+    private int threads;
+    private boolean zeroArg;
+    private RemoteObjectClient client;
     private HashSet<MethodCandidate> candidates;
-
-    private Field proxyField;
-    private Field remoteField;
 
     /**
      * The MethodGuesser makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
@@ -71,23 +58,34 @@ public class MethodGuesser {
      * @param unknownClasses list of unknown classes per bound name
      * @param candidates list of method candidates to guess
      */
-    public MethodGuesser(RMIWhisperer rmiRegistry, HashMap<String,String> unknownClasses, HashSet<MethodCandidate> candidates)
+    public MethodGuesser(RemoteObjectClient client, HashSet<MethodCandidate> candidates, int threads, boolean zeroArg)
     {
-        this.rmi = rmiRegistry;
-        this.classes = unknownClasses;
+        this.client = client;
         this.candidates = candidates;
 
-        try {
-            this.proxyField = Proxy.class.getDeclaredField("h");
-            this.remoteField = RemoteObject.class.getDeclaredField("ref");
-            proxyField.setAccessible(true);
-            remoteField.setAccessible(true);
+        this.threads = threads;
+        this.zeroArg = zeroArg;
+    }
 
-        } catch(NoSuchFieldException | SecurityException e) {
-            Logger.eprintlnMixedYellow("Unexpected Exception caught during", "MethodGuesser", "instantiation.");
-            ExceptionHandler.stackTrace(e);
+    public static void printGuessingIntro(HashSet<MethodCandidate> candidates)
+    {
+        int count = candidates.size();
+
+        if(count == 0) {
+            Logger.eprintlnMixedYellow("List of candidate methods contains", "0", "elements.");
+            Logger.eprintln("Please use a valid and non empty wordlist file.");
             RMGUtils.exit();
         }
+
+        Logger.println("");
+        Logger.printlnMixedYellow("Starting Method Guessing on", String.valueOf(count), "method signature(s).");
+
+        if( count == 1 ) {
+            Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
+        }
+
+        Logger.println("");
+        Logger.increaseIndent();
     }
 
     /**
@@ -124,141 +122,141 @@ public class MethodGuesser {
      * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
      * @return List of successfully guessed methods per bound name
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public HashMap<String,ArrayList<MethodCandidate>> guessMethods(String targetName, int threads, boolean zeroArg, int legacyMode)
+
+    public ArrayList<MethodCandidate> guessMethods()
     {
-        HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
-
-        int count = this.candidates.size();
-        if( count == 0 ) {
-            Logger.eprintlnMixedYellow("List of candidate methods contains", "0", "elements.");
-            Logger.eprintln("No guessing required.");
-            return results;
-        }
-
-        Logger.println("\n[+] Starting Method Guessing:");
+        Logger.printlnMixedYellow("Guessing methods on bound name:", client.getBoundName(), "...");
+        Logger.println("");
         Logger.increaseIndent();
 
-        if( targetName != null )
-            Logger.printlnMixedBlue("Target name specified. Only guessing on bound name:", targetName + ".");
-        else
-            Logger.printlnMixedBlue("No target name specified. Guessing on", "all", "available bound names.");
+        ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
 
-        Logger.printlnMixedYellow("Guessing", String.valueOf(count), "method signature(s).");
-        if( count == 1 ) {
-            Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
+        for( MethodCandidate method : this.candidates ) {
+
+            if( method.isVoid() && !zeroArg ) {
+                Logger.printlnMixedBlue("Skipping zero arguments method:", method.getSignature());
+                continue;
+            }
+
+            Runnable r = new GuessingWorker(client, method, existingMethods);
+            pool.execute(r);
         }
 
-        Iterator<Entry<String, String>> it = this.classes.entrySet().iterator();
-        if(it.hasNext())
-            Logger.println("");
-
-        while (it.hasNext()) {
-
-            Map.Entry pair = (Map.Entry)it.next();
-            String boundName = (String)pair.getKey();
-            String className = (String)pair.getValue();
-
-            if( targetName != null && !targetName.equals(boundName) ) {
-                Logger.printlnMixedBlue("Skipping bound name", boundName + ".");
-                continue;
-            }
-
-            Logger.printlnMixedYellow("Current bound name:", boundName + ".");
-            boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, true);
-            Logger.increaseIndent();
-
-            Remote instance = null;
-            Class remoteClass = null;
-
-            try {
-
-                if( !isLegacy )
-                    remoteClass = RMGUtils.makeInterface(className);
-
-                else
-                    remoteClass = RMGUtils.makeLegacyStub(className);
-
-            } catch(Exception e) {
-                ExceptionHandler.unexpectedException(e, "interface", "creation", false);
-                Logger.decreaseIndent();
-                continue;
-            }
-
-            RemoteRef remoteRef = null;
-            try {
-                instance = rmi.getRegistry().lookup(boundName);
-
-                if( !isLegacy ) {
-                    RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
-                    remoteRef = ref.getRef();
-                } else {
-                    remoteRef = (RemoteRef)remoteField.get(instance);
-                }
-
-            } catch( Exception e ) {
-                ExceptionHandler.unexpectedException(e, "lookup", "operation", false);
-                Logger.decreaseIndent();
-                continue;
-            }
-
-            Logger.println("Guessing methods...\n[+]");
-            Logger.increaseIndent();
-
-            Method rmgInvokeObject = null;
-            Method rmgInvokePrimitive = null;
-            ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
-
-            try {
-                rmgInvokeObject = remoteClass.getMethod("rmgInvokeObject", String.class);
-                rmgInvokePrimitive = remoteClass.getMethod("rmgInvokePrimitive", int.class);
-            } catch (NoSuchMethodException | SecurityException e) {
-                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during method lookup.");
-                Logger.println("Please report this to improve rmg :)");
-                ExceptionHandler.stackTrace(e);
-                RMGUtils.exit();
-            }
-
-            ExecutorService pool = Executors.newFixedThreadPool(threads);
-            for( MethodCandidate method : this.candidates ) {
-
-                Runnable r;
-                if( method.isVoid() && !zeroArg ) {
-                    Logger.printlnMixedBlue("Skipping zero arguments method:", method.getSignature());
-                    continue;
-                }
-
-                if( method.isPrimitive() ) {
-                    r = new GuessingWorker(rmgInvokeObject, instance, remoteRef, existingMethods, method);
-                } else {
-                    r = new GuessingWorker(rmgInvokePrimitive, instance, remoteRef, existingMethods, method);
-                }
-
-                pool.execute(r);
-            }
-
+        try {
             pool.shutdown();
-
-            try {
-                 pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            } catch (InterruptedException e) {
-                 Logger.eprintln("Interrupted!");
-            }
-
-            Logger.decreaseIndent();
-            Logger.println("");
-
-            if( results.containsKey(boundName) ) {
-                ArrayList<MethodCandidate> tmp = results.get(boundName);
-                tmp.addAll(existingMethods);
-            } else {
-                results.put(boundName, existingMethods);
-            }
-
-            Logger.decreaseIndent();
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+             Logger.eprintln("Interrupted!");
         }
 
         Logger.decreaseIndent();
-        return results;
+        Logger.println("");
+
+        return existingMethods;
     }
+
+    private class GuessingWorker implements Runnable {
+
+        private MethodCandidate candidate;
+        private RemoteObjectClient client;
+        private ArrayList<MethodCandidate> existingMethods;
+
+        /**
+         * Initialize the guessing worker with all the required information.
+         *
+         * @param candidate method that is actually guessed
+         * @param existingMethods array of existing methods. Identified methods need to be appended
+         */
+        public GuessingWorker(RemoteObjectClient client, MethodCandidate candidate, ArrayList<MethodCandidate> existingMethods)
+        {
+            this.client = client;
+            this.candidate = candidate;
+            this.existingMethods = existingMethods;
+        }
+
+        /**
+         * Starts the method invocation. The RemoteObject that is used by this worker is actually a dummy
+         * object. It pretends to implement the remote class/interface, but actually has only two dummy methods
+         * defined. One of these dummy methods get invoked during this call, but with an exchanged method hash
+         * of the actual method in question.
+         *
+         * The selected method for the guessing expects either a primitive or non primitive type. This decision
+         * is made based on the MethodCandidate in question and with the goal of always causing a type confusion.
+         * E.g. when the MethodCandidate expects a primitive type as first argument, the method that expects a
+         * non primitive type is selected. Therefore, when the remote object attempts to unmarshal the call
+         * arguments, it will always find a type mismatch on the first argument, which causes an exception.
+         * This exception is used to identify valid methods.
+         */
+        public void run() {
+
+            try {
+                client.rawCallNoReturn(candidate, candidate.getConfusedArgument());
+
+            } catch(java.rmi.ServerException e) {
+
+                Throwable cause = ExceptionHandler.getCause(e);
+                if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().startsWith("unrecognized")) {
+                    /*
+                     * An RMI server throws the UnmarshalException for different reasons while unmarshalling
+                     * the call. One of them is the absence of the transmitted method hash in the method hash
+                     * table stored on the server side. This Exception can safely be ignored, as it just means
+                     * that the guessed method is not available. However, other cases include the unmarshalling
+                     * of the call headers, which could occur when the stream is corrupted. Therefore, we should
+                     * check whether the Exception is a UnmarshalException and verify that it contains the expected
+                     * "unrecognized method hash" message.
+                     */
+                    return;
+                }
+
+            } catch(java.rmi.UnmarshalException e) {
+                /*
+                 * This occurs on invocation of methods taking zero arguments. Since the call always succeeds,
+                 * the remote method returns some value that probably not matches the expected return value of
+                 * the lookup method. However, it is still a successful invocation and the method exists.
+                 */
+
+            } catch(java.rmi.MarshalException e) {
+                /*
+                 * This one is may thrown on the client side why marshalling the call arguments. It should actually
+                 * never occur and if it does, it is probably an internal error.
+                 */
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+
+                String info = "Caught unexpected MarshalException during method guessing.\n"
+                             +"Please report this to improve rmg :)\n"
+                             +"Stack-Trace:\n"
+                             +writer.toString();
+
+                Logger.println(info);
+                return;
+
+            } catch(Exception e) {
+                /*
+                 * All other exceptions cause an error message, but are interpreted as an existing method. The
+                 * idea behind this is that a false-positive is usually better than a false-negative.
+                 */
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+
+                String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
+                             +"Method is marked as existent, but this is probably not true.\n"
+                             +"Please report this to improve rmg :)\n"
+                             +"Stack-Trace:\n"
+                             +writer.toString();
+
+                Logger.println(info);
+            }
+
+            /*
+             * Successfully guessed methods cause either an EOFException (object passed instead of primitive
+             * or two few arguments) or an OptionalDataException (primitive passed for instead of object). As
+             * these exceptions are not caught, we end up here.
+             */
+            Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
+            existingMethods.add(candidate);
+        }
+    }
+
 }

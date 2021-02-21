@@ -26,6 +26,7 @@ public class Dispatcher {
     private RMIWhisperer rmi;
     private ArgumentParser p;
 
+    private String[] boundNames = null;
     private MethodCandidate candidate = null;
     private HashMap<String,String> allClasses = null;
     private ArrayList<HashMap<String,String>> boundClasses = null;
@@ -42,11 +43,11 @@ public class Dispatcher {
     @SuppressWarnings("unchecked")
     private void obtainBoundNames()
     {
-        if(boundClasses != null && allClasses != null)
+        if(boundNames != null && boundClasses != null && allClasses != null)
             return;
 
         rmi.locateRegistry();
-        String[] boundNames = rmi.getBoundNames((String)p.get("bound-name"));
+        boundNames = rmi.getBoundNames((String)p.get("bound-name"));
 
         boundClasses = rmi.getClassNames(boundNames);
         allClasses = (HashMap<String, String>)boundClasses.get(0).clone();
@@ -65,35 +66,16 @@ public class Dispatcher {
         }
     }
 
-    private RemoteObjectClient getRemoteObjecClient()
+    private RemoteObjectClient getRemoteObjectClient(String boundName)
     {
         Object objID = p.get("objid");
-        String boundName = (String)p.get("bound-name");
-
-        if(candidate == null)
-            ExceptionHandler.internalError("getRemoteObjecClient", "Method was invoked without a candidate method.");
 
         if(objID != null) {
-            return new RemoteObjectClient(rmi, (int)objID, candidate, p.getLegacyMode());
-
-        } else if(boundName != null) {
-
-            obtainBoundNames();
-
-            if(!allClasses.containsKey(boundName)) {
-                Logger.eprintlnMixedYellow("Specified bound name", boundName, "is not available.");
-                RMGUtils.exit();
-            }
-
-            return new RemoteObjectClient(rmi, boundName, allClasses.get(boundName), candidate, p.getLegacyMode());
+            return new RemoteObjectClient(rmi, (int)objID, p.getLegacyMode());
 
         } else {
-            Logger.eprintMixedYellow("Error: method action requires either the", "--bound-name", "or the ");
-            Logger.printlnPlainMixedYellowFirst("--objid", "option");
-            RMGUtils.exit();
+            return new RemoteObjectClient(rmi, boundName, allClasses.get(boundName), p.getLegacyMode());
         }
-
-        return null;
     }
 
     private void writeSamples(HashMap<String,ArrayList<MethodCandidate>> results)
@@ -139,6 +121,32 @@ public class Dispatcher {
         Logger.decreaseIndent();
     }
 
+    private HashSet<MethodCandidate> getCandidates()
+    {
+        HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
+
+        String wordlistFile = (String)p.get("wordlist-file");
+        String wordlistFolder = (String)p.get("wordlist-folder");
+        boolean updateWordlist = (boolean)p.get("update");
+
+        if( candidate != null ) {
+            candidates.add(candidate);
+
+        } else {
+
+            try {
+                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist);
+                candidates = wlHandler.getWordlistMethods();
+            } catch( IOException e ) {
+                Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
+                ExceptionHandler.stackTrace(e);
+                RMGUtils.exit();
+            }
+        }
+
+        return candidates;
+    }
+
     public void dispatchListen()
     {
         p.checkArgumentCount(4);
@@ -179,8 +187,8 @@ public class Dispatcher {
     {
         int argumentPosition = (int)p.get("argument-position");
 
-        RemoteObjectClient client = getRemoteObjecClient();
-        client.gadgetCall(p.getGadget(), argumentPosition);
+        RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+        client.gadgetCall(candidate, p.getGadget(), argumentPosition);
     }
 
     @Parameters(count=3, requires= {"bound-name|objid","signature"})
@@ -188,8 +196,8 @@ public class Dispatcher {
     {
         Object[] argumentArray = p.getCallArguments();
 
-        RemoteObjectClient client = getRemoteObjecClient();
-        client.genericCall(argumentArray);
+        RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+        client.genericCall(candidate, argumentArray);
     }
 
     @Parameters(count=4, requires= {"bound-name|objid","signature"})
@@ -212,8 +220,8 @@ public class Dispatcher {
         }
 
         if( candidate != null ) {
-            RemoteObjectClient client = getRemoteObjecClient();
-            client.codebaseCall(payload, argumentPosition);
+            RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+            client.codebaseCall(candidate, payload, argumentPosition);
 
         } else if( signature.matches("dgc") ) {
 
@@ -302,39 +310,30 @@ public class Dispatcher {
 
     public void dispatchGuess()
     {
-        String wordlistFile = (String)p.get("wordlist-file");
-        String wordlistFolder = (String)p.get("wordlist-folder");
-        boolean updateWordlist = (boolean)p.get("update");
         boolean createSamples = (boolean)p.get("create-samples");
 
-        String boundName = (String)p.get("bound-name");
         int threadCount = (int)p.get("threads");
         boolean zeroArg = (boolean)p.get("zero-arg");
         Formatter format = new Formatter();
 
-        if( !RMGUtils.containsObjects(allClasses) )
-            return;
+        HashSet<MethodCandidate> candidates = getCandidates();
+        HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
-        HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
-        if( candidate != null ) {
-            candidates.add(candidate);
+        obtainBoundNames();
+        MethodGuesser.printGuessingIntro(candidates);
 
-        } else {
+        for(String boundName : this.boundNames) {
 
-            try {
-                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist);
-                candidates = wlHandler.getWordlistMethods();
-            } catch( IOException e ) {
-                Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
-                ExceptionHandler.stackTrace(e);
-                RMGUtils.exit();
-            }
+            RemoteObjectClient client = getRemoteObjectClient(boundName);
+            MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount, zeroArg);
+            ArrayList<MethodCandidate> methods = guesser.guessMethods();
+
+            results.put(boundName, methods);
         }
 
-        MethodGuesser guesser = new MethodGuesser(rmi, boundClasses.get(1), candidates);
-        HashMap<String,ArrayList<MethodCandidate>> results = guesser.guessMethods(boundName, threadCount, zeroArg, p.getLegacyMode());
-        RMGUtils.addKnownMethods(boundClasses.get(0), results);
+        Logger.decreaseIndent();
 
+        RMGUtils.addKnownMethods(boundClasses.get(0), results);
         format.listGuessedMethods(results);
 
         if(createSamples)

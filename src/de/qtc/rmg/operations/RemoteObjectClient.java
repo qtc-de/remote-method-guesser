@@ -34,16 +34,16 @@ public class RemoteObjectClient {
 
     private ObjID objID;
     private RMIWhisperer rmi;
-    private MethodCandidate targetMethod;
+    private RemoteRef remoteRef;
 
     private Field proxyField;
     private Field remoteField;
 
     private int legacyMode;
     private String boundName;
-    private String methodName;
     private String remoteClass;
     private String randomClassName;
+
 
     /**
      * The RemoteObjectClient makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
@@ -56,14 +56,13 @@ public class RemoteObjectClient {
      * @param classes list of unknown classes per bound name
      * @param targetMethod the remote method to target
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName, String remoteClass, MethodCandidate targetMethod, int legacyMode)
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName, String remoteClass, int legacyMode)
     {
         this.objID = null;
         this.rmi = rmiRegistry;
         this.boundName = boundName;
         this.legacyMode = legacyMode;
         this.remoteClass = remoteClass;
-        this.targetMethod = targetMethod;
 
         try {
             this.proxyField = Proxy.class.getDeclaredField("h");
@@ -75,24 +74,21 @@ public class RemoteObjectClient {
             ExceptionHandler.unexpectedException(e, "MethodAttacker", "instantiation", true);
         }
 
-        try {
-            methodName = targetMethod.getName();
-        } catch (CannotCompileException | NotFoundException e) {
-            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
-        }
+        remoteRef = getRemoteRef();
     }
 
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID, MethodCandidate targetMethod, int legacyMode)
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID, int legacyMode)
     {
         this.rmi = rmiRegistry;
         this.legacyMode = legacyMode;
         this.objID = new ObjID(objID);
-        this.targetMethod = targetMethod;
-        try {
-            methodName = targetMethod.getName();
-        } catch (CannotCompileException | NotFoundException e) {
-            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
-        }
+
+        remoteRef = getRemoteRef();
+    }
+
+    public String getBoundName()
+    {
+        return this.boundName;
     }
 
     /**
@@ -122,18 +118,17 @@ public class RemoteObjectClient {
      * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
      */
 
-    public void gadgetCall(Object gadget, int argumentPosition)
+    public void gadgetCall(MethodCandidate targetMethod, Object gadget, int argumentPosition)
     {
-        int attackArgument = findNonPrimitiveArgument(argumentPosition);
+        int attackArgument = findNonPrimitiveArgument(targetMethod, argumentPosition);
 
         Logger.printGadgetCallIntro("RMI");
-        printIntro(attackArgument);
+        printIntro(targetMethod, attackArgument);
 
-        Map<Object,Class<?>> argumentArray = prepareArgumentArray(gadget, attackArgument);
-        RemoteRef remoteRef = getRemoteRef();
+        Map<Object,Class<?>> argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
         try {
-            rmi.genericCall(null, -1, this.targetMethod.getHash(), argumentArray, false, methodName, remoteRef);
+            rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef);
 
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
@@ -143,7 +138,7 @@ public class RemoteObjectClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.rmi.UnmarshalException ) {
-                Logger.eprintlnMixedYellow("Method", this.targetMethod.getSignature(), "does not exist on this bound name.");
+                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this bound name.");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException ) {
@@ -187,18 +182,18 @@ public class RemoteObjectClient {
         }
     }
 
-    public void codebaseCall(Object gadget, int argumentPosition)
+    public void codebaseCall(MethodCandidate targetMethod, Object gadget, int argumentPosition)
     {
-        int attackArgument = findNonPrimitiveArgument(argumentPosition);
+        int attackArgument = findNonPrimitiveArgument(targetMethod, argumentPosition);
+        String methodName = getMethodName(targetMethod);
 
         Logger.printCodebaseAttackIntro("RMI", methodName, gadget.getClass().getName());
-        printIntro(attackArgument);
+        printIntro(targetMethod, attackArgument);
 
-        Map<Object,Class<?>> argumentArray = prepareArgumentArray(gadget, attackArgument);
-        RemoteRef remoteRef = getRemoteRef();
+        Map<Object,Class<?>> argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
         try {
-            rmi.genericCall(null, -1, this.targetMethod.getHash(), argumentArray, true, methodName, remoteRef);
+            rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, true, methodName, remoteRef);
 
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
@@ -208,7 +203,7 @@ public class RemoteObjectClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.rmi.UnmarshalException ) {
-                Logger.eprintlnMixedYellow("Method", this.targetMethod.getSignature(), "does not exist on this bound name.");
+                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this bound name.");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException ) {
@@ -251,10 +246,9 @@ public class RemoteObjectClient {
         }
     }
 
-    public void genericCall(Object[] argumentArray)
+    public void genericCall(MethodCandidate targetMethod, Object[] argumentArray)
     {
         CtClass rtype = null;
-        RemoteRef remoteRef = getRemoteRef();
         Map<Object,Class<?>> callArguemnts = null;
 
         try {
@@ -265,18 +259,23 @@ public class RemoteObjectClient {
         }
 
         try {
-            rmi.genericCall(null, -1, this.targetMethod.getHash(), callArguemnts, false, this.methodName, remoteRef, rtype);
+            rmi.genericCall(null, -1, targetMethod.getHash(), callArguemnts, false, getMethodName(targetMethod), remoteRef, rtype);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
         }
     }
 
-    private void printIntro(int attackArgument)
+    public void rawCallNoReturn(MethodCandidate targetMethod, Map<Object,Class<?>> argumentArray) throws Exception
     {
-        Logger.printMixedBlue("Using non primitive argument type", this.targetMethod.getArgumentTypeName(attackArgument));
+        rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef, null);
+    }
+
+    private void printIntro(MethodCandidate targetMethod, int attackArgument)
+    {
+        Logger.printMixedBlue("Using non primitive argument type", targetMethod.getArgumentTypeName(attackArgument));
         Logger.printlnPlainMixedBlue(" on position", String.valueOf(attackArgument));
-        Logger.printlnMixedYellow("Specified method signature is", this.targetMethod.getSignature());
+        Logger.printlnMixedYellow("Specified method signature is", targetMethod.getSignature());
 
         Logger.println("");
     }
@@ -298,18 +297,22 @@ public class RemoteObjectClient {
 
         try {
             if( !isLegacy ) {
-                RMGUtils.makeInterface(this.remoteClass, this.targetMethod);
+                RMGUtils.makeInterface(this.remoteClass);
                 instance = rmi.getRegistry().lookup(boundName);
 
                 RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
                 remoteReference = ref.getRef();
 
             } else {
-                RMGUtils.makeLegacyStub(this.remoteClass, this.targetMethod);
+                RMGUtils.makeLegacyStub(this.remoteClass);
                 instance = rmi.getRegistry().lookup(boundName);
 
                 remoteReference = (RemoteRef)remoteField.get(instance);
             }
+
+        } catch(java.rmi.NotBoundException e) {
+            Logger.eprintlnMixedYellow("Specified bound name", boundName, "is not bound to the registry.");
+            RMGUtils.exit();
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
@@ -318,12 +321,12 @@ public class RemoteObjectClient {
         return remoteReference;
     }
 
-    private int findNonPrimitiveArgument(int position)
+    private int findNonPrimitiveArgument(MethodCandidate targetMethod, int position)
     {
         int attackArgument = 0;
 
         try {
-            attackArgument = this.targetMethod.getPrimitive(position);
+            attackArgument = targetMethod.getPrimitive(position);
 
         } catch (CannotCompileException | NotFoundException e) {
             ExceptionHandler.unexpectedException(e, "search", "for primitive types", true);
@@ -332,7 +335,7 @@ public class RemoteObjectClient {
         if( attackArgument == -1 ) {
 
             if( position == -1 )
-                Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", this.targetMethod.getSignature());
+                Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", targetMethod.getSignature());
 
             RMGUtils.exit();
         }
@@ -340,12 +343,12 @@ public class RemoteObjectClient {
         return attackArgument;
     }
 
-    private Map<Object,Class<?>> prepareArgumentArray(Object gadget, int attackArgument)
+    private Map<Object,Class<?>> prepareArgumentArray(MethodCandidate targetMethod, Object gadget, int attackArgument)
     {
         Object[] methodArguments = null;
 
         try {
-            methodArguments = RMGUtils.getArgumentArray(this.targetMethod.getMethod());
+            methodArguments = RMGUtils.getArgumentArray(targetMethod.getMethod());
         } catch (Exception e) {
             ExceptionHandler.unexpectedException(e, "argument array", "construction", true);
         }
@@ -369,11 +372,24 @@ public class RemoteObjectClient {
 
         Map<Object,Class<?>> callArguments = null;
         try {
-            callArguments = RMGUtils.applyParameterTypes(this.targetMethod.getMethod(), methodArguments);
+            callArguments = RMGUtils.applyParameterTypes(targetMethod.getMethod(), methodArguments);
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "parameter types", "mapping", true);
         }
 
         return callArguments;
+    }
+
+    private String getMethodName(MethodCandidate targetMethod)
+    {
+        String methodName = "";
+
+        try {
+            methodName = targetMethod.getName();
+        } catch (CannotCompileException | NotFoundException e) {
+            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
+        }
+
+        return methodName;
     }
 }

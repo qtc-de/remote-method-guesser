@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -133,13 +135,17 @@ public class MethodCandidate {
      *
      * @return confused parameter for method invocation
      */
-    public Object[] getConfusedArgument()
+    public Map<Object,Class<?>> getConfusedArgument()
     {
+        HashMap<Object,Class<?>> argumentMap = new HashMap<Object,Class<?>>();
+
         if( this.isPrimitive() ) {
-            return new Object[] { "RMG" };
+            argumentMap.put("RMG", Object.class);
         } else {
-            return new Object[] { 42 };
+            argumentMap.put(42, int.class);
         }
+
+        return argumentMap;
     }
 
     /**
@@ -159,7 +165,11 @@ public class MethodCandidate {
      */
     public String getName() throws CannotCompileException, NotFoundException
     {
-        return this.getMethod().getName();
+        if(this.method != null)
+            return this.getMethod().getName();
+
+        else
+            return "method";
     }
 
     /**

@@ -443,6 +443,8 @@ public class Logger {
     public static void decreaseIndent()
     {
         indent -= 1;
+        if(indent < 0)
+            indent = 0;
     }
 
     public static String getIndent()
