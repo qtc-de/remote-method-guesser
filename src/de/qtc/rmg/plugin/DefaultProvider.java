@@ -46,6 +46,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
                     Logger.eprintlnMixedBlue("Specifying a", "gadget argument", "is required for this action.");
                     RMGUtils.exit();
                 }
+
                 return YsoIntegration.getPayloadObject(name, args);
         }
 

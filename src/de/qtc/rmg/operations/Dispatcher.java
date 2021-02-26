@@ -74,6 +74,7 @@ public class Dispatcher {
             return new RemoteObjectClient(rmi, (int)objID, p.getLegacyMode());
 
         } else {
+            obtainBoundNames();
             return new RemoteObjectClient(rmi, boundName, allClasses.get(boundName), p.getLegacyMode());
         }
     }
@@ -241,7 +242,7 @@ public class Dispatcher {
         }
     }
 
-    @Parameters(count=3, requires= {"bound-name"})
+    @Parameters(count=4, requires= {"bound-name"})
     public void dispatchBind()
     {
         String boundName = (String)p.get("bound-name");
@@ -250,7 +251,7 @@ public class Dispatcher {
         reg.bindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
     }
 
-    @Parameters(count=3, requires= {"bound-name"})
+    @Parameters(count=4, requires= {"bound-name"})
     public void dispatchRebind()
     {
         String boundName = (String)p.get("bound-name");
