@@ -201,6 +201,7 @@ public class Dispatcher {
         client.genericCall(candidate, argumentArray);
     }
 
+    @SuppressWarnings("deprecation")
     @Parameters(count=4, requires= {"bound-name|objid","signature"})
     public void dispatchCodebase()
     {

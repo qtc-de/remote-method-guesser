@@ -7,9 +7,9 @@ import java.rmi.server.ObjID;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
-import java.util.Map;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -125,7 +125,7 @@ public class RemoteObjectClient {
         Logger.printGadgetCallIntro("RMI");
         printIntro(targetMethod, attackArgument);
 
-        Map<Object,Class<?>> argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
+        MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
         try {
             rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef);
@@ -190,7 +190,7 @@ public class RemoteObjectClient {
         Logger.printCodebaseAttackIntro("RMI", methodName, gadget.getClass().getName());
         printIntro(targetMethod, attackArgument);
 
-        Map<Object,Class<?>> argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
+        MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
         try {
             rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, true, methodName, remoteRef);
@@ -249,7 +249,7 @@ public class RemoteObjectClient {
     public void genericCall(MethodCandidate targetMethod, Object[] argumentArray)
     {
         CtClass rtype = null;
-        Map<Object,Class<?>> callArguemnts = null;
+        MethodArguments callArguemnts = null;
 
         try {
             rtype = targetMethod.getMethod().getReturnType();
@@ -266,7 +266,7 @@ public class RemoteObjectClient {
         }
     }
 
-    public void rawCallNoReturn(MethodCandidate targetMethod, Map<Object,Class<?>> argumentArray) throws Exception
+    public void rawCallNoReturn(MethodCandidate targetMethod, MethodArguments argumentArray) throws Exception
     {
         rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef, null);
     }
@@ -343,7 +343,8 @@ public class RemoteObjectClient {
         return attackArgument;
     }
 
-    private Map<Object,Class<?>> prepareArgumentArray(MethodCandidate targetMethod, Object gadget, int attackArgument)
+    @SuppressWarnings("deprecation")
+    private MethodArguments prepareArgumentArray(MethodCandidate targetMethod, Object gadget, int attackArgument)
     {
         Object[] methodArguments = null;
 
@@ -370,7 +371,7 @@ public class RemoteObjectClient {
         payloadArray[1] = randomInstance;
         methodArguments[attackArgument] = payloadArray;
 
-        Map<Object,Class<?>> callArguments = null;
+        MethodArguments callArguments = null;
         try {
             callArguments = RMGUtils.applyParameterTypes(targetMethod.getMethod(), methodArguments);
         } catch(Exception e) {

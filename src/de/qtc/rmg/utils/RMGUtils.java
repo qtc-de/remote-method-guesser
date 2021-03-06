@@ -9,14 +9,13 @@ import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
 import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
@@ -762,11 +761,11 @@ public class RMGUtils {
         return simpleSignature.toString();
     }
 
-    public static Map<Object,Class<?>> applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
+    public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
     {
         CtClass type;
         CtClass[] types = method.getParameterTypes();
-        LinkedHashMap<Object,Class<?>> parameterMap = new LinkedHashMap<Object,Class<?>>();
+        MethodArguments parameterMap = new MethodArguments(parameterArray.length);
 
         for(int ctr = 0; ctr < parameterArray.length; ctr++) {
 
@@ -774,27 +773,27 @@ public class RMGUtils {
 
             if (type.isPrimitive()) {
                 if (type == CtPrimitiveType.intType) {
-                    parameterMap.put(parameterArray[ctr], int.class);
+                    parameterMap.add(parameterArray[ctr], int.class);
                 } else if (type == CtPrimitiveType.booleanType) {
-                    parameterMap.put(parameterArray[ctr], boolean.class);
+                    parameterMap.add(parameterArray[ctr], boolean.class);
                 } else if (type == CtPrimitiveType.byteType) {
-                    parameterMap.put(parameterArray[ctr], byte.class);
+                    parameterMap.add(parameterArray[ctr], byte.class);
                 } else if (type == CtPrimitiveType.charType) {
-                    parameterMap.put(parameterArray[ctr], char.class);
+                    parameterMap.add(parameterArray[ctr], char.class);
                 } else if (type == CtPrimitiveType.shortType) {
-                    parameterMap.put(parameterArray[ctr], short.class);
+                    parameterMap.add(parameterArray[ctr], short.class);
                 } else if (type == CtPrimitiveType.longType) {
-                    parameterMap.put(parameterArray[ctr], long.class);
+                    parameterMap.add(parameterArray[ctr], long.class);
                 } else if (type == CtPrimitiveType.floatType) {
-                    parameterMap.put(parameterArray[ctr], float.class);
+                    parameterMap.add(parameterArray[ctr], float.class);
                 } else if (type == CtPrimitiveType.doubleType) {
-                    parameterMap.put(parameterArray[ctr], double.class);
+                    parameterMap.add(parameterArray[ctr], double.class);
                 } else {
                     throw new Error("unrecognized primitive type: " + type);
                 }
 
             } else {
-                parameterMap.put(parameterArray[ctr], Object.class);
+                parameterMap.add(parameterArray[ctr], Object.class);
             }
         }
 

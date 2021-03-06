@@ -31,6 +31,7 @@ public class PluginSystem {
             loadPlugin(pluginPath);
     }
 
+    @SuppressWarnings("deprecation")
     private static void loadPlugin(String pluginPath)
     {
         boolean inUse = false;

@@ -2,10 +2,9 @@ package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -262,7 +261,7 @@ public class DGCClient {
      * @param maliciousStream whether to use the MaliciousOutputStream, required for custom codebase values
      * @throws Exception all connection related exceptions are caught, but anything other is thrown
      */
-    private void dgcCall(String callName, Map<Object,Class<?>> callArguments, boolean maliciousStream) throws Exception
+    private void dgcCall(String callName, MethodArguments callArguments, boolean maliciousStream) throws Exception
     {
         rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
     }
@@ -296,22 +295,22 @@ public class DGCClient {
      * @param payloadObject object to use during the DGC call
      * @return argument array that can be used for the corresponding call
      */
-    private LinkedHashMap<Object,Class<?>> packArgsByName(String callName, Object payloadObject)
+    private MethodArguments packArgsByName(String callName, Object payloadObject)
     {
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        MethodArguments callArguments = new MethodArguments(4);
 
         switch(callName) {
             case "clean":
-                callArguments.put(new ObjID[]{}, Object.class);
-                callArguments.put(0L, long.class);
-                callArguments.put(payloadObject, Object.class);
-                callArguments.put(true, boolean.class);
+                callArguments.add(new ObjID[]{}, Object.class);
+                callArguments.add(0L, long.class);
+                callArguments.add(payloadObject, Object.class);
+                callArguments.add(true, boolean.class);
                 break;
             case "dirty":
 
-                callArguments.put(new ObjID[]{}, Object.class);
-                callArguments.put(0L, long.class);
-                callArguments.put(payloadObject, Object.class);
+                callArguments.add(new ObjID[]{}, Object.class);
+                callArguments.add(0L, long.class);
+                callArguments.add(payloadObject, Object.class);
                 break;
 
             default:

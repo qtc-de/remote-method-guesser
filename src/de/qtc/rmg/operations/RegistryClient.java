@@ -1,12 +1,11 @@
 package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -71,9 +70,9 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put(boundName, String.class);
-        callArguments.put(payloadObject, Object.class);
+        MethodArguments callArguments = new MethodArguments(2);
+        callArguments.add(boundName, String.class);
+        callArguments.add(payloadObject, Object.class);
 
         try {
             registryCall("bind", callArguments, false, localhostBypass);
@@ -129,9 +128,9 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put(boundName, String.class);
-        callArguments.put(payloadObject, Object.class);
+        MethodArguments callArguments = new MethodArguments(2);
+        callArguments.add(boundName, String.class);
+        callArguments.add(payloadObject, Object.class);
 
         try {
             registryCall("rebind", callArguments, false, localhostBypass);
@@ -175,8 +174,8 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put(boundName, String.class);
+        MethodArguments callArguments = new MethodArguments(1);
+        callArguments.add(boundName, String.class);
 
         try {
             registryCall("unbind", callArguments, false, localhostBypass);
@@ -307,8 +306,8 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put(0, Integer.class);
+        MethodArguments callArguments = new MethodArguments(1);
+        callArguments.add(0, Integer.class);
 
         try {
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
@@ -379,8 +378,8 @@ public class RegistryClient {
         Logger.println("");
         Logger.increaseIndent();
 
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put("If this name exists on the registry, it is definitely the maintainers fault...", String.class);
+        MethodArguments callArguments = new MethodArguments(1);
+        callArguments.add("If this name exists on the registry, it is definitely the maintainers fault...", String.class);
 
         try {
             registryCall("unbind", callArguments, false, true);
@@ -593,7 +592,7 @@ public class RegistryClient {
      * @param bypass whether to use CVE-2019-268 for the operation
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */
-    private void registryCall(String callName, Map<Object,Class<?>> callArguments, boolean maliciousStream, boolean bypass) throws Exception
+    private void registryCall(String callName, MethodArguments callArguments, boolean maliciousStream, boolean bypass) throws Exception
     {
         if(bypass)
             rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
@@ -665,20 +664,20 @@ public class RegistryClient {
      * @param payloadObject payload object to include into the argument array
      * @return argument array that can be used for the specified registry call
      */
-    private LinkedHashMap<Object,Class<?>> packArgsByName(String callName, Object payloadObject)
+    private MethodArguments packArgsByName(String callName, Object payloadObject)
     {
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
+        MethodArguments callArguments = new MethodArguments(2);
 
         switch(callName) {
             case "bind":
             case "rebind":
-                callArguments.put("rmg", String.class);
-                callArguments.put(payloadObject, Object.class);
+                callArguments.add("rmg", String.class);
+                callArguments.add(payloadObject, Object.class);
                 break;
 
             case "lookup":
             case "unbind":
-                callArguments.put(payloadObject, Object.class);
+                callArguments.add(payloadObject, Object.class);
                 break;
 
             default:

@@ -1,10 +1,9 @@
 package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -229,11 +228,11 @@ public class ActivationClient {
         }
     }
 
-    private Map<Object,Class<?>> prepareCallArguments(Object payloadObject)
+    private MethodArguments prepareCallArguments(Object payloadObject)
     {
-        LinkedHashMap<Object,Class<?>> callArguments = new LinkedHashMap<Object,Class<?>>();
-        callArguments.put(payloadObject, Object.class);
-        callArguments.put(false, boolean.class);
+        MethodArguments callArguments = new MethodArguments(2);
+        callArguments.add(payloadObject, Object.class);
+        callArguments.add(false, boolean.class);
         return callArguments;
     }
     /**
@@ -245,7 +244,7 @@ public class ActivationClient {
      * @param maliciousStream whether or not to use MaliciousOutputStream, which activates a custom codebase
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */
-    private void activateCall(Map<Object,Class<?>> callArguments, boolean maliciousStream) throws Exception
+    private void activateCall(MethodArguments callArguments, boolean maliciousStream) throws Exception
     {
         rmi.genericCall(objID, -1, methodHash, callArguments, maliciousStream, "activate");
     }

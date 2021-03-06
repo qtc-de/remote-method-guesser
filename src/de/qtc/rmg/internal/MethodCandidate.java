@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -135,14 +133,14 @@ public class MethodCandidate {
      *
      * @return confused parameter for method invocation
      */
-    public Map<Object,Class<?>> getConfusedArgument()
+    public MethodArguments getConfusedArgument()
     {
-        HashMap<Object,Class<?>> argumentMap = new HashMap<Object,Class<?>>();
+        MethodArguments argumentMap = new MethodArguments(1);
 
         if( this.isPrimitive() ) {
-            argumentMap.put("RMG", Object.class);
+            argumentMap.add("RMG", Object.class);
         } else {
-            argumentMap.put(42, int.class);
+            argumentMap.add(42, int.class);
         }
 
         return argumentMap;

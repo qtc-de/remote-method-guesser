@@ -17,13 +17,14 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.Pair;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.plugin.PluginSystem;
@@ -301,7 +302,7 @@ public final class RMIWhisperer {
     /**
      * Wrapper around the genericCall function specified below.
      */
-    public void genericCall(ObjID objID, int callID, long methodHash, Map<Object,Class<?>> callArguments, boolean locationStream, String callName) throws Exception
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName) throws Exception
     {
         genericCall(objID, callID, methodHash, callArguments, locationStream, callName, null, null);
     }
@@ -309,7 +310,7 @@ public final class RMIWhisperer {
     /**
      * Wrapper around the genericCall function specified below.
      */
-    public void genericCall(ObjID objID, int callID, long methodHash, Map<Object,Class<?>> callArguments, boolean locationStream, String callName, RemoteRef ref) throws Exception
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef ref) throws Exception
     {
         genericCall(objID, callID, methodHash, callArguments, locationStream, callName, ref, null);
     }
@@ -340,8 +341,8 @@ public final class RMIWhisperer {
      * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler plugin
      * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
      */
-    @SuppressWarnings("deprecation")
-    public void genericCall(ObjID objID, int callID, long methodHash, Map<Object,Class<?>> callArguments, boolean locationStream, String callName, RemoteRef remoteRef, CtClass rtype) throws Exception
+    @SuppressWarnings({ "deprecation", "rawtypes" })
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef remoteRef, CtClass rtype) throws Exception
     {
         try {
 
@@ -356,8 +357,8 @@ public final class RMIWhisperer {
                 if(locationStream)
                     out = new MaliciousOutputStream(out);
 
-                for(Object o : callArguments.keySet()) {
-                    marshalValue(callArguments.get(o), o, out);
+                for(Pair<Object,Class> p : callArguments) {
+                    marshalValue(p.right(), p.left(), out);
                 }
 
             } catch(java.io.IOException e) {
