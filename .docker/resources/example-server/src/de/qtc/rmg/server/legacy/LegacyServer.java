@@ -14,6 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
 import de.qtc.rmg.server.interfaces.IPlainServer;
 import de.qtc.rmg.server.operations.PlainServer;
 import de.qtc.rmg.server.utils.Logger;
+import de.qtc.rmg.server.utils.Utils;
 
 @SuppressWarnings("unused")
 public class LegacyServer {
@@ -22,16 +23,18 @@ public class LegacyServer {
     private static Remote remoteObject1 = null;
     private static Remote remoteObject2 = null;
     private static Remote remoteObject3 = null;
+    private static Remote remoteObject4 = null;
+
 
     public static void init()
     {
-    	Logger.increaseIndent();
-    	
+        Logger.increaseIndent();
+
         try {
             Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
             Registry registry = LocateRegistry.createRegistry(registryPort);
             Logger.println("");
-            
+
             Logger.printlnMixedBlue("Creating", "LegacyServiceImpl", "object.");
             remoteObject1 = new LegacyServiceImpl();
 
@@ -56,9 +59,23 @@ public class LegacyServer {
             IPlainServer stub2 = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
             bindToRegistry(stub2, registry, "plain-server2");
 
+            try {
+                Logger.printlnMixedBlue("Creating", "ActivatorImp", "object.");
+                Logger.increaseIndent();
+
+                remoteObject4 = Utils.getActivator(registryPort, null);
+                Logger.printlnMixedYellowFirst("Activator", "is ready.");
+
+            } catch( Exception e) {
+                Logger.printlnYellow("Activator initialization failed.");
+
+            } finally {
+                Logger.decreaseIndent();
+            }
+
             Logger.println("");
             Logger.decreaseIndent();
-            
+
             Logger.println("Server setup finished.");
             Logger.println("Waiting for incoming connections.");
             Logger.println("");
@@ -71,8 +88,8 @@ public class LegacyServer {
 
     public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException, NotBoundException
     {
-    	Logger.increaseIndent();
-    	Logger.printlnMixedYellow("Binding Object as", boundName);
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("Binding Object as", boundName);
         registry.bind(boundName, object);
 
         Object o = registry.lookup(boundName);
