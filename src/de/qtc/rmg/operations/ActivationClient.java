@@ -217,6 +217,9 @@ public class ActivationClient {
                 ExceptionHandler.unexpectedException(e, "activate", "call", false);
             }
 
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgumentCodebase(e);
+
         } catch( java.lang.ClassCastException e ) {
             ExceptionHandler.codebaseClassCast(e, false);
 

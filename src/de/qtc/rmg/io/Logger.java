@@ -230,6 +230,10 @@ public class Logger {
         log(first + " " + yellow(second) + " " + third);
     }
 
+    public static void printPlainMixedYellowFirst(String first, String second) {
+        log(yellow(first) + " " + second, false);
+    }
+
     public static void printlnPlainMixedYellowFirst(String first, String second)
     {
         log(yellow(first) + " " + second);
@@ -460,6 +464,9 @@ public class Logger {
         ANSI_RESET = "";
         ANSI_YELLOW = "";
         ANSI_BLUE = "";
+        ANSI_RED = " ";
+        ANSI_GREEN = "";
+        ANSI_PURPLE = "";
     }
 
     public static void printCodebaseAttackIntro(String endpointName, String callName, String className)
@@ -479,6 +486,4 @@ public class Logger {
         Logger.println("");
         Logger.increaseIndent();
     }
-
-
 }

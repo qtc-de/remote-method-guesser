@@ -202,7 +202,7 @@ public class Dispatcher {
     }
 
     @SuppressWarnings("deprecation")
-    @Parameters(count=4, requires= {"bound-name|objid","signature"})
+    @Parameters(count=4, requires= {"signature"})
     public void dispatchCodebase()
     {
         String className = p.getPositionalString(3);
@@ -222,7 +222,13 @@ public class Dispatcher {
         }
 
         if( candidate != null ) {
-            RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+            String boundName = (String)p.get("bound-name");
+
+            if( boundName == null ) {
+                ExceptionHandler.missingBoundName("codebase");
+            }
+
+            RemoteObjectClient client = getRemoteObjectClient(boundName);
             client.codebaseCall(candidate, payload, argumentPosition);
 
         } else if( signature.matches("dgc") ) {

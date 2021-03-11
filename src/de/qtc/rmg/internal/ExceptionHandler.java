@@ -246,6 +246,13 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void illegalArgumentCodebase(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during codebase attack.");
+        Logger.printlnMixedYellowFirst("Codebase attack", "was probably successful :)");
+        showStackTrace(e);
+    }
+
     public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
     {
         Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during " + during1 + " " + during2 + ".");
@@ -290,6 +297,14 @@ public class ExceptionHandler {
             Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
         }
 
+        RMGUtils.exit();
+    }
+
+    public static void missingBoundName(String action)
+    {
+        Logger.eprintMixedYellow("Either ", "--bound-name", "or  ");
+        Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
+        Logger.printlnPlainMixedBlueFirst(action, "action.");
         RMGUtils.exit();
     }
 
