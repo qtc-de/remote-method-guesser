@@ -263,7 +263,11 @@ public class DGCClient {
      */
     private void dgcCall(String callName, MethodArguments callArguments, boolean maliciousStream) throws Exception
     {
-        rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+        try {
+            rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "DGC", false);
+        }
     }
 
     /**

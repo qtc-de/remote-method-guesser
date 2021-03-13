@@ -594,10 +594,15 @@ public class RegistryClient {
      */
     private void registryCall(String callName, MethodArguments callArguments, boolean maliciousStream, boolean bypass) throws Exception
     {
-        if(bypass)
-            rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
-        else
-            rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+        try {
+            if(bypass)
+                rmi.genericCall(objID, -1, getHashByName(callName), callArguments, maliciousStream, callName);
+            else
+                rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "registry", false);
+        }
     }
 
     /**

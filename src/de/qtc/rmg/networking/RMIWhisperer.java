@@ -131,18 +131,12 @@ public final class RMIWhisperer {
      *
      * @return list of available bound names.
      */
-    public String[] getBoundNames()
+    public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
         String[] boundNames = null;
 
         try {
             boundNames = rmiRegistry.list();
-
-        } catch( java.rmi.NoSuchObjectException e) {
-            Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
-            Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
-            ExceptionHandler.showStackTrace(e);
-            RMGUtils.exit();
 
         } catch( java.rmi.UnknownHostException e) {
             ExceptionHandler.unknownHost(e, "list", "operation", host, true);
@@ -183,6 +177,9 @@ public final class RMIWhisperer {
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message") ) {
                 ExceptionHandler.sslError(e, "list", "call");
 
+            } else if( t instanceof java.rmi.NoSuchObjectException ) {
+                throw (java.rmi.NoSuchObjectException)t;
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
@@ -199,7 +196,7 @@ public final class RMIWhisperer {
      * @param boundName specified by the user. Is simply returned if not null
      * @return list of bound names or the user specified bound name
      */
-    public String[] getBoundNames(String boundName)
+    public String[] getBoundNames(String boundName) throws java.rmi.NoSuchObjectException
     {
         if( boundName == null )
             return getBoundNames();

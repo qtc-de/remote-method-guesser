@@ -171,6 +171,9 @@ public class ActivationClient {
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);
 
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "activator", false);
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);
         }
@@ -225,6 +228,9 @@ public class ActivationClient {
 
         } catch( java.security.AccessControlException e ) {
             ExceptionHandler.accessControl(e, "activate", "call");
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "activator", false);
 
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);

@@ -197,6 +197,26 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void noSuchObjectException(Exception e, String object, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
+        Logger.eprintlnMixedBlue("There seems to be no", object, "object avaibale on the specified endpoint.");
+        showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
+    public static void noSuchObjectExceptionRegistryEnum()
+    {
+        Logger.printlnBlue("RMI Registry Enumeration");
+        Logger.println("");
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("- Specified endpoint", "is not", "an RMI registry");
+        Logger.println("  Skipping registry related checks.");
+        Logger.decreaseIndent();
+    }
+
     public static void eofException(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");

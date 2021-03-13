@@ -41,7 +41,7 @@ public class Dispatcher {
     }
 
     @SuppressWarnings("unchecked")
-    private void obtainBoundNames()
+    private void obtainBoundNames() throws java.rmi.NoSuchObjectException
     {
         if(boundNames != null && boundClasses != null && allClasses != null)
             return;
@@ -74,7 +74,13 @@ public class Dispatcher {
             return new RemoteObjectClient(rmi, (int)objID, p.getLegacyMode());
 
         } else {
-            obtainBoundNames();
+
+            try {
+                obtainBoundNames();
+            } catch( java.rmi.NoSuchObjectException e ) {
+                ExceptionHandler.noSuchObjectException(e, "registry", true);
+            }
+
             return new RemoteObjectClient(rmi, boundName, allClasses.get(boundName), p.getLegacyMode());
         }
     }
@@ -279,27 +285,37 @@ public class Dispatcher {
     public void dispatchEnum()
     {
         RMGUtils.enableCodebase();
-        obtainBoundNames();
+        RegistryClient registryClient = new RegistryClient(rmi);
 
         String regMethod = p.validateRegMethod();
         String dgcMethod = p.validateDgcMethod();
         boolean localhostBypass = (boolean)p.get("localhost-bypass");
 
-        Formatter format = new Formatter();
-        format.listBoundNames(boundClasses);
+        boolean enumJEP290Bypass = true;
+        boolean marshal = true;
 
-        Logger.println("");
-        format.listCodeases();
+        try {
+            obtainBoundNames();
 
-        Logger.println("");
-        RegistryClient registryClient = new RegistryClient(rmi);
-        boolean marshal = registryClient.enumerateStringMarshalling();
+            Formatter format = new Formatter();
+            format.listBoundNames(boundClasses);
 
-        Logger.println("");
-        registryClient.enumCodebase(marshal, regMethod, localhostBypass);
+            Logger.println("");
+            format.listCodeases();
 
-        Logger.println("");
-        registryClient.enumLocalhostBypass();
+            Logger.println("");
+            marshal = registryClient.enumerateStringMarshalling();
+
+            Logger.println("");
+            registryClient.enumCodebase(marshal, regMethod, localhostBypass);
+
+            Logger.println("");
+            registryClient.enumLocalhostBypass();
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectExceptionRegistryEnum();
+            enumJEP290Bypass = false;
+        }
 
         Logger.println("");
         DGCClient dgc = new DGCClient(rmi);
@@ -308,8 +324,10 @@ public class Dispatcher {
         Logger.println("");
         dgc.enumJEP290(dgcMethod);
 
-        Logger.println("");
-        registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+        if(enumJEP290Bypass) {
+            Logger.println("");
+            registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+        }
 
         Logger.println("");
         ActivationClient activationClient = new ActivationClient(rmi);
@@ -327,7 +345,12 @@ public class Dispatcher {
         HashSet<MethodCandidate> candidates = getCandidates();
         HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
-        obtainBoundNames();
+        try {
+            obtainBoundNames();
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "registry", true);
+        }
+
         MethodGuesser.printGuessingIntro(candidates);
 
         for(String boundName : this.boundNames) {
