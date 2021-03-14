@@ -1,7 +1,6 @@
 global:
 
   title: remote-method-guesser Tests
-  error_mode: break
   description: >
     'Launches some end-to-end tests of remote-method-guesser.'
 
