@@ -90,8 +90,8 @@ public class Dispatcher {
         String templateFolder = (String)p.get("template-folder");
         String sampleFolder = (String)p.get("sample-folder");
         boolean sslValue = (boolean)p.get("ssl");
-        boolean followRedirect = (boolean)p.get("followRedirect");
-        int legacyMode = (int)p.get("legacyMode");
+        boolean followRedirect = (boolean)p.get("follow");
+        int legacyMode = p.getLegacyMode();
 
         Logger.println("");
         Logger.println("Starting creation of sample files:");

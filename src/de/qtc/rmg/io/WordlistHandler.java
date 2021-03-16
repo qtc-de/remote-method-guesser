@@ -143,7 +143,7 @@ public class WordlistHandler {
         Logger.printlnMixedYellowFirst(String.valueOf(methods.size()), "methods were successfully parsed.");
 
         if(updateWordlists) {
-            Logger.println("Updating template file.");
+            Logger.println("Updating wordlist file.");
             updateWordlist(file, methods);
         }
 

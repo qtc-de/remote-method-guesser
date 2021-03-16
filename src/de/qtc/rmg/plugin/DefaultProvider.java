@@ -74,7 +74,9 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
 
         } catch(VerifyError | CannotCompileException e) {
             Logger.eprintlnMixedYellow("Specified argument string", argumentString, "is invalid.");
-            Logger.eprintlnMixedBlue("Make sure to cast all argument to valid", "Object", "types.");
+            Logger.eprintlnMixedBlue("Argument string has to be a valid Java expression like:", "'\"id\", new Integer(4)'.");
+            Logger.eprintMixedYellow("Make sure that each argument is an", "Object", "not a ");
+            Logger.printlnPlainYellow("Primitive.");
             RMGUtils.exit();
 
         } catch (Exception e) {

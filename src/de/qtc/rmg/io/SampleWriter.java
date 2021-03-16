@@ -112,7 +112,9 @@ public class SampleWriter {
     {
         Security.checkAlphaNumeric(sampleName);
         Security.checkAlphaNumeric(sampleFolder);
-        Security.checkAlphaNumeric(subfolder);
+
+        if(subfolder != null)
+            Security.checkAlphaNumeric(subfolder);
 
         File destinationFolder = new File(this.sampleFolder, sampleFolder);
         if( subfolder != null ) {

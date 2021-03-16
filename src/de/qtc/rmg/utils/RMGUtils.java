@@ -767,7 +767,7 @@ public class RMGUtils {
         CtClass[] types = method.getParameterTypes();
         MethodArguments parameterMap = new MethodArguments(parameterArray.length);
 
-        for(int ctr = 0; ctr < parameterArray.length; ctr++) {
+        for(int ctr = 0; ctr < types.length; ctr++) {
 
             type = types[ctr];
 

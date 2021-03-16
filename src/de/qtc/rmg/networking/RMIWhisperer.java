@@ -257,6 +257,7 @@ public final class RMIWhisperer {
               Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
               Logger.printlnPlainBlue(className + ".");
               Logger.eprintln("The corresponding bound name is not bound to the registry.");
+              RMGUtils.exit();
           }
         }
 
