@@ -1,40 +1,41 @@
-global:
-
-  title: remote-method-guesser Tests
+tester:
+  name: rmg
+  title: 'remote-method-guesser Tests'
+  error_mode: break
   description: >
     'Launches some end-to-end tests of remote-method-guesser.'
 
-  error_mode: break
+variables:
+  rmg: rmg-3.2.0-jar-with-dependencies.jar
+  volume: /tmp/rmg-tricot-test/
+  volume-d: /rce/
+  codebase-class: CodebaseTest
 
-  variables:
-    volume: /tmp/rmg-tricot-test
-    codebase-class: CodebaseTest
+  BASE-CMD-9:
+    - rmg
+    - --no-color
+    - ${jdk9-IP}
+    - 9010
 
-    BASE-CMD-9:
-      - rmg
-      - --no-color
-      - ${DOCKER-rmg-jdk9-IP}
-      - 9010
+  BASE-CMD-SSL-9:
+    - rmg
+    - --no-color
+    - --ssl
+    - ${jdk9-IP}
+    - 1090
 
-    BASE-CMD-SSL-9:
-      - rmg
-      - --no-color
-      - --ssl
-      - ${DOCKER-rmg-jdk9-IP}
-      - 1090
+  BASE-CMD-11:
+    - rmg
+    - --no-color
+    - ${jdk11-IP}
+    - 9010
 
-    BASE-CMD-11:
-      - rmg
-      - --no-color
-      - ${DOCKER-rmg-jdk11-IP}
-      - 9010
-
-    BASE-CMD-SSL-11:
-      - rmg
-      - --no-color
-      - --ssl
-      - ${DOCKER-rmg-jdk11-IP}
-      - 1090
+  BASE-CMD-SSL-11:
+    - rmg
+    - --no-color
+    - --ssl
+    - ${jdk11-IP}
+    - 1090
 
 plugins:
   mkdir:

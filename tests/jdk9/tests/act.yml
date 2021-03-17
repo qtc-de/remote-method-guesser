@@ -1,14 +1,12 @@
-global:
-
+tester:
+  name: act
   title: Activator Tests
   description: "Performs tests on remote-methods-guessers 'act' action."
 
-  variables:
-    file: activator_rce_test.txt
+variables:
+  file: activator_rce_test.txt
 
-
-definitions:
-
+tests:
   - title: Gadget Call
     description: >
       'Performs a deserialization attack on the activator endpoint.'
@@ -19,14 +17,14 @@ definitions:
     arguments:
       - act
       - CommonsCollections6
-      - 'touch ${DOCKER-rmg-jdk9-VOLUME0}/${file}'
+      - 'touch ${volume-d}/${file}'
     validators:
       error: False
       regex: 'Deserialization attack.+successful'
       file_exists:
         clean_up: True
         files:
-          - '${DOCKER-rmg-jdk9-VOLUME0-HOST}/${file}'
+          - '${volume}/${file}'
 
 
   - title: Invalid Gadget

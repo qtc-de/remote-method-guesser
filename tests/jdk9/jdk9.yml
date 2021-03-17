@@ -1,16 +1,23 @@
-global:
-
+tester:
+  name: jdk9
   title: JDK9 Tests
   description: >
     'Launches some end-to-end tests of remote-method-guesser against the jdk9 rmg-example-server.'
 
-  containers:
-    - name: 'rmg-jdk9'
-      image: 'docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.0-jdk9'
-      volumes:
-        - '${volume}:/rce/'
+containers:
+  - name: 'rmg-jdk9'
+    image: 'docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.0-jdk9'
+    volumes:
+      - '${volume}:${volume-d}'
+    aliases:
+      DOCKER-rmg-jdk9-IP: jdk9-IP
+      DOCKER-rmg-jdk9-GATEWAY: jdk9-GW
 
 testers:
-  - ./activator.yml
-  - ./codebase.yml
-  - ./enumeration.yml
+  - ./tests/act.yml
+  - ./tests/bind.yml
+  - ./tests/call.yml
+  - ./tests/codebase.yml
+  - ./tests/dgc.yml
+  - ./tests/enum.yml
+  - ./tests/guess.yml

@@ -1,0 +1,190 @@
+tester:
+  name: bind
+  title: Binding Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'bind', 'rebind'"
+    "and 'unbind' action."
+
+variables:
+  bound-name: jdk9-binding-test
+
+tests:
+  - title: Bind Call
+    description: >
+      'Performs a bind operation.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - bind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+    validators:
+      error: False
+      contains:
+        values:
+          - rejected bind call
+          - --localhost-bypass
+
+
+  - title: Bind Call (localhost bypass)
+    description: >
+      'Performs a bind operation with --localhost-bypass.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - bind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+      - --localhost-bypass
+    validators:
+      error: False
+      contains:
+        values:
+          - no Exception
+          - probably successful
+
+
+  - title: Verify Bind
+    description: >
+      'Verifies the previous bind operation.'
+
+    command: '${BASE-CMD-9}'
+    validators:
+      error: False
+      contains:
+        values:
+          - ${bound-name}
+          - javax.management.remote.rmi.RMIServerImpl_Stub
+
+
+  - title: Bind Call (Bound Name Exists)
+    description: >
+      'Attempts to bind an already existing bound name.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - bind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+      - --localhost-bypass
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - was accepted
+          - already bound
+          - rebind
+
+
+  - title: Rebind Call
+    description: >
+      'Performs a rebind operation.'
+    
+    command: '${BASE-CMD-9}'
+    arguments:
+      - rebind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - rejected rebind call
+          - --localhost-bypass
+
+
+  - title: Rebind Call (localhost bypass)
+    description: >
+      'Performs a rebind operation with --localhost-bypass.'
+    
+    command: '${BASE-CMD-9}'
+    arguments:
+      - rebind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+      - --localhost-bypass
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - no Exception
+          - probably successful
+
+
+  - title: Unbind Call
+    description: >
+      'Performs an unbind operation.'
+    
+    command: '${BASE-CMD-9}'
+    arguments:
+      - unbind
+      - --bound-name 
+      - ${bound-name}
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - rejected unbind call
+          - --localhost-bypass
+
+
+  - title: Unbind Call (localhost bypass)
+    description: >
+      'Performs an unbind operation with --localhost-bypass.'
+    
+    command: '${BASE-CMD-9}'
+    arguments:
+      - unbind
+      - --bound-name 
+      - ${bound-name}
+      - --localhost-bypass
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - no Exception
+          - probably successful
+
+
+  - title: Verify Unbind
+    description: >
+      'Verifies the previous unbind operation.'
+
+    command: '${BASE-CMD-9}'
+    validators:
+      error: False
+      contains:
+        invert: true
+        values:
+          - ${bound-name}
+          - javax.management.remote.rmi.RMIServerImpl_Stub
+
+
+  - title: Unbind Call (Not Bound)
+    description: >
+      'Performs an unbind operation with --localhost-bypass'
+      'on a non existing bound name.'
+    
+    command: '${BASE-CMD-9}'
+    arguments:
+      - unbind
+      - --bound-name 
+      - not-bound
+      - --localhost-bypass
+    validators:
+      error: False
+      contains:
+        ignore_case: True
+        values:
+          - NotBoundException
+          - seems not to be bound

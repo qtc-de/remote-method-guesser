@@ -1,0 +1,42 @@
+tester:
+  name: dgc
+  title: Calling Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'dgc' action."
+
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+
+    command: '${BASE-CMD-9}'
+    arguments:
+      - dgc
+      - CommonsCollections6
+      - ls
+    validators:
+      error: False
+    contains:
+      values:
+        - rejected deserialization
+        - JEP290 is installed
+
+
+  - title: Gadget Call (SSL)
+    description: >
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+
+    command: '${BASE-CMD-SSL-9}'
+    arguments:
+      - dgc
+      - CommonsCollections6
+      - ls
+    validators:
+      error: False
+    contains:
+      values:
+        - rejected deserialization
+        - JEP290 is installed

@@ -1,11 +1,10 @@
-global:
-
+tester:
+  name: enum
   title: Enumeration Tests
   description: "Performs tests on remote-methods-guessers 'enum' action."
 
 
-definitions:
-
+tests:
   - title: 'RMI Server Enumeration'
     command: '${BASE-CMD-SSL-9}'
 
