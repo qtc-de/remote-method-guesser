@@ -1,19 +1,21 @@
 #!/bin/bash
 
 if [[ $# -lt 3 ]]; then
-    echo "$0 <RMG-JAR> <SOURCE> <JAR>"
+    echo "$0 <RMG-FILE> <PLUGIN-FILE> <OUTPUT>"
     exit 1
 fi
 
 RMG=$1
 SRC=$2
 JAR=$3
-MANIFEST="RMG-MANIFEST.MF"
 
-CLASS=$(echo $SRC | cut -d. -f1)
+DIR=$(dirname $SRC)
+CLASS=$(basename $SRC | cut -d. -f1)
+MANIFEST="${DIR}/RMG-MANIFEST.MF"
+
 echo "RmgPluginClass: $CLASS" > $MANIFEST
 
 javac -cp $RMG $SRC
-jar -cfm $JAR $MANIFEST "$CLASS.class"
+jar -cfm $JAR $MANIFEST -C ${DIR} ${CLASS}.class
 
-rm "$CLASS.class" $MANIFEST
+rm "${DIR}/${CLASS}.class" $MANIFEST
