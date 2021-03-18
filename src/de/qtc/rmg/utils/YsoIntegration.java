@@ -152,7 +152,7 @@ public class YsoIntegration {
             Object payloadObject = getPayloadObject(gadget, command);
             Object jrmpListener = cons.newInstance(port, payloadObject);
 
-            ServerSocket serverSock = (ServerSocket) serverSocket.get(jrmpListener);
+            ServerSocket serverSock = (ServerSocket)serverSocket.get(jrmpListener);
             serverSock.close();
 
             serverSock = ServerSocketFactory.getDefault().createServerSocket(port, 0, bindAddress);
@@ -171,6 +171,11 @@ public class YsoIntegration {
             Throwable t = ExceptionHandler.getCause(e);
             if( t instanceof java.net.BindException) {
                 ExceptionHandler.bindException(t);
+
+            } else if( t instanceof java.lang.IllegalArgumentException) {
+                Logger.println("");
+                Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during JRMPListener creation.");
+                Logger.printlnMixedBlue("Exception message:", t.getMessage());
 
             } else {
                 ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
