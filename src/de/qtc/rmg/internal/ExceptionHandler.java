@@ -300,6 +300,14 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void bindException(Throwable t)
+    {
+        Logger.println("");
+        Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
+        Logger.printlnMixedBlue("Exception message:", t.getMessage());
+        RMGUtils.exit();
+    }
+
     public static void ysoNotPresent(String location)
     {
         Logger.eprintlnMixedYellow("Unable to find ysoserial library in path", location);

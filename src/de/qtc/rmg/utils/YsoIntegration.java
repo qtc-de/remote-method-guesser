@@ -163,6 +163,19 @@ public class YsoIntegration {
             runMethod.invoke(jrmpListener, new Object[] {});
             System.exit(0);
 
+        } catch( java.net.BindException e ) {
+            ExceptionHandler.bindException(e);
+
+        } catch( java.lang.reflect.InvocationTargetException e) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+            if( t instanceof java.net.BindException) {
+                ExceptionHandler.bindException(t);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
+            }
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
         }
