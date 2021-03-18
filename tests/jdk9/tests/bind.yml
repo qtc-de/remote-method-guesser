@@ -20,11 +20,11 @@ tests:
       - ${bound-name}
       - '127.0.0.1:8000'
     validators:
-      error: False
-      contains:
-        values:
-          - rejected bind call
-          - --localhost-bypass
+      - error: False
+      - contains:
+          values:
+            - rejected bind call
+            - --localhost-bypass
 
 
   - title: Bind Call (localhost bypass)
@@ -39,11 +39,11 @@ tests:
       - '127.0.0.1:8000'
       - --localhost-bypass
     validators:
-      error: False
-      contains:
-        values:
-          - no Exception
-          - probably successful
+      - error: False
+      - contains:
+          values:
+            - no Exception
+            - probably successful
 
 
   - title: Verify Bind
@@ -52,11 +52,11 @@ tests:
 
     command: '${BASE-CMD-9}'
     validators:
-      error: False
-      contains:
-        values:
-          - ${bound-name}
-          - javax.management.remote.rmi.RMIServerImpl_Stub
+      - error: False
+      - contains:
+          values:
+            - ${bound-name}
+            - javax.management.remote.rmi.RMIServerImpl_Stub
 
 
   - title: Bind Call (Bound Name Exists)
@@ -71,13 +71,13 @@ tests:
       - '127.0.0.1:8000'
       - --localhost-bypass
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - was accepted
-          - already bound
-          - rebind
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - was accepted
+            - already bound
+            - rebind
 
 
   - title: Rebind Call
@@ -91,12 +91,12 @@ tests:
       - ${bound-name}
       - '127.0.0.1:8000'
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - rejected rebind call
-          - --localhost-bypass
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - rejected rebind call
+            - --localhost-bypass
 
 
   - title: Rebind Call (localhost bypass)
@@ -111,12 +111,12 @@ tests:
       - '127.0.0.1:8000'
       - --localhost-bypass
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - no Exception
-          - probably successful
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - no Exception
+            - probably successful
 
 
   - title: Unbind Call
@@ -129,12 +129,12 @@ tests:
       - --bound-name 
       - ${bound-name}
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - rejected unbind call
-          - --localhost-bypass
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - rejected unbind call
+            - --localhost-bypass
 
 
   - title: Unbind Call (localhost bypass)
@@ -148,12 +148,12 @@ tests:
       - ${bound-name}
       - --localhost-bypass
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - no Exception
-          - probably successful
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - no Exception
+            - probably successful
 
 
   - title: Verify Unbind
@@ -162,12 +162,12 @@ tests:
 
     command: '${BASE-CMD-9}'
     validators:
-      error: False
-      contains:
-        invert: true
-        values:
-          - ${bound-name}
-          - javax.management.remote.rmi.RMIServerImpl_Stub
+      - error: False
+      - contains:
+          invert: true
+          values:
+            - ${bound-name}
+            - javax.management.remote.rmi.RMIServerImpl_Stub
 
 
   - title: Unbind Call (Not Bound)
@@ -182,9 +182,9 @@ tests:
       - not-bound
       - --localhost-bypass
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - NotBoundException
-          - seems not to be bound
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - NotBoundException
+            - seems not to be bound

@@ -30,11 +30,11 @@ tests:
       - --signature
       - 'String execute(String dummy)'
     validators:
-      error: False
-      file_exists:
-        clean_up: True
-        files:
-          - '${volume}/${file}'
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
 
 
   - title: Execute Call (Response Handler Plugin)
@@ -52,12 +52,12 @@ tests:
       - --plugin
       - ../../utils/PluginTest.jar
     validators:
-      error: False
-      contains:
-        values:
-          - uid=0(root)
-          - gid=0(root)
-          - groups=0(root)
+      - error: False
+      - contains:
+          values:
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
 
 
   - title: Execute Call (Argument Provider Plugin)
@@ -76,10 +76,10 @@ tests:
       - --plugin
       - ../../utils/PluginTest.jar
     validators:
-      error: False
-      contains:
-        values:
-          - Session-ID-123
+      - error: False
+      - contains:
+          values:
+            - Session-ID-123
 
 
   - title: Invalid Bound Name
@@ -96,11 +96,11 @@ tests:
       - --signature
       - 'String login(java.util.HashMap dummy1)'
     validators:
-      error: True
-      contains:
-        values:
-          - NotBoundException
-          - Cannot continue from here
+      - error: True
+      - contains:
+          values:
+            - NotBoundException
+            - Cannot continue from here
 
 
   - title: Invalid Argument
@@ -116,8 +116,8 @@ tests:
       - --signature
       - 'String login(java.util.HashMap dummy1)'
     validators:
-      error: True
-      contains:
-        values:
-          - 5 is invalid
-          - Cannot continue from here
+      - error: True
+      - contains:
+          values:
+            - 5 is invalid
+            - Cannot continue from here

@@ -19,12 +19,12 @@ tests:
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
     validators:
-      error: False
-      regex: 'Deserialization attack.+successful'
-      file_exists:
-        clean_up: True
-        files:
-          - '${volume}/${file}'
+      - error: False
+      - regex: 'Deserialization attack.+successful'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
 
 
   - title: Invalid Gadget
@@ -38,12 +38,12 @@ tests:
       - CommonsCollections1337
       - invalid
     validators:
-      error: True
-      contains:
-        ignore_case: True
-        values:
-          - wrong gadget name
-          - invalid gadget argument
+      - error: True
+      - contains:
+          ignore_case: True
+          values:
+            - wrong gadget name
+            - invalid gadget argument
 
 
   - title: No Activator
@@ -57,9 +57,9 @@ tests:
       - CommonsCollections6
       - ls
     validators:
-      error: False
-      contains:
-        ignore_case: True
-        values:
-          - Caught NoSuchObjectException
-          - no activator
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - Caught NoSuchObjectException
+            - no activator

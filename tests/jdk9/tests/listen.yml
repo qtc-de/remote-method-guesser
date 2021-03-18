@@ -1,0 +1,33 @@
+tester:
+  name: listen
+  title: Listener Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'listen' action."
+
+
+tests:
+  - title: Start Listener
+    description: >
+      'Attempts to open up a JRMPListener at port 4444'
+
+    command:
+      - rmg
+      - 0.0.0.0
+      - 4444
+      - listen
+      - CommonsCollections6
+      - ls
+      - --no-color
+    timeout: 2
+    validators:
+      - error: False
+      - contains:
+          values:
+            - JRMPListener
+            - 0.0.0.0:4444
+            - Handing off to ysoserial
+      - contains:
+          invert: true
+          ignore_case: true
+          values:
+            - Exception
