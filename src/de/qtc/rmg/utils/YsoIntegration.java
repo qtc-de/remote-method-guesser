@@ -133,7 +133,7 @@ public class YsoIntegration {
      * @param gadget ysoserial gadget name to send within responses
      * @param command ysoserial gadget command to use for gadget generation
      */
-    public static void createJRMPListener(String host, int port, String gadget, String command)
+    public static void createJRMPListener(String host, int port, Object payloadObject)
     {
         try {
             InetAddress bindAddress = getLocalAddress(host);
@@ -149,7 +149,6 @@ public class YsoIntegration {
             Logger.printMixedYellow("Creating a", "JRMPListener", "on ");
             Logger.printlnPlainBlue(host + ":" + port + ".");
 
-            Object payloadObject = getPayloadObject(gadget, command);
             Object jrmpListener = cons.newInstance(port, payloadObject);
 
             ServerSocket serverSock = (ServerSocket)serverSocket.get(jrmpListener);
@@ -176,6 +175,7 @@ public class YsoIntegration {
                 Logger.println("");
                 Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during JRMPListener creation.");
                 Logger.printlnMixedBlue("Exception message:", t.getMessage());
+                RMGUtils.exit();
 
             } else {
                 ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);

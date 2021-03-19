@@ -154,13 +154,10 @@ public class Dispatcher {
         return candidates;
     }
 
+    @Parameters(count=4)
     public void dispatchListen()
     {
-        p.checkArgumentCount(4);
-
-        String gadget = p.getPositionalString(3);
-        String command = p.getPositionalString(4);
-        YsoIntegration.createJRMPListener(p.getHost(), p.getPort(), gadget, command);
+        YsoIntegration.createJRMPListener(p.getHost(), p.getPort(), p.getGadget());
     }
 
     @Parameters(count=4)
