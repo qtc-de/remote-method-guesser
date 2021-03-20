@@ -19,6 +19,7 @@ public class Logger {
     private static String ANSI_PURPLE = "\u001B[35m";
 
     public static int indent = 0;
+    public static int printCount = 0;
     public static boolean verbose = true;
 
     private static String blue(String msg)
@@ -48,11 +49,13 @@ public class Logger {
 
     private static String prefix()
     {
+        Logger.printCount++;
         return "[+]" + Logger.getIndent();
     }
 
     private static String eprefix()
     {
+        Logger.printCount++;
         return "[-]" + Logger.getIndent();
     }
 
@@ -441,7 +444,8 @@ public class Logger {
 
     public static void increaseIndent()
     {
-        indent += 1;
+        if(Logger.printCount != 0)
+            indent += 1;
     }
 
     public static void decreaseIndent()
