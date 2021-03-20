@@ -10,7 +10,7 @@ tests:
     description: >
       'Performs method guessing on the plain RMI registry.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - guess
     validators:
@@ -31,7 +31,7 @@ tests:
     description: >
       'Performs method guessing on the ssl RMI registry.'
 
-    command: '${BASE-CMD-SSL-9}'
+    command: '${BASE-CMD-SSL}'
     arguments:
       - guess
     validators:
@@ -54,7 +54,7 @@ tests:
       'Performs method guessing on the plain RMI registry'
       'using the --zero-arg and --update flag.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - guess
       - --zero-arg
@@ -82,7 +82,7 @@ tests:
       'Performs method guessing on the plain RMI registry'
       'using the --create-samples flag.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - guess
       - --create-samples
@@ -113,7 +113,7 @@ tests:
 
           - file: ./rmg-samples/plain-server2/system/system.java
             contains:
-              - 'private static String remoteHost = "${jdk9-IP}"'
+              - 'private static String remoteHost = "${DOCKER-IP}"'
               - java.lang.String argument0 = TODO
               - java.lang.String[] argument1 = TODO
               - java.lang.String response = stub.system(argument0, argument1)
@@ -133,7 +133,7 @@ tests:
 
           - file: ./rmg-samples/legacy-service/login/login.java
             contains:
-              - 'private static String remoteHost = "${jdk9-IP}"'
+              - 'private static String remoteHost = "${DOCKER-IP}"'
               - java.util.HashMap argument0 = TODO;
               - java.lang.String response = stub.login(argument0);
 

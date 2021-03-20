@@ -1,6 +1,6 @@
 tester:
   name: dgc
-  title: Calling Tests
+  title: DGC Tests
   description: >
     "Performs tests on remote-methods-guessers 'dgc' action."
 
@@ -11,7 +11,7 @@ tests:
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - dgc
       - CommonsCollections6
@@ -29,7 +29,7 @@ tests:
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD-SSL-9}'
+    command: '${BASE-CMD-SSL}'
     arguments:
       - dgc
       - CommonsCollections6

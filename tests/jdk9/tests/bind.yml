@@ -13,7 +13,7 @@ tests:
     description: >
       'Performs a bind operation.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - bind
       - --bound-name 
@@ -31,7 +31,7 @@ tests:
     description: >
       'Performs a bind operation with --localhost-bypass.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - bind
       - --bound-name 
@@ -50,7 +50,7 @@ tests:
     description: >
       'Verifies the previous bind operation.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     validators:
       - error: False
       - contains:
@@ -63,7 +63,7 @@ tests:
     description: >
       'Attempts to bind an already existing bound name.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - bind
       - --bound-name 
@@ -84,7 +84,7 @@ tests:
     description: >
       'Performs a rebind operation.'
     
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - rebind
       - --bound-name 
@@ -103,7 +103,7 @@ tests:
     description: >
       'Performs a rebind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - rebind
       - --bound-name 
@@ -123,7 +123,7 @@ tests:
     description: >
       'Performs an unbind operation.'
     
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - unbind
       - --bound-name 
@@ -141,7 +141,7 @@ tests:
     description: >
       'Performs an unbind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - unbind
       - --bound-name 
@@ -160,7 +160,7 @@ tests:
     description: >
       'Verifies the previous unbind operation.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     validators:
       - error: False
       - contains:
@@ -175,7 +175,7 @@ tests:
       'Performs an unbind operation with --localhost-bypass'
       'on a non existing bound name.'
     
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - unbind
       - --bound-name 

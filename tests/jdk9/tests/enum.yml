@@ -6,7 +6,7 @@ tester:
 
 tests:
   - title: 'RMI Server Enumeration'
-    command: '${BASE-CMD-SSL-9}'
+    command: '${BASE-CMD-SSL}'
 
     validators:
       - error: False
@@ -39,7 +39,7 @@ tests:
 
 
   - title: 'Legacy Server Enumeration'
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
 
     validators:
       - error: False

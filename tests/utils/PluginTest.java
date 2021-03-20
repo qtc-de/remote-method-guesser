@@ -34,7 +34,7 @@ public class PluginTest implements IResponseHandler, IPayloadProvider, IArgument
     public Object getPayloadObject(Operation action, String name, String args)
     {
         if( name.equals("custom") ) {
-            return "id";
+            return defProv.getPayloadObject(action, "CommonsCollections6", args);
         
         } else {
             return defProv.getPayloadObject(action, name, args);

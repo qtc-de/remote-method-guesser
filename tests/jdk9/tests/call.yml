@@ -8,20 +8,20 @@ variables:
   file: call-rce-test.txt
 
 plugins:
-  os_command:
-    cmd:
-      - /bin/bash
-      - ../../../plugins/build.sh
-      - ../../../target/${rmg}
-      - ../../utils/PluginTest.java
-      - ../../utils/PluginTest.jar
+  - os_command:
+      cmd:
+        - /bin/bash
+        - ../../../plugins/build.sh
+        - ../../../target/${rmg}
+        - ../../utils/PluginTest.java
+        - ../../utils/PluginTest.jar
 
 tests:
   - title: Execute Call
     description: >
       'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - call
       - '"touch ${volume-d}/${file}"'
@@ -41,7 +41,7 @@ tests:
     description: >
       'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - call
       - '"id"'
@@ -65,7 +65,7 @@ tests:
       'Invokes the login function on the legacy-service object using'
       'a custom argument provider that creates the required HashMap.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - call
       - login
@@ -87,7 +87,7 @@ tests:
       'Invokes a function on an invalid bound name and checks'
       'the corresponding error message.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - call
       - '"id"'
@@ -107,7 +107,7 @@ tests:
     description: >
       'Invokes a function using an invalid argument definition.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - call
       - '5'

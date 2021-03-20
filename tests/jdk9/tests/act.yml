@@ -13,7 +13,7 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - act
       - CommonsCollections6
@@ -32,7 +32,7 @@ tests:
       'Check whether an incorrect gadget specification is handeled'
       'correctly and a corresponding error message is displayed.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - act
       - CommonsCollections1337
@@ -51,7 +51,7 @@ tests:
       'Check whether a non present activator is handeled'
       'correctly and a corresponding error message is displayed.'
 
-    command: '${BASE-CMD-SSL-9}'
+    command: '${BASE-CMD-SSL}'
     arguments:
       - act
       - CommonsCollections6

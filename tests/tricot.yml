@@ -11,38 +11,12 @@ variables:
   volume-d: /rce/
   codebase-class: CodebaseTest
 
-  BASE-CMD-9:
-    - rmg
-    - --no-color
-    - ${jdk9-IP}
-    - 9010
-
-  BASE-CMD-SSL-9:
-    - rmg
-    - --no-color
-    - --ssl
-    - ${jdk9-IP}
-    - 1090
-
-  BASE-CMD-11:
-    - rmg
-    - --no-color
-    - ${jdk11-IP}
-    - 9010
-
-  BASE-CMD-SSL-11:
-    - rmg
-    - --no-color
-    - --ssl
-    - ${jdk11-IP}
-    - 1090
-
 plugins:
-  mkdir:
-    force: false
-    cleanup: true
-    dirs:
-      - ${volume}
+  - mkdir:
+      force: false
+      cleanup: true
+      dirs:
+        - ${volume}
 
 testers:
   - ./jdk9/jdk9.yml

