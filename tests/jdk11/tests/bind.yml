@@ -42,42 +42,7 @@ tests:
       - error: False
       - contains:
           values:
-            - no Exception
-            - probably successful
-
-
-  - title: Verify Bind
-    description: >
-      'Verifies the previous bind operation.'
-
-    command: '${BASE-CMD}'
-    validators:
-      - error: False
-      - contains:
-          values:
-            - ${bound-name}
-            - javax.management.remote.rmi.RMIServerImpl_Stub
-
-
-  - title: Bind Call (Bound Name Exists)
-    description: >
-      'Attempts to bind an already existing bound name.'
-
-    command: '${BASE-CMD}'
-    arguments:
-      - bind
-      - --bound-name 
-      - ${bound-name}
-      - '127.0.0.1:8000'
-      - --localhost-bypass
-    validators:
-      - error: False
-      - contains:
-          ignore_case: True
-          values:
-            - was accepted
-            - already bound
-            - rebind
+            - Localhost bypass was used but failed
 
 
   - title: Rebind Call
@@ -115,8 +80,7 @@ tests:
       - contains:
           ignore_case: True
           values:
-            - no Exception
-            - probably successful
+            - Localhost bypass was used but failed
 
 
   - title: Unbind Call
@@ -152,38 +116,4 @@ tests:
       - contains:
           ignore_case: True
           values:
-            - no Exception
-            - probably successful
-
-
-  - title: Verify Unbind
-    description: >
-      'Verifies the previous unbind operation.'
-
-    command: '${BASE-CMD}'
-    validators:
-      - error: False
-      - contains:
-          invert:
-            - ${bound-name}
-            - javax.management.remote.rmi.RMIServerImpl_Stub
-
-
-  - title: Unbind Call (Not Bound)
-    description: >
-      'Performs an unbind operation with --localhost-bypass'
-      'on a non existing bound name.'
-    
-    command: '${BASE-CMD}'
-    arguments:
-      - unbind
-      - --bound-name 
-      - not-bound
-      - --localhost-bypass
-    validators:
-      - error: False
-      - contains:
-          ignore_case: True
-          values:
-            - NotBoundException
-            - seems not to be bound
+            - Localhost bypass was used but failed

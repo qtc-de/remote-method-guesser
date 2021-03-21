@@ -1,0 +1,123 @@
+tester:
+  name: call
+  title: Calling Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'call' action."
+
+variables:
+  file: call-rce-test.txt
+
+plugins:
+  - os_command:
+      cmd:
+        - /bin/bash
+        - ../../../plugins/build.sh
+        - ../../../target/${rmg}
+        - ../../utils/PluginTest.java
+        - ../../utils/PluginTest.jar
+
+tests:
+  - title: Execute Call
+    description: >
+      'Invokes the execute function on the plain-server object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - '"touch ${volume-d}/${file}"'
+      - --bound-name 
+      - plain-server
+      - --signature
+      - 'String execute(String dummy)'
+    validators:
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Execute Call (Response Handler Plugin)
+    description: >
+      'Invokes the execute function on the plain-server object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - '"id"'
+      - --bound-name 
+      - plain-server
+      - --signature
+      - 'String execute(String dummy)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
+
+
+  - title: Execute Call (Argument Provider Plugin)
+    description: >
+      'Invokes the login function on the legacy-service object using'
+      'a custom argument provider that creates the required HashMap.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - login
+      - --bound-name 
+      - legacy-service
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Session-ID-123
+
+
+  - title: Invalid Bound Name
+    description: >
+      'Invokes a function on an invalid bound name and checks'
+      'the corresponding error message.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - '"id"'
+      - --bound-name 
+      - legacy-server
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+    validators:
+      - error: True
+      - contains:
+          values:
+            - NotBoundException
+            - Cannot continue from here
+
+
+  - title: Invalid Argument
+    description: >
+      'Invokes a function using an invalid argument definition.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - '5'
+      - --bound-name 
+      - legacy-service
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 5 is invalid
+            - Cannot continue from here

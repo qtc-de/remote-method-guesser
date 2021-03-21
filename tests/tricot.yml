@@ -20,3 +20,4 @@ plugins:
 
 testers:
   - ./jdk9/jdk9.yml
+  - ./jdk11/jdk11.yml

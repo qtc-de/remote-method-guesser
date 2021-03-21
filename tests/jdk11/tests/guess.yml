@@ -64,6 +64,7 @@ tests:
       - contains:
           invert:
             - Skipping zero arguments method
+      - contains:
           values:
             - Updating wordlist file
             - String system(String dummy, String[] dummy2)
