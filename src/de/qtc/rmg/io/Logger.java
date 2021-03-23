@@ -468,7 +468,7 @@ public class Logger {
         ANSI_RESET = "";
         ANSI_YELLOW = "";
         ANSI_BLUE = "";
-        ANSI_RED = " ";
+        ANSI_RED = "";
         ANSI_GREEN = "";
         ANSI_PURPLE = "";
     }

@@ -114,6 +114,7 @@ public class ExceptionHandler {
     public static void codebaseSecurityManager(Exception e)
     {
         Logger.eprintlnMixedYellow("The class loader of the specified target is", "disabled.");
+        Logger.eprintlnMixedBlue("Codebase attacks are", "not", "possible.");
         showStackTrace(e);
     }
 
