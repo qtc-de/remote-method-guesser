@@ -224,13 +224,19 @@ public final class RMIWhisperer {
         HashMap<String, String> unknownClasses = new HashMap<String,String>();
 
         Object object = null;
+        String className = null;
 
-        for( String className : boundNames ) {
+        for( String boundName : boundNames ) {
 
           try {
 
-              object = rmiRegistry.lookup(className);
-              knownClasses.put(className, object.getClass().getName());
+              object = rmiRegistry.lookup(boundName);
+              className = object.getClass().getName();
+
+              if( className.startsWith("com.sun.proxy.") )
+                  className = object.getClass().getInterfaces()[0].getName();
+
+              knownClasses.put(boundName, className);
 
           } catch( RemoteException e ) {
 
@@ -247,7 +253,7 @@ public final class RMIWhisperer {
                   int end = message.indexOf(" ");
 
                   message = message.substring(0, end);
-                  unknownClasses.put(className, message);
+                  unknownClasses.put(boundName, message);
 
               } else {
                   ExceptionHandler.unexpectedException(e, "lookup", "call", false);
@@ -255,7 +261,7 @@ public final class RMIWhisperer {
 
           } catch( NotBoundException e) {
               Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
-              Logger.printlnPlainBlue(className + ".");
+              Logger.printlnPlainBlue(boundName + ".");
               Logger.eprintln("The corresponding bound name is not bound to the registry.");
               RMGUtils.exit();
           }
