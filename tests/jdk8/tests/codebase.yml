@@ -1,0 +1,66 @@
+tester:
+  name: codebase
+  title: Codebase Tests
+  description: "Performs tests on remote-methods-guessers 'codebase' action."
+
+tests:
+  - title: Registry Codebase Call
+    description: >
+      'Performs a codebase attack on the registry endpoint.'
+      'This should fail, as the useCodebaseOnly is set to true.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - TestClass
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature
+      - reg
+    validators:
+      - error: False
+      - contains:
+          values:
+            - is disabled
+            - not possible
+
+
+  - title: DGC Codebase Call
+    description: >
+      'Performs a codebase attack on the DGC endpoint.'
+      'This should fail, as the useCodebaseOnly is set to true.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - TestClass
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature
+      - dgc
+    validators:
+      - error: False
+      - contains:
+          values:
+            - is disabled
+            - not possible
+
+
+  - title: Method Codebase Call
+    description: >
+      'Performs a codebase attack on a method.'
+      'This should fail, as the useCodebaseOnly is set to true.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - TestClass
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature 
+      - 'javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)'
+      - --bound-name
+      - jmxrmi
+    validators:
+      - error: False
+      - contains:
+          values:
+            - is disabled
+            - not possible

@@ -1,0 +1,32 @@
+tester:
+  name: jdk8
+  title: JDK8 Tests
+  description: >
+    'Launches some end-to-end tests of remote-method-guesser against the jdk9  beanshooter example-server.'
+    'https://github.com/qtc-de/beanshooter'
+
+variables:
+  BASE-CMD:
+    - rmg
+    - --no-color
+    - --ssl
+    - ${DOCKER-IP}
+    - 9010
+
+containers:
+  - name: 'rmg-jdk8'
+    image: 'docker.pkg.github.com/qtc-de/beanshooter/tomcat8-jmxmp:1.1'
+    volumes:
+      - '${volume}:${volume-d}'
+    aliases:
+      DOCKER-rmg-jdk8-IP: DOCKER-IP
+      DOCKER-rmg-jdk8-GATEWAY: DOCKER-GW
+
+testers:
+  - ./tests/act.yml
+  - ./tests/bind.yml
+  - ./tests/codebase.yml
+  - ./tests/dgc.yml
+  - ./tests/enum.yml
+  - ./tests/method.yml
+  - ./tests/reg.yml

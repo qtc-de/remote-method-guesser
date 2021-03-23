@@ -1,0 +1,23 @@
+tester:
+  name: act
+  title: Activator Tests
+  description: "Performs tests on remote-methods-guessers 'act' action."
+
+tests:
+  - title: No Activator
+    description: >
+      'Check whether a non present activator is handeled'
+      'correctly and a corresponding error message is displayed.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - act
+      - CommonsCollections6
+      - ls
+    validators:
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - Caught NoSuchObjectException
+            - no activator

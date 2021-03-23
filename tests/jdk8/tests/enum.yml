@@ -1,0 +1,98 @@
+tester:
+  name: enum
+  title: Enumeration Tests
+  description: "Performs tests on remote-methods-guessers 'enum' action."
+
+
+tests:
+  - title: Server Enumeration
+    command: '${BASE-CMD}'
+
+    validators:
+      - error: False
+      - contains:
+          description: 'Check whether all registered bound names are detected.'
+          ignore_case: True
+          values:
+            - 'jmxrmi'
+            - 'javax.management.remote.rmi.RMIServerImpl_Stub (known class)'
+
+      - contains:
+          description: 'Check whether all exposed codebase values are detected.'
+          ignore_case: True
+          values:
+            - The remote server does not expose any codebases
+
+      - contains:
+          description: 'Check whether string marshalling behavior is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server String unmarshalling enumeration:
+              [+] 
+              [+] 	- Caught ClassCastException during lookup call.
+              [+] 	  --> The type java.lang.String is unmarshalled via readObject().
+              [+] 	  Configuration Status: Outdated
+
+      - contains:
+          description: 'Check whether the useCodebaseOnly settings is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server useCodebaseOnly enumeration:
+              [+] 
+              [+] 	- Caught ClassCastException during lookup call.
+              [+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: 'Check whether localhost bypass vulnerability is detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+              [+] 
+              [-] 	- Caught AccessException during unbindcall.
+              [-] 	  --> The servers seems to use a SingleEntryRegistry (probably JMX based).
+              [+] 	  Vulnerability Status: Undecided
+
+      - contains:
+          description: 'Check whether DGC enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI DGC enumeration:
+              [+] 
+              [+] 	- RMI server does not use a SecurityManager during DGC operations.
+              [+] 	  --> Remote class loading attacks are not possible.
+              [+] 	  Configuration Status: Outdated
+
+      - contains:
+          description: 'Check whether JEP290 enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server JEP290 enumeration:
+              [+] 
+              [+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
+              [+] 	  Vulnerability Status: Vulnerable
+
+      - contains:
+          description: 'Check whether JEP290 Bypass enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry JEP290 bypass enmeration:
+              [+] 
+              [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+              [+] 	  Vulnerability Status: Vulnerable
+
+      - contains:
+          description: 'Check whether Activator enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI ActivationSystem enumeration:
+              [+] 
+              [+] 	- Caught NoSuchObjectException during activate call (activator not present).
+              [+] 	  Configuration Status: Current Default

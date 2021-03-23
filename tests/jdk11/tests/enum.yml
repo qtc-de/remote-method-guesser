@@ -130,5 +130,5 @@ tests:
               [+] RMI ActivationSystem enumeration:
               [+] 
               [+] 	- Caught IllegalArgumentException during activate call (activator is present).
-              [+] 	  --> Deserialization allowed	 - Vulnerability Status:  Vulnerable
-              [+] 	  --> Client codebase enabled	 - Configuration Status:  Non Default
+              [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+              [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default

@@ -19,5 +19,6 @@ plugins:
         - ${volume}
 
 testers:
+  - ./jdk8/jdk8.yml
   - ./jdk9/jdk9.yml
   - ./jdk11/jdk11.yml

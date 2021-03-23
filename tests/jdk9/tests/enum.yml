@@ -80,7 +80,7 @@ tests:
               [+] 
               [+] 	- Caught MalformedURLException during lookup call.
               [+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
-              [+] 	  Configuration Status:  Non Default
+              [+] 	  Configuration Status: Non Default
 
       - contains:
           description: 'Check whether localhost bypass vulnerability is detected.'
@@ -90,7 +90,7 @@ tests:
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+] 
               [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
-              [+] 	  Vulnerability Status:  Vulnerable
+              [+] 	  Vulnerability Status: Vulnerable
 
       - contains:
           description: 'Check whether DGC enumeration is working.'
@@ -121,7 +121,7 @@ tests:
               [+] RMI registry JEP290 bypass enmeration:
               [+] 
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
-              [+] 	  Vulnerability Status:  Vulnerable
+              [+] 	  Vulnerability Status: Vulnerable
 
       - contains:
           description: 'Check whether Activator enumeration is working.'
@@ -131,5 +131,5 @@ tests:
               [+] RMI ActivationSystem enumeration:
               [+] 
               [+] 	- Caught IllegalArgumentException during activate call (activator is present).
-              [+] 	  --> Deserialization allowed	 - Vulnerability Status:  Vulnerable
-              [+] 	  --> Client codebase enabled	 - Configuration Status:  Non Default
+              [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+              [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default

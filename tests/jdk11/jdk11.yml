@@ -20,7 +20,7 @@ variables:
 
 containers:
   - name: 'rmg-jdk11'
-    image: 'docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.0-jdk11'
+    image: 'docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk11'
     volumes:
       - '${volume}:${volume-d}'
     aliases:
