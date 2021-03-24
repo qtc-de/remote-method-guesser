@@ -144,10 +144,10 @@ public class SampleWriter {
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSamples(String boundName, String className, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         for(MethodCandidate method : methods) {
-            createSample(className, boundName, method, rmi.host, rmi.port);
+            createSample(className, unknownClass, boundName, method, rmi.host, rmi.port);
         }
     }
 
@@ -165,10 +165,10 @@ public class SampleWriter {
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSample(String className, boolean unknownClass, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-        if(isLegacy)
+        if(isLegacy && unknownClass)
             className += "_Interface";
 
         Security.checkBoundName(boundName);
@@ -355,6 +355,11 @@ public class SampleWriter {
                 ctr += 1;
             }
 
+            if( ctr != 0 ) {
+                arguments.setLength(arguments.length() - 2);
+                argumentArray.setLength(argumentArray.length() - 2);
+            }
+
             methodLookup.setLength(methodLookup.length() - 2);
             methodLookup.append(");");
 
@@ -363,8 +368,8 @@ public class SampleWriter {
             stubTemplate = stubTemplate.replaceFirst("<METHOD_LOOKUP>", methodVariable + " = " + methodLookup);
 
             currentTemplate = currentTemplate.replaceFirst("<METHODNAME>", method.getName());
-            currentTemplate = currentTemplate.replaceFirst("<ARGUMENTS>", arguments.substring(0, arguments.length() - 2));
-            currentTemplate = currentTemplate.replaceFirst("<ARGUMENT_ARRAY>", argumentArray.substring(0, argumentArray.length() - 2));
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENTS>", arguments.toString());
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENT_ARRAY>", argumentArray.toString());
             currentTemplate = currentTemplate.replaceFirst("<HASH>", Long.toString(method.getHash()));
             currentTemplate = currentTemplate.replaceFirst("<RETURN>", returnType.getName());
             currentTemplate = currentTemplate.replaceFirst("<METHOD>", methodVariable);

@@ -101,17 +101,22 @@ public class Dispatcher {
 
         try {
             String className;
-            SampleWriter writer;
-            writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect, legacyMode);
+            boolean unknownClass = false;
+            SampleWriter writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect, legacyMode);
 
             for(String name : results.keySet()) {
 
                 Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
                 Logger.increaseIndent();
 
-                className = boundClasses.get(1).get(name);
-                writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
-                writer.createSamples(name, className, (List<MethodCandidate>)results.get(name), rmi);
+                className = allClasses.get(name);
+
+                if(boundClasses.get(1).keySet().contains(name)) {
+                    writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
+                    unknownClass = true;
+                }
+
+                writer.createSamples(name, className, unknownClass, (List<MethodCandidate>)results.get(name), rmi);
 
                 Logger.decreaseIndent();
             }
