@@ -1,0 +1,67 @@
+tester:
+  name: guess
+  title: Guessing Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'guess' action."
+
+
+tests:
+  - title: Guessing Known Remote Object
+    description: >
+      'Performs method guessing on the JMX remote object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - guess
+    validators:
+      - error: False
+      - contains:
+          values:
+            - known remote object class
+            - guessing is skipped
+            - --force-guessing
+            - java.lang.String getVersion()
+            - javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)
+
+
+  - title: Sample Creation
+    description: >
+      'Performs method guessing on the JMX remote object'
+      'using the --create-samples flag.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - guess
+      - --create-samples
+    validators:
+      - error: False
+      - contains:
+          values:
+            - known remote object class
+            - guessing is skipped
+            - --force-guessing
+            - java.lang.String getVersion()
+            - javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)
+            - Writing sample file 
+            - /rmg-samples/jmxrmi/getVersion/getVersion.java
+            - /rmg-samples/jmxrmi/newClient/newClient.java
+
+      - file_contains:
+          - file: ./rmg-samples/jmxrmi/getVersion/getVersion.java
+            contains:
+              - 'private static String remoteHost = "${DOCKER-IP}"'
+              - RMIServerImpl_Stub stub = (RMIServerImpl_Stub) registry.lookup("jmxrmi")
+              - java.lang.String response = stub.getVersion()
+
+          - file: ./rmg-samples/jmxrmi/newClient/newClient.java
+            contains:
+              - 'private static String remoteHost = "${DOCKER-IP}"'
+              - RMIServerImpl_Stub stub = (RMIServerImpl_Stub) registry.lookup("jmxrmi")
+              - java.lang.Object argument0 = TODO
+              - javax.management.remote.rmi.RMIConnection response = stub.newClient(argument0)
+
+      - dir_exists:
+          cleanup: True
+          force: True
+          dirs:
+            - ./rmg-samples
