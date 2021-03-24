@@ -105,6 +105,7 @@ public class ArgumentParser {
         parameters.put("create-samples", cmdLine.hasOption("create-samples"));
         parameters.put("zero-arg", cmdLine.hasOption("zero-arg"));
         parameters.put("localhost-bypass", cmdLine.hasOption("localhost-bypass"));
+        parameters.put("force-guessing", cmdLine.hasOption("force-guessing"));
     }
 
     /**
@@ -145,6 +146,10 @@ public class ArgumentParser {
         Option follow = new Option(null, "follow", false, "follow redirects to different servers");
         follow.setRequired(false);
         options.addOption(follow);
+
+        Option forceGuessing = new Option(null, "force-guessing", false, "force guessing on known remote objects");
+        forceGuessing.setRequired(false);
+        options.addOption(forceGuessing);
 
         Option forceLegacy = new Option(null, "force-legacy", false, "treat all classes as legacy stubs");
         forceLegacy.setRequired(false);

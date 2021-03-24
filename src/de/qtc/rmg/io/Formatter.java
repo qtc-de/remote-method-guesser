@@ -110,6 +110,9 @@ public class Formatter {
             Logger.printlnMixedBlue("- ", boundName);
             Logger.increaseIndent();
 
+            if(methods.size() == 0)
+                Logger.printlnMixedYellow("-->", "0 remote methods have been identified.");
+
             for( MethodCandidate m : methods ) {
                 Logger.printlnMixedYellow("-->", m.getSignature());
             }

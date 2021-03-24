@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
@@ -348,9 +349,21 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
+        HashMap<String,String> knownClasses = boundClasses.get(0);
+        Set<String> knownBoundNames = knownClasses.keySet();
         MethodGuesser.printGuessingIntro(candidates);
 
         for(String boundName : this.boundNames) {
+
+            if( knownBoundNames.contains(boundName) && (!(boolean)p.get("force-guessing"))) {
+                Logger.printlnMixedYellow("Bound name", boundName, "uses a known remote object class.");
+                Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
+                Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
+                Logger.println("");
+
+                RMGUtils.addKnownMethods(boundName, knownClasses.get(boundName), results);
+                continue;
+            }
 
             RemoteObjectClient client = getRemoteObjectClient(boundName);
             MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount, zeroArg);
@@ -360,8 +373,6 @@ public class Dispatcher {
         }
 
         Logger.decreaseIndent();
-
-        RMGUtils.addKnownMethods(boundClasses.get(0), results);
         format.listGuessedMethods(results);
 
         if(createSamples)

@@ -680,10 +680,8 @@ public class RMGUtils {
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
             if( verbose) {
-                Logger.increaseIndent();
                 Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
                 Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
-                Logger.decreaseIndent();
             }
             return true;
         }
@@ -710,20 +708,25 @@ public class RMGUtils {
      * @param knownClasses list of boundName - className pairs of known classes
      * @param guessedMethods list of successfully guessed methods
      */
-    public static void addKnownMethods(HashMap<String,String> knownClasses, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static void addKnownMethods(String boundName, String className, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
     {
         try {
-            for(String boundName: knownClasses.keySet()) {
-                CtClass knownClass = pool.getCtClass(knownClasses.get(boundName));
-                CtMethod[] knownMethods = knownClass.getDeclaredMethods();
+            CtClass knownClass = pool.getCtClass(className);
 
+            for(CtClass intf : knownClass.getInterfaces()) {
+
+                if(! isAssignableFrom(intf, "java.rmi.Remote"))
+                    continue;
+
+                CtMethod[] knownMethods = intf.getDeclaredMethods();
                 ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
-                for(CtMethod knownMethod: knownMethods) {
+
+                for(CtMethod knownMethod: knownMethods)
                     knownMethodCandidates.add(new MethodCandidate(knownMethod));
-                }
 
                 guessedMethods.put(boundName, knownMethodCandidates);
             }
+
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
         }
@@ -820,5 +823,37 @@ public class RMGUtils {
             serverAddress += "/";
 
         MaliciousOutputStream.setDefaultLocation(serverAddress);
+    }
+
+    /**
+     * This code was copied from the org.hibernate.bytecode.enhance.internal.javassist package,
+     * that is licensed under LGPL version 2.1 or later. According to the GPL compatibility matrix,
+     * it is fine to include the code in a GPLv3 licensed project and to convey the license to GPLv3.
+     * (https://www.gnu.org/licenses/gpl-faq.en.html#AllCompatibility)
+     *
+     * @param thisCtClass
+     * @param targetClassName
+     * @return
+     */
+    public static boolean isAssignableFrom(CtClass thisCtClass, String targetClassName)
+    {
+        if( thisCtClass == null )
+            return false;
+
+        if( thisCtClass.getName().equals(targetClassName) )
+            return true;
+
+        try {
+
+            if( isAssignableFrom(thisCtClass.getSuperclass(), targetClassName) )
+                return true;
+
+            for( CtClass interfaceCtClass : thisCtClass.getInterfaces() ) {
+                if( isAssignableFrom(interfaceCtClass, targetClassName) )
+                    return true;
+            }
+        }
+        catch (NotFoundException e) {}
+        return false;
     }
 }
