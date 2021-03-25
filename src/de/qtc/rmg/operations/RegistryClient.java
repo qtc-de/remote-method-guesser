@@ -288,13 +288,19 @@ public class RegistryClient {
     }
 
     /**
-     * Determines the String unmarshalling behavior of the RMI server. This function abuses the fact that the registry
-     * method lookup expects a String as argument. It attempts to invoke the lookup method using an Integer object instead,
-     * that is annotated with an invalid URL as codebase.
+     * Determines the String marshaling behavior of the RMI server. This function abuses the fact that RMI servers overwrite
+     * the annotateClass method of ObjectOutputStream. Whenever an RMI sever calls readObject, it also attempts to read the
+     * objects annotation, which is normally intended to be the client-side codebase (if existent, null otherwise). While the
+     * annotation is always a String in ordinary use cases, it is read via readObject again. Therefore, when readObject is
+     * used to unmarshal values, you have a second, implicit readObject call.
      *
-     * When an RMI registry unmarshalls String via readObject, it will attempt to parse the client specified codebase and
-     * throw an MalformedURLException. Otherwise, if Strings are unmarshalled via readString, the codebase is just ignored
-     * and a ClassCastException should occur.
+     * This function passes a class that is unknown to the server as annotation for an Integer object, that is send as the
+     * regular argument. When the server unmarshals via readObject, this should lead to a ClassNotFound exception. Otherwise,
+     * the server unmarshals via readString.
+     *
+     * Notice that sending a String as regular argument is not possible. When using writeObject with String as argument, Java
+     * implicitly calls writeString for the actual write process. The writeString method does not add annotations, as the
+     * String class is expected to be known by every Java server.
      *
      * @return true if the server uses readObject to unmarshal String
      */
@@ -310,22 +316,13 @@ public class RegistryClient {
         callArguments.add(0, Integer.class);
 
         try {
-            MaliciousOutputStream.setDefaultLocation("InvalidURL");
             registryCall("lookup", callArguments, true, false);
 
         } catch( java.rmi.ServerException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
 
-            if( t instanceof java.net.MalformedURLException ) {
-                Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during lookup call.");
-                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
-                Logger.printlnPlainYellow("readObject().");
-                Logger.statusOutdated();
-                ExceptionHandler.showStackTrace(e);
-                marshal = true;
-
-            } else if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
+            if( t instanceof ClassCastException && t.getMessage().contains("Cannot cast an object to java.lang.String")) {
                 Logger.printlnMixedYellow("- Server complained that", "object cannot be casted to java.lang.String.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
                 Logger.printlnPlainYellow("readString().");
@@ -339,12 +336,25 @@ public class RegistryClient {
                 Logger.statusUndecided("Configuration");
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( t instanceof java.lang.ClassNotFoundException && t.getMessage().contains("DefinitelyNonExistingClass")) {
+                Logger.printlnMixedYellow("- Caught", "ClassNotFoundException", "during lookup call.");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
+                ExceptionHandler.showStackTrace(e);
+                marshal = true;
+
             } else {
                 ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }
 
         } catch( ClassCastException e ) {
 
+            /**
+             * At the time of writing it is also possible to enumerate marshaling behavior by looking at the
+             * exception message of ClassCastException (compare to the previous one). This method is currently
+             * not used, but the code is left in place as it might be useful in future.
+             */
             if( e.getMessage().contains("java.lang.Integer cannot be cast to java.lang.String") ) {
                 Logger.printlnMixedYellow("- Caught", "ClassCastException", "during lookup call.");
                 Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
@@ -352,6 +362,7 @@ public class RegistryClient {
                 Logger.statusOutdated();
                 ExceptionHandler.showStackTrace(e);
                 marshal = true;
+
             } else {
                 ExceptionHandler.unexpectedException(e, "lookup", "call", false);
             }
