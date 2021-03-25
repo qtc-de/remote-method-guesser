@@ -288,7 +288,7 @@ public class RegistryClient {
     }
 
     /**
-     * Determines the String marshaling behavior of the RMI server. This function abuses the fact that RMI servers overwrite
+     * Determines the String marshalling behavior of the RMI server. This function abuses the fact that RMI servers overwrite
      * the annotateClass method of ObjectOutputStream. Whenever an RMI sever calls readObject, it also attempts to read the
      * objects annotation, which is normally intended to be the client-side codebase (if existent, null otherwise). While the
      * annotation is always a String in ordinary use cases, it is read via readObject again. Therefore, when readObject is
@@ -351,7 +351,7 @@ public class RegistryClient {
         } catch( ClassCastException e ) {
 
             /**
-             * At the time of writing it is also possible to enumerate marshaling behavior by looking at the
+             * At the time of writing it is also possible to enumerate marshalling behavior by looking at the
              * exception message of ClassCastException (compare to the previous one). This method is currently
              * not used, but the code is left in place as it might be useful in future.
              */

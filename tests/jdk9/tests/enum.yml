@@ -67,7 +67,7 @@ tests:
             - |-
               [+] RMI server String unmarshalling enumeration:
               [+] 
-              [+] 	- Caught MalformedURLException during lookup call.
+              [+] 	- Caught ClassNotFoundException during lookup call.
               [+] 	  --> The type java.lang.String is unmarshalled via readObject().
               [+] 	  Configuration Status: Outdated
 

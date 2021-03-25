@@ -4,10 +4,10 @@ import java.util.Iterator;
 
 /**
  * Internally, Java RMI always uses an array of objects as argument for method calls.
- * During the marshaling, reflective access to the corresponding remote method is used
- * to determine the correct marshaling type. Primitive types are marshaled by their
+ * During the marshalling, reflective access to the corresponding remote method is used
+ * to determine the correct marshalling type. Primitive types are marshalled by their
  * corresponding write function (e.g. writeInt for the int type), whereas non primitive
- * types are usually marshaled with writeObject (except of String, that uses writeString).
+ * types are usually marshalled with writeObject (except of String, that uses writeString).
  *
  * Within rmg, we do not use the high level RMI API and implemented low level RMI calls manually
  * (well, we still use RMI library functions and only implemented the actual dispatching manually).
@@ -15,10 +15,10 @@ import java.util.Iterator;
  * required that the corresponding Method object actually exists and methods can be called directly
  * by specifying their hash value.
  *
- * However, the correct marshaling of call arguments is still required and if the corresponding
+ * However, the correct marshalling of call arguments is still required and if the corresponding
  * remote method does not exist within the current scope, it is required to pass the desired argument
  * types in a different way. For this purpose, we use the MethodArguments class, that stores
- * method arguments together with their desired marshaling type.
+ * method arguments together with their desired marshalling type.
  *
  * When creating a MethodArguments object, you currently need to pass the expected capacity for the
  * argument array. This was a design decision, to allow storing method arguments within the most

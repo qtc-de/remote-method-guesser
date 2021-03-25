@@ -110,7 +110,7 @@ tests:
   - title: String Marshaling
     description: >
         'Attempts a deserialization attack on String execute(String dummy), which'
-        'should not work due to the string unmarshaling behavior of jdk11.'
+        'should not work due to the string unmarshalling behavior of jdk11.'
 
     command: '${BASE-CMD}'
     arguments:

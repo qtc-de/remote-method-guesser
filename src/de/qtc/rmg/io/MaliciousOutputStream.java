@@ -16,7 +16,7 @@ import sun.rmi.server.MarshalOutputStream;
  * arbitrary objects to be passed as the location of an object. Within the remote-method-guesser project,
  * this can be used to enumerate how the String type is unmarshalled by the remote server. If the String
  * type is unmarshalled via 'readObject', the 'resolveClass' method will be called which tries to deserialize
- * the 'location' via another 'readObject'. If 'readString' is used to unmarshall the String type, the location
+ * the 'location' via another 'readObject'. If 'readString' is used to unmarshal the String type, the location
  * is just ignored during a RMI lookup call.
  *
  * Technically speaking, the above mentioned unmarshal behavior could also be enumerated easier (which is also

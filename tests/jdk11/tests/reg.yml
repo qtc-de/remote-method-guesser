@@ -9,7 +9,7 @@ tests:
   - title: Gadget Call
     description: >
       'Attempts a deserialization attack on the registry endpoint.'
-      'This should fail, as the server uses readString for unmarshaling.'
+      'This should fail, as the server uses readString for unmarshalling.'
 
     command: '${BASE-CMD}'
     arguments:
@@ -27,7 +27,7 @@ tests:
   - title: Gadget Call (SSL)
     description: >
       'Attempts a deserialization attack on the registry endpoint.'
-      'This should fail, as the server uses readString for unmarshaling.'
+      'This should fail, as the server uses readString for unmarshalling.'
 
     command: '${BASE-CMD-SSL}'
     arguments:
