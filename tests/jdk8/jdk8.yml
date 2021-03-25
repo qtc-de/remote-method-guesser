@@ -25,6 +25,7 @@ containers:
 testers:
   - ./tests/act.yml
   - ./tests/bind.yml
+  - ./tests/call.yml
   - ./tests/codebase.yml
   - ./tests/dgc.yml
   - ./tests/enum.yml

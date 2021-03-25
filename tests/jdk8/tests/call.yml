@@ -1,0 +1,59 @@
+tester:
+  name: call
+  title: Calling Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'call' action."
+
+plugins:
+  - os_command:
+      cmd:
+        - /bin/bash
+        - ../../../plugins/build.sh
+        - ../../../target/${rmg}
+        - ../../utils/PluginTest.java
+        - ../../utils/PluginTest.jar
+
+tests:
+  - title: Execute Call
+    description: >
+      'Invokes the getVersion function on the JMX remote object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - ''
+      - --bound-name
+      - jmxrmi
+      - --signature
+      - 'String getVersion()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - '1.0 java_runtime_1.8.0_40-internal-b22'
+
+
+  - title: Execute Call (Based on ObjID)
+    description: >
+      'Invokes the list function on the rmi registry by using the'
+      '--objid option.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - ''
+      - --objid
+      - 0
+      - --signature
+      - 'String[] list()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - jmxrmi
+
+

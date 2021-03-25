@@ -1,4 +1,6 @@
+import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
 
 import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.plugin.DefaultProvider;
@@ -11,12 +13,36 @@ public class PluginTest implements IResponseHandler, IPayloadProvider, IArgument
 
     private static DefaultProvider defProv = new DefaultProvider();
 
-	public void handleResponse(Object responseObject)
+    public void handleResponse(Object responseObject)
     {
-        System.out.println(responseObject);
+        if(responseObject instanceof Collection<?>) {
+
+            for(Object o: (Collection<?>)responseObject) {
+                System.out.println(o.toString());
+            }
+
+        } else if(responseObject instanceof Map<?,?>) {
+
+            Map<?,?> map = (Map<?,?>)responseObject;
+
+            for(Object o: map.keySet()) {
+                System.out.print(o.toString());
+                System.out.println(" --> " + map.get(o).toString());
+            }
+
+        } else if(responseObject.getClass().isArray()) {
+
+            for(Object o: (Object[])responseObject) {
+                System.out.println(o.toString());
+            }
+
+        } else {
+
+            System.out.println(responseObject.toString());
+        }
     }
 
-	public Object[] getArgumentArray(String argumentString)
+    public Object[] getArgumentArray(String argumentString)
     {
         if( argumentString.equals("login") ) {
 
@@ -35,7 +61,7 @@ public class PluginTest implements IResponseHandler, IPayloadProvider, IArgument
     {
         if( name.equals("custom") ) {
             return defProv.getPayloadObject(action, "CommonsCollections6", args);
-        
+
         } else {
             return defProv.getPayloadObject(action, name, args);
         }
