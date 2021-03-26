@@ -36,7 +36,7 @@ vulnerabilities on *Java RMI* endpoints. Currently, the following operations are
   + [guess](#method-guessing)
   + [call](#calling-remote-methods) 
   + [method](#method-based-deserialization-attacks)
-  + [act|dgc|reg](#method-based-deserialization-attacks)
+  + [act|dgc|reg](#general-deserialization-attacks)
   + [codebase](#codebase-attacks)
   + [listen](#jrmplistener)
   + [create-samples](#sample-generation)
@@ -607,7 +607,7 @@ command execution. After making this substitution and compiling the two generate
 ```
 
 
-### Wordlists Files
+### Wordlist Files
 
 -----
 
