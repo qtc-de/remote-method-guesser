@@ -9,20 +9,19 @@ You can either build the container from source or pull it from *GitHub Packages*
   to create the container. If you also want to make adjustments to the example server, just modify the [source code](/.docker/resources/example-server)
   and rebuild the container.
 
-* To load the container from *GitHub Packages*, just authenticate using your personal access token and
-  run the corresponding pull command:
+* To load the container from *GitHub Packages*, just authenticate using your personal access token and run the corresponding pull command:
   ```console
   $ docker login https://docker.pkg.github.com -u <USERNAME>
   Password:
 
   Login Succeeded
-  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.0-jdk9
+  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
   ```
 
 To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/.docker/docker-compose.yml)
 and start the container using ``docker-compose up``. From container version *v3.0* on, the container is available in two different versions: *jdk9* and *jdk11*.
 As the names suggest, the first one is build based on *openjdk-9*, whereas the second one is based on *openjdk-11*. Since *openjdk-9* is no longer maintained,
-this container version is vulnerable against some older *RMI* vulnerabilities (e.g. localhost and An Trinh bypass). The *jdk11* version, on the other hand,
+this container version is vulnerable to some older *RMI* vulnerabilities (e.g. *localhost* and *An Trinh bypass*). The *jdk11* version, on the other hand,
 is fully patched at the time of building.
 
 
@@ -30,123 +29,97 @@ is fully patched at the time of building.
 
 ----
 
-When launched with its default configuration, the container starts two *Java rmiregistry* instances on port ``1090`` and port ``9010``.
+When launched in its default configuration, the container starts two *Java rmiregistry* instances on port ``1090`` and port ``9010``.
 The registry on port ``1090`` is *SSL* protected and contains three available bound names:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 1090
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 
-[+] Listing bound names in registry:
-[+] 
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- ssl-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
-[+] 	- secure-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
-[+] 
+[qtc@kali ~]$ rmg --ssl 172.17.0.2 1090
+[+] RMI registry bound names:
+[+]
+[+]     - ssl-server
+[+]         --> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
+[+]     - plain-server
+[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+]     - secure-server
+[+]         --> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[+]
 [+] RMI server codebase enumeration:
-[+] 
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
-[+] 		--> javax.rmi.ssl.SslRMIClientSocketFactory
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
-[+] 
+[+]
+[+]     - http://iinsecure.dev/well-hidden-development-folder/
+[+]         --> de.qtc.rmg.server.interfaces.ISslServer
+[+]         --> de.qtc.rmg.server.interfaces.IPlainServer
+[+]         --> javax.rmi.ssl.SslRMIClientSocketFactory
+[+]         --> de.qtc.rmg.server.interfaces.ISecureServer
+[+]
 [+] RMI server String unmarshalling enumeration:
-[+] 
-[+] 	- Server attempted to deserialize object locations during lookup call.
-[+] 	  --> The type java.lang.String is unmarshalled via readObject().
-[+] 	  Configuration Status: Outdated
-[+] 
+[+]
+[+]     - Caught ClassNotFoundException during lookup call.
+[+]       --> The type java.lang.String is unmarshalled via readObject().
+[+]       Configuration Status: Outdated
+[+]
 [+] RMI server useCodebaseOnly enumeration:
-[+] 
-[+] 	- Caught ClassCastException during lookup call.
-[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
-[+] 	  Configuration Status: Current Default
-[+] 
+[+]
+[+]     - Caught MalformedURLException during lookup call.
+[+]       --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+]       Configuration Status: Non Default
+[+]
 [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-[+] 
-[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
-[+] 	  Vulnerability Status: Vulnerable
-[+] 
-[+] RMI server DGC enumeration:
-[+] 
-[+] 	- Security Manager rejected access to the class loader.
-[+] 	  --> The DGC uses most likely a separate security policy.
-[+] 	  Configuration Status: Outdated
-[+] 
+[+]
+[+]     - Caught NotBoundException during unbind call (unbind was accepeted).
+[+]       Vulnerability Status: Vulnerable
+[+]
+[+] RMI DGC enumeration:
+[+]
+[+]     - Security Manager rejected access to the class loader.
+[+]       --> The DGC uses most likely a separate security policy.
+[+]       Configuration Status: Current Default
+[+]
 [+] RMI server JEP290 enumeration:
-[+] 
-[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
-[+] 	  Vulnerability Status: Non Vulnerable
-[+] 
-[+] RMI server JEP290 bypass enmeration:
-[+] 
-[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
-[+] 	  Vulnerability Status: Vulnerable
+[+]
+[+]     - DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+]       Vulnerability Status: Non Vulnerable
+[+]
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+]     - Caught IllegalArgumentException after sending An Trinh gadget.
+[+]       Vulnerability Status: Vulnerable
+[+]
+[+] RMI ActivationSystem enumeration:
+[+]
+[+]     - Caught NoSuchObjectException during activate call (activator not present).
+[+]       Configuration Status: Current Default
 ```
 
 The registry on port ``9010`` can be contacted without *SSL* and exposes also three bound names. In contrast to the previous setup, two of
 the exposed bound names belong to the same remote interface. Furthermore, the last remaining bound name belongs to a remote class that uses
-*statically compiled stubs* ([legacy-rmi](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmic.html)).
+*statically compiled stubs* ([legacy-rmi](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmic.html)). Additionally, this
+registry port binds an RMI Activator instance.
+
 
 ```console
-[qtc@kali ~]$ rmg 172.18.0.2 9010
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 
-[+] Listing bound names in registry:
-[+] 
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 
+[qtc@kali ~]$ rmg 172.17.0.2 9010
+[+] RMI registry bound names:
+[+]
+[+]     - plain-server2
+[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+]     - plain-server
+[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+]     - legacy-service
+[+]         --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
+[+]
 [+] RMI server codebase enumeration:
-[+] 
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
-[+] 
-[+] RMI server String unmarshalling enumeration:
-[+] 
-[+] 	- Server attempted to deserialize object locations during lookup call.
-[+] 	  --> The type java.lang.String is unmarshalled via readObject().
-[+] 	  Configuration Status: Outdated
-[+] 
-[+] RMI server useCodebaseOnly enumeration:
-[+] 
-[+] 	- Caught ClassCastException during lookup call.
-[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
-[+] 	  Configuration Status: Current Default
-[+] 
-[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-[+] 
-[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
-[+] 	  Vulnerability Status: Vulnerable
-[+] 
-[+] RMI server DGC enumeration:
-[+] 
-[+] 	- Security Manager rejected access to the class loader.
-[+] 	  --> The DGC uses most likely a separate security policy.
-[+] 	  Configuration Status: Outdated
-[+] 
-[+] RMI server JEP290 enumeration:
-[+] 
-[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
-[+] 	  Vulnerability Status: Non Vulnerable
-[+] 
-[+] RMI server JEP290 bypass enmeration:
-[+] 
-[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
-[+] 	  Vulnerability Status: Vulnerable
+[+]
+[+]     - http://iinsecure.dev/well-hidden-development-folder/
+[+]         --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
+[+]         --> de.qtc.rmg.server.interfaces.IPlainServer
+[+]
+[...]
+[+]
+[+] RMI ActivationSystem enumeration:
+[+]
+[+]     - Caught IllegalArgumentException during activate call (activator is present).
+[+]       --> Deserialization allowed     - Vulnerability Status: Vulnerable
+[+]       --> Client codebase enabled     - Configuration Status: Non Default
 ```
 
 The corresponding remote objects get assigned a random port during the server startup. By default, the
@@ -164,52 +137,49 @@ Each successful method call is logged on the server side. The following listing 
 was started. Additionally, one successful method call on the ``login`` method was logged:
 
 ```console
-[qtc@kali .docker]$ sudo docker-compose up
-Starting docker_rmg_1 ... done
-Attaching to docker_rmg_1
-rmg_1  | [+] IP address of the container: 172.18.0.2
-rmg_1  | [+] Adding gateway address to /etc/hosts file...
-rmg_1  | [+] Adding RMI hostname to /etc/hosts file...
-rmg_1  | [+] Starting rmi server...
-rmg_1  | Picked up _JAVA_OPTIONS:  -Djava.rmi.server.hostname=iinsecure.dev -Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.keyStore=/opt/store.p12 -Djavax.net.ssl.keyStoreType=pkcs12 -Djava.rmi.server.useCodebaseOnly=false -Djava.security.policy=/opt/policy -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
-rmg_1  | 
-rmg_1  | [2020.11.28 - 14:10:52] Initializing Java RMI Server:
-rmg_1  | [2020.11.28 - 14:10:52] 
-rmg_1  | [2020.11.28 - 14:10:52]     Creating RMI-Registry on port 1090
-rmg_1  | [2020.11.28 - 14:10:52]     
-rmg_1  | [2020.11.28 - 14:10:52]     Creating PlainServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server with interface IPlainServer is ready.
-rmg_1  | [2020.11.28 - 14:10:52]     Creating SSLServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as ssl-server
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname ssl-server with interface ISslServer is ready.
-rmg_1  | [2020.11.28 - 14:10:52]     Creating SecureServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as secure-server
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname secure-server with interface ISecureServer is ready.
-rmg_1  | [2020.11.28 - 14:10:52] 
-rmg_1  | [2020.11.28 - 14:10:52] Server setup finished.
-rmg_1  | [2020.11.28 - 14:10:52] Initializing legacy server.
-rmg_1  | [2020.11.28 - 14:10:52] 
-rmg_1  | [2020.11.28 - 14:10:52]     Creating RMI-Registry on port 9010
-rmg_1  | [2020.11.28 - 14:10:52]     
-rmg_1  | [2020.11.28 - 14:10:52]     Creating LegacyServiceImpl object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding LegacyServiceImpl as legacy-service
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname legacy-service with class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is ready.
-rmg_1  | [2020.11.28 - 14:10:52]     Creating PlainServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server with interface IPlainServer is ready.
-rmg_1  | [2020.11.28 - 14:10:52]     Creating another PlainServer object.
-rmg_1  | [2020.11.28 - 14:10:52]         Binding Object as plain-server2
-rmg_1  | [2020.11.28 - 14:10:52]         Boundname plain-server2 with interface IPlainServer is ready.
-rmg_1  | [2020.11.28 - 14:10:52]     
-rmg_1  | [2020.11.28 - 14:10:52] Server setup finished.
-rmg_1  | [2020.11.28 - 14:10:52] Waiting for incoming connections.
-rmg_1  | [2020.11.28 - 14:10:52] 
-rmg_1  | [2020.11.28 - 14:10:52] [SecureServer]: Processing call for String login(HashMap<String, String> credentials)
+[qtc@kali ~]$ docker run docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
+[+] IP address of the container: 172.17.0.2
+[+] Adding gateway address to /etc/hosts file...
+[+] Adding RMI hostname to /etc/hosts file...
+[+] Starting rmi server...
+Picked up _JAVA_OPTIONS: -Djava.rmi.server.hostname=iinsecure.dev     -Djavax.net.ssl.keyStorePassword=password     -Djavax.net.ssl.keyStore=/opt/store.p12     -Djavax.net.ssl.keyStoreType=pkcs12     -Djava.rmi.server.useCodebaseOnly=false     -Djava.security.policy=/opt/policy     -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
+[2021.03.26 - 05:16:47] Initializing Java RMI Server:
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47]     Creating RMI-Registry on port 1090
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47]     Creating PlainServer object.
+[2021.03.26 - 05:16:47]         Binding Object as plain-server
+[2021.03.26 - 05:16:47]         Boundname plain-server with interface IPlainServer is ready.
+[2021.03.26 - 05:16:47]     Creating SSLServer object.
+[2021.03.26 - 05:16:47]         Binding Object as ssl-server
+[2021.03.26 - 05:16:47]         Boundname ssl-server with interface ISslServer is ready.
+[2021.03.26 - 05:16:47]     Creating SecureServer object.
+[2021.03.26 - 05:16:47]         Binding Object as secure-server
+[2021.03.26 - 05:16:47]         Boundname secure-server with interface ISecureServer is ready.
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47] Server setup finished.
+[2021.03.26 - 05:16:47] Initializing legacy server.
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47]     Creating RMI-Registry on port 9010
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47]     Creating LegacyServiceImpl object.
+[2021.03.26 - 05:16:47]         Binding LegacyServiceImpl as legacy-service
+[2021.03.26 - 05:16:47]         Boundname legacy-service with class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is ready.
+[2021.03.26 - 05:16:47]     Creating PlainServer object.
+[2021.03.26 - 05:16:47]         Binding Object as plain-server
+[2021.03.26 - 05:16:47]         Boundname plain-server with interface IPlainServer is ready.
+[2021.03.26 - 05:16:47]     Creating another PlainServer object.
+[2021.03.26 - 05:16:47]         Binding Object as plain-server2
+[2021.03.26 - 05:16:47]         Boundname plain-server2 with interface IPlainServer is ready.
+[2021.03.26 - 05:16:47]     Creating ActivatorImp object.
+[2021.03.26 - 05:16:47]         Activator is ready.
+[2021.03.26 - 05:16:47]
+[2021.03.26 - 05:16:47] Server setup finished.
+[2021.03.26 - 05:16:47] Waiting for incoming connections.
 ```
 
 One core feature of *remote-method-guesser* is that it allows *safe method guessing* without invoking method calls on the server side.
-The above mentioned logging of server-side method calls can be used to verify this. In a usual run of *rmg's* ``guess``, ``attack``
+The above mentioned logging of server-side method calls can be used to verify this. During a usual run of *rmg's* ``guess``, ``method``
 and ``codebase`` actions, no valid calls should be logged on the server side.
 
 
@@ -299,112 +269,85 @@ The following listing shows an example run of *remote-method-guessers* ``guess``
 #### 1090 Registry
 
 ```console
-[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 2 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
-[+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
-[+] 	2550 methods were successfully parsed.
-[+] 
-[+] Starting Method Guessing:
-[+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3294 method signature(s).
-[+] 	
-[+] 	Current bound name: ssl-server.
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev
-[+] 			Redirecting the ssl connection back to 172.18.0.2... 
-[+] 			This is done for all further requests. This message is not shown again. 
-[+] 		Guessing methods...
+[qtc@kali ~]$ rmg --ssl 172.17.0.2 1090 guess --zero-arg
+[+] Reading method candidates from internal wordlist rmg.txt
+[+]     752 methods were successfully parsed.
+[+] Reading method candidates from internal wordlist rmiscout.txt
+[+]     2550 methods were successfully parsed.
 [+]
-[+] 			HIT! Method with signature String system(String[] dummy) exists!
-[+] 			HIT! Method with signature int execute(String dummy) exists!
-[+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 		
-[+] 	Current bound name: plain-server.
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
-[+] 			Redirecting the connection back to 172.18.0.2... 
-[+] 			This is done for all further requests. This message is not shown again. 
-[+] 		Guessing methods...
+[+] Starting Method Guessing on 3294 method signature(s).
 [+]
-[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 			HIT! Method with signature String execute(String dummy) exists!
-[+] 		
-[+] 	Current bound name: secure-server.
-[+] 		Guessing methods...
+[+]     Guessing methods on bound name: plain-server ...
 [+]
-[+] 			HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
-[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 		
-[+] 
+[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+]         HIT! Method with signature String execute(String dummy) exists!
+[+]
+[+]     Guessing methods on bound name: ssl-server ...
+[+]
+[+]         HIT! Method with signature String system(String[] dummy) exists!
+[+]         HIT! Method with signature int execute(String dummy) exists!
+[+]         HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+]
+[+]     Guessing methods on bound name: secure-server ...
+[+]
+[+]         HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+]         HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+]         HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+]
+[+]
 [+] Listing successfully guessed methods:
-[+] 	-  ssl-server
-[+] 		--> String system(String[] dummy)
-[+] 		--> int execute(String dummy)
-[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-[+] 	-  plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  secure-server
-[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
-[+] 		--> void logMessage(int dummy1, Object dummy2)
-[+] 		--> String login(java.util.HashMap dummy1)
+[+]     -  ssl-server
+[+]         --> String system(String[] dummy)
+[+]         --> int execute(String dummy)
+[+]         --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+]     -  plain-server
+[+]         --> String system(String dummy, String[] dummy2)
+[+]         --> String execute(String dummy)
+[+]     -  secure-server
+[+]         --> void updatePreferences(java.util.ArrayList dummy1)
+[+]         --> void logMessage(int dummy1, Object dummy2)
+[+]         --> String login(java.util.HashMap dummy1)
 ```
 
 #### 9010 Registry
 
 ```console
-[qtc@kali ~]$ rmg --zero-arg 172.18.0.2 9010 guess
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 2 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
-[+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
-[+] 	2550 methods were successfully parsed.
+[qtc@kali ~]$ rmg 172.17.0.2 9010 guess --zero-arg
+[+] Reading method candidates from internal wordlist rmg.txt
+[+]     752 methods were successfully parsed.
+[+] Reading method candidates from internal wordlist rmiscout.txt
+[+]     2550 methods were successfully parsed.
 [+]
-[+] Starting Method Guessing:
-[+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3294 method signature(s).
+[+] Starting Method Guessing on 3294 method signature(s).
 [+]
-[+] 	Current bound name: plain-server2.
-[+] 		RMI object tries to connect to different remote host: iinsecure.dev.
-[+] 			Redirecting the connection back to 172.18.0.2...
-[+] 			This is done for all further requests. This message is not shown again.
-[+] 		Guessing methods...
+[+]     Guessing methods on bound name: plain-server2 ...
 [+]
-[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 			HIT! Method with signature String execute(String dummy) exists!
+[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+]         HIT! Method with signature String execute(String dummy) exists!
 [+]
-[+] 	Current bound name: plain-server.
-[+] 		Guessing methods...
+[+]     Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
+[+]     You can use --no-legacy to prevent this.
+[+]     Guessing methods on bound name: legacy-service ...
 [+]
-[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 			HIT! Method with signature String execute(String dummy) exists!
+[+]         HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+]         HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
+[+]         HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
 [+]
-[+] 	Current bound name: legacy-service.
-[+] 		Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+] 		You can use --no-legacy to prevent this.
-[+] 		Guessing methods...
+[+]     Guessing methods on bound name: plain-server ...
 [+]
-[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 			HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
-[+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+]         HIT! Method with signature String execute(String dummy) exists!
 [+]
 [+]
 [+] Listing successfully guessed methods:
-[+] 	-  plain-server2
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  legacy-service
-[+] 		--> String login(java.util.HashMap dummy1)
-[+] 		--> void logMessage(int dummy1, String dummy2)
-[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+]     -  plain-server2
+[+]         --> String system(String dummy, String[] dummy2)
+[+]         --> String execute(String dummy)
+[+]     -  plain-server
+[+]         --> String system(String dummy, String[] dummy2)
+[+]         --> String execute(String dummy)
+[+]     -  legacy-service
+[+]         --> String login(java.util.HashMap dummy1)
+[+]         --> void logMessage(int dummy1, String dummy2)
+[+]         --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 ```
