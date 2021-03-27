@@ -50,6 +50,13 @@
                 <include>config.properties</include>
             </includes>
           </resource>
+          <resource>
+            <directory>.</directory>
+            <includes>
+                <include>wordlists/**</include>
+                <include>templates/**</include>
+            </includes>
+          </resource>
         </resources>
 
         <plugins>

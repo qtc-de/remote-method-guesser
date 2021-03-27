@@ -2,6 +2,7 @@ package de.qtc.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class SampleWriter {
     private String followRedirects;
 
     private File sampleFolder;
-    private File templateFolder;
+    private String templateFolder;
 
     private static String importPlaceholder = "import <IMPORT>;";
     private static String methodPlaceholder = "    <METHOD> throws RemoteException;";
@@ -57,13 +58,8 @@ public class SampleWriter {
         this.ssl = ssl ? "true" : "false";
         this.followRedirects = followRedirects ? "true" : "false";
 
+        this.templateFolder = templateFolder;
         this.sampleFolder = new File(sampleFolder);
-        this.templateFolder = new File(templateFolder);
-
-        if( !this.templateFolder.exists() ) {
-            Logger.eprintlnMixedYellow("Template folder", this.templateFolder.getCanonicalPath(), "does not exist.");
-            RMGUtils.exit();
-        }
 
         if( !this.sampleFolder.exists() ) {
             Logger.printlnMixedBlue("Sample folder", this.sampleFolder.getCanonicalPath(), "does not exist.");
@@ -82,11 +78,42 @@ public class SampleWriter {
      */
     public String loadTemplate(String templateName) throws IOException
     {
+        if(this.templateFolder != null && this.templateFolder.isEmpty())
+            return loadTemplateStream(templateName);
+
+        else
+            return loadTemplateFile(templateName);
+    }
+
+    /**
+     * Reads a template from the template folder and returns the corresponding content.
+     *
+     * @param templateName name of the template file
+     * @return template content
+     * @throws IOException is thrown when an IO operation fails.
+     */
+    public String loadTemplateStream(String templateName) throws IOException
+    {
+        InputStream stream = this.getClass().getResourceAsStream("/templates/" + templateName);
+        byte[] content = stream.readAllBytes();
+        stream.close();
+        return new String(content);
+    }
+
+    /**
+     * Reads a template from the template folder and returns the corresponding content.
+     *
+     * @param templateName name of the template file
+     * @return template content
+     * @throws IOException is thrown when an IO operation fails.
+     */
+    public String loadTemplateFile(String templateName) throws IOException
+    {
         File templateFile = new File(this.templateFolder, templateName);
         String canonicalPath = templateFile.getCanonicalPath();
 
         if( !templateFile.exists() ) {
-            Logger.eprintlnMixedYellow("Template file", canonicalPath, "was not found in the template folder.");
+            Logger.eprintlnMixedYellow("Template file", canonicalPath, "does not exist.");
             RMGUtils.exit();
         }
 
