@@ -345,6 +345,135 @@ public class Shell implements Serializable, Remote
 
 ------
 
+The ``enum`` action is *rmg's* base action and basically performs an *RMI vulnerability scan*. In this section,
+the different checks of the ``enum`` action and it's outputs are explained in more detail:
+
+
+#### Bound Name Enumeration
+
+The bound name enumeration should be self explanatory. In this check *rmg* simply obtains a list of bound names
+registered on an *RMI registry*. Additionally, each bound name is queried once to obtain the class or interface
+name that is used when dispatching calls to the corresponding bound name. Obtained class names are printed
+and marked as either *known* or *unknown*. The *unknown* marker means that the corresponding *remote class* is not
+available within your own classpath. As the amount of default *remote classes* within a *JRE* is quite limited and
+most *RMI endpoints* use custom *remote classes*, this marker should appear the majority of times. However, for some
+well known services like *JMX* you may also encounter the *known* marker, as the ``RMIServerImpl_Stub`` class that
+is used by *JMX* is available on your *JRE* as well.
+
+
+#### Codebase Enumeration
+
+Apart from client specified codebases explained above, *RMI* servers can also expose a codebase to download class
+definitions dynamically. The idea is basically that it enables client's to call remote methods without having all
+required class definitions within their own class path. Imagine a method like ``ServerManager getServerManager()``,
+where the ``ServerManager`` class is implemented by the server, but is not known to the client. Calling this method
+without a server exposed codebase would lead to a ``ClassNotFoundException``, as the class definition is not known
+on the client side. With a server exposed codebase, the client could enable remote class loading (``useCodebaseOnly=false``)
+and the *RMI* internals would download the class from the server specified codebase during the method call.
+
+As with client specified codebases, remote class loading is always a security risk and ``UseCodebaseOnly`` is set to
+``true`` by default. Due to the implied security risks, this concept is generally not often used in practice. When
+developing applications that use *Java RMI* for client-server communication, you usually already compile all required classes
+and interface definitions into the client. Exposing a server-side codebase is therefore usually not required.
+
+*rmg* looks out for these server-side specified codebase definitions anyway. During a black box security assessment,
+encountering a  ``HTTP`` based server-side codebase can be huge deal. It may allows you to download class definitions
+that expose information about the *RMI* endpoint. Sometimes you also find codebases that rely on the ``file`` protocol.
+While not being that useful without server access, a ``file`` based codebase still reveals internal paths that could
+be useful for other attacks as well.
+
+
+#### String Marshalling
+
+When dispatching *RMI calls*, the *RMI server* uses different methods to unmarshal the client specified arguments.
+*Primitive types* like ``int`` are marshalled via their corresponding *read-method* like e.g. ``readInt``. Non
+primitive types are usually unmarshalled via ``readObject``, that can be used for certain types of attacks.
+
+In *June 2020*, the unmarshalling behavior of the ``String`` type [was changed](https://mogwailabs.de/de/blog/2019/03/attacking-java-rmi-services-after-jep-290/).
+Instead of unmarshalling ``String`` via ``readObject``, the ``String`` type is now read via ``readString`` on modern
+*RMI* endpoints. This prevents certain attack types on remote methods that only accept ``String`` typed arguments.
+
+*rmg* is capable of enumerating the corresponding unmarshalling behavior and returns one of the following
+outputs during its enumeration:
+
+* **Current Default**: The ``String`` type is unmarshalled via ``readString``.
+* **Outdated**: The ``String`` type is unmarshalled via ``readObject``, which usually means that the corresponding
+  *RMI endpoint* is out of date.
+
+
+#### useCodebaseOnly Enumeration
+
+The *useCodebaseOnly enumeration* attempts to detect the servers setting on the ``useCodebaseOnly`` attribute. The impact
+of this attribute was already explained within the [codebase action](#codebase-action) section. The enumeration can return
+one of the following results:
+
+* **Current Default**: The *RMI* server runs with ``useCodebaseOnly=true``
+* **Non Default**: The *RMI* server runs with ``useCodebaseOnly=false``
+
+Notice that the second status was intentionally not named **Vulnerable**, as the actual exploitability depends on the settings
+of the ``SecurityManager``. Please refer to the [codebase action](#codebase-action) section for more details.
+
+
+#### CVE-2019-2684 Enumeration
+
+During bind operations, the *RMI registry* verifies that incoming connections are performed from localhost, which is the only
+requirement on the client. Other authentication mechanisms are not in place within the default registry implementation.
+``CVE-2019-2684`` was a vulnerability within the default *RMI registry* implementation that let remote users *bind*, *rebind* and
+*unbind* objects from the registry endpoint. During it's ``enum`` action, *rmg* can detect this vulnerability and responds with
+either of the following:
+
+* **Non Vulnerable**: The vulnerability is patched.
+* **Vulnerable**: The server is vulnerable (can be confirmed by using e.g. *rmg's* ``bind`` action.
+
+
+#### DGC Enumeration
+
+The *DGC* enumeration is basically a legacy check that is no longer really useful. As detailed in the [codebase section](#codebase-action),
+the *DGC* uses it's own hardening settings with very strict configurations regarding deserialization and usage of codebases.
+The check performs basically a codebase enumeration on the *DGC* and inspects the corresponding exception message. The message is compared
+to some known values and one of the following status is printed:
+
+* **Non Default**: The *DGC* attempted to parse the codebase (``useCodebaseOnly=false``). This also means that the *Java RMI* endpoint
+  is way outdated (2012).
+* **Outdated**: The **DGC** complained about a missing security manager. This exception message is used by older *RMI* endpoints. The
+  *DGC* itself is not vulnerable, but you may find vulnerabilities on other *RMI components*.
+* **Current Default**: The *DGC* rejected access to the classloader, which is default for most current *DGC* implementations.
+
+To clarify: I would not rely on this check e.g. for reporting it as a vulnerability. The check is outdated and only left in place because
+it is already implemented. In rare situations, the result can be interesting, but most of the time it should be ignored.
+
+
+#### JEP 290 Enumeration
+
+The *JEP 290 enumeration* checks for the *deserialization filters* on the *RMI endpoint*. It sends a ``java.util.HashMap`` object
+to the *DGC* and inspects the returned exception message. The corresponding result can be one of the following:
+
+* **Non Vulnerable**: *JEP 290* is installed and the *DGC* rejected the deserialization.
+* **Vulnerable**: The ``java.util.HashMap`` object was deserialized and the endpoint is vulnerable to deserialization attacks.
+
+
+#### JEP 290 Bypass Enumeration
+
+There are currently two well known bypasses for the *RMI registry* deserialization filters. One is the *JRMPClient* gadget of ``ysoserial``
+and the other was identified by [An Trinh](https://twitter.com/_tint0) and is explained in great detail in [this blog post](https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/).
+Both bypasses are patched on modern *RMI registry* endpoints. During it's enumeration, *rmg* uses the *An Trinh* gadget (as it is newer)
+with an invalid set of arguments. Depending on the corresponding exception message, the result status is:
+
+* **Non Vulnerable**: The bypass was patched and the gadget is not working.
+* **Vulnerable**: The registry deserialization filters can be bypassed using the *An Trinh* gadget.
+
+Notice that for this enumeration technique to work from remote, the *RMI registry* must use ``readObject`` to unmarshal the ``String`` type.
+From localhost, you can also enumerate servers that use ``readString``, by using e.g. the ``--reg-method bind`` option.
+
+
+#### Activation System Enumeration
+
+The *Activation System* and it's possible attack vectors are explained in great detail in the [activator action](#activator-action) section.
+This enumeration tells you whether an activator instance is available on the targeted *RMI registry*. The result is either:
+
+* **Current Default**: No activator object is present.
+* **Vulnerable**: An activator is present and allows deserialization and probably codebase attacks.
+
 
 ### Guess Action
 
