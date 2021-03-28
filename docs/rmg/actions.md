@@ -4,15 +4,12 @@
 
 In this document you can find more detailed information on the different available *rmg* actions.
 
-* [act action](./README.md#activator-action)
-* [bind|rebind|unbind action](./README.md#bind-actions)
-* [codebase action](./README.md#codbase-action)
-* [dgc action](./README.md#dgc-action)
-* [enum action](./README.md#enum-action)
-* [guess action](./README.md#guess-action)
-* [listen action](./README.md#listen-action)
-* [method action](./README.md#method-action)
-* [reg action](./README.md#reg-action)
+* [act](#activator-action)
+* [bind|rebind|unbind](#bind-actions)
+* [codebase](#codbase-action)
+* [enum](#enum-action)
+* [guess](#guess-action)
+* [reg|dgc](#registry-and-dgc-actions)
 
 
 ### Activator Action
@@ -559,7 +556,7 @@ To transform a plain wordlist file into the optimized format, just use the ``--u
 operation. This will update all currently used wordlist files to the optimized format.
 
 
-### Reg Action
+### Registry and DGC Actions
 
 ------
 
