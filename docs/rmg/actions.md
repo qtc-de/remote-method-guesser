@@ -336,11 +336,6 @@ public class Shell implements Serializable, Remote
 ```
 
 
-### DGC Action
-
-------
-
-
 ### Enum Action
 
 ------
@@ -562,16 +557,6 @@ boolean call(String[] dummy); -4301784332653484516; false; false
 
 To transform a plain wordlist file into the optimized format, just use the ``--update`` option during the ``guess``
 operation. This will update all currently used wordlist files to the optimized format.
-
-
-### Listen Action
-
-------
-
-
-### Method Action
-
-------
 
 
 ### Reg Action
