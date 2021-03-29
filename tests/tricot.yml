@@ -18,6 +18,14 @@ plugins:
       dirs:
         - ${volume}
 
+  - cleanup:
+      items:
+        - utils/CodebaseTest1.class
+        - utils/CodebaseTest2.class
+        - utils/CodebaseTest3.class
+        - utils/CodebaseTest4.class
+        - utils/PluginTest.jar
+
 testers:
   - ./jdk8/jdk8.yml
   - ./jdk9/jdk9.yml
