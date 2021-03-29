@@ -27,46 +27,22 @@ tests:
             - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 
 
-  - title: SSL Guess
-    description: >
-      'Performs method guessing on the ssl RMI registry.'
-
-    command: '${BASE-CMD-SSL}'
-    arguments:
-      - guess
-    validators:
-      - error: False
-      - contains:
-          values:
-            - Skipping zero arguments method
-            - String system(String[] dummy)
-            - int execute(String dummy)
-            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-            - String system(String dummy, String[] dummy2)
-            - String execute(String dummy)
-            - void updatePreferences(java.util.ArrayList dummy1)
-            - void logMessage(int dummy1, Object dummy2)
-            - String login(java.util.HashMap dummy1)
-
-
-  - title: Plain Guess (--zero-arg & --update)
+  - title: Plain Guess (--zero-arg & --create-samples)
     description: >
       'Performs method guessing on the plain RMI registry'
-      'using the --zero-arg and --update flag.'
+      'using the --zero-arg & --create-samples flag.'
 
     command: '${BASE-CMD}'
     arguments:
       - guess
       - --zero-arg
-      - --update
+      - --create-samples
     validators:
       - error: False
       - contains:
           invert:
             - Skipping zero arguments method
-      - contains:
           values:
-            - Updating wordlist file
             - String system(String dummy, String[] dummy2)
             - String execute(String dummy)
             - String system(String dummy, String[] dummy2)
@@ -78,13 +54,10 @@ tests:
 
   - title: Sample Creation
     description: >
-      'Performs method guessing on the plain RMI registry'
-      'using the --create-samples flag.'
+      'Apply sample creation checks on the previous captured output.'
 
-    command: '${BASE-CMD}'
-    arguments:
-      - guess
-      - --create-samples
+    command:
+      - '${prev}'
     validators:
       - error: False
       - contains:
@@ -141,3 +114,25 @@ tests:
           force: True
           dirs:
             - ./rmg-samples
+
+
+  - title: SSL Guess
+    description: >
+      'Performs method guessing on the ssl RMI registry.'
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - guess
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Skipping zero arguments method
+            - String system(String[] dummy)
+            - int execute(String dummy)
+            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - void updatePreferences(java.util.ArrayList dummy1)
+            - void logMessage(int dummy1, Object dummy2)
+            - String login(java.util.HashMap dummy1)
