@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -95,7 +97,7 @@ public class SampleWriter {
     public String loadTemplateStream(String templateName) throws IOException
     {
         InputStream stream = this.getClass().getResourceAsStream("/templates/" + templateName);
-        byte[] content = stream.readAllBytes();
+        byte[] content = IOUtils.toByteArray(stream);
         stream.close();
         return new String(content);
     }

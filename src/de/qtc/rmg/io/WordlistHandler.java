@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import de.qtc.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
@@ -73,7 +74,7 @@ public class WordlistHandler {
             Logger.increaseIndent();
 
             InputStream stream = WordlistHandler.class.getResourceAsStream("/wordlists/" + wordlist);
-            String content = new String(stream.readAllBytes());
+            String content = new String(IOUtils.toByteArray(stream));
             stream.close();
 
             methods.addAll(parseMethods(content.split("\n")));
