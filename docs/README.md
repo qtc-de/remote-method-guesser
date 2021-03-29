@@ -2,7 +2,17 @@
 
 -----
 
-Coming soon :)
+In this folder you can find more detailed documentation on *remote-method-guesser*. This folder is currently
+work in progress and will be updated from time to time. So far, the following topics are documented:
+
+* *Java RMI*
+  * [Security Manager List](./rmi/security-manager-list.md)
+  * [Serialization Filter List](./rmi/serialization-filter-list.md)
+  * [Unicast Remote Object](./rmi/unicast-remote-object.md)
+
+* *remote-method-gusser*
+  * [rmg Actions](./rmg/actions.md)
+  * [rmg Plugin System](./rmg/plugin-system.md)
 
 
 ### Java RMI - Attack Surface

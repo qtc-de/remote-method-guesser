@@ -2,12 +2,14 @@ package de.qtc.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import de.qtc.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
@@ -25,6 +27,8 @@ public class WordlistHandler {
     private String wordlistFile;
     private String wordlistFolder;
     private boolean updateWordlists;
+
+    private final static String[] defaultWordlists = {"rmg.txt", "rmiscout.txt"};
 
     /**
      * Create a new WordlistHandler.
@@ -50,24 +54,34 @@ public class WordlistHandler {
     public HashSet<MethodCandidate> getWordlistMethods() throws IOException
     {
         if( this.wordlistFile != null && !this.wordlistFile.isEmpty() ) {
-            return getWordlistMethodsFromFile();
+            return getWordlistMethodsFromFile(this.wordlistFile, this.updateWordlists);
+
         } else if( this.wordlistFolder != null && !this.wordlistFolder.isEmpty() ) {
-            return getWordlistMethodsFromFolder();
+            return getWordlistMethodsFromFolder(this.wordlistFolder, this.updateWordlists);
+
         } else {
-            throw new IOException("Neither wordlist-folder nor wordlist-file was specified.");
+            return getWordlistMethodsFromStream();
         }
     }
 
-    /**
-     * Reads all specified methods from a wordlist file and returns the corresponding MethodCandidates.
-     *
-     * @return HashSet of MethodCandidates build from the wordlist file
-     * @throws IOException if an IO operation fails
-     */
-    public HashSet<MethodCandidate> getWordlistMethodsFromFile() throws IOException
+    public static HashSet<MethodCandidate> getWordlistMethodsFromStream() throws IOException
     {
-        File wordlistFile = new File(this.wordlistFile);
-        return getWordlistMethods(wordlistFile);
+        HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
+
+        for(String wordlist : defaultWordlists) {
+
+            Logger.printlnMixedBlue("Reading method candidates from internal wordlist", wordlist);
+            Logger.increaseIndent();
+
+            InputStream stream = WordlistHandler.class.getResourceAsStream("/wordlists/" + wordlist);
+            String content = new String(IOUtils.toByteArray(stream));
+            stream.close();
+
+            methods.addAll(parseMethods(content.split("\n")));
+            Logger.decreaseIndent();
+        }
+
+        return methods;
     }
 
     /**
@@ -76,9 +90,9 @@ public class WordlistHandler {
      * @return HashSet of MethodCandidates build from the wordlist files
      * @throws IOException if an IO operation fails
      */
-    public HashSet<MethodCandidate> getWordlistMethodsFromFolder() throws IOException
+    public static HashSet<MethodCandidate> getWordlistMethodsFromFolder(String folder, boolean updateWordlists) throws IOException
     {
-        File wordlistFolder = new File(this.wordlistFolder);
+        File wordlistFolder = new File(folder);
         if( !wordlistFolder.isDirectory() ) {
             throw new IOException("wordlist-folder " + wordlistFolder.getCanonicalPath() + " is not a directory.");
         }
@@ -88,7 +102,7 @@ public class WordlistHandler {
 
         HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
         for(File file : files){
-            methods.addAll(getWordlistMethods(file));
+            methods.addAll(getWordlistMethodsFromFile(file.getCanonicalPath(), updateWordlists));
         }
 
         return methods;
@@ -105,15 +119,41 @@ public class WordlistHandler {
      * @return HashSet of MethodCandidates build from the wordlist file
      * @throws IOException if an IO operation fails
      */
-    public HashSet<MethodCandidate> getWordlistMethods(File file) throws IOException
+    public static HashSet<MethodCandidate> getWordlistMethodsFromFile(String filename, boolean updateWordlists) throws IOException
     {
+        File file = new File(filename);
+
         Logger.printlnMixedBlue("Reading method candidates from file", file.getCanonicalPath());
         Logger.increaseIndent();
 
-        List<String> content = FileUtils.readLines(file, StandardCharsets.UTF_8);
+        String[] content = FileUtils.readLines(file, StandardCharsets.UTF_8).toArray(new String[0]);
+        HashSet<MethodCandidate> methods = parseMethods(content);
+
+        if(updateWordlists) {
+            Logger.println("Updating wordlist file.");
+            updateWordlist(file, methods);
+        }
+
+        Logger.decreaseIndent();
+        return methods;
+    }
+
+    /**
+     * Parses a wordlist file for available methods and creates the corresponding MethodCandidates. Comments prefixed with '#'
+     * within wordlist files are ignored. Each non comment line is split on the ';' character. If the split has a length of 1,
+     * the ordinary wordlist format (that just contains the method signature) is assumed. If the length is 4 instead, it should
+     * be the advanced format. Otherwise, we have an unknown format and print a warning. If updateWordlists was set within the
+     * constructor, each wordlist file is updated to the advanced format after the parsing.
+     *
+     * @param file wordlist file to read in
+     * @return HashSet of MethodCandidates build from the wordlist file
+     * @throws IOException if an IO operation fails
+     */
+    public static HashSet<MethodCandidate> parseMethods(String[] lines) throws IOException
+    {
         HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
 
-        for(String line : content) {
+        for(String line : lines) {
 
             if( line.trim().startsWith("#") || line.trim().isEmpty() ) {
                 continue;
@@ -141,13 +181,6 @@ public class WordlistHandler {
         }
 
         Logger.printlnMixedYellowFirst(String.valueOf(methods.size()), "methods were successfully parsed.");
-
-        if(updateWordlists) {
-            Logger.println("Updating template file.");
-            updateWordlist(file, methods);
-        }
-
-        Logger.decreaseIndent();
         return methods;
     }
 
@@ -158,7 +191,7 @@ public class WordlistHandler {
      * @param methods MethodCandidates to write into the wordlist
      * @throws IOException if an IO operation fails
      */
-    public void updateWordlist(File file, HashSet<MethodCandidate> methods) throws IOException
+    public static void updateWordlist(File file, HashSet<MethodCandidate> methods) throws IOException
     {
         List<String> signatures = new ArrayList<String>();
         for(MethodCandidate method : methods) {

@@ -15,8 +15,10 @@ import java.util.UUID;
 
 import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.MaliciousOutputStream;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -376,12 +378,67 @@ public class RMGUtils {
      * Construct an argument array for the specified method. Returns an array of Objects, each being an instance
      * of the type that is expected by the method.
      *
-     * @param method method to create the argument array for
+     * @param method Method to create the argument array for
      * @return argument array that can be used to invoke the method
      */
     public static Object[] getArgumentArray(Method method)
     {
         Class[] types = method.getParameterTypes();
+        Object[] argumentArray = new Object[types.length];
+
+        for(int ctr = 0; ctr < types.length; ctr++) {
+            argumentArray[ctr] = getArgument(types[ctr]);
+        }
+
+        return argumentArray;
+    }
+
+    /**
+     * Takes a CtClass object and returns a valid instance for the corresponding class. For primitive types,
+     * preconfigured default values will be returned. Non primitive types create always a null instance.
+     *
+     * @param type Class to create the instance for
+     * @return instance depending on the value of type
+     */
+    public static Object getArgument(CtClass type)
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return 1;
+            } else if (type == CtPrimitiveType.booleanType) {
+                return true;
+            } else if (type == CtPrimitiveType.byteType) {
+                return Byte.MAX_VALUE;
+            } else if (type == CtPrimitiveType.charType) {
+                return Character.MAX_HIGH_SURROGATE;
+            } else if (type == CtPrimitiveType.shortType) {
+                return Short.MAX_VALUE;
+            } else if (type == CtPrimitiveType.longType) {
+                return Long.MAX_VALUE;
+            } else if (type == CtPrimitiveType.floatType) {
+                return Float.MAX_VALUE;
+            } else if (type == CtPrimitiveType.doubleType) {
+                return Double.MAX_VALUE;
+            } else {
+                throw new Error("unrecognized primitive type: " + type);
+            }
+
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Construct an argument array for the specified method. Returns an array of Objects, each being an instance
+     * of the type that is expected by the method.
+     *
+     * @param method CtMethod to create the argument array for
+     * @return argument array that can be used to invoke the method
+     * @throws NotFoundException
+     */
+    public static Object[] getArgumentArray(CtMethod method) throws NotFoundException
+    {
+        CtClass[] types = method.getParameterTypes();
         Object[] argumentArray = new Object[types.length];
 
         for(int ctr = 0; ctr < types.length; ctr++) {
@@ -623,10 +680,8 @@ public class RMGUtils {
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
             if( verbose) {
-                Logger.increaseIndent();
                 Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
                 Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
-                Logger.decreaseIndent();
             }
             return true;
         }
@@ -653,20 +708,25 @@ public class RMGUtils {
      * @param knownClasses list of boundName - className pairs of known classes
      * @param guessedMethods list of successfully guessed methods
      */
-    public static void addKnownMethods(HashMap<String,String> knownClasses, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static void addKnownMethods(String boundName, String className, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
     {
         try {
-            for(String boundName: knownClasses.keySet()) {
-                CtClass knownClass = pool.getCtClass(knownClasses.get(boundName));
-                CtMethod[] knownMethods = knownClass.getDeclaredMethods();
+            CtClass knownClass = pool.getCtClass(className);
 
+            for(CtClass intf : knownClass.getInterfaces()) {
+
+                if(! isAssignableFrom(intf, "java.rmi.Remote"))
+                    continue;
+
+                CtMethod[] knownMethods = intf.getDeclaredMethods();
                 ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
-                for(CtMethod knownMethod: knownMethods) {
+
+                for(CtMethod knownMethod: knownMethods)
                     knownMethodCandidates.add(new MethodCandidate(knownMethod));
-                }
 
                 guessedMethods.put(boundName, knownMethodCandidates);
             }
+
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
         }
@@ -702,5 +762,98 @@ public class RMGUtils {
         }
 
         return simpleSignature.toString();
+    }
+
+    public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
+    {
+        CtClass type;
+        CtClass[] types = method.getParameterTypes();
+        MethodArguments parameterMap = new MethodArguments(parameterArray.length);
+
+        for(int ctr = 0; ctr < types.length; ctr++) {
+
+            type = types[ctr];
+
+            if (type.isPrimitive()) {
+                if (type == CtPrimitiveType.intType) {
+                    parameterMap.add(parameterArray[ctr], int.class);
+                } else if (type == CtPrimitiveType.booleanType) {
+                    parameterMap.add(parameterArray[ctr], boolean.class);
+                } else if (type == CtPrimitiveType.byteType) {
+                    parameterMap.add(parameterArray[ctr], byte.class);
+                } else if (type == CtPrimitiveType.charType) {
+                    parameterMap.add(parameterArray[ctr], char.class);
+                } else if (type == CtPrimitiveType.shortType) {
+                    parameterMap.add(parameterArray[ctr], short.class);
+                } else if (type == CtPrimitiveType.longType) {
+                    parameterMap.add(parameterArray[ctr], long.class);
+                } else if (type == CtPrimitiveType.floatType) {
+                    parameterMap.add(parameterArray[ctr], float.class);
+                } else if (type == CtPrimitiveType.doubleType) {
+                    parameterMap.add(parameterArray[ctr], double.class);
+                } else {
+                    throw new Error("unrecognized primitive type: " + type);
+                }
+
+            } else {
+                parameterMap.add(parameterArray[ctr], Object.class);
+            }
+        }
+
+        return parameterMap;
+    }
+
+    public static String[] splitListener(String listener)
+    {
+        String[] split = listener.split(":");
+
+        if( split.length != 2 || !split[1].matches("\\d+") ) {
+            ExceptionHandler.invalidListenerFormat(false);
+        }
+
+        return split;
+    }
+
+    public static void setCodebase(String serverAddress)
+    {
+        if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
+            serverAddress = "http://" + serverAddress;
+
+        if( !serverAddress.matches("^.+(.class|.jar|/)$") )
+            serverAddress += "/";
+
+        MaliciousOutputStream.setDefaultLocation(serverAddress);
+    }
+
+    /**
+     * This code was copied from the org.hibernate.bytecode.enhance.internal.javassist package,
+     * that is licensed under LGPL version 2.1 or later. According to the GPL compatibility matrix,
+     * it is fine to include the code in a GPLv3 licensed project and to convey the license to GPLv3.
+     * (https://www.gnu.org/licenses/gpl-faq.en.html#AllCompatibility)
+     *
+     * @param thisCtClass
+     * @param targetClassName
+     * @return
+     */
+    public static boolean isAssignableFrom(CtClass thisCtClass, String targetClassName)
+    {
+        if( thisCtClass == null )
+            return false;
+
+        if( thisCtClass.getName().equals(targetClassName) )
+            return true;
+
+        try {
+
+            if( isAssignableFrom(thisCtClass.getSuperclass(), targetClassName) )
+                return true;
+
+            for( CtClass interfaceCtClass : thisCtClass.getInterfaces() ) {
+                if( isAssignableFrom(interfaceCtClass, targetClassName) )
+                    return true;
+            }
+        }
+        catch (NotFoundException e) {}
+        return false;
     }
 }

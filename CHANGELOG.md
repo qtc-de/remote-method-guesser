@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.2.0] - Feb XX, 2021
+
+### Added
+
+* Add ``call`` operation to regulary call remote methods
+  * Can be used with bound names (``--bound-name``)
+  * And also with ObjID values (``--objid``)
+* Add plugin system to allow custom gadgets, call arguments and return handlers
+  * Add some example plugins and a build script
+* Add tests based on [tricot](https://github.com/qtc-de/tricot)
+
+### Changed
+
+* Global refactoring - Renamed and moved many classes and functions
+  * The calling convention changed slightly for some actions
+* The ``guess`` operation now also lists methods for known remote objects
+  * These are obtained via reflection, not by guessing
+  * You can force guessing anyway by using ``--force-guessing``
+* Method arguments are not marshalled correctly (previously, always writeObject was used)
+
+
 ## [3.1.1] - Feb 16, 2021
 
 ### Changed

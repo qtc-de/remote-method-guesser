@@ -10,7 +10,9 @@ function _rmg() {
     local cur prev words opts arg args gadgets value_options
     _init_completion || return
 
-    value_options="--argument-position --bound-name --config --dgc-method --reg-method --sample-folder --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+    value_options="--argument-position --bound-name --config --dgc-method --objid --plugin --reg-method --sample-folder"
+    value_options="$value_options --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+
     _count_args "" "@(${value_options// /|})"
     _comp_get_parameter 3
     COMPREPLY=()
@@ -21,7 +23,7 @@ function _rmg() {
     gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
-    # Only complete positionals when prev is no option that expects a value and current word doesn't starts with -*
+    # Current word is not an option and previous word is not a value_option
     if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then
 
         # If only host was specified so far - complete nothing
@@ -30,7 +32,7 @@ function _rmg() {
 
         # If host and port are specified - complete actions
         elif [[ $args -eq 3 ]]; then
-            opts="act bind codebase dgc enum guess listen method rebind reg unbind"
+            opts="act bind call codebase dgc enum guess listen method rebind reg unbind"
             mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
             return 0
 
@@ -58,7 +60,7 @@ function _rmg() {
                 return 0
 
             # ... and the next argument cannot be guessed, complete nothing
-            elif _comp_contains "act dgc listen metho reg" $arg; then
+            elif _comp_contains "act dgc listen method reg" $arg; then
                 return 0
             fi
 
@@ -67,7 +69,7 @@ function _rmg() {
     fi
 
 	# filename completions
-	if _comp_contains "--config --sample-folder --template-folder --wordlist-file --wordlist-folder --yso" $prev; then
+	if _comp_contains "--config --plugin --sample-folder --template-folder --wordlist-file --wordlist-folder --yso" $prev; then
         _filedir
 		return 0
 
@@ -84,7 +86,7 @@ function _rmg() {
         opts="clean dirty"
 
 	# No completions
-	elif _comp_contains "--argument-position --bound-name --signature --threads" $prev; then
+	elif _comp_contains "--argument-position --bound-name --objid --signature --threads" $prev; then
 		return 0
 
 	# otherwise, we just complete options
@@ -95,11 +97,14 @@ function _rmg() {
 		opts="$opts --create-samples"
 		opts="$opts --dgc-method"
 		opts="$opts --follow"
+		opts="$opts --force-guessing"
 		opts="$opts --force-legacy"
 		opts="$opts --help"
 		opts="$opts --localhost-bypass"
 		opts="$opts --no-color"
 		opts="$opts --no-legacy"
+		opts="$opts --objid"
+		opts="$opts --plugin"
 		opts="$opts --reg-method"
 		opts="$opts --sample-folder"
 		opts="$opts --signature"

@@ -12,7 +12,7 @@ RUN mvn clean package
 FROM alpine:latest AS jdk-builder
 RUN set -ex \
     && apk add --no-cache openjdk9 \
-    && /usr/lib/jvm/java-9-openjdk/bin/jlink --add-modules java.rmi,java.management.rmi --verbose --strip-debug --compress 2 \
+    && /usr/lib/jvm/java-9-openjdk/bin/jlink --add-modules java.rmi,java.management.rmi,jdk.unsupported --verbose --strip-debug --compress 2 \
        --no-header-files --no-man-pages --module-path  /usr/lib/jvm/java-9-openjdk/jmods/ --output /jdk
 
 ###########################################

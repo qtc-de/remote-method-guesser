@@ -114,6 +114,7 @@ public class ExceptionHandler {
     public static void codebaseSecurityManager(Exception e)
     {
         Logger.eprintlnMixedYellow("The class loader of the specified target is", "disabled.");
+        Logger.eprintlnMixedBlue("Codebase attacks are", "not", "possible.");
         showStackTrace(e);
     }
 
@@ -197,6 +198,26 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void noSuchObjectException(Exception e, String object, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
+        Logger.eprintlnMixedBlue("There seems to be no", object, "object avaibale on the specified endpoint.");
+        showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
+    public static void noSuchObjectExceptionRegistryEnum()
+    {
+        Logger.printlnBlue("RMI Registry Enumeration");
+        Logger.println("");
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("- Specified endpoint", "is not", "an RMI registry");
+        Logger.println("  Skipping registry related checks.");
+        Logger.decreaseIndent();
+    }
+
     public static void eofException(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
@@ -246,6 +267,13 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void illegalArgumentCodebase(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during codebase attack.");
+        Logger.printlnMixedYellowFirst("Codebase attack", "was probably successful :)");
+        showStackTrace(e);
+    }
+
     public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
     {
         Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during " + during1 + " " + during2 + ".");
@@ -273,10 +301,39 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void bindException(Throwable t)
+    {
+        Logger.println("");
+        Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
+        Logger.printlnMixedBlue("Exception message:", t.getMessage());
+        RMGUtils.exit();
+    }
+
     public static void ysoNotPresent(String location)
     {
         Logger.eprintlnMixedYellow("Unable to find ysoserial library in path", location);
         Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
+        RMGUtils.exit();
+    }
+
+    public static void missingSignature(boolean codebase)
+    {
+        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the specified action.");
+        Logger.eprintlnMixedBlue("Specify a valid signature like", "--signature \"void login(String password)\"");
+
+        if( codebase ) {
+            Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
+            Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
+        }
+
+        RMGUtils.exit();
+    }
+
+    public static void missingBoundName(String action)
+    {
+        Logger.eprintMixedYellow("Either ", "--bound-name", "or  ");
+        Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
+        Logger.printlnPlainMixedBlueFirst(action, "action.");
         RMGUtils.exit();
     }
 

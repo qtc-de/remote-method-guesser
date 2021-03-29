@@ -133,13 +133,17 @@ public class MethodCandidate {
      *
      * @return confused parameter for method invocation
      */
-    public Object[] getConfusedArgument()
+    public MethodArguments getConfusedArgument()
     {
+        MethodArguments argumentMap = new MethodArguments(1);
+
         if( this.isPrimitive() ) {
-            return new Object[] { "RMG" };
+            argumentMap.add("RMG", Object.class);
         } else {
-            return new Object[] { 42 };
+            argumentMap.add(42, int.class);
         }
+
+        return argumentMap;
     }
 
     /**
@@ -159,7 +163,11 @@ public class MethodCandidate {
      */
     public String getName() throws CannotCompileException, NotFoundException
     {
-        return this.getMethod().getName();
+        if(this.method != null)
+            return this.getMethod().getName();
+
+        else
+            return "method";
     }
 
     /**
@@ -299,5 +307,24 @@ public class MethodCandidate {
     public String convertToString()
     {
         return this.signature + "; " + this.hash + "; " + this.isPrimitive + "; " + this.isVoid;
+    }
+
+    /**
+     * Returns the name of the parameter type in the specified position of the argument array.
+     *
+     * @param position Position in the argument array to obtain the type from
+     * @return name of the requested type
+     */
+    public String getArgumentTypeName(int position)
+    {
+        String typeName = "None";
+
+        try {
+            typeName = this.method.getParameterTypes()[position].getName();
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "parameter type", "determination", true);
+        }
+
+        return typeName;
     }
 }

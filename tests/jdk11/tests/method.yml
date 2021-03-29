@@ -1,0 +1,134 @@
+tester:
+  name: method
+  title: Method Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'method' action."
+
+variables:
+  file: method-rce-test.txt
+
+plugins:
+  - os_command:
+      cmd:
+        - /bin/bash
+        - ../../../plugins/build.sh
+        - ../../../target/${rmg}
+        - ../../utils/PluginTest.java
+        - ../../utils/PluginTest.jar
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Performs a deserialization attack on the system function of the'
+      'plain-server object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - method
+      - CommonsCollections6 
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'String system(String dummy, String[] dummy2)'
+      - --bound-name
+      - plain-server
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.String[]
+            - Caught ClassNotFoundException
+            - deserialize dummy
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Gadget Call (Legacy)
+    description: >
+      'Performs a deserialization attack on the releaseRecord function of the'
+      'legacy-service object.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - method
+      - CommonsCollections6 
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'void releaseRecord(int recordID, String tableName, Integer remoteHashCode)'
+      - --bound-name
+      - legacy-service
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.Integer
+            - Caught ClassNotFoundException
+            - deserialize dummy
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Plugin Call
+    description: >
+      'Uses a plugin as payload provider that returns the string that was specified'
+      'as agument. This is used on the execute method of the plain-server bound name'
+      'to verify code execution.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - method
+      - custom 
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --bound-name
+      - legacy-service
+      - --plugin
+      - ../../utils/PluginTest.jar
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.util.HashMap
+            - Caught ClassNotFoundException
+            - deserialize dummy
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: String Marshaling
+    description: >
+        'Attempts a deserialization attack on String execute(String dummy), which'
+        'should not work due to the string unmarshalling behavior of jdk11.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - method
+      - CommonsCollections6 
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'String execute(String dummy)'
+      - --bound-name
+      - plain-server
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.String
+            - Caught ClassCastException
+            - readString()
+      - file_exists:
+          invert:
+            - '${volume}/${file}'

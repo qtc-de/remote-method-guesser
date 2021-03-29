@@ -3,6 +3,7 @@ package de.qtc.rmg.operations;
 import java.rmi.server.ObjID;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIWhisperer;
@@ -62,7 +63,7 @@ public class ActivationClient {
         Logger.increaseIndent();
 
         try {
-            activateCall(new Object[] {new java.util.HashMap<String,String>(), false}, false);
+            activateCall(prepareCallArguments(new java.util.HashMap<String,String>()), false);
 
         } catch( Exception e ) {
 
@@ -106,7 +107,7 @@ public class ActivationClient {
     {
         try {
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
-            activateCall(new Object[] {0, false}, true);
+            activateCall(prepareCallArguments(0), true);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -145,7 +146,7 @@ public class ActivationClient {
         Logger.printGadgetCallIntro("Activation");
 
         try {
-            activateCall(new Object[] {payloadObject, false}, false);
+            activateCall(prepareCallArguments(payloadObject), false);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -170,6 +171,9 @@ public class ActivationClient {
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);
 
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "activator", false);
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);
         }
@@ -187,7 +191,7 @@ public class ActivationClient {
         Logger.printCodebaseAttackIntro("Activator", "activate", className);
 
         try {
-            activateCall(new Object[] {payloadObject, false}, true);
+            activateCall(prepareCallArguments(payloadObject), true);
 
         } catch( java.rmi.ServerException e ) {
 
@@ -216,17 +220,30 @@ public class ActivationClient {
                 ExceptionHandler.unexpectedException(e, "activate", "call", false);
             }
 
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgumentCodebase(e);
+
         } catch( java.lang.ClassCastException e ) {
             ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( java.security.AccessControlException e ) {
             ExceptionHandler.accessControl(e, "activate", "call");
 
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, "activator", false);
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "activate", "call", false);
         }
     }
 
+    private MethodArguments prepareCallArguments(Object payloadObject)
+    {
+        MethodArguments callArguments = new MethodArguments(2);
+        callArguments.add(payloadObject, Object.class);
+        callArguments.add(false, boolean.class);
+        return callArguments;
+    }
     /**
      * Implementation of the activate call. Just uses the genericCall function of the RMIWhisperer, which allows to perform
      * raw RMI calls. The activator is not implemented as a skeleton and already uses the new calling convention. As it only
@@ -236,7 +253,7 @@ public class ActivationClient {
      * @param maliciousStream whether or not to use MaliciousOutputStream, which activates a custom codebase
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */
-    private void activateCall(Object[] callArguments, boolean maliciousStream) throws Exception
+    private void activateCall(MethodArguments callArguments, boolean maliciousStream) throws Exception
     {
         rmi.genericCall(objID, -1, methodHash, callArguments, maliciousStream, "activate");
     }

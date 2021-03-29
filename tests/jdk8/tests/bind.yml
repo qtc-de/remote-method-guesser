@@ -1,0 +1,68 @@
+tester:
+  name: bind
+  title: Binding Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'bind', 'rebind'"
+    "and 'unbind' action."
+
+variables:
+  bound-name: jdk8-binding-test
+
+tests:
+  - title: Bind Call
+    description: >
+      'Performs a bind operation. Should be rejected, as the container'
+      'runs a SingleEntryRegistry.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - bind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+    validators:
+      - error: False
+      - contains:
+          values:
+            - AccessException
+            - SingleEntryRegistry
+            - JMX
+
+
+  - title: Rebind Call
+    description: >
+      'Performs a rebind operation. Should be rejected, as the container'
+      'runs a SingleEntryRegistry.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - rebind
+      - --bound-name 
+      - ${bound-name}
+      - '127.0.0.1:8000'
+    validators:
+      - error: False
+      - contains:
+          values:
+            - AccessException
+            - SingleEntryRegistry
+            - JMX
+
+
+  - title: Unbind Call
+    description: >
+      'Performs an unbind operation. Should be rejected, as the container'
+      'runs a SingleEntryRegistry.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - unbind
+      - --bound-name 
+      - ${bound-name}
+    validators:
+      - error: False
+      - contains:
+          values:
+            - AccessException
+            - SingleEntryRegistry
+            - JMX

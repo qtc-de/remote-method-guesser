@@ -1,0 +1,65 @@
+tester:
+  name: act
+  title: Activator Tests
+  description: "Performs tests on remote-methods-guessers 'act' action."
+
+variables:
+  file: activator_rce_test.txt
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Performs a deserialization attack on the activator endpoint.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - act
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+    validators:
+      - error: False
+      - regex: 'Deserialization attack.+successful'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Invalid Gadget
+    description: >
+      'Check whether an incorrect gadget specification is handeled'
+      'correctly and a corresponding error message is displayed.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - act
+      - CommonsCollections1337
+      - invalid
+    validators:
+      - error: True
+      - contains:
+          ignore_case: True
+          values:
+            - wrong gadget name
+            - invalid gadget argument
+
+
+  - title: No Activator
+    description: >
+      'Check whether a non present activator is handeled'
+      'correctly and a corresponding error message is displayed.'
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - act
+      - CommonsCollections6
+      - ls
+    validators:
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - Caught NoSuchObjectException
+            - no activator

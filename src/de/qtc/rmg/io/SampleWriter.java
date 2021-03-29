@@ -2,10 +2,13 @@ package de.qtc.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -33,7 +36,7 @@ public class SampleWriter {
     private String followRedirects;
 
     private File sampleFolder;
-    private File templateFolder;
+    private String templateFolder;
 
     private static String importPlaceholder = "import <IMPORT>;";
     private static String methodPlaceholder = "    <METHOD> throws RemoteException;";
@@ -57,13 +60,8 @@ public class SampleWriter {
         this.ssl = ssl ? "true" : "false";
         this.followRedirects = followRedirects ? "true" : "false";
 
+        this.templateFolder = templateFolder;
         this.sampleFolder = new File(sampleFolder);
-        this.templateFolder = new File(templateFolder);
-
-        if( !this.templateFolder.exists() ) {
-            Logger.eprintlnMixedYellow("Template folder", this.templateFolder.getCanonicalPath(), "does not exist.");
-            RMGUtils.exit();
-        }
 
         if( !this.sampleFolder.exists() ) {
             Logger.printlnMixedBlue("Sample folder", this.sampleFolder.getCanonicalPath(), "does not exist.");
@@ -82,11 +80,42 @@ public class SampleWriter {
      */
     public String loadTemplate(String templateName) throws IOException
     {
+        if(this.templateFolder != null && this.templateFolder.isEmpty())
+            return loadTemplateStream(templateName);
+
+        else
+            return loadTemplateFile(templateName);
+    }
+
+    /**
+     * Reads a template from the template folder and returns the corresponding content.
+     *
+     * @param templateName name of the template file
+     * @return template content
+     * @throws IOException is thrown when an IO operation fails.
+     */
+    public String loadTemplateStream(String templateName) throws IOException
+    {
+        InputStream stream = this.getClass().getResourceAsStream("/templates/" + templateName);
+        byte[] content = IOUtils.toByteArray(stream);
+        stream.close();
+        return new String(content);
+    }
+
+    /**
+     * Reads a template from the template folder and returns the corresponding content.
+     *
+     * @param templateName name of the template file
+     * @return template content
+     * @throws IOException is thrown when an IO operation fails.
+     */
+    public String loadTemplateFile(String templateName) throws IOException
+    {
         File templateFile = new File(this.templateFolder, templateName);
         String canonicalPath = templateFile.getCanonicalPath();
 
         if( !templateFile.exists() ) {
-            Logger.eprintlnMixedYellow("Template file", canonicalPath, "was not found in the template folder.");
+            Logger.eprintlnMixedYellow("Template file", canonicalPath, "does not exist.");
             RMGUtils.exit();
         }
 
@@ -112,7 +141,9 @@ public class SampleWriter {
     {
         Security.checkAlphaNumeric(sampleName);
         Security.checkAlphaNumeric(sampleFolder);
-        Security.checkAlphaNumeric(subfolder);
+
+        if(subfolder != null)
+            Security.checkAlphaNumeric(subfolder);
 
         File destinationFolder = new File(this.sampleFolder, sampleFolder);
         if( subfolder != null ) {
@@ -142,10 +173,10 @@ public class SampleWriter {
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSamples(String boundName, String className, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         for(MethodCandidate method : methods) {
-            createSample(className, boundName, method, rmi.host, rmi.port);
+            createSample(className, unknownClass, boundName, method, rmi.host, rmi.port);
         }
     }
 
@@ -163,10 +194,10 @@ public class SampleWriter {
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSample(String className, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSample(String className, boolean unknownClass, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-        if(isLegacy)
+        if(isLegacy && unknownClass)
             className += "_Interface";
 
         Security.checkBoundName(boundName);
@@ -353,6 +384,11 @@ public class SampleWriter {
                 ctr += 1;
             }
 
+            if( ctr != 0 ) {
+                arguments.setLength(arguments.length() - 2);
+                argumentArray.setLength(argumentArray.length() - 2);
+            }
+
             methodLookup.setLength(methodLookup.length() - 2);
             methodLookup.append(");");
 
@@ -361,8 +397,8 @@ public class SampleWriter {
             stubTemplate = stubTemplate.replaceFirst("<METHOD_LOOKUP>", methodVariable + " = " + methodLookup);
 
             currentTemplate = currentTemplate.replaceFirst("<METHODNAME>", method.getName());
-            currentTemplate = currentTemplate.replaceFirst("<ARGUMENTS>", arguments.substring(0, arguments.length() - 2));
-            currentTemplate = currentTemplate.replaceFirst("<ARGUMENT_ARRAY>", argumentArray.substring(0, argumentArray.length() - 2));
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENTS>", arguments.toString());
+            currentTemplate = currentTemplate.replaceFirst("<ARGUMENT_ARRAY>", argumentArray.toString());
             currentTemplate = currentTemplate.replaceFirst("<HASH>", Long.toString(method.getHash()));
             currentTemplate = currentTemplate.replaceFirst("<RETURN>", returnType.getName());
             currentTemplate = currentTemplate.replaceFirst("<METHOD>", methodVariable);

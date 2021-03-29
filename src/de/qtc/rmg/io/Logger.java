@@ -19,6 +19,7 @@ public class Logger {
     private static String ANSI_PURPLE = "\u001B[35m";
 
     public static int indent = 0;
+    public static int printCount = 0;
     public static boolean verbose = true;
 
     private static String blue(String msg)
@@ -48,11 +49,13 @@ public class Logger {
 
     private static String prefix()
     {
+        Logger.printCount++;
         return "[+]" + Logger.getIndent();
     }
 
     private static String eprefix()
     {
+        Logger.printCount++;
         return "[-]" + Logger.getIndent();
     }
 
@@ -88,6 +91,11 @@ public class Logger {
     public static void print(String msg)
     {
         log(prefix() + msg, false);
+    }
+
+    public static void printPlain(String msg)
+    {
+        log(msg, false);
     }
 
     public static void println(String msg)
@@ -155,6 +163,11 @@ public class Logger {
         log(yellow(msg));
     }
 
+    public static void printPlainYellow(String msg)
+    {
+        log(yellow(msg), false);
+    }
+
     public static void eprintlnPlainYellow(String msg)
     {
         elog(yellow(msg));
@@ -218,6 +231,10 @@ public class Logger {
     public static void printlnPlainMixedYellow(String first, String second, String third)
     {
         log(first + " " + yellow(second) + " " + third);
+    }
+
+    public static void printPlainMixedYellowFirst(String first, String second) {
+        log(yellow(first) + " " + second, false);
     }
 
     public static void printlnPlainMixedYellowFirst(String first, String second)
@@ -427,12 +444,15 @@ public class Logger {
 
     public static void increaseIndent()
     {
-        indent += 1;
+        if(Logger.printCount != 0)
+            indent += 1;
     }
 
     public static void decreaseIndent()
     {
         indent -= 1;
+        if(indent < 0)
+            indent = 0;
     }
 
     public static String getIndent()
@@ -448,6 +468,9 @@ public class Logger {
         ANSI_RESET = "";
         ANSI_YELLOW = "";
         ANSI_BLUE = "";
+        ANSI_RED = "";
+        ANSI_GREEN = "";
+        ANSI_PURPLE = "";
     }
 
     public static void printCodebaseAttackIntro(String endpointName, String callName, String className)

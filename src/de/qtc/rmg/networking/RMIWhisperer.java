@@ -1,6 +1,9 @@
 package de.qtc.rmg.networking;
 
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -20,9 +23,14 @@ import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.Pair;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
+import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
+import javassist.CtClass;
+import javassist.CtPrimitiveType;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
@@ -123,18 +131,12 @@ public final class RMIWhisperer {
      *
      * @return list of available bound names.
      */
-    public String[] getBoundNames()
+    public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
         String[] boundNames = null;
 
         try {
             boundNames = rmiRegistry.list();
-
-        } catch( java.rmi.NoSuchObjectException e) {
-            Logger.eprintlnMixedYellow("Caugth", "NoSuchObjectException", "while listing bound names.");
-            Logger.eprintlnMixedYellow("Remote endpoint is probably", "not an RMI registry.");
-            ExceptionHandler.showStackTrace(e);
-            RMGUtils.exit();
 
         } catch( java.rmi.UnknownHostException e) {
             ExceptionHandler.unknownHost(e, "list", "operation", host, true);
@@ -175,6 +177,9 @@ public final class RMIWhisperer {
             } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message") ) {
                 ExceptionHandler.sslError(e, "list", "call");
 
+            } else if( t instanceof java.rmi.NoSuchObjectException ) {
+                throw (java.rmi.NoSuchObjectException)t;
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
@@ -191,7 +196,7 @@ public final class RMIWhisperer {
      * @param boundName specified by the user. Is simply returned if not null
      * @return list of bound names or the user specified bound name
      */
-    public String[] getBoundNames(String boundName)
+    public String[] getBoundNames(String boundName) throws java.rmi.NoSuchObjectException
     {
         if( boundName == null )
             return getBoundNames();
@@ -219,13 +224,19 @@ public final class RMIWhisperer {
         HashMap<String, String> unknownClasses = new HashMap<String,String>();
 
         Object object = null;
+        String className = null;
 
-        for( String className : boundNames ) {
+        for( String boundName : boundNames ) {
 
           try {
 
-              object = rmiRegistry.lookup(className);
-              knownClasses.put(className, object.getClass().getName());
+              object = rmiRegistry.lookup(boundName);
+              className = object.getClass().getName();
+
+              if( className.startsWith("com.sun.proxy.") )
+                  className = object.getClass().getInterfaces()[0].getName();
+
+              knownClasses.put(boundName, className);
 
           } catch( RemoteException e ) {
 
@@ -242,16 +253,17 @@ public final class RMIWhisperer {
                   int end = message.indexOf(" ");
 
                   message = message.substring(0, end);
-                  unknownClasses.put(className, message);
+                  unknownClasses.put(boundName, message);
 
               } else {
                   ExceptionHandler.unexpectedException(e, "lookup", "call", false);
               }
 
           } catch( NotBoundException e) {
-              Logger.eprintMixedYellow("Caught", "NotBoundException", "on boundname ");
-              Logger.printlnPlainBlue(className + ".");
-              Logger.eprintln("Boundname seems to be no longer available.");
+              Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
+              Logger.printlnPlainBlue(boundName + ".");
+              Logger.eprintln("The corresponding bound name is not bound to the registry.");
+              RMGUtils.exit();
           }
         }
 
@@ -272,6 +284,18 @@ public final class RMIWhisperer {
     }
 
     /**
+     * Constructs a RemoteRef (class used by internal RMI communication) using the specified
+     * host, port, csf and objID values..
+     *
+     * @return newly constructed RemoteRef
+     */
+    public RemoteRef getRemoteRef(ObjID objID)
+    {
+        Endpoint endpoint = this.getEndpoint();
+        return new UnicastRef(new LiveRef(objID, endpoint, false));
+    }
+
+    /**
      * @return the underlying registry object
      */
     public Registry getRegistry()
@@ -282,9 +306,17 @@ public final class RMIWhisperer {
     /**
      * Wrapper around the genericCall function specified below.
      */
-    public void genericCall(ObjID objID, int callID, long methodHash, Object[] callArguments, boolean locationStream, String callName) throws Exception
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName) throws Exception
     {
-        genericCall(objID, callID, methodHash, callArguments, locationStream, callName, null);
+        genericCall(objID, callID, methodHash, callArguments, locationStream, callName, null, null);
+    }
+
+    /**
+     * Wrapper around the genericCall function specified below.
+     */
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef ref) throws Exception
+    {
+        genericCall(objID, callID, methodHash, callArguments, locationStream, callName, ref, null);
     }
 
     /**
@@ -306,42 +338,31 @@ public final class RMIWhisperer {
      * @param objID identifies the RemoteObject you want to communicate with. Registry = 0, Activator = 1, DGC = 2 or custom once...
      * @param callID callID that is used for legacy calls. Basically specifies the position of the method
      * @param methodHash hash value of the method to call or interface hash for legacy calls
-     * @param callArguments Object array of method arguments to used within the call
+     * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
      * @param locationStream if true, uses the MaliciousOutpuStream class to write custom annotation objects
      * @param callName the name of the RMI call you want to dispatch (only used for logging)
-     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port of this class are used.
+     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port of this class are used
+     * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler plugin
      * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
      */
-    @SuppressWarnings("deprecation")
-    public void genericCall(ObjID objID, int callID, long methodHash, Object[] callArguments, boolean locationStream, String callName, RemoteRef remoteRef) throws Exception
+    @SuppressWarnings({ "deprecation", "rawtypes" })
+    public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef remoteRef, CtClass rtype) throws Exception
     {
         try {
 
             if(remoteRef == null) {
-                Endpoint endpoint = this.getEndpoint();
-                remoteRef = new UnicastRef(new LiveRef(objID, endpoint, false));
+                remoteRef = this.getRemoteRef(objID);
             }
 
             StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, methodHash);
+
             try {
                 ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
-
                 if(locationStream)
                     out = new MaliciousOutputStream(out);
 
-                for(Object o : callArguments) {
-
-                    if( o == null )
-                        out.writeObject(o);
-
-                    else if(o.getClass() == Long.class)
-                        out.writeLong((long) o);
-
-                    else if(o.getClass() == Boolean.class)
-                        out.writeBoolean((boolean) o);
-
-                    else
-                        out.writeObject(o);
+                for(Pair<Object,Class> p : callArguments) {
+                    marshalValue(p.right(), p.left(), out);
                 }
 
             } catch(java.io.IOException e) {
@@ -349,6 +370,27 @@ public final class RMIWhisperer {
             }
 
             remoteRef.invoke(call);
+
+            if(rtype != null && rtype != CtPrimitiveType.voidType && PluginSystem.hasResponseHandler()) {
+
+                try {
+                    ObjectInputStream in = (ObjectInputStream)call.getInputStream();
+                    Object returnValue = unmarshalValue(rtype, in);
+                    PluginSystem.handleResponse(returnValue);
+
+                } catch( IOException | ClassNotFoundException e ) {
+                    ((StreamRemoteCall)call).discardPendingRefs();
+                    throw new java.rmi.UnmarshalException("error unmarshalling return", e);
+
+                } finally {
+                    try {
+                        remoteRef.done(call);
+                    } catch (IOException e) {
+                        ExceptionHandler.unexpectedException(e, "done", "operation", true);
+                    }
+                }
+            }
+
             remoteRef.done(call);
 
         } catch(java.rmi.ConnectException e) {
@@ -384,6 +426,60 @@ public final class RMIWhisperer {
             } else {
                 ExceptionHandler.unexpectedException(e, callName, "call", true);
             }
+        }
+    }
+
+    private static void marshalValue(Class<?> type, Object value, ObjectOutput out) throws IOException
+    {
+        if (type.isPrimitive()) {
+            if (type == int.class) {
+                out.writeInt(((Integer) value).intValue());
+            } else if (type == boolean.class) {
+                out.writeBoolean(((Boolean) value).booleanValue());
+            } else if (type == byte.class) {
+                out.writeByte(((Byte) value).byteValue());
+            } else if (type == char.class) {
+                out.writeChar(((Character) value).charValue());
+            } else if (type == short.class) {
+                out.writeShort(((Short) value).shortValue());
+            } else if (type == long.class) {
+                out.writeLong(((Long) value).longValue());
+            } else if (type == float.class) {
+                out.writeFloat(((Float) value).floatValue());
+            } else if (type == double.class) {
+                out.writeDouble(((Double) value).doubleValue());
+            } else {
+                throw new Error("Unrecognized primitive type: " + type);
+            }
+        } else {
+            out.writeObject(value);
+        }
+    }
+
+    private static Object unmarshalValue(CtClass type, ObjectInput in) throws IOException, ClassNotFoundException
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return Integer.valueOf(in.readInt());
+            } else if (type == CtPrimitiveType.booleanType) {
+                return Boolean.valueOf(in.readBoolean());
+            } else if (type == CtPrimitiveType.byteType) {
+                return Byte.valueOf(in.readByte());
+            } else if (type == CtPrimitiveType.charType) {
+                return Character.valueOf(in.readChar());
+            } else if (type == CtPrimitiveType.shortType) {
+                return Short.valueOf(in.readShort());
+            } else if (type == CtPrimitiveType.longType) {
+                return Long.valueOf(in.readLong());
+            } else if (type == CtPrimitiveType.floatType) {
+                return Float.valueOf(in.readFloat());
+            } else if (type == CtPrimitiveType.doubleType) {
+                return Double.valueOf(in.readDouble());
+            } else {
+                throw new Error("Unrecognized primitive type: " + type);
+            }
+        } else {
+            return in.readObject();
         }
     }
 }

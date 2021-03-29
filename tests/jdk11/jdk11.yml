@@ -1,0 +1,40 @@
+tester:
+  name: jdk11
+  title: JDK11 Tests
+  description: >
+    'Launches some end-to-end tests of remote-method-guesser against the jdk11 rmg-example-server.'
+
+variables:
+  BASE-CMD:
+    - rmg
+    - --no-color
+    - ${DOCKER-IP}
+    - 9010
+
+  BASE-CMD-SSL:
+    - rmg
+    - --no-color
+    - --ssl
+    - ${DOCKER-IP}
+    - 1090
+
+containers:
+  - name: 'rmg-jdk11'
+    image: 'docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk11'
+    volumes:
+      - '${volume}:${volume-d}'
+    aliases:
+      DOCKER-rmg-jdk11-IP: DOCKER-IP
+      DOCKER-rmg-jdk11-GATEWAY: DOCKER-GW
+
+testers:
+  - ./tests/act.yml
+  - ./tests/bind.yml
+  - ./tests/call.yml
+  - ./tests/codebase.yml
+  - ./tests/dgc.yml
+  - ./tests/enum.yml
+  - ./tests/guess.yml
+  - ./tests/listen.yml
+  - ./tests/method.yml
+  - ./tests/reg.yml

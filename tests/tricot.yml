@@ -1,0 +1,32 @@
+tester:
+  name: rmg
+  title: 'remote-method-guesser Tests'
+  error_mode: break
+  description: >
+    'Launches some end-to-end tests of remote-method-guesser.'
+
+variables:
+  rmg: rmg-3.2.0-jar-with-dependencies.jar
+  volume: /tmp/rmg-tricot-test/
+  volume-d: /rce/
+  codebase-class: CodebaseTest
+
+plugins:
+  - mkdir:
+      force: false
+      cleanup: true
+      dirs:
+        - ${volume}
+
+  - cleanup:
+      items:
+        - utils/CodebaseTest1.class
+        - utils/CodebaseTest2.class
+        - utils/CodebaseTest3.class
+        - utils/CodebaseTest4.class
+        - utils/PluginTest.jar
+
+testers:
+  - ./jdk8/jdk8.yml
+  - ./jdk9/jdk9.yml
+  - ./jdk11/jdk11.yml
