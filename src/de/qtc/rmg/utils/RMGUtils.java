@@ -1,8 +1,5 @@
 package de.qtc.rmg.utils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.rmi.Remote;
@@ -10,10 +7,8 @@ import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
-import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -557,42 +552,6 @@ public class RMGUtils {
     {
         Logger.eprintln("Cannot continue from here.");
         System.exit(1);
-    }
-
-    /**
-     * Loads the remote-method-guesser configuration file from the specified destination. This function may be used
-     * twice during the startup of rmg. First it is used to load the default configuration, which is done via
-     * getResourceAsStream. In this case extern should be set to false and the prop argument is an empty Properties
-     * object.
-     *
-     * Afterwards, the function may be called again with a user defined configuration file. In this case, extern should
-     * be set to true and the prop arguments should contain a Properties object that already contains the default
-     * configuration.
-     *
-     * @param filename file system path to load the configuration file from
-     * @param prop a Properties object to store the parsed properties
-     * @param extern whether to use FileInputStream (true) or getResourceAsStream (false) to read the properties file
-     */
-    public static void loadConfig(String filename, Properties prop, boolean extern)
-    {
-        if(filename == null)
-            return;
-
-        try {
-
-            InputStream configStream = null;
-
-            if( extern )
-                configStream = new FileInputStream(filename);
-            else
-                configStream = Starter.class.getResourceAsStream(filename);
-
-            prop.load(configStream);
-            configStream.close();
-
-        } catch( IOException e ) {
-            ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
-        }
     }
 
     /**

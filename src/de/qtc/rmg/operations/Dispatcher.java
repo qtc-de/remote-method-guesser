@@ -176,7 +176,7 @@ public class Dispatcher {
     @Parameters(count=4)
     public void dispatchRegistry()
     {
-        String regMethod = p.validateRegMethod();
+        String regMethod = p.getRegMethod();
         boolean localhostBypass = (boolean)p.get("localhost-bypass");
 
         RegistryClient reg = new RegistryClient(rmi);
@@ -186,7 +186,7 @@ public class Dispatcher {
     @Parameters(count=4)
     public void dispatchDGC()
     {
-        String dgcMethod = p.validateDgcMethod();
+        String dgcMethod = p.getDgcMethod();
 
         DGCClient dgc = new DGCClient(rmi);
         dgc.gadgetCall(dgcMethod, p.getGadget());
@@ -290,8 +290,8 @@ public class Dispatcher {
         RMGUtils.enableCodebase();
         RegistryClient registryClient = new RegistryClient(rmi);
 
-        String regMethod = p.validateRegMethod();
-        String dgcMethod = p.validateDgcMethod();
+        String regMethod = p.getRegMethod();
+        String dgcMethod = p.getDgcMethod();
         boolean localhostBypass = (boolean)p.get("localhost-bypass");
 
         boolean enumJEP290Bypass = true;

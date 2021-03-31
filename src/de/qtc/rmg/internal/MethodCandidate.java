@@ -103,75 +103,7 @@ public class MethodCandidate {
     }
 
     /**
-     * Two MethodCandidates are equal when their method hash is equal.
-     */
-    @Override
-    public boolean equals(Object o)
-    {
-        if(!(o instanceof MethodCandidate))
-            return false;
-
-        MethodCandidate other = (MethodCandidate)o;
-        return this.hash == other.getHash();
-    }
-
-    /**
-     * MethodCandidates are hashed according to their method hash.
-     */
-    @Override
-    public int hashCode(){
-       return Long.hashCode(this.hash);
-    }
-
-    /**
-     * During guessing operations, we want to invoke methods with confused arguments. This means that:
-     *
-     * - If the function expects a primitive argument as first parameter, we should write an object
-     * - If the function expects a non primitive argument as first parameter, we should write a primitive
-     *
-     * This function returns the corresponding argument type depending on the corresponding method definition.
-     *
-     * @return confused parameter for method invocation
-     */
-    public MethodArguments getConfusedArgument()
-    {
-        MethodArguments argumentMap = new MethodArguments(1);
-
-        if( this.isPrimitive() ) {
-            argumentMap.add("RMG", Object.class);
-        } else {
-            argumentMap.add(42, int.class);
-        }
-
-        return argumentMap;
-    }
-
-    /**
-     * @return the parameter types for the method
-     * @throws CannotCompileException should never occur
-     * @throws NotFoundException should never occur
-     */
-    public CtClass[] getParameterTypes() throws CannotCompileException, NotFoundException
-    {
-        return this.getMethod().getParameterTypes();
-    }
-
-    /**
-     * @return the name of the method
-     * @throws CannotCompileException should never occur
-     * @throws NotFoundException should never occur
-     */
-    public String getName() throws CannotCompileException, NotFoundException
-    {
-        if(this.method != null)
-            return this.getMethod().getName();
-
-        else
-            return "method";
-    }
-
-    /**
-     * Computes the RMI method hash over an CtMethod.
+     * Computes the RMI method hash over a CtMethod.
      *
      * @param method CtMethod to calculate the hash from
      * @return RMI method hash
@@ -182,7 +114,6 @@ public class MethodCandidate {
         return computeMethodHash(methodSignature);
     }
 
-    // copied from https://github.com/waderwu/attackRmi - License: Apache-2.0 License
     /**
      * Computes the RMI method hash from a method signature. This function was basically
      * copied from https://github.com/waderwu/attackRmi and is therefore licensed under the
@@ -213,6 +144,58 @@ public class MethodCandidate {
             throw new SecurityException(complain.getMessage());
         }
         return hash;
+    }
+
+    /**
+     * During guessing operations, we want to invoke methods with confused arguments. This means that:
+     *
+     * - If the function expects a primitive argument as first parameter, we should write an object
+     * - If the function expects a non primitive argument as first parameter, we should write a primitive
+     *
+     * This function returns the corresponding argument type depending on the corresponding method definition.
+     *
+     * @return confused parameter for method invocation
+     */
+    public MethodArguments getConfusedArgument()
+    {
+        MethodArguments argumentMap = new MethodArguments(1);
+
+        if( this.isPrimitive() ) {
+            argumentMap.add("RMG", Object.class);
+        } else {
+            argumentMap.add(42, int.class);
+        }
+
+        return argumentMap;
+    }
+
+    /**
+     * Returns the parameter types of the method as obtained from the CtMethod.
+     *
+     * @return the parameter types for the method
+     * @throws CannotCompileException should never occur
+     * @throws NotFoundException should never occur
+     */
+    public CtClass[] getParameterTypes() throws CannotCompileException, NotFoundException
+    {
+        return this.getMethod().getParameterTypes();
+    }
+
+    /**
+     * Obtain the name of the corresponding method. If the CtMethod was not created so far,
+     * the function returns the placeholder "method".
+     *
+     * @return the name of the method
+     * @throws CannotCompileException should never occur
+     * @throws NotFoundException should never occur
+     */
+    public String getName() throws CannotCompileException, NotFoundException
+    {
+        if(this.method != null)
+            return this.getMethod().getName();
+
+        else
+            return "method";
     }
 
     /**
@@ -264,21 +247,41 @@ public class MethodCandidate {
         return result;
     }
 
+    /**
+     * Returns the current value of the signature attribute.
+     *
+     * @return The methods signature.
+     */
     public String getSignature()
     {
         return this.signature;
     }
 
+    /**
+     * Returns the current value of the hash attribute.
+     *
+     * @return hash value of the method
+     */
     public long getHash()
     {
         return this.hash;
     }
 
+    /**
+     * Returns the current value of the isPrimitive attribute.
+     *
+     * @return true if first argument within the method is a primitive
+     */
     public boolean isPrimitive()
     {
         return this.isPrimitive;
     }
 
+    /**
+     * Returns the current value of the isVoid attribute.
+     *
+     * @return true if method does not take arguments, false otherwise
+     */
     public boolean isVoid()
     {
         return this.isVoid;
@@ -326,5 +329,26 @@ public class MethodCandidate {
         }
 
         return typeName;
+    }
+
+    /**
+     * Two MethodCandidates are equal when their method hash is equal.
+     */
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!(o instanceof MethodCandidate))
+            return false;
+
+        MethodCandidate other = (MethodCandidate)o;
+        return this.hash == other.getHash();
+    }
+
+    /**
+     * MethodCandidates are hashed according to their method hash.
+     */
+    @Override
+    public int hashCode(){
+       return Long.hashCode(this.hash);
     }
 }
