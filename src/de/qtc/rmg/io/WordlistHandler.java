@@ -46,7 +46,8 @@ public class WordlistHandler {
 
     /**
      * Read the specified wordlist and return the corresponding MethodCandidates. Only uses a wordlist
-     * file, if one was specified. Otherwise, it searches the specified wordlist folder.
+     * file, if one was specified. Otherwise, it searches the specified wordlist folder. If there is also
+     * no wordlist folder specified, it defaults to the internal wordlists that are stored within the JAR.
      *
      * @return HashSet of MethodCandidates build from the wordlist
      * @throws IOException if an IO operation fails
@@ -64,6 +65,14 @@ public class WordlistHandler {
         }
     }
 
+    /**
+     * This function is responsible for loading internal wordlist files. These are stored within the JAR file
+     * in the wordlists folder on the top level of the archive. Enumerating files within an internal JAR folder
+     * is currently a pain and the available wordlist names are hardcoded into this class.
+     *
+     * @return HashSet of method candidates parsed from the wordlist file
+     * @throws IOException
+     */
     public static HashSet<MethodCandidate> getWordlistMethodsFromStream() throws IOException
     {
         HashSet<MethodCandidate> methods = new HashSet<MethodCandidate>();
@@ -87,7 +96,9 @@ public class WordlistHandler {
     /**
      * Reads all files ending with .txt within the wordlist folder and returns the corresponding MethodCandidates.
      *
-     * @return HashSet of MethodCandidates build from the wordlist files
+     * @param folder wordlist folder to read the wordlist files from
+     * @param updateWordlists determiens whether wordlists should be updated after creating MethodCandidates
+     * @return HashSet of MethodCandidates parsed from the wordlist files
      * @throws IOException if an IO operation fails
      */
     public static HashSet<MethodCandidate> getWordlistMethodsFromFolder(String folder, boolean updateWordlists) throws IOException
@@ -115,8 +126,9 @@ public class WordlistHandler {
      * be the advanced format. Otherwise, we have an unknown format and print a warning. If updateWordlists was set within the
      * constructor, each wordlist file is updated to the advanced format after the parsing.
      *
-     * @param file wordlist file to read in
-     * @return HashSet of MethodCandidates build from the wordlist file
+     * @param filename wordlist file to parse
+     * @param updateWordlists determiens whether wordlists should be updated after creating MethodCandidates
+     * @return HashSet of MethodCandidates parsed from the wordlist file
      * @throws IOException if an IO operation fails
      */
     public static HashSet<MethodCandidate> getWordlistMethodsFromFile(String filename, boolean updateWordlists) throws IOException
@@ -139,13 +151,11 @@ public class WordlistHandler {
     }
 
     /**
-     * Parses a wordlist file for available methods and creates the corresponding MethodCandidates. Comments prefixed with '#'
-     * within wordlist files are ignored. Each non comment line is split on the ';' character. If the split has a length of 1,
-     * the ordinary wordlist format (that just contains the method signature) is assumed. If the length is 4 instead, it should
-     * be the advanced format. Otherwise, we have an unknown format and print a warning. If updateWordlists was set within the
-     * constructor, each wordlist file is updated to the advanced format after the parsing.
+     * Takes the contents of a wordlist file as a list of lines and parses the corresponding method specifications.
+     * Empty lines and lines starting with a '#' are ignored. All other lines should be valid method signatures and
+     * are parsed to MethodCandidates by this function.
      *
-     * @param file wordlist file to read in
+     * @param lines method signatures read from a wordlist file
      * @return HashSet of MethodCandidates build from the wordlist file
      * @throws IOException if an IO operation fails
      */

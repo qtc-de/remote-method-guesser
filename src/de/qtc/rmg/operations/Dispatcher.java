@@ -22,6 +22,18 @@ import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
+/**
+ * The dispatcher class contains all method definitions for the different rmg actions. It obtains a reference
+ * to the ArgumentParser object and extracts all required arguments parameters for the corresponding method calls.
+ *
+ * Methods within the Dispatcher class can be annotated with the Parameters annotation to specify additional requirements
+ * on their expected arguments. Refer to the de.qtc.rmg.annotations.Parameters class for more details.
+ *
+ * To add a new operation to rmg, the operation  must first be registered within the de.qtc.rmg.operations.Operation class.
+ * A new Operation needs to be created there that references the corresponding method within this class.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class Dispatcher {
 
     private RMIWhisperer rmi;
@@ -32,6 +44,11 @@ public class Dispatcher {
     private HashMap<String,String> allClasses = null;
     private ArrayList<HashMap<String,String>> boundClasses = null;
 
+    /**
+     * Creates the dispatcher object.
+     *
+     * @param p ArgumentParser object that contains the current command line specifications
+     */
     public Dispatcher(ArgumentParser p)
     {
         this.p = p;
@@ -41,6 +58,13 @@ public class Dispatcher {
             this.createMethodCandidate();
     }
 
+    /**
+     * Obtains a list of bound names from the RMI registry. Additionally, each object is looked up to obtain
+     * the name of the class that it implements. All results are saved within of class variables within the
+     * Dispatcher class.
+     *
+     * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not a registry
+     */
     @SuppressWarnings("unchecked")
     private void obtainBoundNames() throws java.rmi.NoSuchObjectException
     {
@@ -55,6 +79,9 @@ public class Dispatcher {
         allClasses.putAll(boundClasses.get(1));
     }
 
+    /**
+     * Creates a method candidate from the specified signature on the command line.
+     */
     private void createMethodCandidate()
     {
         String signature = (String)p.get("signature");
@@ -67,6 +94,15 @@ public class Dispatcher {
         }
     }
 
+    /**
+     * A RemoteObjectClient is used for communication to user registered RMI objects (anything other than
+     * registry, DGC or activator). This function returns a corresponding object that can be used for the
+     * communication. If an ObjID was specified on the command line, this ObjID is used as a target. Otherwise
+     * the client needs to be created for one particular bound name.
+     *
+     * @param boundName to create the client for. If ObjID was specified on the command line, it is preferred.
+     * @return RemoteObjectClient that can be used to communicate to the specified RMI object
+     */
     private RemoteObjectClient getRemoteObjectClient(String boundName)
     {
         Object objID = p.get("objid");
@@ -86,6 +122,13 @@ public class Dispatcher {
         }
     }
 
+    /**
+     * Is expected to be called other the method guessing. Takes a HashMap of bound name -> [MethodCandidaite]
+     * pairs and writes sample files for each bound name. The sample files contain Java code that can be used to
+     * call the corresponding remote methods.
+     *
+     * @param results HashMap of bound name -> [MethodCanidate] pairs
+     */
     private void writeSamples(HashMap<String,ArrayList<MethodCandidate>> results)
     {
         String templateFolder = (String)p.get("template-folder");
@@ -134,6 +177,11 @@ public class Dispatcher {
         Logger.decreaseIndent();
     }
 
+    /**
+     * Parses the user specified wordlist options and creates a corresponding list of MethodCandidates.
+     *
+     * @return HashSet of MethodCandidates that should be used during guessing operations
+     */
     private HashSet<MethodCandidate> getCandidates()
     {
         HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
@@ -160,12 +208,19 @@ public class Dispatcher {
         return candidates;
     }
 
+    /**
+     * Dispatches the listen action. Basically just a handover to ysoserial.
+     */
     @Parameters(count=4)
     public void dispatchListen()
     {
         YsoIntegration.createJRMPListener(p.getHost(), p.getPort(), p.getGadget());
     }
 
+    /**
+     * Performs the gadgetCall operation on an ActivatorClient object. Used for deserialization
+     * attacks on the activator.
+     */
     @Parameters(count=4)
     public void dispatchActivator()
     {
@@ -173,6 +228,10 @@ public class Dispatcher {
         act.gadgetCall(p.getGadget());
     }
 
+    /**
+     * Performs the gadgetCall operation on a RegistryClient object. Used for deserialization
+     * attacks on the registry.
+     */
     @Parameters(count=4)
     public void dispatchRegistry()
     {
@@ -183,6 +242,10 @@ public class Dispatcher {
         reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
     }
 
+    /**
+     * Performs the gadgetCall operation on a DGCClient object. Used for deserialization
+     * attacks on the DGC.
+     */
     @Parameters(count=4)
     public void dispatchDGC()
     {
@@ -192,6 +255,10 @@ public class Dispatcher {
         dgc.gadgetCall(dgcMethod, p.getGadget());
     }
 
+    /**
+     * Performs the gadgetCall operation on a RemoteObjectClient object. Used for deserialization
+     * attacks on user registered RMI objects. Targets can be specified by bound name or ObjID.
+     */
     @Parameters(count=3, requires= {"bound-name|objid","signature"})
     public void dispatchMethod()
     {
@@ -201,6 +268,10 @@ public class Dispatcher {
         client.gadgetCall(candidate, p.getGadget(), argumentPosition);
     }
 
+    /**
+     * Performs the genericCall operation on a RemoteObjectClient object. Used for legitimate
+     * RMI calls on user registered RMI objects. Targets can be specified by bound name or ObjID.
+     */
     @Parameters(count=3, requires= {"bound-name|objid","signature"})
     public void dispatchCall()
     {
@@ -210,6 +281,11 @@ public class Dispatcher {
         client.genericCall(candidate, argumentArray);
     }
 
+    /**
+     * Performs a codebase attack. The actual target is determined by the value of the --signature
+     * option. If the signature is a real method signature, a target needs to  be specified by
+     * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
+     */
     @SuppressWarnings("deprecation")
     @Parameters(count=4, requires= {"signature"})
     public void dispatchCodebase()
@@ -258,6 +334,10 @@ public class Dispatcher {
         }
     }
 
+    /**
+     * Performs the bind operation on the RegistryClient object. Binds the user specified gadget to
+     * the targeted registry.
+     */
     @Parameters(count=4, requires= {"bound-name"})
     public void dispatchBind()
     {
@@ -267,6 +347,10 @@ public class Dispatcher {
         reg.bindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
     }
 
+    /**
+     * Performs the rebind operation on the RegistryClient object. Binds the user specified gadget to
+     * the targeted registry.
+     */
     @Parameters(count=4, requires= {"bound-name"})
     public void dispatchRebind()
     {
@@ -276,6 +360,10 @@ public class Dispatcher {
         reg.rebindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
     }
 
+    /**
+     * Performs the unbind operation on the RegistryClient object. Removes a bound name from the
+     * targeted registry endpoint.
+     */
     @Parameters(requires= {"bound-name"})
     public void dispatchUnbind()
     {
@@ -285,6 +373,10 @@ public class Dispatcher {
         reg.unbindObject(boundName, (boolean)p.get("localhost-bypass"));
     }
 
+    /**
+     * Performs rmg's enumeration action. During this action, several different vulnerability types
+     * are enumerated.
+     */
     public void dispatchEnum()
     {
         RMGUtils.enableCodebase();
@@ -337,6 +429,11 @@ public class Dispatcher {
         activationClient.enumActivator();
     }
 
+    /**
+     * Performs a method guessing attack. During this operation, the specified wordlist files are parsed
+     * for valid method definitions and each method is invoked on the targeted RMI endpoint. Currently, this
+     * operation is only supported on registry endpoints and cannot be performed using the --objid option.
+     */
     public void dispatchGuess()
     {
         boolean createSamples = (boolean)p.get("create-samples");

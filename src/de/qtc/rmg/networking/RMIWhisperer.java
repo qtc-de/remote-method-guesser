@@ -127,7 +127,7 @@ public final class RMIWhisperer {
 
     /**
      * Obtains a list of bound names. This is basically a wrapper around the list function of the RMI registry,
-     * but it has error handling implemented.
+     * but has error handling implemented.
      *
      * @return list of available bound names.
      */
@@ -190,8 +190,7 @@ public final class RMIWhisperer {
 
     /**
      * When called with null as parameter, this function just obtains a list of bound names from the registry.
-     * If a string was specified instead, it returns a list that only contains that String. Not very useful,
-     * but it allows to write the main function of rmg a little bit more straigt forward.
+     * If a string was specified instead, it returns a list that only contains that String.
      *
      * @param boundName specified by the user. Is simply returned if not null
      * @return list of bound names or the user specified bound name
@@ -273,17 +272,6 @@ public final class RMIWhisperer {
     }
 
     /**
-     * Constructs a TCPEndpoint (class used by internal RMI communication) using the specified
-     * host, port and csf values.
-     *
-     * @return newly constructed TCPEndpoint
-     */
-    public TCPEndpoint getEndpoint()
-    {
-        return new TCPEndpoint(host, port, csf, null);
-    }
-
-    /**
      * Constructs a RemoteRef (class used by internal RMI communication) using the specified
      * host, port, csf and objID values..
      *
@@ -291,7 +279,7 @@ public final class RMIWhisperer {
      */
     public RemoteRef getRemoteRef(ObjID objID)
     {
-        Endpoint endpoint = this.getEndpoint();
+        Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
         return new UnicastRef(new LiveRef(objID, endpoint, false));
     }
 
@@ -320,29 +308,39 @@ public final class RMIWhisperer {
     }
 
     /**
-     * Dispatches a raw RMI call. Having such a function available is important for some low level RMI operations like the localhost bypass or even
-     * just calling the registry with serialization gadgets. This method provides full access to almost all relevant parts of the actual RMI calls.
+     * Dispatches a raw RMI call. Having such a function available is important for some low level RMI operations like
+     * the localhost bypass or even just calling the registry with serialization gadgets. This method provides full
+     * access to almost all relevant parts of the actual RMI calls.
      *
-     * The target remote objects can be either specified by their ObjID or by using an already existing RemoteRef. The first approach is suitable
-     * for communicating with well known RMI objects like the registry, the DGC or the Activator. The second approach can be useful, when you just
-     * looked up an object using regular RMI functions and now want to dispatch a raw RMI call to the already obtain RemoteObject.
+     * The target remote objects can be either specified by their ObjID or by using an already existing RemoteRef. The
+     * first approach is suitable for communicating with well known RMI objects like the registry, the DGC or the Activator.
+     * The second approach can be useful, when you just looked up an object using regular RMI functions and now want to
+     * dispatch a raw RMI call to the already obtain RemoteObject.
      *
-     * Within the current RMI protocol, you invoke methods by specifying an ObjID to identify the RemoteObject you want to talk with and a method hash
-     * to identify the method you want to invoke. In legacy RMI, methods were instead identified by using a callID. This callID is basically the position
-     * of the method within the class definition and is therefore a positive number for legacy RMI calls. Within modern RMI, this method should be always
-     * negative (except when attempting localhost bypasses :P). The currently used method hash is replaced by an interface hash in the legacy implementation.
+     * Within the current RMI protocol, you invoke methods by specifying an ObjID to identify the RemoteObject you want to
+     * talk with and a method hash to identify the method you want to invoke. In legacy RMI, methods were instead identified
+     * by using a callID. This callID is basically the position of the method within the class definition and is therefore a
+     * positive number for legacy RMI calls. Within modern RMI, this method should be always negative (except when attempting
+     * localhost bypasses :P). The currently used method hash is replaced by an interface hash in the legacy implementation.
+     * The internal RMI communication (DGC and Registry) still use the legacy calling convention today, as you can check by
+     * searching for the corresponding Skeleton classes within the Java RMI source code.
      *
-     * The internal RMI communication (DGC and Registry) still use the legacy calling convention today, as you can check by searching for the corresponding
-     * Skeleton classes within the Java RMI source code.
+     * By default, the genericCall function just ignores responses from the RMI server. Responses are only parsed if an
+     * expected return type was specified during the function call and a ResponseHandler was registered by using the plugin
+     * system.
      *
-     * @param objID identifies the RemoteObject you want to communicate with. Registry = 0, Activator = 1, DGC = 2 or custom once...
-     * @param callID callID that is used for legacy calls. Basically specifies the position of the method
+     * @param objID identifies the RemoteObject you want to communicate with. Registry = 0, Activator = 1, DGC = 2 or
+     *                 custom once...
+     * @param callID callID that is used for legacy calls. Basically specifies the position of the method to call in legacy
+     *                 rmi calls. For current calling convention, it should be negative
      * @param methodHash hash value of the method to call or interface hash for legacy calls
      * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
      * @param locationStream if true, uses the MaliciousOutpuStream class to write custom annotation objects
      * @param callName the name of the RMI call you want to dispatch (only used for logging)
-     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port of this class are used
-     * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler plugin
+     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port
+     *                 of this class are used
+     * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler
+     *                 plugin (if registered to the plugin system)
      * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
      */
     @SuppressWarnings({ "deprecation", "rawtypes" })

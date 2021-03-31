@@ -237,6 +237,13 @@ public class ActivationClient {
         }
     }
 
+    /**
+     * Helper method to pack the arguments for the activate call. The first parameter of the corresponding remote method
+     * is the non primitive and contains the payload object. The second one is a boolean and always contains failse.
+     *
+     * @param payloadObject payload to use for the first non primitive argument
+     * @return MethodArguments object that can be used for the activate call
+     */
     private MethodArguments prepareCallArguments(Object payloadObject)
     {
         MethodArguments callArguments = new MethodArguments(2);
@@ -244,6 +251,7 @@ public class ActivationClient {
         callArguments.add(false, boolean.class);
         return callArguments;
     }
+
     /**
      * Implementation of the activate call. Just uses the genericCall function of the RMIWhisperer, which allows to perform
      * raw RMI calls. The activator is not implemented as a skeleton and already uses the new calling convention. As it only
