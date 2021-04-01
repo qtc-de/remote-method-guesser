@@ -162,7 +162,7 @@ public class DGCClient {
 
     /**
      * Invokes a DGC method with a user controlled codebase as class annotation. The codebase is already set
-     * by the ArgumentParser during the startup of the program. This method was never successfuly tested, as
+     * by the ArgumentParser during the startup of the program. This method was never successfully tested, as
      * it is difficult to find a Java version that is still vulnerable to this :D
      *
      * @param callName the DGC call to use for the operation (clean|dirty)
@@ -271,7 +271,7 @@ public class DGCClient {
     }
 
     /**
-     * Looks up the callID for the specified DGC call.
+     * Looks up the callID for the specified DGC call. DGC endpoints only support the methods clean and dirty.
      *
      * @param callName the DGC call to use for the operation (clean|dirty)
      * @return callID for the corresponding call
@@ -297,7 +297,7 @@ public class DGCClient {
      *
      * @param callName the DGC call to use for the operation (clean|dirty)
      * @param payloadObject object to use during the DGC call
-     * @return argument array that can be used for the corresponding call
+     * @return MethodArguments that can be used for the corresponding call
      */
     private MethodArguments packArgsByName(String callName, Object payloadObject)
     {

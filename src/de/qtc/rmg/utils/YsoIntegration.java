@@ -51,6 +51,14 @@ public class YsoIntegration {
     private static String ysoPath;
     private static String[] bypassGadgets = new String[]{"JRMPClient2", "AnTrinh"};
 
+    /**
+     * Basically a wrapper around prapreAnTrinhGadget that attempts to parse the command string as a listener
+     * before creating the listener object. This is called during gadget creation, when the specified gadget
+     * is the AnTrinh gadget.
+     *
+     * @param command expected to be in listener format (host:port)
+     * @return AnTrinh bypass gadget
+     */
     private static Object generateBypassGadget(String command)
     {
         Object payloadObject = null;
@@ -73,7 +81,6 @@ public class YsoIntegration {
      * Just a small wrapper around the URLClassLoader creation. Checks the existence of the specified file
      * path before creating a class loader around it.
      *
-     * @param ysoPath file system path to the ysoserial .jar file
      * @return URLClassLoader for ysoserial classes
      * @throws MalformedURLException when the specified file system path exists, but is invalid
      */
@@ -127,11 +134,9 @@ public class YsoIntegration {
      * the listening host in this implementation. The JRMPListener will then only be opened on the specified
      * IP address.
      *
-     * @param ysoPath file system path to the ysoserial .jar file
      * @param host IP address where to listen for connections
      * @param port port where to listen for connections
-     * @param gadget ysoserial gadget name to send within responses
-     * @param command ysoserial gadget command to use for gadget generation
+     * @param payloadObject to deliver to incoming connections
      */
     public static void createJRMPListener(String host, int port, Object payloadObject)
     {
@@ -190,7 +195,6 @@ public class YsoIntegration {
      * Loads ysoserial using and separate URLClassLoader and invokes the makePayloadObject function by using
      * reflection. The result is a ysoserial gadget as it would be created on the command line.
      *
-     * @param ysoPath file system path to ysoserial .jar file
      * @param gadget name of the desired gadget
      * @param command command specification for the desired gadget
      * @return ysoserial gadget

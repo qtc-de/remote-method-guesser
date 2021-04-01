@@ -427,6 +427,17 @@ public final class RMIWhisperer {
         }
     }
 
+    /**
+     * Marshals the specified object value to the corresponding type and writes it to the specified
+     * output stream. This is basically a copy from the default RMI implementation of this function.
+     * The type values are obtained by the method signature and the object values come from the argument
+     * array.
+     *
+     * @param type data type to marshal to
+     * @param value object to be marshalled
+     * @param out output stream to marshal to
+     * @throws IOException in case of a failing write operation to the stream
+     */
     private static void marshalValue(Class<?> type, Object value, ObjectOutput out) throws IOException
     {
         if (type.isPrimitive()) {
@@ -454,6 +465,18 @@ public final class RMIWhisperer {
         }
     }
 
+    /**
+     * Unmarshals an object from the specified ObjectInput according to the data type specified
+     * in the type parameter. This is required to read the result of RMI calls, as different types
+     * are written differently to the ObjectInput by the RMI server. The expected type is taken from
+     * the return value of the method signature.
+     *
+     * @param type data type that is expected from the stream
+     * @param in ObjectInput to read from.
+     * @return unmarshalled object
+     * @throws IOException if reading the ObjectInput fails
+     * @throws ClassNotFoundException if the read in class is unknown.
+     */
     private static Object unmarshalValue(CtClass type, ObjectInput in) throws IOException, ClassNotFoundException
     {
         if (type.isPrimitive()) {

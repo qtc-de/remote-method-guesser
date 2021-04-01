@@ -33,10 +33,7 @@ import de.qtc.rmg.utils.RMGUtils;
  *
  * This allows to reliably detect remote methods without the risk of causing unwanted actions on the server
  * side by actually invoking them. The idea for such a guessing approach was not invented by remote-method-guesser,
- * but was, to the best of our knowledge first implemented by the rmi-scout project.
- *
- * The MethodGuesser class was one of the first operation classes in rmg and is therefore not fully optimized
- * to the currently available other utility classes. It may be restructured in future.
+ * but was, to the best of our knowledge, first implemented by the rmiscout project.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -47,16 +44,17 @@ public class MethodGuesser {
     private RemoteObjectClient client;
     private HashSet<MethodCandidate> candidates;
 
+
     /**
-     * The MethodGuesser makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
-     * Afterwards, it needs access to the underlying UnicastRemoteRef to perform customized RMi calls. Depending
-     * on the RMI version of the server (current proxy approach or legacy stub objects), this requires access to
-     * a different field within the Proxy or RemoteObject class. Both fields are made accessible within the constructor
-     * to make the actual guessing code more clean.
+     * The MethodGuesser relies on a RemoteObjectClient object to dispatch raw RMI calls. This object needs to be created
+     * in advance and has to be passed to the constructor. Other requirements are a HashSet of MethodCandidates to guess,
+     * the number of threads to use for guessing and a boolean indicating whether zero argument methods should be guessed.
+     * The problem with zero argument methods is, that they lead to real calls on the server side.
      *
-     * @param rmiRegistry registry to perform lookup operations
-     * @param unknownClasses list of unknown classes per bound name
-     * @param candidates list of method candidates to guess
+     * @param client RemoteObjectClient for the targeted RMI object
+     * @param candidates HashSet of MethodCandidates to guess
+     * @param threads number of threads to use
+     * @param zeroArg whether or not to guess zero argument methods
      */
     public MethodGuesser(RemoteObjectClient client, HashSet<MethodCandidate> candidates, int threads, boolean zeroArg)
     {
@@ -67,6 +65,12 @@ public class MethodGuesser {
         this.zeroArg = zeroArg;
     }
 
+    /**
+     * Helper function that prints some visual text when the guesser is started. Just contains information
+     * on the number of methods that are guessed or the concrete method signature (if specified).
+     *
+     * @param candidates HashSet of MethodCandidates to guess
+     */
     public static void printGuessingIntro(HashSet<MethodCandidate> candidates)
     {
         int count = candidates.size();
@@ -89,40 +93,15 @@ public class MethodGuesser {
     }
 
     /**
-     * This lengthy function is used for method guessing. If targetName is not null, guessing is only performed on
-     * the specified bound name, otherwise all bound names within the registry are targeted. The function starts of
-     * with some initialization and then tries to determine the legacy status of the server. This status is required
-     * to decide whether to create the remote classes as interface or stub classes on the client side. Within legacy
-     * RMI, stub classes are required on the client side, but current RMI implementations only need an interface that
-     * is assigned to a Proxy.
+     * This method starts the actual guessing process. It iterates over the HashSet of MethodCandidate and creates a
+     * new GuessingWorker for each candidate. The corresponding workers are assigned to a thread pool and termination
+     * is awaited after all GuessingWorkers have been created.
      *
-     * Depending on the determined legacy status, an interface or legacy stub class is now created dynamically.
-     * With the corresponding class now available on the class path, the RemoteObject can be looked up on the
-     * registry. From the obtained object, the RemoteRef is then extracted by using reflection. With this remote
-     * reference, customized RMI calls can now be dispatched.
+     * Each GuessingWorker obtains a reference to an ArrayList of MethodCandidates. Guessing workers are expected to
+     * push successfully guessed methods into this ArrayList.
      *
-     * This low level RMI access is required to call methods with invalid argument types. During method guessing,
-     * you want to call possibly existing remote methods with invalid argument types to prevent their actual execution.
-     * When using ordinary RMI to make a call, Java would refuse to use anything other than the expected argument types,
-     * as it would violate the interface or method definition. With low level RMI access, the call arguments can be
-     * manually written to the OutputStream which allows to use arbitrary arguments for a call.
-     *
-     * To implement this confusion of argument types, the dynamically created classes for the RemoteObjects are
-     * constructed with two (interface)methods. The first, rmgInvokeObject, expects a String as first parameter,
-     * whereas the second, rmgInvokePrimitive, expects an int. Depending on the method signature that is currently
-     * guessed, rmgInvokeObject or rmgInvokePrimitive is used for the call. If the method signature expects a
-     * primitive as its first argument, rmgInvokeObject is used to cause the confusion. Otherwise, rmgInvokePrimitive
-     * will be used. During the call, the methodHash of rmgInvokeObject or rmgInvokePrimitive is replaced by the
-     * methodHash of the currently guessed method signature. This approach allows testing for arbitrary method signatures
-     * without manually exchanging the call parameters.
-     *
-     * @param targetName bound name to target. If null, target all available bound names
-     * @param threads number of threads to use for the operation
-     * @param zeroArg whether or not to also guess zero argument methods (are really invoked)
-     * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
-     * @return List of successfully guessed methods per bound name
+     * @return ArrayList of successfully guessed methods
      */
-
     public ArrayList<MethodCandidate> guessMethods()
     {
         Logger.printlnMixedYellow("Guessing methods on bound name:", client.getBoundName(), "...");
@@ -156,6 +135,14 @@ public class MethodGuesser {
         return existingMethods;
     }
 
+    /**
+     * The GuessingWorker class performs the actual method guessing in terms of RMI calls. It implements Runnable and
+     * is intended to be run within a thread pool. Each GuessingWorker has exactly one MethodCandidate assigned that is
+     * guessed by the worker. It uses the obtained RemoteObjectClient object to dispatch a call to that candidate and inspects
+     * the server-side exception to determine whether the method exists on the remote object.
+     *
+     * @author Tobias Neitzel (@qtc_de)
+     */
     private class GuessingWorker implements Runnable {
 
         private MethodCandidate candidate;
@@ -165,8 +152,9 @@ public class MethodGuesser {
         /**
          * Initialize the guessing worker with all the required information.
          *
-         * @param candidate method that is actually guessed
-         * @param existingMethods array of existing methods. Identified methods need to be appended
+         * @param client RemoteObjectClient to the targeted remote object
+         * @param candidate MethodCanidate to guess
+         * @param existingMethods ArrayList of existing methods. If candidate exists, it is pushed here
          */
         public GuessingWorker(RemoteObjectClient client, MethodCandidate candidate, ArrayList<MethodCandidate> existingMethods)
         {
@@ -176,17 +164,13 @@ public class MethodGuesser {
         }
 
         /**
-         * Starts the method invocation. The RemoteObject that is used by this worker is actually a dummy
-         * object. It pretends to implement the remote class/interface, but actually has only two dummy methods
-         * defined. One of these dummy methods get invoked during this call, but with an exchanged method hash
-         * of the actual method in question.
-         *
-         * The selected method for the guessing expects either a primitive or non primitive type. This decision
-         * is made based on the MethodCandidate in question and with the goal of always causing a type confusion.
-         * E.g. when the MethodCandidate expects a primitive type as first argument, the method that expects a
-         * non primitive type is selected. Therefore, when the remote object attempts to unmarshal the call
-         * arguments, it will always find a type mismatch on the first argument, which causes an exception.
-         * This exception is used to identify valid methods.
+         * Invokes the assigned MethodCandidate. During the method invocation, a type-confusion mechanism is used.
+         * The assigned method is inspected for its first argument type and it is determined whether it is a primitive
+         * or non primitive type. Depending on the type, the exact opposite type is used for the actual method call.
+         * E.g. when the MethodCandidate expects a primitive type as first argument, we send a non primitive type, and
+         * the other way around. Therefore, when the remote object attempts to unmarshal the call arguments, it will always
+         * find a type mismatch on the first argument, which causes an exception. This exception is used to identify valid
+         * methods.
          */
         public void run() {
 
@@ -211,14 +195,14 @@ public class MethodGuesser {
 
             } catch(java.rmi.UnmarshalException e) {
                 /*
-                 * This occurs on invocation of methods taking zero arguments. Since the call always succeeds,
-                 * the remote method returns some value that probably not matches the expected return value of
-                 * the lookup method. However, it is still a successful invocation and the method exists.
+                 * This is basically a legacy catch. In the old way of invoking remote methods, this exception was
+                 * thrown on existing methods that return a different argument type than expected. This should no longer
+                 * occur, as arguments returned by the server are ignored by rmg. Nonetheless, the keep it for now.
                  */
 
             } catch(java.rmi.MarshalException e) {
                 /*
-                 * This one is may thrown on the client side why marshalling the call arguments. It should actually
+                 * This one is  thrown on the client side when marshalling the call arguments. It should actually
                  * never occur and if it does, it is probably an internal error.
                  */
                 StringWriter writer = new StringWriter();
@@ -251,8 +235,8 @@ public class MethodGuesser {
 
             /*
              * Successfully guessed methods cause either an EOFException (object passed instead of primitive
-             * or two few arguments) or an OptionalDataException (primitive passed for instead of object). As
-             * these exceptions are not caught, we end up here.
+             * or two few arguments) or an OptionalDataException (primitive passed for instead of object) that
+             * is wrapped in a ServerException. As these exceptions caught, but not return, we end up here.
              */
             Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
             existingMethods.add(candidate);

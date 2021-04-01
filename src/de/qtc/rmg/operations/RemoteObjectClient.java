@@ -20,13 +20,9 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 
 /**
- * The method attacker is used to invoke RMI methods on the application level with user controlled
- * objects as method arguments. It can be used to attempt codebase and deserialization attacks on
- * known remote methods. Usually, you use first the *guess* operation to enumerate remote methods and
- * then you use the *method* operation to check them for codebase and deserialization vulnerabilities.
- *
- * The MethodAttacker was one of the first operation classes in rmg and is therefore not fully optimized
- * to the currently available other utility classes. It may be restructured in future.
+ * The RemoteObjectClient class is used for method guessing and communication to user defined remote objects.
+ * It can be used to perform regular RMI calls to objects specified by either a bound name or an ObjID.
+ * Apart from regular RMI calls, it also supports invoking methods with payload objects and user specified codebases.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -53,8 +49,9 @@ public class RemoteObjectClient {
      * to make the actual attacking code more clean.
      *
      * @param rmiRegistry registry to perform lookup operations
-     * @param classes list of unknown classes per bound name
-     * @param targetMethod the remote method to target
+     * @param boundName for the lookup on the registry
+     * @param remoteClass class name of the bound name (is created dynamically to prevent ClassNotFoundExceptions)
+     * @param legacyMode the user specified legacyMode setting
      */
     public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName, String remoteClass, int legacyMode)
     {
@@ -77,6 +74,15 @@ public class RemoteObjectClient {
         remoteRef = getRemoteRef();
     }
 
+    /**
+     * When the ObjID of a remote object is already known, we can talk to this object without a previous lookup
+     * operation. In this case, the corresponding remote reference is constructed from scratch, as the ObjID and
+     * the target address (host:port) are the only required informations.
+     *
+     * @param rmiRegistry target where the object is located
+     * @param objID ID of the remote object to talk to
+     * @param legacyMode user specified legacyMode setting
+     */
     public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID, int legacyMode)
     {
         this.rmi = rmiRegistry;
@@ -92,32 +98,15 @@ public class RemoteObjectClient {
     }
 
     /**
-     * This lengthy method performs the actual method call. If no bound name was specified, it iterates
-     * over all available bound names on the registry. After some initialization, the function checks the
-     * specified MethodCandidate for non primitive arguments and determines whether the remote endpoint
-     * uses legacy stubs. Non primitive arguments are required for codebase and deserialization attacks,
-     * whereas the legacy status of the server is required to decide whether to create the remote classes
-     * as interface or stub classes on the client side. Within legacy RMI, stub classes are required on the
-     * client side, but current RMI implementations only need an interface that is assigned to a Proxy.
+     * Invokes the specified MethodCandiate with a user specified payload object. This is used during deserialization
+     * attacks and needs to target non primitive input arguments of RMI methods. By default, the function attempts
+     * to find a non primitive method argument on it's own. However, by using the argumentPosition parameter, it is
+     * also possible to specify it manually.
      *
-     * Depending on the determined legacy status, an interface or legacy stub class is now created dynamically.
-     * With the corresponding class now available on the class path, the RemoteObject can be looked up on the
-     * registry. From the obtained object, the RemoteRef is then extracted by using reflection. With this remote
-     * reference, a customized RMI call can now be dispatched.
-     *
-     * This low level RMI access is required to call methods with invalid argument types. During deserialization
-     * attacks you may want to call a method that expects a HashMap with some other serialized object. When using
-     * ordinary RMI to make the call, Java would refuse to use anything other than a HashMap during the call, as
-     * it would violate the interface definition. With low level RMI access, the call arguments can be manually
-     * written to the stream which allows to use arbitrary arguments for the call.
-     *
-     * @param gadget object to use during the RMI call. Usually a payload object created by ysoserial
-     * @param boundName optional bound name to target. If null, target all bound names
-     * @param argumentPosition specify the argument position to attack. If negative, automatically search for non primitive
-     * @param operationMode the function was upgraded to support two operations 'codebase' or 'attack'
-     * @param legacyMode whether to enforce legacy stubs. 0 -> auto, 1 -> enforce legacy, 2 -> enforce normal
+     * @param targetMethod method to target for the attack
+     * @param gadget payload object to use for the call
+     * @param argumentPosition argument position to attack. Can be negative for auto selection.
      */
-
     public void gadgetCall(MethodCandidate targetMethod, Object gadget, int argumentPosition)
     {
         int attackArgument = findNonPrimitiveArgument(targetMethod, argumentPosition);
@@ -182,6 +171,16 @@ public class RemoteObjectClient {
         }
     }
 
+    /**
+     * This function invokes the specified MethodCandidate with a user specified codebase. The specified payload object
+     * is expected to be an instance of the class that should be loaded from the codebase. Usually this is created
+     * dynamically by rmg and the user has only to specify the class name. The function needs to target a non primitive
+     * method argument, that is selected by default, but users can also specify an argumentPosition explicitly.
+     *
+     * @param targetMethod method to target for the attack
+     * @param gadget instance of class that should be loaded from the client specified codebase
+     * @param argumentPosition argument to use for the attack. Can be negative for auto selection
+     */
     public void codebaseCall(MethodCandidate targetMethod, Object gadget, int argumentPosition)
     {
         int attackArgument = findNonPrimitiveArgument(targetMethod, argumentPosition);
@@ -246,6 +245,15 @@ public class RemoteObjectClient {
         }
     }
 
+    /**
+     * This function is used for regular RMI calls on the specified MethodCandidate. It takes an array of Objects as
+     * input arguments and invokes the MethodCandidate with them accordingly. The function itself is basically just a
+     * wrapper around the genericCall function from the RMIWhisperer class. Especially the transformation from the raw
+     * Object array into the MethodArguments type is one of it's purposes.
+     *
+     * @param targetMethod remote method to call
+     * @param argumentArray method arguments to use for the call
+     */
     public void genericCall(MethodCandidate targetMethod, Object[] argumentArray)
     {
         CtClass rtype = null;
@@ -266,11 +274,27 @@ public class RemoteObjectClient {
         }
     }
 
+    /**
+     * Just a wrapper around the genericCall function from the RMIWhisperer class. Invokes the specified MethodCandidate
+     * with the specified set of MethodArguments.
+     *
+     * @param targetMethod method to invoke
+     * @param argumentArray arguments to use for the call
+     * @throws Exception this function is used e.g. for remote method guessing and raising all kind of exceptions is
+     *         required.
+     */
     public void rawCallNoReturn(MethodCandidate targetMethod, MethodArguments argumentArray) throws Exception
     {
         rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef, null);
     }
 
+    /**
+     * Helper function that is used during deserialization and codebase attacks. It prints information on the selected
+     * argument position for the attack and also displays the parsed method signature again.
+     *
+     * @param targetMethod MethodCandidate that is attacked
+     * @param attackArgument the argument position of the argument that is attacked
+     */
     private void printIntro(MethodCandidate targetMethod, int attackArgument)
     {
         Logger.printMixedBlue("Using non primitive argument type", targetMethod.getArgumentTypeName(attackArgument));
@@ -280,6 +304,12 @@ public class RemoteObjectClient {
         Logger.println("");
     }
 
+    /**
+     * Obtains a remote reference to the desired remote object. If this.objID is not null, the remote reference is always
+     * constructed manually by using the ObjID value. Otherwise, an RMI lookup is used to obtain it by bound name.
+     *
+     * @return Remote reference to the targeted object
+     */
     private RemoteRef getRemoteRef()
     {
         if(this.objID == null)
@@ -288,6 +318,13 @@ public class RemoteObjectClient {
             return this.rmi.getRemoteRef(this.objID);
     }
 
+    /**
+     * This function obtains a remote reference by using the regular way. It looks up the bound name that was specified
+     * during construction of the RemoteObjectClient to obtain the corresponding object from the registry. Reflection
+     * is then used to make the remote reference accessible.
+     *
+     * @return Remote reference to the targeted object
+     */
     private RemoteRef getRemoteRefByName()
     {
         boolean isLegacy = RMGUtils.isLegacy(this.remoteClass, this.legacyMode, true);
@@ -321,6 +358,15 @@ public class RemoteObjectClient {
         return remoteReference;
     }
 
+    /**
+     * Helper function to find the first non primitive argument within a method or to check whether the
+     * user specified argument position is really a non primitive. Basically relies on getPrimitive from
+     * the MethodCandidate class. The function itself is mainly concerned on the error handling.
+     *
+     * @param targetMethod MethodCandidate to look for non primitives
+     * @param position user specified argument position
+     * @return position of the first non primitive argument or the user specified position if primitive
+     */
     private int findNonPrimitiveArgument(MethodCandidate targetMethod, int position)
     {
         int attackArgument = 0;
@@ -343,6 +389,20 @@ public class RemoteObjectClient {
         return attackArgument;
     }
 
+    /**
+     * During deserialization and codebase attacks, rmg uses a canary to check whether the attack was successful.
+     * Instead of sending the plain payload object to the RMI endpoint, rmg always sends an Object array that consists
+     * out of the actual payload Object and a canary class. The canary class is randomly generated during runtime and
+     * passed in the second position within the Object array. The payload itself is used in the first position.
+     *
+     * Only if the payload object was successfully processed on the RMI server, it will attempt to load the canary class,
+     * that leads to a ClassNotFoundException. This makes it reliably detectable whether an attack was successful.
+     *
+     * @param targetMethod MethodCandidate to create the payload for.
+     * @param gadget payload object to use in the payload
+     * @param attackArgument position of a non primitive argument
+     * @return MethodArguments to use for the call
+     */
     @SuppressWarnings("deprecation")
     private MethodArguments prepareArgumentArray(MethodCandidate targetMethod, Object gadget, int attackArgument)
     {
@@ -381,6 +441,14 @@ public class RemoteObjectClient {
         return callArguments;
     }
 
+    /**
+     * Due to other internal requirements, the getName function from the MethodCandidate class does not
+     * implement exception handling. Therefore, this function provides a simple wrapper class that catches
+     * exceptions.
+     *
+     * @param targetMethod MethodCandidate to obtain the name from
+     * @return method name of the MethodCandidate
+     */
     private String getMethodName(MethodCandidate targetMethod)
     {
         String methodName = "";
