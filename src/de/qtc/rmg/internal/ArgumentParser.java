@@ -1,5 +1,8 @@
 package de.qtc.rmg.internal;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +16,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import de.qtc.rmg.Starter;
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.Operation;
@@ -27,6 +29,9 @@ import de.qtc.rmg.utils.YsoIntegration;
  * during an execution of rmg. In future we may move to an module based
  * argument parser, as the amount of options and actions has become quite
  * high. However, for now the current parsing should be sufficient.
+ *
+ * To implement more complicated parsing logic, it is recommended to look at the
+ * de.qtc.rmg.annotations.Parameters class.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -43,11 +48,12 @@ public class ArgumentParser {
     private Properties config;
     private HashMap<String,Object> parameters;
 
-    private static String defaultConfiguration = "/config.properties";
+    private  String defaultConfiguration = "/config.properties";
 
     /**
-     * Creates the actual parser object and initializes it with some default
-     * options.
+     * Creates the actual parser object and initializes it with some default options
+     * and parses the current command line. Parsed parameters are stored within the
+     * parameters HashMap.
      */
     public ArgumentParser(String[] argv)
     {
@@ -61,28 +67,76 @@ public class ArgumentParser {
         this.parse(argv);
     }
 
-    private Object parseOption(String name, Object defaultValue)
+    /**
+     * Parses the specified command line arguments and handles some shortcuts.
+     * E.g. the --help and --trusted options are already caught at this level and
+     * set the corresponding global variables in other classes.
+     *
+     * @param argv arguments specified on the command line
+     */
+    private void parse(String[] argv)
     {
-        Object returnValue = null;
-
         try {
-            returnValue = cmdLine.getParsedOptionValue(name);
-
-            if(returnValue instanceof Number)
-                returnValue = ((Number)returnValue).intValue();
-
-        } catch(ParseException e) {
-            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", name);
-            System.out.println("");
+            cmdLine = parser.parse(this.options, argv);
+        } catch (ParseException e) {
+            System.err.println("Error: " + e.getMessage() + "\n");
             printHelpAndExit(1);
         }
 
-        if( returnValue == null )
-            return defaultValue;
-        else
-            return returnValue;
+        this.config = new Properties();
+        loadConfig(cmdLine.getOptionValue("config", null));
+
+        if( cmdLine.hasOption("help") ) {
+            printHelpAndExit(0);
+        }
+
+        if( cmdLine.hasOption("trusted") )
+            Security.trusted();
+
+        if( cmdLine.hasOption("no-color") )
+            Logger.disableColor();
+
+        PluginSystem.init(cmdLine.getOptionValue("plugin", null));
+        ExceptionHandler.showStackTrace(cmdLine.hasOption("stack-trace"));
+        YsoIntegration.setYsoPath(cmdLine.getOptionValue("yso", config.getProperty("ysoserial-path")));
+
+        preapreParameters();
     }
 
+    /**
+     * Loads the remote-method-guesser configuration file from the specified destination. The default configuration
+     * is always loaded. If the filename parameter is not null, an additional user specified config is loaded, that
+     * may overwrites some configurations.
+     *
+     * @param filename file system path to load the configuration file from
+     */
+    private void loadConfig(String filename)
+    {
+        try {
+            InputStream configStream = null;
+
+            configStream = ArgumentParser.class.getResourceAsStream(defaultConfiguration);
+            config.load(configStream);
+            configStream.close();
+
+            if( filename != null ) {
+                configStream = new FileInputStream(filename);
+                config.load(configStream);
+                configStream.close();
+            }
+
+        } catch( IOException e ) {
+            ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
+        }
+    }
+
+
+    /**
+     * rmg stores command line parameters within a HashMap, that makes the syntax for obtaining parameter
+     * values a little bit shorter than using commons-cli syntax. This function creates the corresponding HashMap
+     * and fills it with the values parsed from the command line. Certain options also have default values assigned,
+     * that are used when the corresponding option was not specified.
+     */
     private void preapreParameters()
     {
         parameters = new HashMap<String,Object>();
@@ -106,6 +160,52 @@ public class ArgumentParser {
         parameters.put("zero-arg", cmdLine.hasOption("zero-arg"));
         parameters.put("localhost-bypass", cmdLine.hasOption("localhost-bypass"));
         parameters.put("force-guessing", cmdLine.hasOption("force-guessing"));
+    }
+
+    /**
+     * This function is used for integer parsing. Commons-cli allows to restrict option values to certain parameter
+     * types. For numeric types, it uses the abstract Number class. Later on, rmg-functions consume such argument types
+     * usually as int and this function converts the value into this corresponding form.
+     *
+     * @param name parameter name within the command line
+     * @param defaultValue to use if the parameter is not present
+     * @return the parsing result that should be stored within the parameters HashMap
+     */
+    private Object parseOption(String name, Object defaultValue)
+    {
+        Object returnValue = null;
+
+        try {
+            returnValue = cmdLine.getParsedOptionValue(name);
+
+            if(returnValue instanceof Number)
+                returnValue = ((Number)returnValue).intValue();
+
+        } catch(ParseException e) {
+            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", name);
+            System.out.println("");
+            printHelpAndExit(1);
+        }
+
+        if( returnValue == null )
+            return defaultValue;
+        else
+            return returnValue;
+    }
+
+    /**
+     * Returns the number of specified positional arguments.
+     *
+     * @return number of positional arguments.
+     */
+    private int getArgumentCount()
+    {
+        if( this.argList != null ) {
+            return this.argList.size();
+        } else {
+            this.argList = cmdLine.getArgList();
+            return this.argList.size();
+        }
     }
 
     /**
@@ -247,14 +347,65 @@ public class ArgumentParser {
     }
 
     /**
-     * Returns the help string that is used by rmg.
+     * The validateOperation function is used to validate that all required parameters were specified for an operation.
+     * Each operation has one assigned method, that can be annotated with the Parameters annotation. If this annotation
+     * is present, this function checks the 'count' and 'requires' attribute and makes sure that the corresponding values
+     * have been specified on the command line. Read the de.qtc.rmg.annotations.Parameters class for more details.
+     *
+     * @param operation Operation to validate
+     */
+    private void validateOperation(Operation operation)
+    {
+        Method m = operation.getMethod();
+        Parameters paramRequirements = (Parameters)m.getAnnotation(Parameters.class);
+
+        if(paramRequirements == null)
+            return;
+
+        this.checkArgumentCount(paramRequirements.count());
+
+        for(String requiredOption: paramRequirements.requires()) {
+
+            Object optionValue = null;
+            String[] possibleOptions = requiredOption.split("\\|");
+
+            for(String possibleOption: possibleOptions) {
+                if((optionValue = this.get(possibleOption)) != null) {
+                    break;
+                }
+            }
+
+            if(optionValue == null) {
+
+                Logger.eprint("Error: The ");
+
+                for(int ctr = 0; ctr < possibleOptions.length - 1; ctr++) {
+                    Logger.printPlainYellow("--" + possibleOptions[ctr]);
+
+                    if(ctr == possibleOptions.length - 2)
+                        Logger.printPlain(" or ");
+
+                    else
+                        Logger.printPlain(", ");
+                }
+
+                Logger.printPlainYellow("--" + possibleOptions[possibleOptions.length - 1]);
+                Logger.printlnPlainMixedBlue(" option is required for the", operation.toString().toLowerCase(), "operation.");
+                RMGUtils.exit();
+            }
+        }
+    }
+
+    /**
+     * Returns the help string that is used by rmg. The version information is read from the pom.xml, which makes
+     * it easier to keep it in sync. Possible operation names are taken from the Operation enumeration.
      *
      * @return help string.
      */
     private String getHelpString()
     {
         String helpString = "rmg [options] <ip> <port> <action>\n\n"
-                +"rmg v" + Starter.class.getPackage().getImplementationVersion()
+                +"rmg v" + ArgumentParser.class.getPackage().getImplementationVersion()
                 +" - Identify common misconfigurations on Java RMI endpoints.\n\n"
                 +"Positional Arguments:\n"
                 +"    ip                              IP address of the target\n"
@@ -264,7 +415,7 @@ public class ArgumentParser {
 
         for(Operation op : Operation.values()) {
             helpString += "    "
-                    + padRight(op.toString().toLowerCase() + " " + op.getArgs(), 32)
+                    + Logger.padRight(op.toString().toLowerCase() + " " + op.getArgs(), 32)
                     + op.getDescription() + "\n";
         }
 
@@ -272,62 +423,23 @@ public class ArgumentParser {
         return helpString;
     }
 
-    private String padRight(String s, int n) {
-        return String.format("%-" + n + "s", s);
-    }
-
     /**
-     * Parses the specified command line arguments and handles some shortcuts.
-     * The --help option and --trusted are already caught at this level and
-     * do not need to be processed later on.
+     * Utility function to show the program help and exit it right away.
      *
-     * @param argv arguments specified on the command line
-     * @return
+     * @param code return code of the program
      */
-    public void parse(String[] argv)
-    {
-        try {
-            cmdLine = parser.parse(this.options, argv);
-        } catch (ParseException e) {
-            System.err.println("Error: " + e.getMessage() + "\n");
-            printHelpAndExit(1);
-        }
-
-        this.config = new Properties();
-        RMGUtils.loadConfig(defaultConfiguration, config, false);
-        RMGUtils.loadConfig(cmdLine.getOptionValue("config", null), config, true);
-
-        if( cmdLine.hasOption("help") ) {
-            printHelpAndExit(0);
-        }
-
-        if( cmdLine.hasOption("trusted") )
-            Security.trusted();
-
-        if( cmdLine.hasOption("no-color") )
-            Logger.disableColor();
-
-        PluginSystem.init(cmdLine.getOptionValue("plugin", null));
-        ExceptionHandler.showStackTrace(cmdLine.hasOption("stack-trace"));
-        YsoIntegration.setYsoPath(cmdLine.getOptionValue("yso", config.getProperty("ysoserial-path")));
-
-        preapreParameters();
-    }
-
-    /**
-     * Prints the help menu of rmg.
-     */
-    public void printHelp()
-    {
-        formatter.printHelp(helpString, options);
-    }
-
-    public void printHelpAndExit(int code)
+    private void printHelpAndExit(int code)
     {
         formatter.printHelp(helpString, options);
         System.exit(code);
     }
 
+    /**
+     * This is only a wrapper around this.parameters.get to make parameters more accessible.
+     *
+     * @param name parameter name to obtain
+     * @return corresponding parameter value
+     */
     public Object get(String name)
     {
         return parameters.get(name);
@@ -375,20 +487,6 @@ public class ArgumentParser {
         return 0;
     }
 
-    /**
-     * Returns the number of specified positional arguments.
-     *
-     * @return number of positional arguments.
-     */
-    public int getArgumentCount()
-    {
-        if( this.argList != null ) {
-            return this.argList.size();
-        } else {
-            this.argList = cmdLine.getArgList();
-            return this.argList.size();
-        }
-    }
 
     /**
      * Checks whether the specified amount of positional arguments is sufficiently high.
@@ -431,8 +529,12 @@ public class ArgumentParser {
     }
 
     /**
-     * Simply returns the specified action on the command line. If no action was specified, returns
-     * 'enum' as the default action.
+     * This function is used to check the requested operation name on the command line and returns the corresponding
+     * Operation object. If no operation was specified, the Operation.ENUM is used. Operations are always validated
+     * before they are returned. The validation checks if all required parameters for the corresponding operation were
+     * specified.
+     *
+     * @return Operation requested by the client
      */
     public Operation getAction()
     {
@@ -464,7 +566,7 @@ public class ArgumentParser {
      * @param regMethod requested by the user.
      * @return regMethod if valid.
      */
-    public String validateRegMethod()
+    public String getRegMethod()
     {
         String regMethod = (String)this.get("reg-method");
 
@@ -485,7 +587,7 @@ public class ArgumentParser {
      * @param dgcMethod requested by the user.
      * @return dgcMethod if valid.
      */
-    public String validateDgcMethod()
+    public String getDgcMethod()
     {
         String dgcMethod = (String)this.get("dgc-method");
 
@@ -516,16 +618,32 @@ public class ArgumentParser {
         return !signature.matches("reg|dgc|act");
     }
 
+    /**
+     * Utility function that returns the hostname specified on the command line.
+     *
+     * @return user specified hostname (target)
+     */
     public String getHost()
     {
         return this.getPositionalString(0);
     }
 
+    /**
+     * Utility function that returns the port specified on the command line.
+     *
+     * @return user specified port (target)
+     */
     public int getPort()
     {
         return this.getPositionalInt(1);
     }
 
+    /**
+     * Parses the user specified gadget arguments to request a corresponding gadget from the PayloadProvider.
+     * The corresponding gadget object is returned.
+     *
+     * @return gadget object build from the user specified arguments
+     */
     public Object getGadget()
     {
         String gadget = this.getPositionalString(3);
@@ -537,51 +655,15 @@ public class ArgumentParser {
         return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
     }
 
+    /**
+     * Parses the user specified argument string during a call action. Passes the string to the corresponding
+     * ArgumentProvider and returns the result argument array.
+     *
+     * @return Object array resulting from the specified argument string
+     */
     public Object[] getCallArguments()
     {
         String argumentString = this.getPositionalString(3);
         return PluginSystem.getArgumentArray(argumentString);
-    }
-
-    public void validateOperation(Operation operation)
-    {
-        Method m = operation.getMethod();
-        Parameters paramRequirements = (Parameters)m.getAnnotation(Parameters.class);
-
-        if(paramRequirements == null)
-            return;
-
-        this.checkArgumentCount(paramRequirements.count());
-
-        for(String requiredOption: paramRequirements.requires()) {
-
-            Object optionValue = null;
-            String[] possibleOptions = requiredOption.split("\\|");
-
-            for(String possibleOption: possibleOptions) {
-                if((optionValue = this.get(possibleOption)) != null) {
-                    break;
-                }
-            }
-
-            if(optionValue == null) {
-
-                Logger.eprint("Error: The ");
-
-                for(int ctr = 0; ctr < possibleOptions.length - 1; ctr++) {
-                    Logger.printPlainYellow("--" + possibleOptions[ctr]);
-
-                    if(ctr == possibleOptions.length - 2)
-                        Logger.printPlain(" or ");
-
-                    else
-                        Logger.printPlain(", ");
-                }
-
-                Logger.printPlainYellow("--" + possibleOptions[possibleOptions.length - 1]);
-                Logger.printlnPlainMixedBlue(" option is required for the", operation.toString().toLowerCase(), "operation.");
-                RMGUtils.exit();
-            }
-        }
     }
 }

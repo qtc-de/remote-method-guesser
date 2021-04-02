@@ -7,6 +7,10 @@ package de.qtc.rmg.exceptions;
  * filtering in this regard is very strict, but can be disabled by using the
  * --trusted switch after reviewing the corresponding names.
  *
+ * The reason for this filtering is simple: rmg uses the bound names from the
+ * RMI registry within of the file names for the sample files. Bound names can
+ * contain arbitrary characters, which includes e.g. path traversal sequences.
+ *
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("serial")

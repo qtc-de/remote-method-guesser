@@ -44,7 +44,8 @@ public class SampleWriter {
 
     /**
      * Creates a SmapleWriter object. During the creation, a samples folder may be generated if not
-     * already present. The template folder needs to already exist for the creation of this object.
+     * already present. If the specified template folder is null or empty, rmg defaults to use it's
+     * internal template folder that is packed into the JAR file.
      *
      * @param templateFolder folder where template files are stored
      * @param sampleFolder folder where created samples should be created
@@ -72,7 +73,9 @@ public class SampleWriter {
     }
 
     /**
-     * Reads a template from the template folder and returns the corresponding content.
+     * Reads a template from the template folder and returns the corresponding content. Depending
+     * on the contents of this.templateFolder, an external template folder or the internal from the
+     * JAR file is used.
      *
      * @param templateName name of the template file
      * @return template content
@@ -88,7 +91,9 @@ public class SampleWriter {
     }
 
     /**
-     * Reads a template from the template folder and returns the corresponding content.
+     * Reads a template file form the internal template folder and returns it's contents. As the
+     * internal template folder is contained within the JAR file, getResourceAsStream is used to
+     * load the template.
      *
      * @param templateName name of the template file
      * @return template content
@@ -103,7 +108,8 @@ public class SampleWriter {
     }
 
     /**
-     * Reads a template from the template folder and returns the corresponding content.
+     * Reads a template from the template folder and returns the corresponding content. This function is
+     * called when external template folders are used.
      *
      * @param templateName name of the template file
      * @return template content
@@ -122,6 +128,9 @@ public class SampleWriter {
         return new String(Files.readAllBytes(templateFile.toPath()));
     }
 
+    /**
+     * Wrapper around writeSamples with additional subfolder argument.
+     */
     public void writeSample(String sampleFolder, String sampleName, String sampleContent) throws UnexpectedCharacterException, IOException
     {
         writeSample(sampleFolder, sampleName, sampleContent, null);

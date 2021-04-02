@@ -1,8 +1,5 @@
 package de.qtc.rmg.utils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.rmi.Remote;
@@ -10,10 +7,8 @@ import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
-import de.qtc.rmg.Starter;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -551,66 +546,12 @@ public class RMGUtils {
     }
 
     /**
-     * Just a wrapper around Syste.exit(1) that prints an information before quitting.
+     * Just a wrapper around System.exit(1) that prints an information before quitting.
      */
     public static void exit()
     {
         Logger.eprintln("Cannot continue from here.");
         System.exit(1);
-    }
-
-    /**
-     * Loads the remote-method-guesser configuration file from the specified destination. This function may be used
-     * twice during the startup of rmg. First it is used to load the default configuration, which is done via
-     * getResourceAsStream. In this case extern should be set to false and the prop argument is an empty Properties
-     * object.
-     *
-     * Afterwards, the function may be called again with a user defined configuration file. In this case, extern should
-     * be set to true and the prop arguments should contain a Properties object that already contains the default
-     * configuration.
-     *
-     * @param filename file system path to load the configuration file from
-     * @param prop a Properties object to store the parsed properties
-     * @param extern whether to use FileInputStream (true) or getResourceAsStream (false) to read the properties file
-     */
-    public static void loadConfig(String filename, Properties prop, boolean extern)
-    {
-        if(filename == null)
-            return;
-
-        try {
-
-            InputStream configStream = null;
-
-            if( extern )
-                configStream = new FileInputStream(filename);
-            else
-                configStream = Starter.class.getResourceAsStream(filename);
-
-            prop.load(configStream);
-            configStream.close();
-
-        } catch( IOException e ) {
-            ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
-        }
-    }
-
-    /**
-     * Small helper function that checks whether a HashMap contains items and returns an error message that fits
-     * for the desired situation.
-     *
-     * @param unknownClasses HashMap to investigate
-     * @return true if the HashMap contains items, false otherwise
-     */
-    public static boolean containsObjects(HashMap<String,String> availableClasses)
-    {
-        if( availableClasses.size() <= 0 ) {
-            Logger.eprintln("There are no remote objects present on the registry.");
-            Logger.eprintln("Guessing methods not necessary.");
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -704,9 +645,14 @@ public class RMGUtils {
 
     /**
      * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
+     * The known remote object classes are looked by by using the CtClassPool. Afterwards, all implemented interfaces
+     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmiRemote (this
+     * is required for all methods, that can be called from remote). From these interface,s all methods are obtained
+     * and added to the list of successfully guessed methods.
      *
-     * @param knownClasses list of boundName - className pairs of known classes
-     * @param guessedMethods list of successfully guessed methods
+     * @param boundName bound name that is using the known class
+     * @param className name of the class implemented by the bound name
+     * @param guessedMethods list of successfully guessed methods (bound name -> list)
      */
     public static void addKnownMethods(String boundName, String className, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
     {
@@ -764,6 +710,22 @@ public class RMGUtils {
         return simpleSignature.toString();
     }
 
+    /**
+     * During regular RMI calls, method arguments are usually passed as Object array as methods are invoked using a
+     * Proxy mechanism. However, on the network layer argument types need to be marshalled according to the expected
+     * type from the method signature. E.g. an argument value might be an Integer, but is epxected by the method as int.
+     * Therefore, passing an Object array alone is not sufficient to correctly write the method arguments to the output
+     * stream.
+     *
+     * This function takes the remote method that is going to be invoked and an Object array of parameters to use for
+     * the call. It then creates a MethodArguments object, that contains Pairs that store the desired object value
+     * together with their corresponding type that is expected by the remote method.
+     *
+     * @param method CtMethod that is going to be invoked
+     * @param parameterArray array of arguments to use for the call
+     * @return MerhodArguments - basically a list of Object value -> Type pairs
+     * @throws NotFoundException
+     */
     public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
     {
         CtClass type;
@@ -803,6 +765,13 @@ public class RMGUtils {
         return parameterMap;
     }
 
+    /**
+     * Helper function that is called to split a string that contains a listener definition (host:port).
+     * The main benefit of this function is, that it implements basic error handling.
+     *
+     * @param listener listener definition as string
+     * @return split listener [host, port]
+     */
     public static String[] splitListener(String listener)
     {
         String[] split = listener.split(":");
@@ -814,6 +783,13 @@ public class RMGUtils {
         return split;
     }
 
+    /**
+     * Enables a user specified codebase within the MaliciousOutputStream. If the user specified address does not start
+     * with a protocol definition, 'http' is prefixed by default. Furthermore, if no typical java extension was specified,
+     * a slash is added to the end of the URL.
+     *
+     * @param serverAddress user specified codebase address.
+     */
     public static void setCodebase(String serverAddress)
     {
         if( !serverAddress.matches("^(https?|ftp|file)://.*$") )
@@ -831,9 +807,13 @@ public class RMGUtils {
      * it is fine to include the code in a GPLv3 licensed project and to convey the license to GPLv3.
      * (https://www.gnu.org/licenses/gpl-faq.en.html#AllCompatibility)
      *
-     * @param thisCtClass
-     * @param targetClassName
-     * @return
+     * The code is used to implement isAssignableFrom for CtClasses. It checks whether thisCtClass is the same as,
+     * extends or implements targetClassName. Or in other words: It checks whether targetClassName is the same as,
+     * or is a superclass or superinterface of the class or interface represented by the thisCtClass parameter.
+     *
+     * @param thisCtClass class in question
+     * @param targetClassName name of the class to compare against
+     * @return true if targetClassName is the same as, or is a superclass or superinterface of thisCtClass
      */
     public static boolean isAssignableFrom(CtClass thisCtClass, String targetClassName)
     {

@@ -23,35 +23,17 @@ import de.qtc.rmg.internal.MethodCandidate;
 public class Formatter {
 
     /**
-     * Basically a wrapper for the listBoundNames functions specified below.
-     *
-     * @param boundNames list of available bound names
-     * @param classes known and unknown classes of the corresponding bound names
-     */
-    public void listBoundNames(ArrayList<HashMap<String,String>> classes)
-    {
-        HashMap<String,String> knownClasses = null;
-        HashMap<String,String> unknownClasses = null;
-
-        if(classes != null) {
-            knownClasses = classes.get(0);
-            unknownClasses = classes.get(1);
-        }
-
-        this.listBoundNames(knownClasses, unknownClasses);
-    }
-
-    /**
      * Creates a formatted list of available bound names and their corresponding classes. Classes
      * are divided in known classes (classes that are available on the current class path) and
      * unknown classes (not available on the current class path).
      *
-     * @param boundNames list of available bound names
-     * @param knownClasses list of known classes
-     * @param unknownClasses list of unknown classes
+     * @param classes array of maps containing boundname-classes pairs
      */
-    public void listBoundNames(HashMap<String,String> knownClasses, HashMap<String,String> unknownClasses)
+    public void listBoundNames(ArrayList<HashMap<String,String>> classes)
     {
+        HashMap<String,String> knownClasses = classes.get(0);
+        HashMap<String,String>  unknownClasses = classes.get(1);
+
         Logger.printlnBlue("RMI registry bound names:");
         Logger.println("");
         Logger.increaseIndent();
