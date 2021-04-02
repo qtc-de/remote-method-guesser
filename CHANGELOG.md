@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The ``guess`` operation now also lists methods for known remote objects
   * These are obtained via reflection, not by guessing
   * You can force guessing anyway by using ``--force-guessing``
-* Method arguments are not marshalled correctly (previously, always writeObject was used)
+* Method arguments are now marshalled correctly (previously, always writeObject was used)
 
 
 ## [3.1.1] - Feb 16, 2021
