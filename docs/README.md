@@ -13,6 +13,7 @@ work in progress and will be updated from time to time. So far, the following to
 * *remote-method-gusser*
   * [rmg Actions](./rmg/actions.md)
   * [rmg Plugin System](./rmg/plugin-system.md)
+  * [rmg Media](./rmg/media.md)
 
 
 ### Java RMI - Attack Surface

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * These are obtained via reflection, not by guessing
   * You can force guessing anyway by using ``--force-guessing``
 * Method arguments are now marshalled correctly (previously, always writeObject was used)
+* The default wordlist and template files are now included into the *rmg* JAR file
 
 
 ## [3.1.1] - Feb 16, 2021
