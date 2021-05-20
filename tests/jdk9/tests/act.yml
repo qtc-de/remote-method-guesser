@@ -20,7 +20,9 @@ tests:
       - 'touch ${volume-d}/${file}'
     validators:
       - error: False
-      - regex: 'Deserialization attack.+successful'
+      - regex:
+          match:
+            - 'Deserialization attack.+successful'
       - file_exists:
           cleanup: True
           files:

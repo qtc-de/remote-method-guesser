@@ -36,7 +36,9 @@ tests:
       - act
     validators:
       - error: False
-      - regex: 'Codebase attack.+successful'
+      - regex:
+          match:
+            - 'Codebase attack.+successful'
       - file_exists:
           cleanup: True
           files:
@@ -58,7 +60,9 @@ tests:
       - reg
     validators:
       - error: False
-      - regex: 'Codebase attack.+worked'
+      - regex:
+          match:
+            - 'Codebase attack.+worked'
       - file_exists:
           cleanup: True
           files:

@@ -24,7 +24,7 @@ tests:
       - --no-color
     timeout: 2
     validators:
-      - error: False
+      - status: 99
       - contains:
           ignore_case: true
           values:
