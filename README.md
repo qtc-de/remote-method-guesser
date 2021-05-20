@@ -716,7 +716,7 @@ You can also create a ``.properties`` file with your own configuration and feed 
 ----
 
 *remote-method-guesser* was heavily influenced by the blog posts of [Hans-Martin Münch](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/)
-and [Jake Miller](https://labs.bishopfox.com/tech-blog/rmiscout). Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the *rmiscout*
+and [Jake Miller](https://labs.bishopfox.com/tech-blog/rmiscout). Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the [rmiscout](https://github.com/BishopFox/rmiscout)
 project (as you can already tell by the different license agreement). Thanks *Jake*, for this awesome wordlist of *remote methods* collected from different *GitHub* repositories.
 
 *Copyright 2021, Tobias Neitzel and the remote-method-guesser contributors.*
