@@ -158,7 +158,7 @@ public class RemoteObjectClient {
             if( t instanceof java.lang.ClassNotFoundException ) {
                 Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
                 Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
-                Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
                 ExceptionHandler.showStackTrace(e);
 
             } else {
