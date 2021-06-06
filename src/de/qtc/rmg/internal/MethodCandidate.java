@@ -46,17 +46,7 @@ public class MethodCandidate {
         RMGUtils.createTypesFromSignature(signature);
 
         method = RMGUtils.makeMethod(signature);
-        CtClass[] types = method.getParameterTypes();
-        this.hash = getCtMethodHash(method);
-
-        if( types.length == 0 ) {
-            this.isVoid = true;
-            this.isPrimitive = false;
-
-        } else {
-            this.isVoid = false;
-            this.isPrimitive = types[0].isPrimitive();
-        }
+        initialize(method);
     }
 
     /**
@@ -66,7 +56,7 @@ public class MethodCandidate {
      *
      * @param signature method signature to create the MethodCandidate from.
      * @param hash method hash for the corresponding method.
-     * @param isPrimitive if true, the first expected method parameter is a primitive
+     * @param isPrimitive if true, all method parameters are primitive types
      * @param isVoid if true, the method does not take any arguments
      */
     public MethodCandidate(String signature, String hash, String isPrimitive, String isVoid)
@@ -88,17 +78,37 @@ public class MethodCandidate {
     public MethodCandidate(CtMethod method) throws NotFoundException
     {
         this.signature = RMGUtils.getSimpleSignature(method);
+        initialize(method);
+    }
 
-        CtClass[] types = method.getParameterTypes();
+    /**
+     * Takes the CtMethod that belongs to the MethodCandidate and initializes the object attributes
+     * from it.
+     *
+     * @param method CtMethod that belongs to the MethodCandidate
+     * @throws NotFoundException
+     */
+    private void initialize(CtMethod method) throws NotFoundException
+    {
         this.hash = getCtMethodHash(method);
+        CtClass[] types = method.getParameterTypes();
 
         if( types.length == 0 ) {
+
             this.isVoid = true;
             this.isPrimitive = false;
 
         } else {
+
             this.isVoid = false;
-            this.isPrimitive = types[0].isPrimitive();
+            this.isPrimitive = true;
+
+            for( CtClass ct : types) {
+                if( !ct.isPrimitive() ) {
+                    this.isPrimitive = false;
+                    break;
+                }
+            }
         }
     }
 
@@ -108,7 +118,7 @@ public class MethodCandidate {
      * @param method CtMethod to calculate the hash from
      * @return RMI method hash
      */
-    private long getCtMethodHash(CtMethod method)
+    private static long getCtMethodHash(CtMethod method)
     {
         String methodSignature = method.getName() + method.getSignature();
         return computeMethodHash(methodSignature);
@@ -122,7 +132,7 @@ public class MethodCandidate {
      * @param methodSignature signature to compute the hash on
      * @return RMI method hash
      */
-    private long computeMethodHash(String methodSignature) {
+    private static long computeMethodHash(String methodSignature) {
         long hash = 0;
         ByteArrayOutputStream sink = new ByteArrayOutputStream(127);
         try {
@@ -270,7 +280,7 @@ public class MethodCandidate {
     /**
      * Returns the current value of the isPrimitive attribute.
      *
-     * @return true if first argument within the method is a primitive
+     * @return true if all method arguments are primitive types
      */
     public boolean isPrimitive()
     {
