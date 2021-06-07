@@ -284,6 +284,18 @@ public final class RMIWhisperer {
     }
 
     /**
+     * Constructs a RemoteRef (class used by internal RMI communication) using the specified
+     * host, port, csf and objID values.
+     *
+     * @return newly constructed RemoteRef
+     */
+    public RemoteRef getRemoteRef(ObjID objID, int port, RMIClientSocketFactory csf)
+    {
+        Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
+        return new UnicastRef(new LiveRef(objID, endpoint, false));
+    }
+
+    /**
      * @return the underlying registry object
      */
     public Registry getRegistry()
