@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -93,9 +95,10 @@ public class MethodGuesser {
     }
 
     /**
-     * This method starts the actual guessing process. It iterates over the HashSet of MethodCandidate and creates a
-     * new GuessingWorker for each candidate. The corresponding workers are assigned to a thread pool and termination
-     * is awaited after all GuessingWorkers have been created.
+     * This method starts the actual guessing process. The Set of possible MethodCandidates is split into as many
+     * junks as threads are used. For each thread, one GuessingWorker is created that performs a method call for each
+     * method defined in it's corresponding method set. Each GuessingWorker uses a separate RemoteObjectClient and
+     * therefore a dedicated TCPChannel.
      *
      * Each GuessingWorker obtains a reference to an ArrayList of MethodCandidates. Guessing workers are expected to
      * push successfully guessed methods into this ArrayList.
@@ -110,15 +113,10 @@ public class MethodGuesser {
 
         ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
         ExecutorService pool = Executors.newFixedThreadPool(threads);
+        List<Set<MethodCandidate>> methodLists = RMGUtils.splitSet(this.candidates, threads);
 
-        for( MethodCandidate method : this.candidates ) {
-
-            if( method.isVoid() && !zeroArg ) {
-                Logger.printlnMixedBlue("Skipping zero arguments method:", method.getSignature());
-                continue;
-            }
-
-            Runnable r = new GuessingWorker(client, method, existingMethods);
+        for( Set<MethodCandidate> methods : methodLists ) {
+            Runnable r = new GuessingWorker(client.clone(), methods, existingMethods);
             pool.execute(r);
         }
 
@@ -137,15 +135,15 @@ public class MethodGuesser {
 
     /**
      * The GuessingWorker class performs the actual method guessing in terms of RMI calls. It implements Runnable and
-     * is intended to be run within a thread pool. Each GuessingWorker has exactly one MethodCandidate assigned that is
-     * guessed by the worker. It uses the obtained RemoteObjectClient object to dispatch a call to that candidate and inspects
-     * the server-side exception to determine whether the method exists on the remote object.
+     * is intended to be run within a thread pool. Each GuessingWorker gets assigned a Set of MethodCandidates and iterates
+     * over the corresponding set. It uses the obtained RemoteObjectClient object to dispatch a call to the candidates and
+     * inspects the server-side exception to determine whether the method exists on the remote object.
      *
      * @author Tobias Neitzel (@qtc_de)
      */
     private class GuessingWorker implements Runnable {
 
-        private MethodCandidate candidate;
+        private Set<MethodCandidate> candidates;
         private RemoteObjectClient client;
         private ArrayList<MethodCandidate> existingMethods;
 
@@ -156,15 +154,15 @@ public class MethodGuesser {
          * @param candidate MethodCanidate to guess
          * @param existingMethods ArrayList of existing methods. If candidate exists, it is pushed here
          */
-        public GuessingWorker(RemoteObjectClient client, MethodCandidate candidate, ArrayList<MethodCandidate> existingMethods)
+        public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates, ArrayList<MethodCandidate> existingMethods)
         {
             this.client = client;
-            this.candidate = candidate;
+            this.candidates = candidates;
             this.existingMethods = existingMethods;
         }
 
         /**
-         * Invokes the assigned MethodCandidate. During the method invocation, a type-confusion mechanism is used.
+         * Invokes the assigned MethodCandidates. During the method invocation, a type-confusion mechanism is used.
          * The assigned method is inspected for its first argument type and it is determined whether it is a primitive
          * or non primitive type. Depending on the type, the exact opposite type is used for the actual method call.
          * E.g. when the MethodCandidate expects a primitive type as first argument, we send a non primitive type, and
@@ -174,73 +172,81 @@ public class MethodGuesser {
          */
         public void run() {
 
-            try {
-                client.rawCallNoReturn(candidate, candidate.getConfusedArgument());
+            for( MethodCandidate candidate : candidates ) {
 
-            } catch(java.rmi.ServerException e) {
-
-                Throwable cause = ExceptionHandler.getCause(e);
-                if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().startsWith("unrecognized")) {
-                    /*
-                     * An RMI server throws the UnmarshalException for different reasons while unmarshalling
-                     * the call. One of them is the absence of the transmitted method hash in the method hash
-                     * table stored on the server side. This Exception can safely be ignored, as it just means
-                     * that the guessed method is not available. However, other cases include the unmarshalling
-                     * of the call headers, which could occur when the stream is corrupted. Therefore, we should
-                     * check whether the Exception is a UnmarshalException and verify that it contains the expected
-                     * "unrecognized method hash" message.
-                     */
-                    return;
+                if( candidate.isVoid() && !zeroArg ) {
+                    Logger.printlnMixedBlue("Skipping zero arguments method:", candidate.getSignature());
+                    continue;
                 }
 
-            } catch(java.rmi.UnmarshalException e) {
+                try {
+                    client.rawCallNoReturn(candidate, candidate.getConfusedArgument());
+
+                } catch(java.rmi.ServerException e) {
+
+                    Throwable cause = ExceptionHandler.getCause(e);
+                    if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().startsWith("unrecognized")) {
+                        /*
+                         * An RMI server throws the UnmarshalException for different reasons while unmarshalling
+                         * the call. One of them is the absence of the transmitted method hash in the method hash
+                         * table stored on the server side. This Exception can safely be ignored, as it just means
+                         * that the guessed method is not available. However, other cases include the unmarshalling
+                         * of the call headers, which could occur when the stream is corrupted. Therefore, we should
+                         * check whether the Exception is a UnmarshalException and verify that it contains the expected
+                         * "unrecognized method hash" message.
+                         */
+                        continue;
+                    }
+
+                } catch(java.rmi.UnmarshalException e) {
+                    /*
+                     * This is basically a legacy catch. In the old way of invoking remote methods, this exception was
+                     * thrown on existing methods that return a different argument type than expected. This should no longer
+                     * occur, as arguments returned by the server are ignored by rmg. Nonetheless, the keep it for now.
+                     */
+                    continue;
+
+                } catch(java.rmi.MarshalException e) {
+                    /*
+                     * This one is  thrown on the client side when marshalling the call arguments. It should actually
+                     * never occur and if it does, it is probably an internal error.
+                     */
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+
+                    String info = "Caught unexpected MarshalException during method guessing.\n"
+                                 +"Please report this to improve rmg :)\n"
+                                 +"Stack-Trace:\n"
+                                 +writer.toString();
+
+                    Logger.println(info);
+                    continue;
+
+                } catch(Exception e) {
+                    /*
+                     * All other exceptions cause an error message, but are interpreted as an existing method. The
+                     * idea behind this is that a false-positive is usually better than a false-negative.
+                     */
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+
+                    String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
+                                 +"Method is marked as existent, but this is probably not true.\n"
+                                 +"Please report this to improve rmg :)\n"
+                                 +"Stack-Trace:\n"
+                                 +writer.toString();
+
+                    Logger.println(info);
+                }
+
                 /*
-                 * This is basically a legacy catch. In the old way of invoking remote methods, this exception was
-                 * thrown on existing methods that return a different argument type than expected. This should no longer
-                 * occur, as arguments returned by the server are ignored by rmg. Nonetheless, the keep it for now.
+                 * Successfully guessed methods cause either an EOFException (object passed instead of primitive
+                 * or two few arguments) or an OptionalDataException (primitive passed for instead of object) that
+                 * is wrapped in a ServerException. As these exceptions caught, but not return, we end up here.
                  */
-
-            } catch(java.rmi.MarshalException e) {
-                /*
-                 * This one is  thrown on the client side when marshalling the call arguments. It should actually
-                 * never occur and if it does, it is probably an internal error.
-                 */
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-
-                String info = "Caught unexpected MarshalException during method guessing.\n"
-                             +"Please report this to improve rmg :)\n"
-                             +"Stack-Trace:\n"
-                             +writer.toString();
-
-                Logger.println(info);
-                return;
-
-            } catch(Exception e) {
-                /*
-                 * All other exceptions cause an error message, but are interpreted as an existing method. The
-                 * idea behind this is that a false-positive is usually better than a false-negative.
-                 */
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-
-                String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
-                             +"Method is marked as existent, but this is probably not true.\n"
-                             +"Please report this to improve rmg :)\n"
-                             +"Stack-Trace:\n"
-                             +writer.toString();
-
-                Logger.println(info);
+                Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
+                existingMethods.add(candidate);
             }
-
-            /*
-             * Successfully guessed methods cause either an EOFException (object passed instead of primitive
-             * or two few arguments) or an OptionalDataException (primitive passed for instead of object) that
-             * is wrapped in a ServerException. As these exceptions caught, but not return, we end up here.
-             */
-            Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
-            existingMethods.add(candidate);
         }
     }
-
 }

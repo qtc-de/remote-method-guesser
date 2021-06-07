@@ -6,7 +6,10 @@ import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import de.qtc.rmg.internal.ExceptionHandler;
@@ -835,5 +838,34 @@ public class RMGUtils {
         }
         catch (NotFoundException e) {}
         return false;
+    }
+
+    /**
+     * Divide a Set into n separate Sets, where n is the number specified within the count argument.
+     * Basically copied from: https://stackoverflow.com/questions/16449644/how-can-i-take-a-java-set-of-size-x-and-break-into-x-y-sets
+     *
+     * @param <T>
+     * @param original Set that should be divided
+     * @param count Number of Sets to divide into
+     * @return List of n separate sets, where n is equal to count
+     */
+    public static <T> List<Set<T>> splitSet(Set<T> original, int count)
+    {
+        ArrayList<Set<T>> result = new ArrayList<Set<T>>(count);
+        Iterator<T> it = original.iterator();
+
+        int each = original.size() / count;
+
+        for (int i = 0; i < count; i++) {
+
+            HashSet<T> s = new HashSet<T>(original.size() / count + 1);
+            result.add(s);
+
+            for (int j = 0; j < each && it.hasNext(); j++) {
+                s.add(it.next());
+            }
+        }
+
+        return result;
     }
 }
