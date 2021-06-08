@@ -406,41 +406,35 @@ public final class RMIWhisperer {
             remoteRef.done(call);
 
         } catch(java.rmi.ConnectException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
+            ExceptionHandler.connectException(e, callName);
 
         } catch( java.rmi.UnknownHostException e) {
             ExceptionHandler.unknownHost(e, callName, "call", host, true);
 
         } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, callName, "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, callName, "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, callName, "call");
-
-            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
-                ExceptionHandler.networkUnreachable(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
+            ExceptionHandler.connectIOException(e, callName);
         }
     }
 
+    /**
+     * guessingCall is basically a copy of the genericCall method, that is optimized for method guessing. It takes
+     * less parameters and offers only limited control to the caller. Methods are called with a specially prepared
+     * set of arguments. In case of a method that accepts non primitive arguments, the function sends as many primitive
+     * bytes over the network as it is required to reach the first non primitive argument. The advantage of this technique
+     * is that all data is send within one BLOCKDATA block in the ObjectOutputStream (same block that contains the method hash).
+     * The RMI server will read and drop the complete BLOCKDATA block in any case (method exists / method does not exist)
+     * and the stream is clean and ready for the next invocation. In case of methods that take only primitive arguments,
+     * the ObjectOutputStream is modified to send a RMI ping message that cuts of the BLOCKDATA array that contains the
+     * regular calling arguments. This will lead to a second dispatch within the RMI server if the method does not exist.
+     * If it does exist, the server picks up the RMI ping and throws an StreamCorruptedException. In the second case, the
+     * next RMI call can directly being dispatched. In the first case, the RMI ping response need to be read from the
+     * ObjectInputStream.
+     *
+     * @param candidate Candidate method to guess
+     * @param callName Name of the method for logging purposes
+     * @param remoteRef Remote Reference to guess on
+     * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
+     */
     @SuppressWarnings("deprecation")
     public void guessingCall(MethodCandidate candidate, String callName, RemoteRef remoteRef) throws Exception
     {
@@ -454,59 +448,28 @@ public final class RMIWhisperer {
                 candidate.sendArguments(out);
                 call.executeCall();
 
-            } catch ( java.io.StreamCorruptedException e) {
-                remoteRef.done(call);
-                throw e;
-
             } catch( Exception e ) {
 
                 Throwable t = ExceptionHandler.getCause(e);
-                if( t instanceof java.io.StreamCorruptedException || candidate.primitiveSize() != -1 ) {
-                    remoteRef.done(call);
-                    throw e;
-                }
+                if( !(t instanceof java.io.StreamCorruptedException) && candidate.primitiveSize() == -1 ) {
 
-                ObjectInputStream in = (ObjectInputStream)call.getInputStream();
-                RawObjectInputStream rin = new RawObjectInputStream(in);
-                rin.skip(1);
+                    ObjectInputStream in = (ObjectInputStream)call.getInputStream();
+                    RawObjectInputStream rin = new RawObjectInputStream(in);
+                    rin.skip(1);
+                }
 
                 remoteRef.done(call);
                 throw e;
             }
 
         } catch(java.rmi.ConnectException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
+            ExceptionHandler.connectException(e, callName);
 
         } catch( java.rmi.UnknownHostException e) {
             ExceptionHandler.unknownHost(e, callName, "call", host, true);
 
         } catch(java.rmi.ConnectIOException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, callName, "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, callName, "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, callName, "call");
-
-            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
-                ExceptionHandler.networkUnreachable(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
+            ExceptionHandler.connectIOException(e, callName);
         }
     }
 

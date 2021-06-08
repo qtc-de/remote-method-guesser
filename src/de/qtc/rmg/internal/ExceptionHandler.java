@@ -337,6 +337,39 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void connectException(Exception e, String callName)
+    {
+        Throwable t = ExceptionHandler.getCause(e);
+
+        if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+            ExceptionHandler.connectionRefused(e, callName, "call");
+
+        } else {
+            ExceptionHandler.unexpectedException(e, callName, "call", true);
+        }
+    }
+
+    public static void connectIOException(Exception e, String callName)
+    {
+        Throwable t = ExceptionHandler.getCause(e);
+
+        if( t instanceof java.net.NoRouteToHostException) {
+            ExceptionHandler.noRouteToHost(e, callName, "call");
+
+        } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+            ExceptionHandler.noJRMPServer(e, callName, "call");
+
+        } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+            ExceptionHandler.sslError(e, callName, "call");
+
+        } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
+            ExceptionHandler.networkUnreachable(e, callName, "call");
+
+        } else {
+            ExceptionHandler.unexpectedException(e, callName, "call", true);
+        }
+    }
+
     /**
      * Walks down a stacktrace and searches for a specific exception name.
      * If it finds the corresponding name, the corresponding Throwable is returned.
