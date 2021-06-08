@@ -99,9 +99,9 @@ tests:
 
           - file: ./rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
             contains:
-              - method_0 = intf.getMethod("login", java.util.HashMap.class)
-              - method_1 = intf.getMethod("logMessage", Integer.TYPE, java.lang.String.class)
-              - method_2 = intf.getMethod("releaseRecord", Integer.TYPE, java.lang.String.class, java.lang.Integer.class)
+              - = intf.getMethod("login", java.util.HashMap.class)
+              - = intf.getMethod("logMessage", Integer.TYPE, java.lang.String.class)
+              - = intf.getMethod("releaseRecord", Integer.TYPE, java.lang.String.class, java.lang.Integer.class)
 
           - file: ./rmg-samples/legacy-service/login/login.java
             contains:
