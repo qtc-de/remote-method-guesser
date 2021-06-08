@@ -24,9 +24,11 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.Pair;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
+import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CtClass;
