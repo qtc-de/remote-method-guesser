@@ -868,4 +868,47 @@ public class RMGUtils {
 
         return result;
     }
+
+    /**
+     * Takes an array of types and returns the amount of bytes before the first non primitive type.
+     * If all types are primitive, it returns -1.
+     *
+     * @param types Array of types
+     * @return bytes before the first non primitive type. If all types are primitive, returns -1
+     */
+    public static int getPrimitiveSize(CtClass[] types)
+    {
+        int returnValue = 0;
+
+        for(CtClass ct : types) {
+
+            if (ct.isPrimitive()) {
+
+                if (ct == CtPrimitiveType.intType) {
+                    returnValue += Integer.BYTES;
+                } else if (ct == CtPrimitiveType.booleanType) {
+                    returnValue += 1;
+                } else if (ct == CtPrimitiveType.byteType) {
+                    returnValue += Byte.BYTES;
+                } else if (ct == CtPrimitiveType.charType) {
+                    returnValue += Character.BYTES;
+                } else if (ct == CtPrimitiveType.shortType) {
+                    returnValue += Short.BYTES;
+                } else if (ct == CtPrimitiveType.longType) {
+                    returnValue += Long.BYTES;
+                } else if (ct == CtPrimitiveType.floatType) {
+                    returnValue += Float.BYTES;
+                } else if (ct == CtPrimitiveType.doubleType) {
+                    returnValue += Double.BYTES;
+                } else {
+                    throw new Error("unrecognized primitive type: " + ct);
+                }
+
+            } else {
+                return returnValue;
+            }
+        }
+
+        return -1;
+    }
 }

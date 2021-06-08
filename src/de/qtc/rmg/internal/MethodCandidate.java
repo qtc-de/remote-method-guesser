@@ -3,11 +3,13 @@ package de.qtc.rmg.internal;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.RawObjectOutputStream;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -25,10 +27,12 @@ import javassist.NotFoundException;
 public class MethodCandidate {
 
     private long hash;
+
+    private CtMethod method;
     private String signature;
+
     private boolean isVoid;
-    private boolean isPrimitive;
-    private CtMethod method;;
+    private int primitiveSize;
 
     /**
      * Creates a MethodCandidate from a method signature defined as String. The constructor first of all
@@ -56,14 +60,14 @@ public class MethodCandidate {
      *
      * @param signature method signature to create the MethodCandidate from.
      * @param hash method hash for the corresponding method.
-     * @param isPrimitive if true, all method parameters are primitive types
+     * @param primitiveSize number of bytes before the first non primitive argument
      * @param isVoid if true, the method does not take any arguments
      */
-    public MethodCandidate(String signature, String hash, String isPrimitive, String isVoid)
+    public MethodCandidate(String signature, String hash, String primitiveSize, String isVoid)
     {
         this.signature = signature;
         this.hash = Long.valueOf(hash);
-        this.isPrimitive = Boolean.valueOf(isPrimitive);
+        this.primitiveSize = Integer.valueOf(primitiveSize);
         this.isVoid = Boolean.valueOf(isVoid);
     }
 
@@ -96,19 +100,12 @@ public class MethodCandidate {
         if( types.length == 0 ) {
 
             this.isVoid = true;
-            this.isPrimitive = false;
+            this.primitiveSize = -99;
 
         } else {
 
             this.isVoid = false;
-            this.isPrimitive = true;
-
-            for( CtClass ct : types) {
-                if( !ct.isPrimitive() ) {
-                    this.isPrimitive = false;
-                    break;
-                }
-            }
+            this.primitiveSize = RMGUtils.getPrimitiveSize(types);
         }
     }
 
@@ -165,18 +162,25 @@ public class MethodCandidate {
      * This function returns the corresponding argument type depending on the corresponding method definition.
      *
      * @return confused parameter for method invocation
+     * @throws IOException
      */
-    public MethodArguments getConfusedArgument()
+    @SuppressWarnings("restriction")
+    public void sendArguments(ObjectOutputStream oo) throws IOException
     {
-        MethodArguments argumentMap = new MethodArguments(1);
+        if( this.primitiveSize == -99 ) {
 
-        if( this.isPrimitive() ) {
-            argumentMap.add("RMG", Object.class);
+            oo.flush();
+
+        } else if( this.primitiveSize == -1 ) {
+
+            oo.flush();
+            RawObjectOutputStream rout = new RawObjectOutputStream(oo);
+            rout.writeRaw(sun.rmi.transport.TransportConstants.Ping);
+
         } else {
-            argumentMap.add(42, int.class);
+            oo.write(new byte[this.primitiveSize]);
+            oo.writeInt(1);
         }
-
-        return argumentMap;
     }
 
     /**
@@ -278,13 +282,13 @@ public class MethodCandidate {
     }
 
     /**
-     * Returns the current value of the isPrimitive attribute.
+     * Returns the current value of the primitiveSize attribute.
      *
-     * @return true if all method arguments are primitive types
+     * @return true if first argument within the method is a primitive
      */
-    public boolean isPrimitive()
+    public int primitiveSize()
     {
-        return this.isPrimitive;
+        return this.primitiveSize;
     }
 
     /**
@@ -319,7 +323,7 @@ public class MethodCandidate {
      */
     public String convertToString()
     {
-        return this.signature + "; " + this.hash + "; " + this.isPrimitive + "; " + this.isVoid;
+        return this.signature + "; " + this.hash + "; " + this.primitiveSize + "; " + this.isVoid;
     }
 
     /**
@@ -334,6 +338,7 @@ public class MethodCandidate {
 
         try {
             typeName = this.method.getParameterTypes()[position].getName();
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "parameter type", "determination", true);
         }

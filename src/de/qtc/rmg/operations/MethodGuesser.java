@@ -180,7 +180,7 @@ public class MethodGuesser {
                 }
 
                 try {
-                    client.rawCallNoReturn(candidate, candidate.getConfusedArgument());
+                    client.guessingCall(candidate);
 
                 } catch(java.rmi.ServerException e) {
 

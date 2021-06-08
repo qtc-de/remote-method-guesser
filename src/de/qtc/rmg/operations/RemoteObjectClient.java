@@ -329,6 +329,18 @@ public class RemoteObjectClient {
     }
 
     /**
+     * Just a wrapper around the guessingCall function from the RMIWhisperer class.
+     *
+     * @param targetMethod method to invoke
+     * @throws Exception this function is used e.g. for remote method guessing and raising all kind of exceptions is
+     *         required.
+     */
+    public void guessingCall(MethodCandidate targetMethod) throws Exception
+    {
+        rmi.guessingCall(targetMethod, getMethodName(targetMethod), remoteRef);
+    }
+
+    /**
      * Helper function that is used during deserialization and codebase attacks. It prints information on the selected
      * argument position for the attack and also displays the parsed method signature again.
      *

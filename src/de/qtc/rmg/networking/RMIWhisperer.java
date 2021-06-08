@@ -439,6 +439,75 @@ public final class RMIWhisperer {
         }
     }
 
+    @SuppressWarnings("deprecation")
+    public void guessingCall(MethodCandidate candidate, String callName, RemoteRef remoteRef) throws Exception
+    {
+        try {
+
+            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, -1, candidate.getHash());
+
+            try {
+
+                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
+                candidate.sendArguments(out);
+                call.executeCall();
+
+            } catch ( java.io.StreamCorruptedException e) {
+                remoteRef.done(call);
+                throw e;
+
+            } catch( Exception e ) {
+
+                Throwable t = ExceptionHandler.getCause(e);
+                if( t instanceof java.io.StreamCorruptedException || candidate.primitiveSize() != -1 ) {
+                    remoteRef.done(call);
+                    throw e;
+                }
+
+                ObjectInputStream in = (ObjectInputStream)call.getInputStream();
+                RawObjectInputStream rin = new RawObjectInputStream(in);
+                rin.skip(1);
+
+                remoteRef.done(call);
+                throw e;
+            }
+
+        } catch(java.rmi.ConnectException e) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+                ExceptionHandler.connectionRefused(e, callName, "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
+            }
+
+        } catch( java.rmi.UnknownHostException e) {
+            ExceptionHandler.unknownHost(e, callName, "call", host, true);
+
+        } catch(java.rmi.ConnectIOException e) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.net.NoRouteToHostException) {
+                ExceptionHandler.noRouteToHost(e, callName, "call");
+
+            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+                ExceptionHandler.noJRMPServer(e, callName, "call");
+
+            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+                ExceptionHandler.sslError(e, callName, "call");
+
+            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
+                ExceptionHandler.networkUnreachable(e, callName, "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, callName, "call", true);
+            }
+        }
+    }
+
     /**
      * Marshals the specified object value to the corresponding type and writes it to the specified
      * output stream. This is basically a copy from the default RMI implementation of this function.
