@@ -35,7 +35,10 @@ import de.qtc.rmg.utils.RMGUtils;
  *
  * This allows to reliably detect remote methods without the risk of causing unwanted actions on the server
  * side by actually invoking them. The idea for such a guessing approach was not invented by remote-method-guesser,
- * but was, to the best of our knowledge, first implemented by the rmiscout project.
+ * but was, to the best of our knowledge, first implemented by the rmiscout project. However, remote-method-guesser
+ * takes this approach further and implements the mismatch of argument types in a way that prevents the underlying
+ * TCP stream from being corrupted. This allows remote-method-guesser to reuse already established TCP connection
+ * which provied a great performance boost, especially on TLS protected endpoints.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -162,13 +165,10 @@ public class MethodGuesser {
         }
 
         /**
-         * Invokes the assigned MethodCandidates. During the method invocation, a type-confusion mechanism is used.
-         * The assigned method is inspected for its first argument type and it is determined whether it is a primitive
-         * or non primitive type. Depending on the type, the exact opposite type is used for the actual method call.
-         * E.g. when the MethodCandidate expects a primitive type as first argument, we send a non primitive type, and
-         * the other way around. Therefore, when the remote object attempts to unmarshal the call arguments, it will always
-         * find a type mismatch on the first argument, which causes an exception. This exception is used to identify valid
-         * methods.
+         * Invokes the assigned MethodCandidates. Methods are invoked by using a specially crafting argument array.
+         * The array is crafted in a way that method calls will never be fully dispatched on the server side while
+         * simultaneously preventing corruption of the underlying TCP stream. This allows to reuse the TCP connection
+         * during method guessing which makes the proccess much faster, especially on TLS protected connections.
          */
         public void run() {
 
@@ -198,35 +198,12 @@ public class MethodGuesser {
                         continue;
                     }
 
-                } catch(java.rmi.UnmarshalException e) {
-                    /*
-                     * This is basically a legacy catch. In the old way of invoking remote methods, this exception was
-                     * thrown on existing methods that return a different argument type than expected. This should no longer
-                     * occur, as arguments returned by the server are ignored by rmg. Nonetheless, the keep it for now.
-                     */
-                    continue;
-
-                } catch(java.rmi.MarshalException e) {
-                    /*
-                     * This one is  thrown on the client side when marshalling the call arguments. It should actually
-                     * never occur and if it does, it is probably an internal error.
-                     */
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-
-                    String info = "Caught unexpected MarshalException during method guessing.\n"
-                                 +"Please report this to improve rmg :)\n"
-                                 +"Stack-Trace:\n"
-                                 +writer.toString();
-
-                    Logger.println(info);
-                    continue;
-
                 } catch(Exception e) {
                     /*
                      * All other exceptions cause an error message, but are interpreted as an existing method. The
                      * idea behind this is that a false-positive is usually better than a false-negative.
                      */
+
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
 
@@ -240,9 +217,11 @@ public class MethodGuesser {
                 }
 
                 /*
-                 * Successfully guessed methods cause either an EOFException (object passed instead of primitive
-                 * or two few arguments) or an OptionalDataException (primitive passed for instead of object) that
-                 * is wrapped in a ServerException. As these exceptions caught, but not return, we end up here.
+                 * Successfully guessed methods cause a java.rmi.ServerException that is caught above, but not handled.
+                 * The inner cause of these exceptions is expected to be one of java.io.StreamCorruptedException (expected
+                 * for methods that accept primitive arguments only) or java.io.OptionalDataException (expected for methods
+                 * that accept at least one non primitive argument). The exceptions are not caught explicitly, which could
+                 * lead to false positives, but we never observed this in practice so far.
                  */
                 Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
                 existingMethods.add(candidate);
