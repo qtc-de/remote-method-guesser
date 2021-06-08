@@ -3,7 +3,6 @@ package de.qtc.rmg.operations;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -45,9 +44,8 @@ import de.qtc.rmg.utils.RMGUtils;
 public class MethodGuesser {
 
     private int threads;
-    private boolean zeroArg;
     private RemoteObjectClient client;
-    private HashSet<MethodCandidate> candidates;
+    private Set<MethodCandidate> candidates;
 
 
     /**
@@ -61,13 +59,11 @@ public class MethodGuesser {
      * @param threads number of threads to use
      * @param zeroArg whether or not to guess zero argument methods
      */
-    public MethodGuesser(RemoteObjectClient client, HashSet<MethodCandidate> candidates, int threads, boolean zeroArg)
+    public MethodGuesser(RemoteObjectClient client, Set<MethodCandidate> candidates, int threads)
     {
         this.client = client;
-        this.candidates = candidates;
-
         this.threads = threads;
-        this.zeroArg = zeroArg;
+        this.candidates = candidates;
     }
 
     /**
@@ -76,7 +72,7 @@ public class MethodGuesser {
      *
      * @param candidates HashSet of MethodCandidates to guess
      */
-    public static void printGuessingIntro(HashSet<MethodCandidate> candidates)
+    public static void printGuessingIntro(Set<MethodCandidate> candidates)
     {
         int count = candidates.size();
 
@@ -111,8 +107,8 @@ public class MethodGuesser {
     public ArrayList<MethodCandidate> guessMethods()
     {
         Logger.printlnMixedYellow("Guessing methods on bound name:", client.getBoundName(), "...");
-        Logger.println("");
         Logger.increaseIndent();
+        Logger.printlnBlue("--------------------------------");
 
         ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
         ExecutorService pool = Executors.newFixedThreadPool(threads);
@@ -173,11 +169,6 @@ public class MethodGuesser {
         public void run() {
 
             for( MethodCandidate candidate : candidates ) {
-
-                if( candidate.isVoid() && !zeroArg ) {
-                    Logger.printlnMixedBlue("Skipping zero arguments method:", candidate.getSignature());
-                    continue;
-                }
 
                 try {
                     client.guessingCall(candidate);

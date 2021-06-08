@@ -182,12 +182,13 @@ public class Dispatcher {
      *
      * @return HashSet of MethodCandidates that should be used during guessing operations
      */
-    private HashSet<MethodCandidate> getCandidates()
+    private Set<MethodCandidate> getCandidates()
     {
-        HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
+        Set<MethodCandidate> candidates = new HashSet<MethodCandidate>();
 
         String wordlistFile = (String)p.get("wordlist-file");
         String wordlistFolder = (String)p.get("wordlist-folder");
+        boolean zeroArg = (boolean)p.get("zero-arg");
         boolean updateWordlist = (boolean)p.get("update");
 
         if( candidate != null ) {
@@ -196,7 +197,7 @@ public class Dispatcher {
         } else {
 
             try {
-                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist);
+                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist, zeroArg);
                 candidates = wlHandler.getWordlistMethods();
             } catch( IOException e ) {
                 Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
@@ -439,10 +440,9 @@ public class Dispatcher {
         boolean createSamples = (boolean)p.get("create-samples");
 
         int threadCount = (int)p.get("threads");
-        boolean zeroArg = (boolean)p.get("zero-arg");
         Formatter format = new Formatter();
 
-        HashSet<MethodCandidate> candidates = getCandidates();
+        Set<MethodCandidate> candidates = getCandidates();
         HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
         try {
@@ -468,7 +468,7 @@ public class Dispatcher {
             }
 
             RemoteObjectClient client = getRemoteObjectClient(boundName);
-            MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount, zeroArg);
+            MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount);
             ArrayList<MethodCandidate> methods = guesser.guessMethods();
 
             results.put(boundName, methods);
