@@ -89,7 +89,7 @@ function _rmg() {
 	elif _comp_contains "--argument-position --bound-name --objid --signature --threads" $prev; then
 		return 0
 
-	# otherwise, we just complete options
+	# otherwise, just complete options
 	else 
 		opts="--argument-position"
 		opts="$opts --bound-name"
@@ -114,6 +114,7 @@ function _rmg() {
 		opts="$opts --threads"
 		opts="$opts --trusted"
 		opts="$opts --update"
+		opts="$opts --verbose"
 		opts="$opts --wordlist-file"
 		opts="$opts --wordlist-folder"
 		opts="$opts --yso"
