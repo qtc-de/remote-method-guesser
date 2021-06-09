@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -46,7 +45,6 @@ public class ArgumentParser {
     private CommandLine cmdLine;
     private List<String> argList;
     private Properties config;
-    private HashMap<String,Object> parameters;
 
     private  String defaultConfiguration = "/config.properties";
 
@@ -84,16 +82,16 @@ public class ArgumentParser {
         }
 
         this.config = new Properties();
-        loadConfig(cmdLine.getOptionValue("config", null));
+        loadConfig(cmdLine.getOptionValue(RMGOption.CONFIG.name, null));
 
-        if( cmdLine.hasOption("help") ) {
+        if( cmdLine.hasOption(RMGOption.HELP.name) ) {
             printHelpAndExit(0);
         }
 
-        if( cmdLine.hasOption("trusted") )
+        if( cmdLine.hasOption(RMGOption.TRUSTED.name) )
             Security.trusted();
 
-        if( cmdLine.hasOption("no-color") )
+        if( cmdLine.hasOption(RMGOption.NO_COLOR.name) )
             Logger.disableColor();
 
         PluginSystem.init(cmdLine.getOptionValue("plugin", null));
@@ -132,65 +130,43 @@ public class ArgumentParser {
 
 
     /**
-     * rmg stores command line parameters within a HashMap, that makes the syntax for obtaining parameter
-     * values a little bit shorter than using commons-cli syntax. This function creates the corresponding HashMap
-     * and fills it with the values parsed from the command line. Certain options also have default values assigned,
-     * that are used when the corresponding option was not specified.
+     * Command line parameters are stored within the RMGOption enum. This function parses the values
+     * from the command line and sets the corresponding enum values.
      */
     private void preapreParameters()
     {
-        parameters = new HashMap<String,Object>();
+        RMGOption.SAMPLE_FOLDER.setValue(cmdLine, config.getProperty("sample-folder"));
+        RMGOption.WORDLIST_FILE.setValue(cmdLine, config.getProperty("wordlist-file"));
+        RMGOption.TEMPLATE_FOLDER.setValue(cmdLine, config.getProperty("template-folder"));
+        RMGOption.WORDLIST_FOLDER.setValue(cmdLine, config.getProperty("wordlist-folder"));
+        RMGOption.SIGNATURE.setValue(cmdLine);
+        RMGOption.BOUND_NAME.setValue(cmdLine);
+        RMGOption.REG_METHOD.setValue(cmdLine, "lookup");
+        RMGOption.DGC_METHOD.setValue(cmdLine, "clean");
 
-        parameters.put("argument-position", this.parseOption("argument-position", -1));
-        parameters.put("threads", this.parseOption("threads", Integer.valueOf(config.getProperty("threads"))));
-        parameters.put("sample-folder", cmdLine.getOptionValue("sample-folder", config.getProperty("sample-folder")));
-        parameters.put("wordlist-file", cmdLine.getOptionValue("wordlist-file", config.getProperty("wordlist-file")));
-        parameters.put("template-folder", cmdLine.getOptionValue("template-folder", config.getProperty("template-folder")));
-        parameters.put("wordlist-folder", cmdLine.getOptionValue("wordlist-folder", config.getProperty("wordlist-folder")));
-        parameters.put("signature", cmdLine.getOptionValue("signature"));
-        parameters.put("bound-name", cmdLine.getOptionValue("bound-name"));
-        parameters.put("objid", this.parseOption("objid", null));
-        parameters.put("reg-method", cmdLine.getOptionValue("reg-method", "lookup"));
-        parameters.put("dgc-method", cmdLine.getOptionValue("dgc-method", "clean"));
-
-        parameters.put("ssl", cmdLine.hasOption("ssl"));
-        parameters.put("follow", cmdLine.hasOption("follow"));
-        parameters.put("update", cmdLine.hasOption("update"));
-        parameters.put("create-samples", cmdLine.hasOption("create-samples"));
-        parameters.put("zero-arg", cmdLine.hasOption("zero-arg"));
-        parameters.put("localhost-bypass", cmdLine.hasOption("localhost-bypass"));
-        parameters.put("force-guessing", cmdLine.hasOption("force-guessing"));
-    }
-
-    /**
-     * This function is used for integer parsing. Commons-cli allows to restrict option values to certain parameter
-     * types. For numeric types, it uses the abstract Number class. Later on, rmg-functions consume such argument types
-     * usually as int and this function converts the value into this corresponding form.
-     *
-     * @param name parameter name within the command line
-     * @param defaultValue to use if the parameter is not present
-     * @return the parsing result that should be stored within the parameters HashMap
-     */
-    private Object parseOption(String name, Object defaultValue)
-    {
-        Object returnValue = null;
+        RMGOption.SSL.setBoolean(cmdLine);
+        RMGOption.FOLLOW.setBoolean(cmdLine);
+        RMGOption.UPDATE.setBoolean(cmdLine);
+        RMGOption.CREATE_SAMPLES.setBoolean(cmdLine);
+        RMGOption.ZERO_ARG.setBoolean(cmdLine);
+        RMGOption.LOCALHOST_BYPASS.setBoolean(cmdLine);
+        RMGOption.FORCE_GUESSING.setBoolean(cmdLine);
 
         try {
-            returnValue = cmdLine.getParsedOptionValue(name);
-
-            if(returnValue instanceof Number)
-                returnValue = ((Number)returnValue).intValue();
+            RMGOption.OBJID.setInt(cmdLine, null);
+            RMGOption.ARGUMENT_POS.setInt(cmdLine, -1);
+            RMGOption.THREADS.setInt(cmdLine, Integer.valueOf(config.getProperty("threads")));
 
         } catch(ParseException e) {
-            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", name);
+            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", "OBJID | ARGUMENT_POS | THREADS");
             System.out.println("");
             printHelpAndExit(1);
         }
 
-        if( returnValue == null )
-            return defaultValue;
-        else
-            return returnValue;
+        if( RMGOption.OBJID.value != null )
+            RMGOption.TARGET.setValue(RMGOption.OBJID.value);
+        else if( RMGOption.BOUND_NAME.value != null )
+            RMGOption.TARGET.setValue(RMGOption.BOUND_NAME.value);
     }
 
     /**
@@ -218,128 +194,128 @@ public class ArgumentParser {
     {
         Options options = new Options();
 
-        Option position = new Option(null, "argument-position", true, "select argument position for deserialization attacks");
+        Option position = new Option(null, RMGOption.ARGUMENT_POS.name, RMGOption.ARGUMENT_POS.requiresValue, RMGOption.ARGUMENT_POS.description);
         position.setArgName("int");
         position.setRequired(false);
         position.setType(Number.class);
         options.addOption(position);
 
-        Option name = new Option(null, "bound-name", true, "guess only on the specified bound name");
+        Option name = new Option(null, RMGOption.BOUND_NAME.name, RMGOption.BOUND_NAME.requiresValue, RMGOption.BOUND_NAME.description);
         name.setArgName("name");
         name.setRequired(false);
         options.addOption(name);
 
-        Option configOption = new Option(null, "config", true, "path to a configuration file");
+        Option configOption = new Option(null, RMGOption.CONFIG.name, RMGOption.CONFIG.requiresValue, RMGOption.CONFIG.description);
         configOption.setArgName("file");
         configOption.setRequired(false);
         options.addOption(configOption);
 
-        Option samples = new Option(null, "create-samples", false, "create sample classes for identified methods");
+        Option samples = new Option(null, RMGOption.CREATE_SAMPLES.name, RMGOption.CREATE_SAMPLES.requiresValue, RMGOption.CREATE_SAMPLES.description);
         samples.setRequired(false);
         options.addOption(samples);
 
-        Option dgcMethod = new Option(null, "dgc-method", true, "method to use during dgc operations (clean|dirty)");
+        Option dgcMethod = new Option(null, RMGOption.DGC_METHOD.name, RMGOption.DGC_METHOD.requiresValue, RMGOption.DGC_METHOD.description);
         dgcMethod.setArgName("method");
         dgcMethod.setRequired(false);
         options.addOption(dgcMethod);
 
-        Option follow = new Option(null, "follow", false, "follow redirects to different servers");
+        Option follow = new Option(null, RMGOption.FOLLOW.name, RMGOption.FOLLOW.requiresValue, RMGOption.FOLLOW.description);
         follow.setRequired(false);
         options.addOption(follow);
 
-        Option forceGuessing = new Option(null, "force-guessing", false, "force guessing on known remote objects");
+        Option forceGuessing = new Option(null, RMGOption.FORCE_GUESSING.name, RMGOption.FORCE_GUESSING.requiresValue, RMGOption.FORCE_GUESSING.description);
         forceGuessing.setRequired(false);
         options.addOption(forceGuessing);
 
-        Option forceLegacy = new Option(null, "force-legacy", false, "treat all classes as legacy stubs");
+        Option forceLegacy = new Option(null, RMGOption.FORCE_LEGACY.name, RMGOption.FORCE_LEGACY.requiresValue, RMGOption.FORCE_LEGACY.description);
         forceLegacy.setRequired(false);
         options.addOption(forceLegacy);
 
-        Option help = new Option(null, "help", false, "display help message");
+        Option help = new Option(null, RMGOption.HELP.name, RMGOption.HELP.requiresValue, RMGOption.HELP.description);
         help.setRequired(false);
         options.addOption(help);
 
-        Option local = new Option(null, "localhost-bypass", false, "attempt localhost bypass for registry operations (CVE-2019-2684)");
+        Option local = new Option(null, RMGOption.LOCALHOST_BYPASS.name, RMGOption.LOCALHOST_BYPASS.requiresValue, RMGOption.LOCALHOST_BYPASS.description);
         local.setRequired(false);
         options.addOption(local);
 
-        Option noColor = new Option(null, "no-color", false, "disable colored output");
+        Option noColor = new Option(null, RMGOption.NO_COLOR.name, RMGOption.NO_COLOR.requiresValue, RMGOption.NO_COLOR.description);
         noColor.setRequired(false);
         options.addOption(noColor);
 
-        Option noLegacy = new Option(null, "no-legacy", false, "disable automatic legacy stub detection");
+        Option noLegacy = new Option(null, RMGOption.NO_LEGACY.name, RMGOption.NO_LEGACY.requiresValue, RMGOption.NO_LEGACY.description);
         noLegacy.setRequired(false);
         options.addOption(noLegacy);
 
-        Option objID = new Option(null, "objid", true, "use an ObjID instead of bound names");
+        Option objID = new Option(null, RMGOption.OBJID.name, RMGOption.OBJID.requiresValue, RMGOption.OBJID.description);
         objID.setRequired(false);
         objID.setArgName("objID");
         objID.setType(Number.class);
         options.addOption(objID);
 
-        Option plugin = new Option(null, "plugin", true, "file system path to a rmg plugin");
+        Option plugin = new Option(null, RMGOption.PLUGIN.name, RMGOption.PLUGIN.requiresValue, RMGOption.PLUGIN.description);
         plugin.setArgName("path");
         plugin.setRequired(false);
         options.addOption(plugin);
 
-        Option regMethod = new Option(null, "reg-method", true, "method to use during registry operations (bind|lookup|unbind|rebind)");
+        Option regMethod = new Option(null, RMGOption.REG_METHOD.name, RMGOption.REG_METHOD.requiresValue, RMGOption.REG_METHOD.description);
         regMethod.setArgName("method");
         regMethod.setRequired(false);
         options.addOption(regMethod);
 
-        Option outputs = new Option(null, "sample-folder", true, "folder used for sample generation");
+        Option outputs = new Option(null, RMGOption.SAMPLE_FOLDER.name, RMGOption.SAMPLE_FOLDER.requiresValue, RMGOption.SAMPLE_FOLDER.description);
         outputs.setArgName("folder");
         outputs.setRequired(false);
         options.addOption(outputs);
 
-        Option signature = new Option(null, "signature", true, "function signature or one of (dgc|reg|act)");
+        Option signature = new Option(null, RMGOption.SIGNATURE.name, RMGOption.SIGNATURE.requiresValue, RMGOption.SIGNATURE.description);
         signature.setArgName("method");
         signature.setRequired(false);
         options.addOption(signature);
 
-        Option ssl = new Option(null, "ssl", false, "use SSL for the rmi-registry connection");
+        Option ssl = new Option(null, RMGOption.SSL.name, RMGOption.SSL.requiresValue, RMGOption.SSL.description);
         ssl.setRequired(false);
         options.addOption(ssl);
 
-        Option stackTrace = new Option(null, "stack-trace", false, "display stack traces for caught exceptions");
+        Option stackTrace = new Option(null, RMGOption.STACK_TRACE.name, RMGOption.STACK_TRACE.requiresValue, RMGOption.STACK_TRACE.description);
         stackTrace.setRequired(false);
         options.addOption(stackTrace);
 
-        Option templates = new Option(null, "template-folder", true, "location of the template folder");
+        Option templates = new Option(null, RMGOption.TEMPLATE_FOLDER.name, RMGOption.TEMPLATE_FOLDER.requiresValue, RMGOption.TEMPLATE_FOLDER.description);
         templates.setArgName("folder");
         templates.setRequired(false);
         options.addOption(templates);
 
-        Option threads = new Option(null, "threads", true, "maximum number of threads (default: 5)");
+        Option threads = new Option(null, RMGOption.THREADS.name, RMGOption.THREADS.requiresValue, RMGOption.THREADS.description);
         threads.setArgName("int");
         threads.setRequired(false);
         threads.setType(Number.class);
         options.addOption(threads);
 
-        Option trusted = new Option(null, "trusted", false, "disable bound name filtering");
+        Option trusted = new Option(null, RMGOption.TRUSTED.name, RMGOption.TRUSTED.requiresValue, RMGOption.TRUSTED.description);
         trusted.setRequired(false);
         options.addOption(trusted);
 
-        Option update = new Option(null, "update", false, "update wordlist file with method hashes");
+        Option update = new Option(null, RMGOption.UPDATE.name, RMGOption.UPDATE.requiresValue, RMGOption.UPDATE.description);
         update.setRequired(false);
         options.addOption(update);
 
-        Option wordlist = new Option(null, "wordlist-file", true, "wordlist file to use for method guessing");
+        Option wordlist = new Option(null, RMGOption.WORDLIST_FILE.name, RMGOption.WORDLIST_FILE.requiresValue, RMGOption.WORDLIST_FILE.description);
         wordlist.setArgName("file");
         wordlist.setRequired(false);
         options.addOption(wordlist);
 
-        Option wordlistFolder = new Option(null, "wordlist-folder", true, "location of the wordlist folder");
+        Option wordlistFolder = new Option(null, RMGOption.WORDLIST_FOLDER.name, RMGOption.WORDLIST_FOLDER.requiresValue, RMGOption.WORDLIST_FOLDER.description);
         wordlistFolder.setArgName("folder");
         wordlistFolder.setRequired(false);
         options.addOption(wordlistFolder);
 
-        Option yso = new Option(null, "yso", true, "location of ysoserial.jar for deserialization attacks");
+        Option yso = new Option(null, RMGOption.YSO.name, RMGOption.YSO.requiresValue, RMGOption.YSO.description);
         yso.setArgName("file");
         yso.setRequired(false);
         options.addOption(yso);
 
-        Option zeroArg = new Option(null, "zero-arg", false, "allow guessing on void functions (dangerous)");
+        Option zeroArg = new Option(null, RMGOption.ZERO_ARG.name, RMGOption.ZERO_ARG.requiresValue, RMGOption.ZERO_ARG.description);
         zeroArg.setRequired(false);
         options.addOption(zeroArg);
 
@@ -364,32 +340,12 @@ public class ArgumentParser {
 
         this.checkArgumentCount(paramRequirements.count());
 
-        for(String requiredOption: paramRequirements.requires()) {
+        for(RMGOption requiredOption: paramRequirements.requires()) {
 
-            Object optionValue = null;
-            String[] possibleOptions = requiredOption.split("\\|");
-
-            for(String possibleOption: possibleOptions) {
-                if((optionValue = this.get(possibleOption)) != null) {
-                    break;
-                }
-            }
-
-            if(optionValue == null) {
+            if(requiredOption.value == null) {
 
                 Logger.eprint("Error: The ");
-
-                for(int ctr = 0; ctr < possibleOptions.length - 1; ctr++) {
-                    Logger.printPlainYellow("--" + possibleOptions[ctr]);
-
-                    if(ctr == possibleOptions.length - 2)
-                        Logger.printPlain(" or ");
-
-                    else
-                        Logger.printPlain(", ");
-                }
-
-                Logger.printPlainYellow("--" + possibleOptions[possibleOptions.length - 1]);
+                Logger.printPlainYellow("--" + requiredOption.name);
                 Logger.printlnPlainMixedBlue(" option is required for the", operation.toString().toLowerCase(), "operation.");
                 RMGUtils.exit();
             }
@@ -432,17 +388,6 @@ public class ArgumentParser {
     {
         formatter.printHelp(helpString, options);
         System.exit(code);
-    }
-
-    /**
-     * This is only a wrapper around this.parameters.get to make parameters more accessible.
-     *
-     * @param name parameter name to obtain
-     * @return corresponding parameter value
-     */
-    public Object get(String name)
-    {
-        return parameters.get(name);
     }
 
     /**
@@ -518,10 +463,10 @@ public class ArgumentParser {
      */
     public int getLegacyMode()
     {
-        if( this.cmdLine.hasOption("--no-legacy") )
+        if( this.cmdLine.hasOption(RMGOption.NO_LEGACY.name) )
             return 2;
 
-        else if( this.cmdLine.hasOption("--force-legacy") )
+        else if( this.cmdLine.hasOption(RMGOption.FORCE_LEGACY.name) )
             return 1;
 
         else
@@ -568,7 +513,7 @@ public class ArgumentParser {
      */
     public String getRegMethod()
     {
-        String regMethod = (String)this.get("reg-method");
+        String regMethod = RMGOption.REG_METHOD.getString();
 
         if(!regMethod.matches("lookup|bind|unbind|rebind")) {
             Logger.printlnPlainMixedYellow("Unsupported registry method:", regMethod);
@@ -589,7 +534,7 @@ public class ArgumentParser {
      */
     public String getDgcMethod()
     {
-        String dgcMethod = (String)this.get("dgc-method");
+        String dgcMethod = RMGOption.DGC_METHOD.getString();
 
         if(!dgcMethod.matches("clean|dirty")) {
             Logger.printlnPlainMixedYellow("Unsupported DGC method:", dgcMethod);
@@ -610,7 +555,7 @@ public class ArgumentParser {
      */
     public boolean containsMethodSignature()
     {
-        String signature = (String)this.get("signature");
+        String signature = RMGOption.SIGNATURE.getString();
 
         if(signature == null)
             return false;
