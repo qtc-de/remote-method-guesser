@@ -20,7 +20,17 @@ public class Logger {
 
     public static int indent = 0;
     public static int printCount = 0;
-    public static boolean verbose = true;
+    public static boolean verbose = false;
+    public static boolean enabled = true;
+
+    public static void disableIfNotVerbose() {
+        if( !Logger.verbose )
+            Logger.enabled = false;
+    }
+
+    public static void enable() {
+        Logger.enabled = true;
+    }
 
     private static String blue(String msg)
     {
@@ -61,12 +71,14 @@ public class Logger {
 
     private static void log(String msg)
     {
-        log(msg, true);
+        if( Logger.enabled ) {
+            log(msg, true);
+        }
     }
 
     private static void log(String msg, boolean newline)
     {
-        if( Logger.verbose ) {
+        if( Logger.enabled ) {
 
             if( newline )
                 System.out.println(msg);
@@ -77,15 +89,20 @@ public class Logger {
 
     private static void elog(String msg)
     {
-        elog(msg, true);
+        if( Logger.enabled ) {
+            elog(msg, true);
+        }
     }
 
     private static void elog(String msg, boolean newline)
     {
-        if( newline )
-            System.out.println(msg);
-        else
-            System.out.print(msg);
+        if( Logger.enabled ) {
+
+            if( newline )
+                System.out.println(msg);
+            else
+                System.out.print(msg);
+        }
     }
 
     public static void print(String msg)
@@ -457,10 +474,7 @@ public class Logger {
 
     public static String getIndent()
     {
-        if( verbose )
-            return " " + new String(new char[indent]).replace("\0", "\t");
-        else
-            return " ";
+        return " " + new String(new char[indent]).replace("\0", "\t");
     }
 
     public static void disableColor()

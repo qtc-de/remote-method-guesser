@@ -43,13 +43,15 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      * @param fac original socket factory to create sockets from
      * @param followRedirect if true, connections are not redirected to the expected host
      */
-    public LoopbackSocketFactory(String host, RMISocketFactory fac, boolean followRedirect) {
+    public LoopbackSocketFactory(String host, RMISocketFactory fac, boolean followRedirect)
+    {
         this.host = host;
         this.fac = fac;
         this.followRedirect= followRedirect;
     }
 
-    public ServerSocket createServerSocket(int port) throws IOException {
+    public ServerSocket createServerSocket(int port) throws IOException
+    {
         return fac.createServerSocket(port);
     }
 
@@ -58,7 +60,8 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      * value and changes the value if required. After the host check was done, the default socket factory
      * is used to create the real socket.
      */
-    public Socket createSocket(String host, int port) throws IOException {
+    public Socket createSocket(String host, int port) throws IOException
+    {
         if(!this.host.equals(host)) {
             printInfos("RMI object tries to connect to different remote host: " + host + ".");
 
@@ -81,8 +84,9 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      *
      * @param info user information about redirects
      */
-    private void printInfos(String info) {
-        if( this.printInfo )
+    private void printInfos(String info)
+    {
+        if( this.printInfo && Logger.verbose )
             Logger.eprintlnBlue(info);
     }
 }

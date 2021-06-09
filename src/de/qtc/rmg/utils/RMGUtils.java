@@ -620,10 +620,10 @@ public class RMGUtils {
      * @param verbose whether or not to print the warning message
      * @return true if legacy mode should be used, false otherwise
      */
-    public static boolean isLegacy(String className, int legacyMode, boolean verbose)
+    public static boolean isLegacy(String className, int legacyMode)
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-            if( verbose) {
+            if( Logger.verbose ) {
                 Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
                 Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
             }

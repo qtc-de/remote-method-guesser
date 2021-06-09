@@ -44,7 +44,8 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
      * is used to create the real socket.
      */
     @Override
-    public Socket createSocket(String target, int port) throws IOException {
+    public Socket createSocket(String target, int port) throws IOException
+    {
         if(!host.equals(target)) {
             printInfos("RMI object tries to connect to different remote host: " + target);
 
@@ -61,32 +62,38 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException {
+    public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
-    public String[] getDefaultCipherSuites() {
+    public String[] getDefaultCipherSuites()
+    {
         return fac.getDefaultCipherSuites();
     }
 
     @Override
-    public String[] getSupportedCipherSuites() {
+    public String[] getSupportedCipherSuites()
+    {
         return fac.getSupportedCipherSuites();
     }
 
     @Override
-    public Socket createSocket(InetAddress arg0, int arg1) throws IOException {
+    public Socket createSocket(InetAddress arg0, int arg1) throws IOException
+    {
         return fac.createSocket(arg0, arg1);
     }
 
     @Override
-    public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException {
+    public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
-    public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException {
+    public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
     }
 
@@ -97,8 +104,9 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
      *
      * @param info user information about redirects
      */
-    private void printInfos(String info) {
-        if( printInfo )
+    private void printInfos(String info)
+    {
+        if( printInfo && Logger.verbose )
             Logger.eprintlnBlue(info);
     }
 }
