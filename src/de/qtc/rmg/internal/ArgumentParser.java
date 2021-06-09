@@ -94,6 +94,9 @@ public class ArgumentParser {
         if( cmdLine.hasOption(RMGOption.NO_COLOR.name) )
             Logger.disableColor();
 
+        if( cmdLine.hasOption(RMGOption.VERBOSE.name) )
+            Logger.verbose = true;
+
         PluginSystem.init(cmdLine.getOptionValue("plugin", null));
         ExceptionHandler.showStackTrace(cmdLine.hasOption("stack-trace"));
         YsoIntegration.setYsoPath(cmdLine.getOptionValue("yso", config.getProperty("ysoserial-path")));
@@ -299,6 +302,10 @@ public class ArgumentParser {
         Option update = new Option(null, RMGOption.UPDATE.name, RMGOption.UPDATE.requiresValue, RMGOption.UPDATE.description);
         update.setRequired(false);
         options.addOption(update);
+
+        Option verbose = new Option(null, RMGOption.VERBOSE.name, RMGOption.VERBOSE.requiresValue, RMGOption.VERBOSE.description);
+        verbose.setRequired(false);
+        options.addOption(verbose);
 
         Option wordlist = new Option(null, RMGOption.WORDLIST_FILE.name, RMGOption.WORDLIST_FILE.requiresValue, RMGOption.WORDLIST_FILE.description);
         wordlist.setArgName("file");
