@@ -179,4 +179,115 @@ public void invoke(RemoteCall call) throws Exception {
       throw e;
 ```
 
+Not reusing existing *TCP streams* slows down the overall speed of method guessing, as *TCP connections* need to be reestablished.
+For plain *TCP* connections the impact is not that big of a deal, although it increases with a larger wordlist size. For *TLS* protected
+connections, the slowdown is more significant and we observed speedups up to a factor of ``8`` when implementing reusable streams.
+
+
+#### Preventing Stream Corruption
+
+The open question is now how to prevent stream corruption during method guessing. From our perspective there are two approaches to that:
+
+  1. *Argument less guessing* - When looking at the *RMI* message structure displayed above and the behavior how *RMI endpoints* parse
+     the corresponding data, it seems that one can just skip sending of method arguments during method guessing. In case of non existing
+     remote methods this is indeed fine, as the *RMI endpoint* will only parse the data up to the method hash and then raise an exception.
+     When no arguments were sent, the *TCP* streams stays clean and can be reused.
+
+     In case of existing methods, *argument less guessing* causes a small problem: The *RMI endpoint* waits for the method arguments to appear
+     within the *TCP* stream. When not sending any arguments, this will cause a timeout. Obviously, this timeout would be sufficient as an
+     indicator that the corresponding method exists, but such time based approaches are not that reliable an error prone.
+
+  2. *Polyglot argument* - Method arguments usually corrupt the *TCP* stream, as they do not match the format of a valid *RMI call*. If it is
+     possible to send method arguments that form a valid *RMI call* on their own, stream corruption could be prevented and the *TCP* connection
+     could be reused. Moreover, in the case of existing methods, the method arguments lead to an invalid *RMI call* on the server side, to prevent
+     the method from actually being invoked.
+
+In *rmg v3.3.0*, we implemented the second approach and looked for a corresponding *polyglot* method argument, that was surprisingly simple to find.
+*RMI messages* usually start with a *TransportConstant* as it was explained earlier. During method calls, this transport constant is always set to
+``0x50``, but also other transport constants exist. In case of other transport constants, the structure of an *RMI* differs from the above mentioned
+structure and it is parsed differently by the server. The following snipped shows an excerpt of the [TCPTransport](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/transport/tcp/TCPTransport.java) class, that handles the different
+message types:
+
+```java
+do {
+    int op = in.read();     // transport op
+    [...]
+
+    switch (op) {
+
+      case TransportConstants.Call:
+          // service incoming RMI call
+          RemoteCall call = new StreamRemoteCall(conn);
+          if (serviceCall(call) == false)
+              return;
+          break;
+
+      case TransportConstants.Ping:
+          // send ack for ping
+          DataOutputStream out =
+              new DataOutputStream(conn.getOutputStream());
+          out.writeByte(TransportConstants.PingAck);
+          conn.releaseOutputStream();
+          break;
+
+      case TransportConstants.DGCAck:
+          DGCAckHandler.received(UID.read(in));
+          break;
+
+      default:
+          throw new IOException("unknown transport op " + op);
+    }
+
+} while (persistent);
+```
+
+Notice that in case of the *TransportConstant* being *Ping* (``0x52``), no further data is read from the input stream.
+Therefore, an *RMI Ping* message just consists out of the *TransportConstant*, which is pretty handy for our purposes.
+The following diagram shows, how the used the *RMI Ping* message as a *polyglot* method argument:
+
+![RMI Ping Polyglot](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-method-guessing-03.png)
+
+With the *RMI Ping* message being used as a method argument, the *TCP* streams stays in a clean state and can be reused
+for further guessing attempts in case of non existing methods. But how about existing methods? The *RMI Ping TransportConstant*
+is just an ``int`` doesn't this cause problems with methods that expected an ``int`` as argument? Luckily, the answer is *no*
+if you write the data to the correct output stream.
+
+Almost all data written during a *RMI call* is wrapped within an ``ObjectOutputStream`` (only the *TransportConstant* is written
+to the raw ``OutputStream`` directly). Within an ``ObjectOuputStream``, data is aligned to match a specific format. This is not only
+true for non primitive data (e.g. objects or classes), but also primitive types are aligned within a special data structure.
+The following listing shows an example of this situation, where the contents of an *RMI call* are visualized by using the tool
+[SerializationDumper](https://github.com/NickstaDB/SerializationDumper) (the *TransportConstant* was stripped before):
+
+```
+STREAM_MAGIC - 0xac ed
+STREAM_VERSION - 0x00 05
+Contents
+  TC_BLOCKDATA - 0x77
+    Length - 38 - 0x26
+    Contents - 0x6ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec00000001
+```
+
+Instead of raw bytes, the *ObjID*, *OperationNumber* and the *MethodHash* are wrapped into a ``TC_BLOCKDATA`` element,
+that includes the length of the contained data. During method guessing, we write the *RMI Ping* message not on the
+``ObjectOutputStream``, but on the underlying raw ``OutputStream``. The *RMI Ping* message is then not treated as part
+of the ``TC_BLOCKDATA`` structure, but as a new element within the ``ObjectOutputStream``. However, as the code ``0x52``
+is not a valid element type, parsing the corresponding ``ObjectInputStream`` now leads to an error:
+
+```
+STREAM_MAGIC - 0xac ed
+STREAM_VERSION - 0x00 05
+Contents
+  TC_BLOCKDATA - 0x77
+    Length - 38 - 0x26
+    Contents - 0x6ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec00000001
+  Invalid content element type 0x52
+```
+
+This is exactly the behavior we want during method guessing. As the ``ObjectInputStream`` is valid up to the method hash,
+the *RMI endpoint* successfully parses all the elements before the *RMI Ping* message. When attempting to read the method arguments
+however, the *RMI endpoint* will read the next ``ObjectInputStream`` element (``0x52``) and raise an exception. Due to the different
+exception message, we know that the method exists and because the *RMI Ping* message was read and removed from the *TCP stream*, the
+stream stays clean and can be reused. Furthermore, the corresponding remote method was never really invoked, as there was an error when
+parsing the method arguments.
+
 TODO...
