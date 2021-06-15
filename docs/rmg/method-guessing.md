@@ -10,6 +10,20 @@ to write a more detailed explanation on how we perform method guessing and how w
 mentioned speedup.
 
 
+### Table of Contents
+
+----
+
+- [Why Method Guessing?](#why-method-guessing)
+- [Implementation](#implementation)
+  - [Most Naive Approach](#most-naive-approach)
+  - [Guessing Without Invoking](#guessing-without-invoking)
+  - [Making it Fast](#making-it-fast)
+  - [Preventing Stream Corruption](#preventing-stream-corruption)
+  - [The Full Story](#the-full-story)
+- [Conclusion](#conclusion)
+
+
 ### Why Method Guessing?
 
 ----
@@ -290,4 +304,47 @@ exception message, we know that the method exists and because the *RMI Ping* mes
 stream stays clean and can be reused. Furthermore, the corresponding remote method was never really invoked, as there was an error when
 parsing the method arguments.
 
-TODO...
+
+#### The Full Story
+
+The chapter above basically explains how method guessing is implemented in *rmg v3.3.0*. However, there is another minor optimization
+that is explained in this chapter. When we initially researched for a way to prevent stream corruption, we noticed that pure primitive
+method arguments never corrupt the *TCP stream*. This is most likely related to how the ``ObjectInputStream`` class reads ``TC_BLOCKDATA``
+structures from the stream.
+
+When a method only accepts primitive argument types, the whole argument data is contained within the same ``TC_BLOCKDATA`` structure
+as the *ObjID* and the *MethodHash*. As the length of the ``TC_BLOCKDATA`` is contained within the structure, ``ObjectInputStream`` probably
+parses the whole structure at once and removes it completely from the *TCP* stream. Even in case of a non existing method hash, the *stream*
+stays clean and the already read method arguments would be ignored. This makes pure primitive method arguments another great candidate
+for fast method guessing. That being said, there is a problem concerning real method invocations on the server side.
+
+A major goal of method guessing was to prevent valid method calls on the server side and we already saw that it is implemented by tampering
+with the type of method arguments. When enforcing method arguments to be pure primitive (to prevent stream corruption) it is no longer
+possible to tamper with the argument types that are expected by the remote method. Each method that expects only primitive argument types would
+be able to parse arguments from the stream and lead to a real invocation on the server side. Confusing different primitive argument types is also
+not possible, as they are all represented as raw bytes in the ``TC_BLOCKDATA`` structure.
+
+Therefore, the technique mentioned above can only be used for methods that accept at least one non primitive argument type. In this case,
+the *RMI endpoint* expects the ``TC_BLOCKDATA`` structure to have a specific length and to be followed by another ``ObjectInput`` structure.
+We can just append data to the ``TC_BLOCKDATA`` structure, which causes an exception on the server side. But it is even worth the effort?
+Well, it is difficult to estimate. The approach mentioned above requires usually to send more data to the *RMI server*. The polyglot approach,
+on the other hand, causes one additional processing loop on the *RMI server*. In our tests, combining the two approaches was the fastest
+implementation, although this might not be true in each situation.
+
+Nonetheless, *rmg v3.3.0* implements the hybrid approach. Pure primitive methods are guessed by using the *Ping polyglot* technique, whereas methods
+with non primitive argument types are guessed by extending the ``TC_BLOCKDATA`` structure over it's expected length (needs to be extended up to the
+point where the corresponding remote method expects a non primitive type).
+
+
+### Conclusion
+
+----
+
+*remote-method-guesser* accesses low level *Java RMI functions* by using reflection, to tamper with *RMI data* before it is send
+to the server side. The current method guessing implementation abuses certain properties of the general *RMI message structure*
+to achieve a noticeable speedup during the ``guess`` operation. As the *RMI message structure* is usually shared among different
+*RMI* implementations, the approach should work in most cases and was tested against different targets (*Java8*, *Java9*, *Java11*,
+*Sun Implementation*, *JMX*). If you encounter unexpected errors, please report them by creating corresponding issues in this
+repository. Running the most recent older version (*rmg v3.2.0*) can be useful to confirm whether the error is caused by the
+new guessing approach. Older implementations of method guessing are no longer supported in *rmg v3.3.0*, but we may reintroduce
+them if we notice that they are required.
