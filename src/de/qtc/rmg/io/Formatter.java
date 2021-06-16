@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -19,7 +21,6 @@ import de.qtc.rmg.internal.MethodCandidate;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class Formatter {
 
     /**
@@ -29,10 +30,10 @@ public class Formatter {
      *
      * @param classes array of maps containing boundname-classes pairs
      */
-    public void listBoundNames(ArrayList<HashMap<String,String>> classes)
+    public void listBoundNames(HashMap<String,String>[] classes)
     {
-        HashMap<String,String> knownClasses = classes.get(0);
-        HashMap<String,String>  unknownClasses = classes.get(1);
+        HashMap<String,String> knownClasses = classes[0];
+        HashMap<String,String>  unknownClasses = classes[1];
 
         Logger.printlnBlue("RMI registry bound names:");
         Logger.println("");
@@ -75,21 +76,24 @@ public class Formatter {
      *
      * @param results HashMap that contains the guessed MethodCandidates for each bound name
      */
-    public void listGuessedMethods(HashMap<String,ArrayList<MethodCandidate>> results)
+    public void listGuessedMethods(Map<String, ArrayList<MethodCandidate>> results)
     {
+        if( results.size() == 0 ) {
+            Logger.printlnBlue("No remote methods identified :(");
+            return;
+        }
+
         Logger.println("");
         Logger.println("Listing successfully guessed methods:");
 
         Logger.increaseIndent();
-        Iterator<Entry<String, ArrayList<MethodCandidate>>> it = results.entrySet().iterator();
+        SortedSet<String> boundNames = new TreeSet<String>(results.keySet());
 
-        while(it.hasNext()) {
+        for(String boundName : boundNames ) {
 
-            Map.Entry pair = (Map.Entry)it.next();
-            String boundName = (String)pair.getKey();
-            ArrayList<MethodCandidate> methods = ((ArrayList<MethodCandidate>)pair.getValue());
+            ArrayList<MethodCandidate> methods = results.get(boundName);
 
-            Logger.printlnMixedBlue("- ", boundName);
+            Logger.printlnMixedBlue("-", boundName);
             Logger.increaseIndent();
 
             if(methods.size() == 0)

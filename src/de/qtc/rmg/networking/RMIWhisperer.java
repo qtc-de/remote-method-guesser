@@ -15,7 +15,6 @@ import java.rmi.server.RMISocketFactory;
 import java.rmi.server.RemoteRef;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLContext;
@@ -217,9 +216,10 @@ public final class RMIWhisperer {
      * @return HashMaps of bound name -> class name pairs. Returns two HashMaps, one for
      *            known and one for unknown classes
      */
-    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames)
+    @SuppressWarnings("unchecked")
+    public HashMap<String, String>[] getClassNames(String[] boundNames)
     {
-        ArrayList<HashMap<String, String>> returnList = new ArrayList<HashMap<String, String>>();
+        HashMap<String, String>[] returnList = (HashMap<String, String>[])new HashMap[2];
 
         HashMap<String, String> knownClasses = new HashMap<String,String>();
         HashMap<String, String> unknownClasses = new HashMap<String,String>();
@@ -268,8 +268,9 @@ public final class RMIWhisperer {
           }
         }
 
-        returnList.add(knownClasses);
-        returnList.add(unknownClasses);
+        returnList[0] = knownClasses;
+        returnList[1] = unknownClasses;
+
         return returnList;
     }
 

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import de.qtc.rmg.annotations.Parameters;
@@ -43,7 +44,7 @@ public class Dispatcher {
     private String[] boundNames = null;
     private MethodCandidate candidate = null;
     private HashMap<String,String> allClasses = null;
-    private ArrayList<HashMap<String,String>> boundClasses = null;
+    private HashMap<String,String>[] boundClasses = null;
 
     /**
      * Creates the dispatcher object.
@@ -76,8 +77,8 @@ public class Dispatcher {
         boundNames = rmi.getBoundNames(RMGOption.BOUND_NAME.getString());
 
         boundClasses = rmi.getClassNames(boundNames);
-        allClasses = (HashMap<String, String>)boundClasses.get(0).clone();
-        allClasses.putAll(boundClasses.get(1));
+        allClasses = (HashMap<String, String>)boundClasses[0].clone();
+        allClasses.putAll(boundClasses[1]);
     }
 
     /**
@@ -130,7 +131,7 @@ public class Dispatcher {
      *
      * @param results HashMap of bound name -> [MethodCanidate] pairs
      */
-    private void writeSamples(HashMap<String,ArrayList<MethodCandidate>> results)
+    private void writeSamples(Map<String,ArrayList<MethodCandidate>> results)
     {
         String templateFolder = RMGOption.TEMPLATE_FOLDER.getString();
         String sampleFolder = RMGOption.SAMPLE_FOLDER.getString();
@@ -155,7 +156,7 @@ public class Dispatcher {
 
                 className = allClasses.get(name);
 
-                if(boundClasses.get(1).keySet().contains(name)) {
+                if(boundClasses[1].keySet().contains(name)) {
                     writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
                     unknownClass = true;
                 }
@@ -438,13 +439,8 @@ public class Dispatcher {
      */
     public void dispatchGuess()
     {
-        boolean createSamples = RMGOption.CREATE_SAMPLES.getBool();
-
-        int threadCount = RMGOption.THREADS.getInt();
         Formatter format = new Formatter();
-
         Set<MethodCandidate> candidates = getCandidates();
-        HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
 
         try {
             obtainBoundNames();
@@ -452,33 +448,15 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        HashMap<String,String> knownClasses = boundClasses.get(0);
-        Set<String> knownBoundNames = knownClasses.keySet();
-        MethodGuesser.printGuessingIntro(candidates);
+        MethodGuesser guesser = new MethodGuesser(rmi, this.boundClasses, candidates, p.getLegacyMode());
+        guesser.printGuessingIntro();
 
-        for(String boundName : this.boundNames) {
-
-            if( knownBoundNames.contains(boundName) && (!RMGOption.FORCE_GUESSING.getBool())) {
-                Logger.printlnMixedYellow("Bound name", boundName, "uses a known remote object class.");
-                Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
-                Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
-                Logger.println("");
-
-                RMGUtils.addKnownMethods(boundName, knownClasses.get(boundName), results);
-                continue;
-            }
-
-            RemoteObjectClient client = getRemoteObjectClient(boundName);
-            MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount);
-            ArrayList<MethodCandidate> methods = guesser.guessMethods();
-
-            results.put(boundName, methods);
-        }
+        Map<String, ArrayList<MethodCandidate>> results = guesser.guessMethods();
 
         Logger.decreaseIndent();
         format.listGuessedMethods(results);
 
-        if(createSamples)
+        if(results.size() > 0 && RMGOption.CREATE_SAMPLES.getBool())
             this.writeSamples(results);
     }
 }

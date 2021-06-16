@@ -20,6 +20,7 @@ public enum RMGOption {
     FOLLOW("follow", "follow redirects to different servers", false),
     FORCE_GUESSING("force-guessing", "force guessing on known remote objects", false),
     FORCE_LEGACY("force-legacy", "treat all classes as legacy stubs", false),
+    GUESS_DUPLICATES("guess-duplicates", "guess duplicate remote classes", false),
     HELP("help", "display help message", false),
     LOCALHOST_BYPASS("localhost-bypass", "attempt localhost bypass for registry operations (CVE-2019-2684)", false),
     NO_COLOR("no-color", "disable colored output", false),
@@ -70,6 +71,9 @@ public enum RMGOption {
      */
     public boolean getBool()
     {
+        if( this.value == null)
+            return false;
+
         return (boolean)this.value;
     }
 

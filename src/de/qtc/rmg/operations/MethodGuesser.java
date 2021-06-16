@@ -3,21 +3,27 @@ package de.qtc.rmg.operations;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
 
 /**
- * The method guesser is used to brute force available remote methods on a Java RMI endpoint. It
- * uses the regular Java RMI API to obtain a RemoteObject from the RMI registry, but then uses
- * low level Java RMI calls to enumerate valid methods.
+ * The MethodGuesser class is used to brute force available remote methods on Java RMI endpoints. It uses
+ * low level Java RMI functions to invoke methods parsed from a wordlist with incorrect argument types. The
+ * server-side exception can be used as an indicator whether the invoked method exists on the server.
  *
  * When a RMI client calls a remote method, it establishes a TCP connection to the remote endpoint
  * and sends (among others) the following information:
@@ -28,7 +34,7 @@ import de.qtc.rmg.utils.RMGUtils;
  *
  * During method guessing, remote-method-guesser uses a wordlist of Java methods and computes their hash
  * values. The corresponding hashes are then sent to the server, together with an collection of argument types
- * that do NOT match the expected argument types by the actual remote method. If a remote method does not
+ * that do NOT match the expected argument types by the remote method. If a remote method does not
  * exist, the server throws an exception complaining about an unknown hash value. On the other hand, if the
  * remote method exists, the server will complain about the mismatch of argument types.
  *
@@ -36,43 +42,135 @@ import de.qtc.rmg.utils.RMGUtils;
  * side by actually invoking them. The idea for such a guessing approach was not invented by remote-method-guesser,
  * but was, to the best of our knowledge, first implemented by the rmiscout project. However, remote-method-guesser
  * takes this approach further and implements the mismatch of argument types in a way that prevents the underlying
- * TCP stream from being corrupted. This allows remote-method-guesser to reuse already established TCP connection
- * which provied a great performance boost, especially on TLS protected endpoints.
+ * TCP stream from being corrupted. This allows remote-method-guesser to reuse already established TCP connections
+ * which provides a great performance boost, especially on TLS protected endpoints.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
 public class MethodGuesser {
 
-    private int threads;
-    private RemoteObjectClient client;
-    private Set<MethodCandidate> candidates;
+    private int padding = 0;
+    private int legacyMode;
 
+    private RMIWhisperer rmiEndpoint;
+    private Set<MethodCandidate> candidates;
+    private List<RemoteObjectClient> clientList;
+    private HashMap<String, String[]> duplicateMap;
+    private List<Set<MethodCandidate>> candidateSets;
 
     /**
-     * The MethodGuesser relies on a RemoteObjectClient object to dispatch raw RMI calls. This object needs to be created
-     * in advance and has to be passed to the constructor. Other requirements are a HashSet of MethodCandidates to guess,
-     * the number of threads to use for guessing and a boolean indicating whether zero argument methods should be guessed.
-     * The problem with zero argument methods is, that they lead to real calls on the server side.
+     * To create a MethodGuesser object, you usually pass the obtained information from an RMI registry endpoint.
+     * This includes the RMIWhisperer to the registry itself together with an ArrayList containing the bound- and
+     * corresponding class names. Moreover, the method candidates to be guessed and the current legacy mode are
+     * required.
      *
-     * @param client RemoteObjectClient for the targeted RMI object
-     * @param candidates HashSet of MethodCandidates to guess
-     * @param threads number of threads to use
-     * @param zeroArg whether or not to guess zero argument methods
+     * The MethodGuesser creates a RemoteObjectClient for each unique remote class and guess the specified candidates
+     * on it when invoking the guess action. The list of candidates is split to the number of available threads
+     * first. Therefore, method guessing is performed in n * t tasks, where n is the number of bound names and t is
+     * the number of threads.
+     *
+     * @param rmi RMIWhisperer for the current registry
+     * @param classArray Two HashMap that contain boundName -> className pairs for known and unknown classes
+     * @param candidates MethodCandidates that should be guessed
+     * @param legacyMode Determines how to handle legacy objects during guessing
      */
-    public MethodGuesser(RemoteObjectClient client, Set<MethodCandidate> candidates, int threads)
+    public MethodGuesser(RMIWhisperer rmi, HashMap<String,String>[] classArray, Set<MethodCandidate> candidates, int legacyMode)
     {
-        this.client = client;
-        this.threads = threads;
+        this.rmiEndpoint = rmi;
+        this.legacyMode = legacyMode;
         this.candidates = candidates;
+
+        this.duplicateMap = new HashMap<String, String[]>();
+        this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getInt());
+
+        HashMap<String, String> boundClasses = (HashMap<String, String>)classArray[1];
+        if( classArray[0].size() != 0 && RMGOption.FORCE_GUESSING.getBool() )
+            boundClasses.putAll(classArray[0]);
+
+        this.clientList = new ArrayList<RemoteObjectClient>();
+        initClientList(boundClasses);
+    }
+
+    /**
+     * This function is basically used to prevent guessing on duplicate classes. Some RMI endpoints bind
+     * multiple instances of the same remote class to the registry. Guessing each of them is usually not
+     * what you want, as they use the same implementation. This function checks the bound class names for
+     * duplicates and handles them according to the RMGOption.GUESS_DUPLICATES value.
+     *
+     * If guessing duplicates was requested, the function creates a new RemoteObjectClient for each boundName.
+     * If guessing duplicates was not requested, only the first boundName is used to create a RemoteObjectClient
+     * and all other bound names that are based on the same class are registered as duplicates.
+     *
+     * @param boundClasses Map of boundName -> className pairs
+     */
+    private void initClientList(HashMap<String, String> boundClasses)
+    {
+        RemoteObjectClient client = null;
+        HashMap<String, ArrayList<String>> classBoundnameMap = new HashMap<String, ArrayList<String>>();
+
+        for( Map.Entry<String, String> entry : boundClasses.entrySet() ) {
+            setPadding(entry.getKey());
+            classBoundnameMap.computeIfAbsent(entry.getValue(), k -> new ArrayList<String>()).add(entry.getKey());
+        }
+
+        for( Map.Entry<String, ArrayList<String>> entry : classBoundnameMap.entrySet() ) {
+
+            String className = entry.getKey();
+            ArrayList<String> boundNames = entry.getValue();
+            String[] boundNamesStr = boundNames.toArray(new String[0]);
+
+            for( String boundName : boundNames ) {
+                client = new RemoteObjectClient(rmiEndpoint, boundName, className, legacyMode);
+                clientList.add(client);
+
+                if( RMGOption.GUESS_DUPLICATES.getBool() )
+                    continue;
+
+                duplicateMap.put(boundName, (String[]) Arrays.copyOfRange(boundNamesStr, 1, boundNamesStr.length));
+                break;
+            }
+        }
+    }
+
+    /**
+     * This function is just used for displaying the result. It is called when iterating over the boundNames
+     * and saves the length of the longest boundName. This is used as a padding value for the other boundNames.
+     *
+     * @param value String to obtain the length from
+     */
+    private void setPadding(String value)
+    {
+        if( padding < value.length() )
+            padding = value.length();
+    }
+
+    /**
+     * When bound names were skipped because they are duplicates, they still need to obtain valid methods
+     * that were guessed on the chosen duplicate. This function adds each duplicate boundName to the results
+     * list and appends the methods that were found in the chosen duplicate.
+     *
+     * @param results ResultList that was obtained after method guessing.
+     */
+    private void handleDuplicates(Map<String, ArrayList<MethodCandidate>> results)
+    {
+        for( Map.Entry<String, String[]> entry: duplicateMap.entrySet()) {
+            String boundName = entry.getKey();
+            String[] boundNames = entry.getValue();
+
+            ArrayList<MethodCandidate> existingMethods = results.get(boundName);
+
+            if( existingMethods != null ) {
+                for( String duplicate : boundNames )
+                    results.put(duplicate + " (== " + boundName + ")", existingMethods);
+            }
+        }
     }
 
     /**
      * Helper function that prints some visual text when the guesser is started. Just contains information
      * on the number of methods that are guessed or the concrete method signature (if specified).
-     *
-     * @param candidates HashSet of MethodCandidates to guess
      */
-    public static void printGuessingIntro(Set<MethodCandidate> candidates)
+    public void printGuessingIntro()
     {
         int count = candidates.size();
 
@@ -94,41 +192,40 @@ public class MethodGuesser {
     }
 
     /**
-     * This method starts the actual guessing process. The Set of possible MethodCandidates is split into as many
-     * junks as threads are used. For each thread, one GuessingWorker is created that performs a method call for each
-     * method defined in it's corresponding method set. Each GuessingWorker uses a separate RemoteObjectClient and
-     * therefore a dedicated TCPChannel.
+     * This method starts the actual guessing process. It creates a GuessingWorker for each remoteClient in the clientMap
+     * and for each Set of MethodCandidates in the candidateSets.
      *
-     * Each GuessingWorker obtains a reference to an ArrayList of MethodCandidates. Guessing workers are expected to
-     * push successfully guessed methods into this ArrayList.
-     *
-     * @return ArrayList of successfully guessed methods
+     * @return Map of successfully guessed methods (boundName -> List<MethodCandidates>)
      */
-    public ArrayList<MethodCandidate> guessMethods()
+    public Map<String, ArrayList<MethodCandidate>> guessMethods()
     {
-        Logger.printlnMixedYellow("Guessing methods on bound name:", client.getBoundName(), "...");
+        Logger.printlnYellow("MethodGuesser is running:");
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
 
-        ArrayList<MethodCandidate> existingMethods = new ArrayList<MethodCandidate>();
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
-        List<Set<MethodCandidate>> methodLists = RMGUtils.splitSet(this.candidates, threads);
+        ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods = new ConcurrentHashMap<String, ArrayList<MethodCandidate>>();
+        ExecutorService pool = Executors.newFixedThreadPool(RMGOption.THREADS.getInt());
 
-        for( Set<MethodCandidate> methods : methodLists ) {
-            Runnable r = new GuessingWorker(client.clone(), methods, existingMethods);
-            pool.execute(r);
+        for( RemoteObjectClient client : clientList ) {
+            for( Set<MethodCandidate> candidates : candidateSets ) {
+                Runnable r = new GuessingWorker(client, candidates, client.getBoundName(), existingMethods);
+                pool.execute(r);
+            }
         }
 
         try {
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
         } catch (InterruptedException e) {
              Logger.eprintln("Interrupted!");
         }
 
         Logger.decreaseIndent();
+        Logger.printlnYellow("done.");
         Logger.println("");
 
+        handleDuplicates(existingMethods);
         return existingMethods;
     }
 
@@ -142,29 +239,45 @@ public class MethodGuesser {
      */
     private class GuessingWorker implements Runnable {
 
+        private String boundName;
         private Set<MethodCandidate> candidates;
         private RemoteObjectClient client;
-        private ArrayList<MethodCandidate> existingMethods;
+        private ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods;
 
         /**
          * Initialize the guessing worker with all the required information.
          *
          * @param client RemoteObjectClient to the targeted remote object
-         * @param candidate MethodCanidate to guess
-         * @param existingMethods ArrayList of existing methods. If candidate exists, it is pushed here
+         * @param candidate MethodCanidates to guess
+         * @param boundName BoundName that is currently guessed by this guesser
+         * @param existingMethods Map of existing methods. If a candidate exists, it is pushed here
          */
-        public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates, ArrayList<MethodCandidate> existingMethods)
+        public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates, String boundName, ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods)
         {
             this.client = client;
+            this.boundName = boundName;
             this.candidates = candidates;
             this.existingMethods = existingMethods;
+        }
+
+        /**
+         * This function is called when a guessed MethodCandidate exists. It creates a corresponding log entry and
+         * saves the candidate within the results map.
+         *
+         * @param candidate MethodCandidate that was successfully guessed
+         */
+        private void logHit(MethodCandidate candidate)
+        {
+            Logger.printMixedBlue("[", Logger.padRight(boundName, padding), "] ");
+            Logger.printlnPlainMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
+            existingMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).add(candidate);
         }
 
         /**
          * Invokes the assigned MethodCandidates. Methods are invoked by using a specially crafting argument array.
          * The array is crafted in a way that method calls will never be fully dispatched on the server side while
          * simultaneously preventing corruption of the underlying TCP stream. This allows to reuse the TCP connection
-         * during method guessing which makes the proccess much faster, especially on TLS protected connections.
+         * during method guessing which makes the process much faster, especially on TLS protected connections.
          */
         public void run() {
 
@@ -172,50 +285,37 @@ public class MethodGuesser {
 
                 try {
                     client.guessingCall(candidate);
+                    logHit(candidate); // If there was no exception, the method exists (zero arg / valid call)
 
                 } catch(java.rmi.ServerException e) {
 
                     Throwable cause = ExceptionHandler.getCause(e);
-                    if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().startsWith("unrecognized")) {
-                        /*
-                         * An RMI server throws the UnmarshalException for different reasons while unmarshalling
-                         * the call. One of them is the absence of the transmitted method hash in the method hash
-                         * table stored on the server side. This Exception can safely be ignored, as it just means
-                         * that the guessed method is not available. However, other cases include the unmarshalling
-                         * of the call headers, which could occur when the stream is corrupted. Therefore, we should
-                         * check whether the Exception is a UnmarshalException and verify that it contains the expected
-                         * "unrecognized method hash" message.
-                         */
-                        continue;
+
+                    /*
+                     * In case of an existing method, the specially crafted argument array that is used during guessing calls
+                     * will always lead to one of the following exceptions. These are caught and indicate an existing method.
+                     * One could also attempt to catch the 'unrecognized method hash' exception from the server to match non
+                     * existing methods, but this requires an additional string compare that might be slower.
+                     */
+                    if( cause instanceof java.io.OptionalDataException || cause instanceof java.io.StreamCorruptedException) {
+                        logHit(candidate);
                     }
 
                 } catch(Exception e) {
-                    /*
-                     * All other exceptions cause an error message, but are interpreted as an existing method. The
-                     * idea behind this is that a false-positive is usually better than a false-negative.
-                     */
 
+                    /*
+                     * If we end up here, an unexpected exception was raised that indicates a general error.
+                     */
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
 
                     String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
-                                 +"Method is marked as existent, but this is probably not true.\n"
                                  +"Please report this to improve rmg :)\n"
                                  +"Stack-Trace:\n"
                                  +writer.toString();
 
                     Logger.println(info);
                 }
-
-                /*
-                 * Successfully guessed methods cause a java.rmi.ServerException that is caught above, but not handled.
-                 * The inner cause of these exceptions is expected to be one of java.io.StreamCorruptedException (expected
-                 * for methods that accept primitive arguments only) or java.io.OptionalDataException (expected for methods
-                 * that accept at least one non primitive argument). The exceptions are not caught explicitly, which could
-                 * lead to false positives, but we never observed this in practice so far.
-                 */
-                Logger.printlnMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
-                existingMethods.add(candidate);
             }
         }
     }

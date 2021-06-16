@@ -18,8 +18,6 @@ import de.qtc.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import sun.rmi.server.UnicastRef;
-import sun.rmi.transport.LiveRef;
 
 /**
  * The RemoteObjectClient class is used for method guessing and communication to user defined remote objects.
@@ -28,7 +26,6 @@ import sun.rmi.transport.LiveRef;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-@SuppressWarnings("restriction")
 public class RemoteObjectClient {
 
     private ObjID objID;
@@ -93,38 +90,6 @@ public class RemoteObjectClient {
         this.objID = new ObjID(objID);
 
         remoteRef = getRemoteRef();
-    }
-
-    /**
-     * This constructor allows cloning a RemoteObjectClient. It creates a new RemoteObjectClient based
-     * on the ObjID of the old one. The new client obtains a new TCPEndpoint and therefore communicates
-     * using it's own TCP Channel.
-     *
-     * @param clone RemoteObjectClient that should be cloned
-     */
-    public RemoteObjectClient(RemoteObjectClient clone)
-    {
-        this.rmi = clone.rmi;
-        this.legacyMode = clone.legacyMode;
-
-        try {
-            Field liveRef = UnicastRef.class.getDeclaredField("ref");
-            liveRef.setAccessible(true);
-
-            LiveRef lRef = (LiveRef)liveRef.get(clone.remoteRef);
-            this.objID = lRef.getObjID();
-            this.remoteRef = this.rmi.getRemoteRef(this.objID, lRef.getPort(), lRef.getClientSocketFactory());
-
-        } catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-            ExceptionHandler.unexpectedException(e, "MethodAttacker", "instantiation", true);
-        }
-    }
-
-    /**
-     * Just a wrapper around the RemoteObjectClient clone constructor (see above).
-     */
-    public RemoteObjectClient clone() {
-        return new RemoteObjectClient(this);
     }
 
     /**
