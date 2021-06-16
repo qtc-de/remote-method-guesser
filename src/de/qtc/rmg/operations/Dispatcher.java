@@ -151,6 +151,9 @@ public class Dispatcher {
 
             for(String name : results.keySet()) {
 
+                if( name.contains("(==") )
+                    continue;
+
                 Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
                 Logger.increaseIndent();
 
