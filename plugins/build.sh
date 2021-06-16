@@ -10,7 +10,7 @@ SRC=$2
 JAR=$3
 
 DIR=$(dirname $SRC)
-CLASS=$(basename $SRC | cut -d. -f1)
+CLASS=$(basename $SRC .java)
 MANIFEST="${DIR}/RMG-MANIFEST.MF"
 
 echo "RmgPluginClass: $CLASS" > $MANIFEST
