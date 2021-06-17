@@ -866,6 +866,10 @@ public class RMGUtils {
             }
         }
 
+        for(int i = 0; i < count && it.hasNext(); i++) {
+            result.get(i).add(it.next());
+        }
+
         return result;
     }
 
