@@ -374,7 +374,7 @@ public class ArgumentParser {
     {
         String helpString = "rmg [options] <ip> <port> <action>\n\n"
                 +"rmg v" + ArgumentParser.class.getPackage().getImplementationVersion()
-                +" - Identify common misconfigurations on Java RMI endpoints.\n\n"
+                +" - Java RMI Vulnerability Scanner\n\n"
                 +"Positional Arguments:\n"
                 +"    ip                              IP address of the target\n"
                 +"    port                            Port of the RMI registry\n"
