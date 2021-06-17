@@ -271,42 +271,36 @@ The following listing shows an example run of *remote-method-guessers* ``guess``
 ```console
 [qtc@kali ~]$ rmg --ssl 172.17.0.2 1090 guess --zero-arg
 [+] Reading method candidates from internal wordlist rmg.txt
-[+]     752 methods were successfully parsed.
+[+]   757 methods were successfully parsed.
 [+] Reading method candidates from internal wordlist rmiscout.txt
-[+]     2550 methods were successfully parsed.
+[+]   2550 methods were successfully parsed.
 [+]
-[+] Starting Method Guessing on 3294 method signature(s).
+[+] Starting Method Guessing on 3299 method signature(s).
 [+]
-[+]     Guessing methods on bound name: plain-server ...
-[+]
-[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]         HIT! Method with signature String execute(String dummy) exists!
-[+]
-[+]     Guessing methods on bound name: ssl-server ...
-[+]
-[+]         HIT! Method with signature String system(String[] dummy) exists!
-[+]         HIT! Method with signature int execute(String dummy) exists!
-[+]         HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+]
-[+]     Guessing methods on bound name: secure-server ...
-[+]
-[+]         HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+]         HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
-[+]         HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+]
+[+]   MethodGuesser is running:
+[+]     --------------------------------
+[+]     [ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
+[+]     [ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
+[+]     [ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+]     [ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+]     [ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+]     [ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
+[+]     [ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+]     [ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+]   done.
 [+]
 [+] Listing successfully guessed methods:
-[+]     -  ssl-server
-[+]         --> String system(String[] dummy)
-[+]         --> int execute(String dummy)
-[+]         --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-[+]     -  plain-server
-[+]         --> String system(String dummy, String[] dummy2)
-[+]         --> String execute(String dummy)
-[+]     -  secure-server
-[+]         --> void updatePreferences(java.util.ArrayList dummy1)
-[+]         --> void logMessage(int dummy1, Object dummy2)
-[+]         --> String login(java.util.HashMap dummy1)
+[+]   - plain-server
+[+]     --> String system(String dummy, String[] dummy2)
+[+]     --> String execute(String dummy)
+[+]   - secure-server
+[+]     --> void logMessage(int dummy1, Object dummy2)
+[+]     --> void updatePreferences(java.util.ArrayList dummy1)
+[+]     --> String login(java.util.HashMap dummy1)
+[+]   - ssl-server
+[+]     --> String system(String[] dummy)
+[+]     --> int execute(String dummy)
+[+]     --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 ```
 
 #### 9010 Registry
@@ -314,40 +308,30 @@ The following listing shows an example run of *remote-method-guessers* ``guess``
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 guess --zero-arg
 [+] Reading method candidates from internal wordlist rmg.txt
-[+]     752 methods were successfully parsed.
+[+]     757 methods were successfully parsed.
 [+] Reading method candidates from internal wordlist rmiscout.txt
 [+]     2550 methods were successfully parsed.
 [+]
-[+] Starting Method Guessing on 3294 method signature(s).
+[+] Starting Method Guessing on 3299 method signature(s).
 [+]
-[+]     Guessing methods on bound name: plain-server2 ...
-[+]
-[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]         HIT! Method with signature String execute(String dummy) exists!
-[+]
-[+]     Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+]     You can use --no-legacy to prevent this.
-[+]     Guessing methods on bound name: legacy-service ...
-[+]
-[+]         HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+]         HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
-[+]         HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+]
-[+]     Guessing methods on bound name: plain-server ...
-[+]
-[+]         HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]         HIT! Method with signature String execute(String dummy) exists!
-[+]
+[+]     MethodGuesser is running:
+[+]         --------------------------------
+[+]         [ legacy-service ] HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
+[+]         [ legacy-service ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+]         [ legacy-service ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+]         [ plain-server2  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+]         [ plain-server2  ] HIT! Method with signature String execute(String dummy) exists!
+[+]     done.
 [+]
 [+] Listing successfully guessed methods:
-[+]     -  plain-server2
-[+]         --> String system(String dummy, String[] dummy2)
-[+]         --> String execute(String dummy)
-[+]     -  plain-server
-[+]         --> String system(String dummy, String[] dummy2)
-[+]         --> String execute(String dummy)
-[+]     -  legacy-service
-[+]         --> String login(java.util.HashMap dummy1)
+[+]     - legacy-service
 [+]         --> void logMessage(int dummy1, String dummy2)
 [+]         --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+]         --> String login(java.util.HashMap dummy1)
+[+]     - plain-server (== plain-server2)
+[+]         --> String system(String dummy, String[] dummy2)
+[+]         --> String execute(String dummy)
+[+]     - plain-server2
+[+]         --> String system(String dummy, String[] dummy2)
+[+]         --> String execute(String dummy)
 ```
