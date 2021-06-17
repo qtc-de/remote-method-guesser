@@ -32,27 +32,27 @@ public class Logger {
         Logger.enabled = true;
     }
 
-    private static String blue(String msg)
+    public static String blue(String msg)
     {
         return ANSI_BLUE + msg + ANSI_RESET;
     }
 
-    private static String yellow(String msg)
+    public static String yellow(String msg)
     {
         return ANSI_YELLOW + msg + ANSI_RESET;
     }
 
-    private static String red(String msg)
+    public static String red(String msg)
     {
         return ANSI_RED + msg + ANSI_RESET;
     }
 
-    private static String purple(String msg)
+    public static String purple(String msg)
     {
         return ANSI_PURPLE + msg + ANSI_RESET;
     }
 
-    private static String green(String msg)
+    public static String green(String msg)
     {
         return ANSI_GREEN + msg + ANSI_RESET;
     }

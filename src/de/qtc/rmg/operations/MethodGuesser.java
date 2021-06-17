@@ -268,8 +268,8 @@ public class MethodGuesser {
          */
         private void logHit(MethodCandidate candidate)
         {
-            Logger.printMixedBlue("[", Logger.padRight(boundName, padding), "] ");
-            Logger.printlnPlainMixedYellow("HIT! Method with signature", candidate.getSignature(), "exists!");
+            String prefix = Logger.blue("[ " + Logger.padRight(boundName, padding) + " ] ");
+            Logger.printlnMixedYellow(prefix + "HIT! Method with signature", candidate.getSignature(), "exists!");
             existingMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).add(candidate);
         }
 
