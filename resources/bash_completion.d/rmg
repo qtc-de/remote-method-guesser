@@ -99,6 +99,7 @@ function _rmg() {
 		opts="$opts --follow"
 		opts="$opts --force-guessing"
 		opts="$opts --force-legacy"
+		opts="$opts --guess-duplicates"
 		opts="$opts --help"
 		opts="$opts --localhost-bypass"
 		opts="$opts --no-color"
