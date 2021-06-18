@@ -57,6 +57,7 @@ public class MethodGuesser {
     private List<RemoteObjectClient> clientList;
     private HashMap<String, String[]> duplicateMap;
     private List<Set<MethodCandidate>> candidateSets;
+    private Map<String, ArrayList<MethodCandidate>> knownMethods;
 
     /**
      * To create a MethodGuesser object, you usually pass the obtained information from an RMI registry endpoint.
@@ -81,11 +82,19 @@ public class MethodGuesser {
         this.candidates = candidates;
 
         this.duplicateMap = new HashMap<String, String[]>();
+        this.knownMethods = new HashMap<String,ArrayList<MethodCandidate>>();
         this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getInt());
 
         HashMap<String, String> boundClasses = (HashMap<String, String>)classArray[1];
+
         if( classArray[0].size() != 0 && RMGOption.FORCE_GUESSING.getBool() )
             boundClasses.putAll(classArray[0]);
+
+        else
+            for( Map.Entry<String, String> entry : classArray[0].entrySet() ) {
+                logKnown(entry.getKey());
+                RMGUtils.addKnownMethods(entry.getKey(), entry.getValue(), knownMethods);
+            }
 
         this.clientList = new ArrayList<RemoteObjectClient>();
         initClientList(boundClasses);
@@ -142,6 +151,23 @@ public class MethodGuesser {
     {
         if( padding < value.length() )
             padding = value.length();
+    }
+
+    /**
+     * When known remote objects are encountered and --force-guessing was not used, the corresponding remote methods
+     * are added automatically to the list of guessed methods. This function just prints the according user information.
+     *
+     * @param boudnName To include into the log
+     */
+    private void logKnown(String boudnName)
+    {
+        Logger.println("");
+        Logger.printlnBlue("Info:");
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("Bound name", boudnName, "uses a known remote object class.");
+        Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
+        Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
+        Logger.decreaseIndent();
     }
 
     /**
@@ -226,6 +252,7 @@ public class MethodGuesser {
         Logger.println("");
 
         handleDuplicates(existingMethods);
+        existingMethods.putAll(knownMethods);
         return existingMethods;
     }
 

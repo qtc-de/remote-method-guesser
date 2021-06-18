@@ -5,10 +5,10 @@ import java.lang.reflect.Method;
 import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -657,7 +657,7 @@ public class RMGUtils {
      * @param className name of the class implemented by the bound name
      * @param guessedMethods list of successfully guessed methods (bound name -> list)
      */
-    public static void addKnownMethods(String boundName, String className, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static void addKnownMethods(String boundName, String className, Map<String,ArrayList<MethodCandidate>> guessedMethods)
     {
         try {
             CtClass knownClass = pool.getCtClass(className);
