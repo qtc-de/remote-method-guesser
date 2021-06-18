@@ -91,10 +91,7 @@ public class MethodGuesser {
             boundClasses.putAll(classArray[0]);
 
         else
-            for( Map.Entry<String, String> entry : classArray[0].entrySet() ) {
-                logKnown(entry.getKey());
-                RMGUtils.addKnownMethods(entry.getKey(), entry.getValue(), knownMethods);
-            }
+            handleKnownMethods(classArray[0]);
 
         this.clientList = new ArrayList<RemoteObjectClient>();
         initClientList(boundClasses);
@@ -155,19 +152,41 @@ public class MethodGuesser {
 
     /**
      * When known remote objects are encountered and --force-guessing was not used, the corresponding remote methods
-     * are added automatically to the list of guessed methods. This function just prints the according user information.
+     * are added automatically to the list of guessed methods. This function performs this task and also prints according
+     * information for the user.
      *
-     * @param boudnName To include into the log
+     * @param classArray Map of boundName -> knownClass pairs
      */
-    private void logKnown(String boudnName)
+    private void handleKnownMethods(HashMap<String,String> classArray)
     {
+        if( classArray.size() == 0 )
+            return;
+
+        ArrayList<String> knownBoundNames = new ArrayList<String>();
+
+        for( Map.Entry<String, String> entry : classArray.entrySet() ) {
+            knownBoundNames.add(entry.getKey() + " (" + entry.getValue() + ")");
+            RMGUtils.addKnownMethods(entry.getKey(), entry.getValue(), knownMethods);
+        }
+
         Logger.println("");
         Logger.printlnBlue("Info:");
         Logger.increaseIndent();
-        Logger.printlnMixedYellow("Bound name", boudnName, "uses a known remote object class.");
+        Logger.printlnBlue("--------------------------------");
+
+        Logger.println("The following bound names use a known remote object class.");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        for(String boundName : knownBoundNames )
+            Logger.printlnBlue("- " + boundName);
+
+        Logger.decreaseIndent();
+        Logger.println("");
         Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
         Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
         Logger.decreaseIndent();
+        Logger.println("");
     }
 
     /**
@@ -204,6 +223,9 @@ public class MethodGuesser {
             Logger.eprintlnMixedYellow("List of candidate methods contains", "0", "elements.");
             Logger.eprintln("Please use a valid and non empty wordlist file.");
             RMGUtils.exit();
+
+        } else if( clientList.size() == 0 ) {
+            return;
         }
 
         Logger.println("");
@@ -212,9 +234,6 @@ public class MethodGuesser {
         if( count == 1 ) {
             Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
         }
-
-        Logger.println("");
-        Logger.increaseIndent();
     }
 
     /**
@@ -225,6 +244,12 @@ public class MethodGuesser {
      */
     public Map<String, ArrayList<MethodCandidate>> guessMethods()
     {
+        Logger.println("");
+
+        if( clientList.size() == 0 )
+            return knownMethods;
+
+        Logger.increaseIndent();
         Logger.printlnYellow("MethodGuesser is running:");
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
