@@ -648,8 +648,8 @@ public class RMGUtils {
 
     /**
      * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
-     * The known remote object classes are looked by by using the CtClassPool. Afterwards, all implemented interfaces
-     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmiRemote (this
+     * The known remote object classes are looked up by using the CtClassPool. Afterwards, all implemented interfaces
+     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmi.Remote (this
      * is required for all methods, that can be called from remote). From these interface,s all methods are obtained
      * and added to the list of successfully guessed methods.
      *
@@ -662,19 +662,41 @@ public class RMGUtils {
         try {
             CtClass knownClass = pool.getCtClass(className);
 
-            for(CtClass intf : knownClass.getInterfaces()) {
+            if( knownClass.isInterface() )
+                addKnownMethods(knownClass, boundName, guessedMethods);
 
-                if(! isAssignableFrom(intf, "java.rmi.Remote"))
-                    continue;
+            else
+                for(CtClass intf : knownClass.getInterfaces()) {
 
-                CtMethod[] knownMethods = intf.getDeclaredMethods();
-                ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
+                    if(! isAssignableFrom(intf, "java.rmi.Remote"))
+                        continue;
 
-                for(CtMethod knownMethod: knownMethods)
-                    knownMethodCandidates.add(new MethodCandidate(knownMethod));
+                    addKnownMethods(intf, boundName, guessedMethods);
+                }
 
-                guessedMethods.put(boundName, knownMethodCandidates);
-            }
+        } catch(Exception e) {
+            ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
+        }
+    }
+
+    /**
+     * Same as the previous addKnownMethods function, but takes the corresponding interface as argument directly.
+     * This function is called by the previous addKnownMethods function to add the methods.
+     *
+     * @param intf Interface class to add methods from
+     * @param boundName bound name that is using the known class
+     * @param guessedMethods list of successfully guessed methods (bound name -> list)
+     */
+    public static void addKnownMethods(CtClass intf, String boundName, Map<String,ArrayList<MethodCandidate>> guessedMethods)
+    {
+        try {
+            CtMethod[] knownMethods = intf.getDeclaredMethods();
+            ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
+
+            for(CtMethod knownMethod: knownMethods)
+                knownMethodCandidates.add(new MethodCandidate(knownMethod));
+
+            guessedMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).addAll(knownMethodCandidates);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
