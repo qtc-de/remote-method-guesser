@@ -344,7 +344,7 @@ public class RemoteObjectClient {
      */
     private RemoteRef getRemoteRefByName()
     {
-        boolean isLegacy = RMGUtils.isLegacy(this.remoteClass, this.legacyMode);
+        boolean isLegacy = RMGUtils.isLegacy(this.remoteClass, this.legacyMode, true);
 
         Remote instance = null;
         RemoteRef remoteReference = null;

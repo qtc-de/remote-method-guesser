@@ -205,7 +205,7 @@ public class SampleWriter {
      */
     public void createSample(String className, boolean unknownClass, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
         if(isLegacy && unknownClass)
             className += "_Interface";
 
@@ -277,7 +277,7 @@ public class SampleWriter {
      */
     public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode);
+        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
 
         if(isLegacy) {
             createInterfaceSample(boundName, className + "_Interface", methods);
