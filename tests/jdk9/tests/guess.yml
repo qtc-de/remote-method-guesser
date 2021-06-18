@@ -69,9 +69,6 @@ tests:
             - /rmg-samples/plain-server2/IPlainServer.java
             - /rmg-samples/plain-server2/system/system.java
             - /rmg-samples/plain-server2/execute/execute.java
-            - /rmg-samples/plain-server/IPlainServer.java
-            - /rmg-samples/plain-server/system/system.java
-            - /rmg-samples/plain-server/execute/execute.java
             - /rmg-samples/legacy-service/LegacyServiceImpl_Stub_Interface.java
             - /rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
             - /rmg-samples/legacy-service/login/login.java
