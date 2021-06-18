@@ -336,6 +336,39 @@ with non primitive argument types are guessed by extending the ``TC_BLOCKDATA`` 
 point where the corresponding remote method expects a non primitive type).
 
 
+### About Threading
+
+----
+
+*Java RMI* uses threading by default and creates a separate thread for each connection. If a *remote method* is invoked multiple times simultaneously,
+these method invocations are executed in parallel on the server side. This behavior is independent of whether the method invocations originate from
+the same or different clients. Making *remote objects* thread safe is the responsibility of the developer.
+
+For method guessing, the multi threaded behavior of *Java RMI* is nice and we may be able to speedup the ``guess`` action by using multiple
+threads. Initially we thought that one has to create separate [TCPEndpoint](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/transport/tcp/TCPEndpoint.java)
+objects on the client side to profit from multiple threads, but this seems not to be true. A ``TCPEndpoint`` object just saves the remote host,
+port and the ``RMIClientSocketFactory`` that should be used to establish connections. Therefore, a ``TCPEndpoint`` is not bound to exactly one
+*TCP connection*, as we expected earlier, but is used as a socket factory instead.
+
+When an *RMI client* dispatches a call, it calls the ``newConnection`` method from the [TCPChannel](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/transport/tcp/TCPChannel.java)
+class. This function checks whether there is already a free and reusable connection and creates a new one if this is not the case.
+The connection is then used to perform the *RMI call* and is freed afterwards. If no exception occurred, the connection is marked as
+*reusable* before it is freed, which causes the connection to be cached for later calls. If another call is dispatched (within
+the cache interval for *RMI connections*) the *RMI client* will find the cached connection and reuse it for the call. This is closely related
+to the *stream corruption prevention* discussed above, as *stream corruptions* make a stream not reusable.
+
+The behavior described above is also true for multiple threads operating on the same ``RemoteObject``. When two threads call a method on
+the same ``RemoteObject`` in parallel, they will both use a separate *TCP connection* and create a new thread on the server side. If the
+corresponding method calls don't cause the connections to be in a corrupted state, they will be cached and reused for later calls that are
+requested within the caching interval. This makes the implementation of multi threaded guessing easy, as the *RMI runtime* handles most of
+the complicated stuff.
+
+To get an optimal distribution of tasks that is independent of the number of *bound names*, *rmg v3.3.0* divides the method candidates obtained
+from the wordlists into as many parts as threads are available. For each *bound name* - *wordlist* combination, one task is created and executed
+within a thread pool. Or, to put it another way: *rmg v3.3.0* distributes guessing in ``n * t`` tasks, where ``n`` is the number of *bound names*
+and ``t`` is the number of threads. These tasks are executed in a thread pool with ``t`` worker threads.
+
+
 ### Conclusion
 
 ----
