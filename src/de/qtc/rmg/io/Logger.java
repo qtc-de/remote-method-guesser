@@ -429,6 +429,14 @@ public class Logger {
         elog(eprefix() + yellow(first) + " " + second + " " + yellow(third), false);
     }
 
+    public static void printInfoBox()
+    {
+        Logger.println("");
+        Logger.printlnBlue("Info:");
+        Logger.increaseIndent();
+        Logger.printlnBlue("--------------------------------");
+    }
+
     public static void statusVulnerable()
     {
         printlnMixedRed("  Vulnerability Status:", "Vulnerable");

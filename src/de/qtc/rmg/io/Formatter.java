@@ -84,6 +84,7 @@ public class Formatter {
         }
 
         Logger.println("Listing successfully guessed methods:");
+        Logger.println("");
         Logger.increaseIndent();
 
         SortedSet<String> boundNames = new TreeSet<String>(results.keySet());

@@ -73,6 +73,7 @@ public class WordlistHandler {
         if( !zeroArg ) {
 
             Logger.disableIfNotVerbose();
+            Logger.printInfoBox();
             Logger.printlnMixedYellow("Methods that take zero arguments are ignored by default. Use", "--zero-args", "to guess them.");
             Logger.increaseIndent();
             Set<MethodCandidate> voidMethods = candidates.stream().filter(m -> m.isVoid()).collect(Collectors.toSet());
@@ -83,6 +84,7 @@ public class WordlistHandler {
             }
 
             candidates.removeAll(voidMethods);
+            Logger.decreaseIndent();
             Logger.decreaseIndent();
             Logger.enable();
         }

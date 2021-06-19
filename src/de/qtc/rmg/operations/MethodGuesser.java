@@ -132,10 +132,14 @@ public class MethodGuesser {
                 if( RMGOption.GUESS_DUPLICATES.getBool() )
                     continue;
 
-                duplicateMap.put(boundName, (String[]) Arrays.copyOfRange(boundNamesStr, 1, boundNamesStr.length));
+                if( boundNamesStr.length > 1 )
+                    duplicateMap.put(boundName, (String[]) Arrays.copyOfRange(boundNamesStr, 1, boundNamesStr.length));
+
                 break;
             }
         }
+
+        printDuplicates();
     }
 
     /**
@@ -148,6 +152,38 @@ public class MethodGuesser {
     {
         if( padding < value.length() )
             padding = value.length();
+    }
+
+    private void printDuplicates()
+    {
+        if( duplicateMap.size() == 0 )
+            return;
+
+        Logger.disableIfNotVerbose();
+        Logger.printInfoBox();
+
+        Logger.println("The following bound names use the same remote class:");
+        Logger.println("");
+        Logger.increaseIndent();
+
+        for( Map.Entry<String, String[]> entry : duplicateMap.entrySet() ) {
+
+            Logger.printlnMixedBlue("-", entry.getKey());
+            Logger.increaseIndent();
+
+            for(String dup : entry.getValue() ) {
+                Logger.printlnMixedYellow("-->", dup);
+            }
+
+            Logger.decreaseIndent();
+        }
+
+        Logger.decreaseIndent();
+        Logger.println("");
+        Logger.printlnMixedBlue("Method guessing", "is skipped", "for duplicate remote classes.");
+        Logger.printlnMixedYellow("You can use", "--guess-duplicates", "to guess them anyway.");
+        Logger.decreaseIndent();
+        Logger.enable();
     }
 
     /**
@@ -169,17 +205,15 @@ public class MethodGuesser {
             RMGUtils.addKnownMethods(entry.getKey(), entry.getValue(), knownMethods);
         }
 
-        Logger.println("");
-        Logger.printlnBlue("Info:");
-        Logger.increaseIndent();
-        Logger.printlnBlue("--------------------------------");
+        Logger.disableIfNotVerbose();
+        Logger.printInfoBox();
 
-        Logger.println("The following bound names use a known remote object class.");
+        Logger.println("The following bound names use a known remote object class:");
         Logger.println("");
         Logger.increaseIndent();
 
         for(String boundName : knownBoundNames )
-            Logger.printlnBlue("- " + boundName);
+            Logger.printlnMixedBlue("-", boundName);
 
         Logger.decreaseIndent();
         Logger.println("");
@@ -187,6 +221,7 @@ public class MethodGuesser {
         Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
         Logger.decreaseIndent();
         Logger.println("");
+        Logger.enable();
     }
 
     /**
@@ -199,6 +234,7 @@ public class MethodGuesser {
     private void handleDuplicates(Map<String, ArrayList<MethodCandidate>> results)
     {
         for( Map.Entry<String, String[]> entry: duplicateMap.entrySet()) {
+
             String boundName = entry.getKey();
             String[] boundNames = entry.getValue();
 

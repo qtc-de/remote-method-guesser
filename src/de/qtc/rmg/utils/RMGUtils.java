@@ -624,8 +624,10 @@ public class RMGUtils {
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
             if( Logger.verbose && verbose) {
+                Logger.printInfoBox();
                 Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
+                Logger.printlnMixedYellow("You can use", "--no-legacy", "to prevent this.");
+                Logger.decreaseIndent();
             }
             return true;
         }
