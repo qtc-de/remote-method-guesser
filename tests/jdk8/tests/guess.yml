@@ -13,6 +13,7 @@ tests:
     command: '${BASE-CMD}'
     arguments:
       - guess
+      - --verbose
     validators:
       - error: False
       - contains:
@@ -33,6 +34,7 @@ tests:
     arguments:
       - guess
       - --create-samples
+      - --verbose
     validators:
       - error: False
       - contains:
