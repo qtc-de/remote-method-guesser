@@ -665,14 +665,13 @@ public class RMGUtils {
             if( knownClass.isInterface() )
                 addKnownMethods(knownClass, boundName, guessedMethods);
 
-            else
-                for(CtClass intf : knownClass.getInterfaces()) {
+            for(CtClass intf : knownClass.getInterfaces()) {
 
-                    if(! isAssignableFrom(intf, "java.rmi.Remote"))
-                        continue;
+                if(! isAssignableFrom(intf, "java.rmi.Remote"))
+                    continue;
 
-                    addKnownMethods(intf, boundName, guessedMethods);
-                }
+                addKnownMethods(intf, boundName, guessedMethods);
+            }
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
