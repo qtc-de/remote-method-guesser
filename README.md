@@ -278,6 +278,7 @@ on the server side. You can enable guessing on zero argument methods by using th
 [+] 	done.
 [+]
 [+] Listing successfully guessed methods:
+[+]
 [+] 	- legacy-service
 [+] 		--> void logMessage(int dummy1, String dummy2)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)

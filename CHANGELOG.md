@@ -6,11 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.3.0] - June 20, 2021
+
+### Added
+
+* Added the ``--verbose`` option. The output of *rmg* is now less verbose, but you can
+  get the full details by using this option.
+* Added the ``--guess-duplicate`` option. *rmg-v3.3.0* no longer guesses methods on identical
+  remote classes (only one instance will be used, the others are considered duplicates).
+  If you want to guess them anyway, you can use this option.
+* Added documentation on [method guessing](/docs/rmg/method-guessing.md)
+
+### Changed
+
+* Changed the underlying implementation of method guessing. The new implementation is
+  way faster an reduces the runtime of the ``guess`` action up to a factor of ``8``.
+  The new implementation is described in more detail here: [method guessing](/docs/rmg/method-guessing.md)
+* Changed the wordlist format slightly. The overall format stays the same, but the meaning
+  of one field was changed. Old wordlists (in optimized format) should be updated.
+* Changed option implementation. Options are now handled by an *Enum*. Although this makes only
+  a difference internally.
+* Some small bug fixes
+
+
+
 ## [3.2.0] - Apr 02, 2021
 
 ### Added
 
-* Add ``call`` operation to regulary call remote methods
+* Add ``call`` operation to regularly call remote methods
   * Can be used with bound names (``--bound-name``)
   * And also with ObjID values (``--objid``)
 * Add plugin system to allow custom gadgets, call arguments and return handlers
@@ -66,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add ``--stack-trace`` options for easier debugging
 * Add improved error and exception handling
 * Add options to use different *registry* / *DGC* methods during enum action
-* Add documentation to the source code Oo
+* Add documentation to the source code
 * Add some other RMI related documentation
 
 ### Removed
