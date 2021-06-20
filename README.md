@@ -545,23 +545,26 @@ and ``--bound-name`` options, it is also possible to generate code only for one 
 to invoke the ``execute`` method on the ``plain-server`` bound name:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
 [qtc@kali ~]$ rmg 172.17.0.2 9010 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
-[+] 
+[+]
 [+] Starting Method Guessing on 1 method signature(s).
 [+] Method signature: String execute(String dummy).
-[+] 
-[+] 	Guessing methods on bound name: plain-server ...
-[+] 	
-[+] 		HIT! Method with signature String execute(String dummy) exists!
-[+] 	
-[+] 
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server ] HIT! Method with signature String execute(String dummy) exists!
+[+] 	done.
+[+]
 [+] Listing successfully guessed methods:
-[+] 	-  plain-server
+[+]
+[+] 	- plain-server
 [+] 		--> String execute(String dummy)
-[+] 
+[+]
 [+] Starting creation of sample files:
-[+] 
+[+]
+[+] 	Sample folder /home/qtc/rmg-samples does not exist.
+[+] 	Creating sample folder.
+[+]
 [+] 	Creating samples for bound name plain-server.
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
