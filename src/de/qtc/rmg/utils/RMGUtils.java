@@ -5,8 +5,11 @@ import java.lang.reflect.Method;
 import java.rmi.Remote;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import de.qtc.rmg.internal.ExceptionHandler;
@@ -620,9 +623,11 @@ public class RMGUtils {
     public static boolean isLegacy(String className, int legacyMode, boolean verbose)
     {
         if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-            if( verbose) {
+            if( Logger.verbose && verbose) {
+                Logger.printInfoBox();
                 Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-                Logger.printlnMixedBlue("You can use", "--no-legacy", "to prevent this.");
+                Logger.printlnMixedYellow("You can use", "--no-legacy", "to prevent this.");
+                Logger.decreaseIndent();
             }
             return true;
         }
@@ -645,8 +650,8 @@ public class RMGUtils {
 
     /**
      * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
-     * The known remote object classes are looked by by using the CtClassPool. Afterwards, all implemented interfaces
-     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmiRemote (this
+     * The known remote object classes are looked up by using the CtClassPool. Afterwards, all implemented interfaces
+     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmi.Remote (this
      * is required for all methods, that can be called from remote). From these interface,s all methods are obtained
      * and added to the list of successfully guessed methods.
      *
@@ -654,24 +659,45 @@ public class RMGUtils {
      * @param className name of the class implemented by the bound name
      * @param guessedMethods list of successfully guessed methods (bound name -> list)
      */
-    public static void addKnownMethods(String boundName, String className, HashMap<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static void addKnownMethods(String boundName, String className, Map<String,ArrayList<MethodCandidate>> guessedMethods)
     {
         try {
             CtClass knownClass = pool.getCtClass(className);
+
+            if( knownClass.isInterface() )
+                addKnownMethods(knownClass, boundName, guessedMethods);
 
             for(CtClass intf : knownClass.getInterfaces()) {
 
                 if(! isAssignableFrom(intf, "java.rmi.Remote"))
                     continue;
 
-                CtMethod[] knownMethods = intf.getDeclaredMethods();
-                ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
-
-                for(CtMethod knownMethod: knownMethods)
-                    knownMethodCandidates.add(new MethodCandidate(knownMethod));
-
-                guessedMethods.put(boundName, knownMethodCandidates);
+                addKnownMethods(intf, boundName, guessedMethods);
             }
+
+        } catch(Exception e) {
+            ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
+        }
+    }
+
+    /**
+     * Same as the previous addKnownMethods function, but takes the corresponding interface as argument directly.
+     * This function is called by the previous addKnownMethods function to add the methods.
+     *
+     * @param intf Interface class to add methods from
+     * @param boundName bound name that is using the known class
+     * @param guessedMethods list of successfully guessed methods (bound name -> list)
+     */
+    public static void addKnownMethods(CtClass intf, String boundName, Map<String,ArrayList<MethodCandidate>> guessedMethods)
+    {
+        try {
+            CtMethod[] knownMethods = intf.getDeclaredMethods();
+            ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
+
+            for(CtMethod knownMethod: knownMethods)
+                knownMethodCandidates.add(new MethodCandidate(knownMethod));
+
+            guessedMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).addAll(knownMethodCandidates);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
@@ -835,5 +861,81 @@ public class RMGUtils {
         }
         catch (NotFoundException e) {}
         return false;
+    }
+
+    /**
+     * Divide a Set into n separate Sets, where n is the number specified within the count argument.
+     * Basically copied from: https://stackoverflow.com/questions/16449644/how-can-i-take-a-java-set-of-size-x-and-break-into-x-y-sets
+     *
+     * @param <T>
+     * @param original Set that should be divided
+     * @param count Number of Sets to divide into
+     * @return List of n separate sets, where n is equal to count
+     */
+    public static <T> List<Set<T>> splitSet(Set<T> original, int count)
+    {
+        ArrayList<Set<T>> result = new ArrayList<Set<T>>(count);
+        Iterator<T> it = original.iterator();
+
+        int each = original.size() / count;
+
+        for (int i = 0; i < count; i++) {
+
+            HashSet<T> s = new HashSet<T>(original.size() / count + 1);
+            result.add(s);
+
+            for (int j = 0; j < each && it.hasNext(); j++) {
+                s.add(it.next());
+            }
+        }
+
+        for(int i = 0; i < count && it.hasNext(); i++) {
+            result.get(i).add(it.next());
+        }
+
+        return result;
+    }
+
+    /**
+     * Takes an array of types and returns the amount of bytes before the first non primitive type.
+     * If all types are primitive, it returns -1.
+     *
+     * @param types Array of types
+     * @return bytes before the first non primitive type. If all types are primitive, returns -1
+     */
+    public static int getPrimitiveSize(CtClass[] types)
+    {
+        int returnValue = 0;
+
+        for(CtClass ct : types) {
+
+            if (ct.isPrimitive()) {
+
+                if (ct == CtPrimitiveType.intType) {
+                    returnValue += Integer.BYTES;
+                } else if (ct == CtPrimitiveType.booleanType) {
+                    returnValue += 1;
+                } else if (ct == CtPrimitiveType.byteType) {
+                    returnValue += Byte.BYTES;
+                } else if (ct == CtPrimitiveType.charType) {
+                    returnValue += Character.BYTES;
+                } else if (ct == CtPrimitiveType.shortType) {
+                    returnValue += Short.BYTES;
+                } else if (ct == CtPrimitiveType.longType) {
+                    returnValue += Long.BYTES;
+                } else if (ct == CtPrimitiveType.floatType) {
+                    returnValue += Float.BYTES;
+                } else if (ct == CtPrimitiveType.doubleType) {
+                    returnValue += Double.BYTES;
+                } else {
+                    throw new Error("unrecognized primitive type: " + ct);
+                }
+
+            } else {
+                return returnValue;
+            }
+        }
+
+        return -1;
     }
 }

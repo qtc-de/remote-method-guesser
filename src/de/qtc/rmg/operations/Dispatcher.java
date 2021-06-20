@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import de.qtc.rmg.annotations.Parameters;
@@ -12,6 +13,7 @@ import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.ArgumentParser;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.SampleWriter;
@@ -42,7 +44,7 @@ public class Dispatcher {
     private String[] boundNames = null;
     private MethodCandidate candidate = null;
     private HashMap<String,String> allClasses = null;
-    private ArrayList<HashMap<String,String>> boundClasses = null;
+    private HashMap<String,String>[] boundClasses = null;
 
     /**
      * Creates the dispatcher object.
@@ -52,7 +54,7 @@ public class Dispatcher {
     public Dispatcher(ArgumentParser p)
     {
         this.p = p;
-        rmi = new RMIWhisperer(p.getHost(), p.getPort(), (boolean)p.get("ssl"), (boolean)p.get("follow"));
+        rmi = new RMIWhisperer(p.getHost(), p.getPort(), RMGOption.SSL.getBool(), RMGOption.FOLLOW.getBool());
 
         if(p.containsMethodSignature())
             this.createMethodCandidate();
@@ -72,11 +74,11 @@ public class Dispatcher {
             return;
 
         rmi.locateRegistry();
-        boundNames = rmi.getBoundNames((String)p.get("bound-name"));
+        boundNames = rmi.getBoundNames(RMGOption.BOUND_NAME.getString());
 
         boundClasses = rmi.getClassNames(boundNames);
-        allClasses = (HashMap<String, String>)boundClasses.get(0).clone();
-        allClasses.putAll(boundClasses.get(1));
+        allClasses = (HashMap<String, String>)boundClasses[0].clone();
+        allClasses.putAll(boundClasses[1]);
     }
 
     /**
@@ -84,7 +86,7 @@ public class Dispatcher {
      */
     private void createMethodCandidate()
     {
-        String signature = (String)p.get("signature");
+        String signature = RMGOption.SIGNATURE.getString();
 
         try {
             candidate = new MethodCandidate(signature);
@@ -105,7 +107,7 @@ public class Dispatcher {
      */
     private RemoteObjectClient getRemoteObjectClient(String boundName)
     {
-        Object objID = p.get("objid");
+        Object objID = RMGOption.OBJID.value;
 
         if(objID != null) {
             return new RemoteObjectClient(rmi, (int)objID, p.getLegacyMode());
@@ -129,12 +131,12 @@ public class Dispatcher {
      *
      * @param results HashMap of bound name -> [MethodCanidate] pairs
      */
-    private void writeSamples(HashMap<String,ArrayList<MethodCandidate>> results)
+    private void writeSamples(Map<String,ArrayList<MethodCandidate>> results)
     {
-        String templateFolder = (String)p.get("template-folder");
-        String sampleFolder = (String)p.get("sample-folder");
-        boolean sslValue = (boolean)p.get("ssl");
-        boolean followRedirect = (boolean)p.get("follow");
+        String templateFolder = RMGOption.TEMPLATE_FOLDER.getString();
+        String sampleFolder = RMGOption.SAMPLE_FOLDER.getString();
+        boolean sslValue = RMGOption.SSL.getBool();
+        boolean followRedirect = RMGOption.FOLLOW.getBool();
         int legacyMode = p.getLegacyMode();
 
         Logger.println("");
@@ -149,12 +151,15 @@ public class Dispatcher {
 
             for(String name : results.keySet()) {
 
+                if( name.contains("(==") )
+                    continue;
+
                 Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
                 Logger.increaseIndent();
 
                 className = allClasses.get(name);
 
-                if(boundClasses.get(1).keySet().contains(name)) {
+                if(boundClasses[1].keySet().contains(name)) {
                     writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
                     unknownClass = true;
                 }
@@ -182,13 +187,14 @@ public class Dispatcher {
      *
      * @return HashSet of MethodCandidates that should be used during guessing operations
      */
-    private HashSet<MethodCandidate> getCandidates()
+    private Set<MethodCandidate> getCandidates()
     {
-        HashSet<MethodCandidate> candidates = new HashSet<MethodCandidate>();
+        Set<MethodCandidate> candidates = new HashSet<MethodCandidate>();
 
-        String wordlistFile = (String)p.get("wordlist-file");
-        String wordlistFolder = (String)p.get("wordlist-folder");
-        boolean updateWordlist = (boolean)p.get("update");
+        String wordlistFile = RMGOption.WORDLIST_FILE.getString();
+        String wordlistFolder = RMGOption.WORDLIST_FOLDER.getString();
+        boolean zeroArg = RMGOption.ZERO_ARG.getBool();
+        boolean updateWordlist = RMGOption.UPDATE.getBool();
 
         if( candidate != null ) {
             candidates.add(candidate);
@@ -196,7 +202,7 @@ public class Dispatcher {
         } else {
 
             try {
-                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist);
+                WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist, zeroArg);
                 candidates = wlHandler.getWordlistMethods();
             } catch( IOException e ) {
                 Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
@@ -236,7 +242,7 @@ public class Dispatcher {
     public void dispatchRegistry()
     {
         String regMethod = p.getRegMethod();
-        boolean localhostBypass = (boolean)p.get("localhost-bypass");
+        boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
@@ -259,12 +265,12 @@ public class Dispatcher {
      * Performs the gadgetCall operation on a RemoteObjectClient object. Used for deserialization
      * attacks on user registered RMI objects. Targets can be specified by bound name or ObjID.
      */
-    @Parameters(count=3, requires= {"bound-name|objid","signature"})
+    @Parameters(count=3, requires= {RMGOption.TARGET, RMGOption.SIGNATURE})
     public void dispatchMethod()
     {
-        int argumentPosition = (int)p.get("argument-position");
+        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
-        RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+        RemoteObjectClient client = getRemoteObjectClient(RMGOption.BOUND_NAME.getString());
         client.gadgetCall(candidate, p.getGadget(), argumentPosition);
     }
 
@@ -272,12 +278,12 @@ public class Dispatcher {
      * Performs the genericCall operation on a RemoteObjectClient object. Used for legitimate
      * RMI calls on user registered RMI objects. Targets can be specified by bound name or ObjID.
      */
-    @Parameters(count=3, requires= {"bound-name|objid","signature"})
+    @Parameters(count=3, requires= {RMGOption.TARGET, RMGOption.SIGNATURE})
     public void dispatchCall()
     {
         Object[] argumentArray = p.getCallArguments();
 
-        RemoteObjectClient client = getRemoteObjectClient((String)p.get("bound-name"));
+        RemoteObjectClient client = getRemoteObjectClient(RMGOption.BOUND_NAME.getString());
         client.genericCall(candidate, argumentArray);
     }
 
@@ -287,14 +293,14 @@ public class Dispatcher {
      * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
      */
     @SuppressWarnings("deprecation")
-    @Parameters(count=4, requires= {"signature"})
+    @Parameters(count=4, requires= {RMGOption.SIGNATURE})
     public void dispatchCodebase()
     {
         String className = p.getPositionalString(3);
         RMGUtils.setCodebase(p.getPositionalString(4));
 
-        String signature = (String)p.get("signature");
-        int argumentPosition = (int)p.get("argument-position");
+        String signature = RMGOption.SIGNATURE.getString();
+        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
         Object payload = null;
 
@@ -307,7 +313,7 @@ public class Dispatcher {
         }
 
         if( candidate != null ) {
-            String boundName = (String)p.get("bound-name");
+            String boundName = RMGOption.BOUND_NAME.getString();
 
             if( boundName == null ) {
                 ExceptionHandler.missingBoundName("codebase");
@@ -319,11 +325,11 @@ public class Dispatcher {
         } else if( signature.matches("dgc") ) {
 
             DGCClient dgc = new DGCClient(rmi);
-            dgc.codebaseCall((String)p.get("dgc-method"), payload);
+            dgc.codebaseCall(RMGOption.DGC_METHOD.getString(), payload);
 
         } else if( signature.matches("reg") ) {
             RegistryClient reg = new RegistryClient(rmi);
-            reg.codebaseCall(payload, (String)p.get("reg-method"), (boolean)p.get("localhost-bypass"));
+            reg.codebaseCall(payload, RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool());
 
         } else if( signature.matches("act") ) {
             ActivationClient act = new ActivationClient(rmi);
@@ -338,39 +344,39 @@ public class Dispatcher {
      * Performs the bind operation on the RegistryClient object. Binds the user specified gadget to
      * the targeted registry.
      */
-    @Parameters(count=4, requires= {"bound-name"})
+    @Parameters(count=4, requires= {RMGOption.BOUND_NAME})
     public void dispatchBind()
     {
-        String boundName = (String)p.get("bound-name");
+        String boundName = RMGOption.BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.bindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
+        reg.bindObject(boundName, p.getGadget(), RMGOption.LOCALHOST_BYPASS.getBool());
     }
 
     /**
      * Performs the rebind operation on the RegistryClient object. Binds the user specified gadget to
      * the targeted registry.
      */
-    @Parameters(count=4, requires= {"bound-name"})
+    @Parameters(count=4, requires= {RMGOption.BOUND_NAME})
     public void dispatchRebind()
     {
-        String boundName = (String)p.get("bound-name");
+        String boundName = RMGOption.BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.rebindObject(boundName, p.getGadget(), (boolean)p.get("localhost-bypass"));
+        reg.rebindObject(boundName, p.getGadget(), RMGOption.LOCALHOST_BYPASS.getBool());
     }
 
     /**
      * Performs the unbind operation on the RegistryClient object. Removes a bound name from the
      * targeted registry endpoint.
      */
-    @Parameters(requires= {"bound-name"})
+    @Parameters(requires= {RMGOption.BOUND_NAME})
     public void dispatchUnbind()
     {
-        String boundName = (String)p.get("bound-name");
+        String boundName = RMGOption.BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.unbindObject(boundName, (boolean)p.get("localhost-bypass"));
+        reg.unbindObject(boundName, RMGOption.LOCALHOST_BYPASS.getBool());
     }
 
     /**
@@ -384,7 +390,7 @@ public class Dispatcher {
 
         String regMethod = p.getRegMethod();
         String dgcMethod = p.getDgcMethod();
-        boolean localhostBypass = (boolean)p.get("localhost-bypass");
+        boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
 
         boolean enumJEP290Bypass = true;
         boolean marshal = true;
@@ -436,14 +442,8 @@ public class Dispatcher {
      */
     public void dispatchGuess()
     {
-        boolean createSamples = (boolean)p.get("create-samples");
-
-        int threadCount = (int)p.get("threads");
-        boolean zeroArg = (boolean)p.get("zero-arg");
         Formatter format = new Formatter();
-
-        HashSet<MethodCandidate> candidates = getCandidates();
-        HashMap<String,ArrayList<MethodCandidate>> results = new HashMap<String,ArrayList<MethodCandidate>>();
+        Set<MethodCandidate> candidates = getCandidates();
 
         try {
             obtainBoundNames();
@@ -451,33 +451,15 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        HashMap<String,String> knownClasses = boundClasses.get(0);
-        Set<String> knownBoundNames = knownClasses.keySet();
-        MethodGuesser.printGuessingIntro(candidates);
+        MethodGuesser guesser = new MethodGuesser(rmi, this.boundClasses, candidates, p.getLegacyMode());
+        guesser.printGuessingIntro();
 
-        for(String boundName : this.boundNames) {
-
-            if( knownBoundNames.contains(boundName) && (!(boolean)p.get("force-guessing"))) {
-                Logger.printlnMixedYellow("Bound name", boundName, "uses a known remote object class.");
-                Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
-                Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
-                Logger.println("");
-
-                RMGUtils.addKnownMethods(boundName, knownClasses.get(boundName), results);
-                continue;
-            }
-
-            RemoteObjectClient client = getRemoteObjectClient(boundName);
-            MethodGuesser guesser = new MethodGuesser(client, candidates, threadCount, zeroArg);
-            ArrayList<MethodCandidate> methods = guesser.guessMethods();
-
-            results.put(boundName, methods);
-        }
+        Map<String, ArrayList<MethodCandidate>> results = guesser.guessMethods();
 
         Logger.decreaseIndent();
         format.listGuessedMethods(results);
 
-        if(createSamples)
+        if(results.size() > 0 && RMGOption.CREATE_SAMPLES.getBool())
             this.writeSamples(results);
     }
 }

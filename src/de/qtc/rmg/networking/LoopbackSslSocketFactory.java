@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -44,61 +45,81 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
      * is used to create the real socket.
      */
     @Override
-    public Socket createSocket(String target, int port) throws IOException {
+    public Socket createSocket(String target, int port) throws IOException
+    {
+        Socket sock = null;
+
         if(!host.equals(target)) {
-            printInfos("RMI object tries to connect to different remote host: " + target);
+
+            if( printInfo && Logger.verbose ) {
+                Logger.printInfoBox();
+                Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", target);
+            }
 
             if( followRedirect ) {
-                printInfos("\tFollowing ssl connection to new target... ");
+                if( printInfo && Logger.verbose )
+                    Logger.println("Following SSL redirect to new target...");
+
             } else {
-                printInfos("\tRedirecting the ssl connection back to " + host + "... ");
+
                 target = host;
+
+                if( printInfo && Logger.verbose ) {
+                    Logger.printlnMixedBlue("Redirecting the SSL connection back to", host);
+                    Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
+                }
             }
-            printInfos("\tThis is done for all further requests. This message is not shown again. ");
+
+            if( printInfo && Logger.verbose ) {
+                Logger.decreaseIndent();
+            }
+
             printInfo = false;
         }
-        return fac.createSocket(target, port);
+
+        try {
+            sock = fac.createSocket(host, port);
+
+        } catch( UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+        }
+
+        return sock;
     }
 
     @Override
-    public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException {
+    public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
-    public String[] getDefaultCipherSuites() {
+    public String[] getDefaultCipherSuites()
+    {
         return fac.getDefaultCipherSuites();
     }
 
     @Override
-    public String[] getSupportedCipherSuites() {
+    public String[] getSupportedCipherSuites()
+    {
         return fac.getSupportedCipherSuites();
     }
 
     @Override
-    public Socket createSocket(InetAddress arg0, int arg1) throws IOException {
+    public Socket createSocket(InetAddress arg0, int arg1) throws IOException
+    {
         return fac.createSocket(arg0, arg1);
     }
 
     @Override
-    public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException {
+    public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
-    public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException {
+    public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException
+    {
         return fac.createSocket(arg0, arg1, arg2, arg3);
-    }
-
-    /**
-     * Especially during guessing, the number of warnings can go out of control. Therefore, redirection warnings
-     * are only printed once. This helper function checks whether a warning was already printed and only prints
-     * a new warning if this was not the case.
-     *
-     * @param info user information about redirects
-     */
-    private void printInfos(String info) {
-        if( printInfo )
-            Logger.eprintlnBlue(info);
     }
 }

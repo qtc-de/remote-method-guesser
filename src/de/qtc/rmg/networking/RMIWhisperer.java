@@ -15,7 +15,6 @@ import java.rmi.server.RMISocketFactory;
 import java.rmi.server.RemoteRef;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLContext;
@@ -24,9 +23,11 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.Pair;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
+import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CtClass;
@@ -138,9 +139,6 @@ public final class RMIWhisperer {
         try {
             boundNames = rmiRegistry.list();
 
-        } catch( java.rmi.UnknownHostException e) {
-            ExceptionHandler.unknownHost(e, "list", "operation", host, true);
-
         } catch( java.rmi.ConnectIOException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
@@ -215,9 +213,10 @@ public final class RMIWhisperer {
      * @return HashMaps of bound name -> class name pairs. Returns two HashMaps, one for
      *            known and one for unknown classes
      */
-    public ArrayList<HashMap<String, String>> getClassNames(String[] boundNames)
+    @SuppressWarnings("unchecked")
+    public HashMap<String, String>[] getClassNames(String[] boundNames)
     {
-        ArrayList<HashMap<String, String>> returnList = new ArrayList<HashMap<String, String>>();
+        HashMap<String, String>[] returnList = (HashMap<String, String>[])new HashMap[2];
 
         HashMap<String, String> knownClasses = new HashMap<String,String>();
         HashMap<String, String> unknownClasses = new HashMap<String,String>();
@@ -266,8 +265,9 @@ public final class RMIWhisperer {
           }
         }
 
-        returnList.add(knownClasses);
-        returnList.add(unknownClasses);
+        returnList[0] = knownClasses;
+        returnList[1] = unknownClasses;
+
         return returnList;
     }
 
@@ -278,6 +278,18 @@ public final class RMIWhisperer {
      * @return newly constructed RemoteRef
      */
     public RemoteRef getRemoteRef(ObjID objID)
+    {
+        Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
+        return new UnicastRef(new LiveRef(objID, endpoint, false));
+    }
+
+    /**
+     * Constructs a RemoteRef (class used by internal RMI communication) using the specified
+     * host, port, csf and objID values.
+     *
+     * @return newly constructed RemoteRef
+     */
+    public RemoteRef getRemoteRef(ObjID objID, int port, RMIClientSocketFactory csf)
     {
         Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
         return new UnicastRef(new LiveRef(objID, endpoint, false));
@@ -392,38 +404,64 @@ public final class RMIWhisperer {
             remoteRef.done(call);
 
         } catch(java.rmi.ConnectException e) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-                ExceptionHandler.connectionRefused(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
-            }
-
-        } catch( java.rmi.UnknownHostException e) {
-            ExceptionHandler.unknownHost(e, callName, "call", host, true);
+            ExceptionHandler.connectException(e, callName);
 
         } catch(java.rmi.ConnectIOException e) {
+            ExceptionHandler.connectIOException(e, callName);
+        }
+    }
 
-            Throwable t = ExceptionHandler.getCause(e);
+    /**
+     * guessingCall is basically a copy of the genericCall method, that is optimized for method guessing. It takes
+     * less parameters and offers only limited control to the caller. Methods are called with a specially prepared
+     * set of arguments. In case of a method that accepts non primitive arguments, the function sends as many primitive
+     * bytes over the network as it is required to reach the first non primitive argument. The advantage of this technique
+     * is that all data is send within one BLOCKDATA block in the ObjectOutputStream (same block that contains the method hash).
+     * The RMI server will read and drop the complete BLOCKDATA block in any case (method exists / method does not exist)
+     * and the stream is clean and ready for the next invocation. In case of methods that take only primitive arguments,
+     * the ObjectOutputStream is modified to send a RMI ping message that cuts of the BLOCKDATA array that contains the
+     * regular calling arguments. This will lead to a second dispatch within the RMI server if the method does not exist.
+     * If it does exist, the server picks up the RMI ping and throws an StreamCorruptedException. In the second case, the
+     * next RMI call can directly being dispatched. In the first case, the RMI ping response need to be read from the
+     * ObjectInputStream.
+     *
+     * @param candidate Candidate method to guess
+     * @param callName Name of the method for logging purposes
+     * @param remoteRef Remote Reference to guess on
+     * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
+     */
+    @SuppressWarnings("deprecation")
+    public void guessingCall(MethodCandidate candidate, String callName, RemoteRef remoteRef) throws Exception
+    {
+        try {
 
-            if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, callName, "call");
+            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, -1, candidate.getHash());
 
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
-                ExceptionHandler.noJRMPServer(e, callName, "call");
+            try {
 
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
-                ExceptionHandler.sslError(e, callName, "call");
+                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
+                candidate.sendArguments(out);
+                call.executeCall();
 
-            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
-                ExceptionHandler.networkUnreachable(e, callName, "call");
+            } catch( Exception e ) {
 
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
+                Throwable t = ExceptionHandler.getCause(e);
+                if( !(t instanceof java.io.StreamCorruptedException) && candidate.primitiveSize() == -1 ) {
+
+                    ObjectInputStream in = (ObjectInputStream)call.getInputStream();
+                    RawObjectInputStream rin = new RawObjectInputStream(in);
+                    rin.skip(1);
+                }
+
+                remoteRef.done(call);
+                throw e;
             }
+
+        } catch(java.rmi.ConnectException e) {
+            ExceptionHandler.connectException(e, callName);
+
+        } catch(java.rmi.ConnectIOException e) {
+            ExceptionHandler.connectIOException(e, callName);
         }
     }
 

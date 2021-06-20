@@ -1,10 +1,12 @@
 package de.qtc.rmg.networking;
 
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.rmi.server.RMISocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -43,13 +45,15 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      * @param fac original socket factory to create sockets from
      * @param followRedirect if true, connections are not redirected to the expected host
      */
-    public LoopbackSocketFactory(String host, RMISocketFactory fac, boolean followRedirect) {
+    public LoopbackSocketFactory(String host, RMISocketFactory fac, boolean followRedirect)
+    {
         this.host = host;
         this.fac = fac;
         this.followRedirect= followRedirect;
     }
 
-    public ServerSocket createServerSocket(int port) throws IOException {
+    public ServerSocket createServerSocket(int port) throws IOException
+    {
         return fac.createServerSocket(port);
     }
 
@@ -58,31 +62,45 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      * value and changes the value if required. After the host check was done, the default socket factory
      * is used to create the real socket.
      */
-    public Socket createSocket(String host, int port) throws IOException {
+    public Socket createSocket(String host, int port) throws IOException
+    {
+        Socket sock = null;
+
         if(!this.host.equals(host)) {
-            printInfos("RMI object tries to connect to different remote host: " + host + ".");
+
+            if( printInfo && Logger.verbose ) {
+                Logger.printInfoBox();
+                Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", host);
+            }
 
             if( this.followRedirect ) {
-                printInfos("\tFollowing connection to new target... ");
+                if( printInfo && Logger.verbose )
+                    Logger.println("Following redirect to new target...");
+
             } else {
-                printInfos("\tRedirecting the connection back to " + this.host + "... ");
+
                 host = this.host;
+
+                if( printInfo && Logger.verbose ) {
+                    Logger.printlnMixedBlue("Redirecting the connection back to", host);
+                    Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
+                }
             }
-            printInfos("\tThis is done for all further requests. This message is not shown again. ");
+
+            if( printInfo && Logger.verbose ) {
+                Logger.decreaseIndent();
+            }
+
             this.printInfo = false;
         }
-        return fac.createSocket(host, port);
-    }
 
-    /**
-     * Especially during method guessing, the number of warnings can go out of control. Therefore, redirection warnings
-     * are only printed once. This helper function checks whether a warning was already printed and only prints
-     * a new warning if this was not the case.
-     *
-     * @param info user information about redirects
-     */
-    private void printInfos(String info) {
-        if( this.printInfo )
-            Logger.eprintlnBlue(info);
+        try {
+            sock = fac.createSocket(host, port);
+
+        } catch( UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+        }
+
+        return sock;
     }
 }

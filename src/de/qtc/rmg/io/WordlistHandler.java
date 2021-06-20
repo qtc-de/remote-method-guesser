@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -27,6 +29,7 @@ public class WordlistHandler {
     private String wordlistFile;
     private String wordlistFolder;
     private boolean updateWordlists;
+    private boolean zeroArg;
 
     private final static String[] defaultWordlists = {"rmg.txt", "rmiscout.txt"};
 
@@ -37,11 +40,12 @@ public class WordlistHandler {
      * @param wordlistFolder wordlist folder to look for wordlist files
      * @param updateWordlists whether wordlists should be updated to the advanced format
      */
-    public WordlistHandler(String wordlistFile, String wordlistFolder, boolean updateWordlists)
+    public WordlistHandler(String wordlistFile, String wordlistFolder, boolean updateWordlists, boolean zeroArg)
     {
         this.wordlistFile = wordlistFile;
         this.wordlistFolder = wordlistFolder;
         this.updateWordlists = updateWordlists;
+        this.zeroArg = zeroArg;
     }
 
     /**
@@ -52,17 +56,40 @@ public class WordlistHandler {
      * @return HashSet of MethodCandidates build from the wordlist
      * @throws IOException if an IO operation fails
      */
-    public HashSet<MethodCandidate> getWordlistMethods() throws IOException
+    public Set<MethodCandidate> getWordlistMethods() throws IOException
     {
+        HashSet<MethodCandidate> candidates = null;
+
         if( this.wordlistFile != null && !this.wordlistFile.isEmpty() ) {
-            return getWordlistMethodsFromFile(this.wordlistFile, this.updateWordlists);
+            candidates = getWordlistMethodsFromFile(this.wordlistFile, this.updateWordlists);
 
         } else if( this.wordlistFolder != null && !this.wordlistFolder.isEmpty() ) {
-            return getWordlistMethodsFromFolder(this.wordlistFolder, this.updateWordlists);
+            candidates = getWordlistMethodsFromFolder(this.wordlistFolder, this.updateWordlists);
 
         } else {
-            return getWordlistMethodsFromStream();
+            candidates = getWordlistMethodsFromStream();
         }
+
+        if( !zeroArg ) {
+
+            Logger.disableIfNotVerbose();
+            Logger.printInfoBox();
+            Logger.printlnMixedYellow("Methods that take zero arguments are ignored by default. Use", "--zero-args", "to guess them.");
+            Logger.increaseIndent();
+            Set<MethodCandidate> voidMethods = candidates.stream().filter(m -> m.isVoid()).collect(Collectors.toSet());
+
+            for( MethodCandidate method : voidMethods ) {
+                Logger.printlnMixedBlue("Ignoring zero argument method:", method.getSignature());
+                continue;
+            }
+
+            candidates.removeAll(voidMethods);
+            Logger.decreaseIndent();
+            Logger.decreaseIndent();
+            Logger.enable();
+        }
+
+        return candidates;
     }
 
     /**

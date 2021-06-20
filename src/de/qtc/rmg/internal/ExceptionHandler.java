@@ -283,10 +283,10 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
-    public static void unknownHost(Exception e, String during1, String during2, String host, boolean exit)
+    public static void unknownHost(Exception e, String host, boolean exit)
     {
-        Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("The IP address of the specified endpoint", host, "could not be resolved.");
+        Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during connection setup.");
+        Logger.eprintlnMixedBlue("The IP address of the endpoint", host, "could not be resolved.");
         ExceptionHandler.showStackTrace(e);
 
         if(exit)
@@ -335,6 +335,39 @@ public class ExceptionHandler {
         Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
         Logger.printlnPlainMixedBlueFirst(action, "action.");
         RMGUtils.exit();
+    }
+
+    public static void connectException(Exception e, String callName)
+    {
+        Throwable t = ExceptionHandler.getCause(e);
+
+        if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
+            ExceptionHandler.connectionRefused(e, callName, "call");
+
+        } else {
+            ExceptionHandler.unexpectedException(e, callName, "call", true);
+        }
+    }
+
+    public static void connectIOException(Exception e, String callName)
+    {
+        Throwable t = ExceptionHandler.getCause(e);
+
+        if( t instanceof java.net.NoRouteToHostException) {
+            ExceptionHandler.noRouteToHost(e, callName, "call");
+
+        } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
+            ExceptionHandler.noJRMPServer(e, callName, "call");
+
+        } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message")) {
+            ExceptionHandler.sslError(e, callName, "call");
+
+        } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
+            ExceptionHandler.networkUnreachable(e, callName, "call");
+
+        } else {
+            ExceptionHandler.unexpectedException(e, callName, "call", true);
+        }
     }
 
     /**

@@ -92,6 +92,11 @@ public class RemoteObjectClient {
         remoteRef = getRemoteRef();
     }
 
+    /**
+     * Getter function for the bound name.
+     *
+     * @return bound name associated with the RemoteObjectClient
+     */
     public String getBoundName()
     {
         return this.boundName;
@@ -158,7 +163,7 @@ public class RemoteObjectClient {
             if( t instanceof java.lang.ClassNotFoundException ) {
                 Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
                 Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
-                Logger.printlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
                 ExceptionHandler.showStackTrace(e);
 
             } else {
@@ -286,6 +291,18 @@ public class RemoteObjectClient {
     public void rawCallNoReturn(MethodCandidate targetMethod, MethodArguments argumentArray) throws Exception
     {
         rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef, null);
+    }
+
+    /**
+     * Just a wrapper around the guessingCall function from the RMIWhisperer class.
+     *
+     * @param targetMethod method to invoke
+     * @throws Exception this function is used e.g. for remote method guessing and raising all kind of exceptions is
+     *         required.
+     */
+    public void guessingCall(MethodCandidate targetMethod) throws Exception
+    {
+        rmi.guessingCall(targetMethod, getMethodName(targetMethod), remoteRef);
     }
 
     /**

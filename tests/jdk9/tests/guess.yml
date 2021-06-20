@@ -13,11 +13,12 @@ tests:
     command: '${BASE-CMD}'
     arguments:
       - guess
+      - --verbose
     validators:
       - error: False
       - contains:
           values:
-            - Skipping zero arguments method
+            - Ignoring zero argument method
             - String system(String dummy, String[] dummy2)
             - String execute(String dummy)
             - String system(String dummy, String[] dummy2)
@@ -37,11 +38,12 @@ tests:
       - guess
       - --zero-arg
       - --create-samples
+      - --verbose
     validators:
       - error: False
       - contains:
           invert:
-            - Skipping zero arguments method
+            - Ignoring zero argument method
           values:
             - String system(String dummy, String[] dummy2)
             - String execute(String dummy)
@@ -67,9 +69,6 @@ tests:
             - /rmg-samples/plain-server2/IPlainServer.java
             - /rmg-samples/plain-server2/system/system.java
             - /rmg-samples/plain-server2/execute/execute.java
-            - /rmg-samples/plain-server/IPlainServer.java
-            - /rmg-samples/plain-server/system/system.java
-            - /rmg-samples/plain-server/execute/execute.java
             - /rmg-samples/legacy-service/LegacyServiceImpl_Stub_Interface.java
             - /rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
             - /rmg-samples/legacy-service/login/login.java
@@ -99,9 +98,9 @@ tests:
 
           - file: ./rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
             contains:
-              - method_0 = intf.getMethod("login", java.util.HashMap.class)
-              - method_1 = intf.getMethod("logMessage", Integer.TYPE, java.lang.String.class)
-              - method_2 = intf.getMethod("releaseRecord", Integer.TYPE, java.lang.String.class, java.lang.Integer.class)
+              - = intf.getMethod("login", java.util.HashMap.class)
+              - = intf.getMethod("logMessage", Integer.TYPE, java.lang.String.class)
+              - = intf.getMethod("releaseRecord", Integer.TYPE, java.lang.String.class, java.lang.Integer.class)
 
           - file: ./rmg-samples/legacy-service/login/login.java
             contains:
@@ -123,11 +122,12 @@ tests:
     command: '${BASE-CMD-SSL}'
     arguments:
       - guess
+      - --verbose
     validators:
       - error: False
       - contains:
           values:
-            - Skipping zero arguments method
+            - Ignoring zero argument method
             - String system(String[] dummy)
             - int execute(String dummy)
             - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)

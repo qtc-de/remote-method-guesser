@@ -1,4 +1,4 @@
-### RMG Documentation
+### Documentation
 
 -----
 
@@ -11,9 +11,10 @@ work in progress and will be updated from time to time. So far, the following to
   * [Unicast Remote Object](./rmi/unicast-remote-object.md)
 
 * *remote-method-gusser*
-  * [rmg Actions](./rmg/actions.md)
-  * [rmg Plugin System](./rmg/plugin-system.md)
-  * [rmg Media](./rmg/media.md)
+  * [Actions](./rmg/actions.md)
+  * [Plugin System](./rmg/plugin-system.md)
+  * [Media](./rmg/media.md)
+  * [Method-Guessing](./rmg/method-guessing.md)
 
 
 ### Java RMI - Attack Surface

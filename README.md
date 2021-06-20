@@ -87,7 +87,7 @@ the sources within the [docker folder](./.docker).
 [qtc@kali ~]$ rmg --help
 usage: rmg [options] <ip> <port> <action>
 
-rmg v3.2.0 - Identify common misconfigurations on Java RMI endpoints.
+rmg v3.3.0 - Java RMI Vulnerability Scanner.
 
 Positional Arguments:
     ip                              IP address of the target
@@ -117,6 +117,7 @@ Optional Arguments:
     --follow                        follow redirects to different servers
     --force-guessing                force guessing on known remote objects
     --force-legacy                  treat all classes as legacy stubs
+    --guess-duplicates              guess duplicate remote classes
     --help                          display help message
     --localhost-bypass              attempt localhost bypass for registry operations (CVE-2019-2684)
     --no-color                      disable colored output
@@ -132,6 +133,7 @@ Optional Arguments:
     --threads <int>                 maximum number of threads (default: 5)
     --trusted                       disable bound name filtering
     --update                        update wordlist file with method hashes
+    --verbose                       enable verbose output
     --wordlist-file <file>          wordlist file to use for method guessing
     --wordlist-folder <folder>      location of the wordlist folder
     --yso <file>                    location of ysoserial.jar for deserialization attacks
@@ -252,51 +254,41 @@ the *Plugin System*, please refer to the [detailed documentation folder](./docs/
 
 When using the ``guess`` action, *remote-method-guesser* attempts to identify existing remote methods by sending method hashes
 to the remote server. This operation requires a wordlist that contains the corresponding method definitions.
-*remote-method-guesser* ships some default wordlists and expects them in the path ``/opt/remote-method-guesser/wordlists/``.
-You can change this path either by modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
-or ``--wordlist-folder`` arguments. Methods with zero arguments are skipped during the enumeration, as they lead to real method calls
-on the server side. You can enable guessing on them by using the ``--zero-arg`` switch. 
+*remote-method-guesser* ships some default wordlists that are included into the ``.jar`` file during the build stage.
+You can overwrite the wordlists by either modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
+or ``--wordlist-folder`` arguments. Methods with zero arguments are skipped during guessing, as they lead to real method calls
+on the server side. You can enable guessing on zero argument methods by using the ``--zero-arg`` switch.
 
 ```console
 [qtc@kali ~]$ rmg 172.17.0.2 9010 guess
-[+] 2 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
-[+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
+[+] Reading method candidates from internal wordlist rmg.txt
+[+] 	757 methods were successfully parsed.
+[+] Reading method candidates from internal wordlist rmiscout.txt
 [+] 	2550 methods were successfully parsed.
-[+] 
-[+] Starting Method Guessing on 3294 method signature(s).
-[+] 
-[+] 	Guessing methods on bound name: plain-server2 ...
-[+] 	
-[+] 		HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 		HIT! Method with signature String execute(String dummy) exists!
-[+] 	
-[+] 	Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+] 	You can use --no-legacy to prevent this.
-[+] 	Guessing methods on bound name: legacy-service ...
-[+] 	
-[+] 		HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 		HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
-[+] 		HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 	
-[+] 	Guessing methods on bound name: plain-server ...
-[+] 	
-[+] 		HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 		HIT! Method with signature String execute(String dummy) exists!
-[+] 	
-[+] 
+[+]
+[+] Starting Method Guessing on 3286 method signature(s).
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ legacy-service ] HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
+[+] 		[ legacy-service ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+] 		[ legacy-service ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		[ plain-server2  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 		[ plain-server2  ] HIT! Method with signature String execute(String dummy) exists!
+[+] 	done.
+[+]
 [+] Listing successfully guessed methods:
-[+] 	-  plain-server2
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  legacy-service
-[+] 		--> String login(java.util.HashMap dummy1)
+[+]
+[+] 	- legacy-service
 [+] 		--> void logMessage(int dummy1, String dummy2)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+] 		--> String login(java.util.HashMap dummy1)
+[+] 	- plain-server (== plain-server2)
+[+] 		--> String system(String dummy, String[] dummy2)
+[+] 		--> String execute(String dummy)
+[+] 	- plain-server2
+[+] 		--> String system(String dummy, String[] dummy2)
+[+] 		--> String execute(String dummy)
 ```
 
 
@@ -553,23 +545,26 @@ and ``--bound-name`` options, it is also possible to generate code only for one 
 to invoke the ``execute`` method on the ``plain-server`` bound name:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.23.0.2 1090 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
 [qtc@kali ~]$ rmg 172.17.0.2 9010 guess --create-samples --signature "String execute(String dummy)" --bound-name plain-server
-[+] 
+[+]
 [+] Starting Method Guessing on 1 method signature(s).
 [+] Method signature: String execute(String dummy).
-[+] 
-[+] 	Guessing methods on bound name: plain-server ...
-[+] 	
-[+] 		HIT! Method with signature String execute(String dummy) exists!
-[+] 	
-[+] 
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server ] HIT! Method with signature String execute(String dummy) exists!
+[+] 	done.
+[+]
 [+] Listing successfully guessed methods:
-[+] 	-  plain-server
+[+]
+[+] 	- plain-server
 [+] 		--> String execute(String dummy)
-[+] 
+[+]
 [+] Starting creation of sample files:
-[+] 
+[+]
+[+] 	Sample folder /home/qtc/rmg-samples does not exist.
+[+] 	Creating sample folder.
+[+]
 [+] 	Creating samples for bound name plain-server.
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
 [+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
@@ -640,24 +635,28 @@ boolean call(String[] dummy); -4301784332653484516; false; false
 However, *remote-method-guesser* is also able to process non-optimized wordlists that contain plain function signatures:
 
 ```console
-[qtc@kali wordlists]$ cat custom_wordlist.txt
-boolean example_signature(String test)
-[qrc@kali ~]$ rmg --ssl --wordlist-folder /opt/remote-method-guesser/wordlists/ 172.17.0.2 1090 guess
-[+] 3 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
-[+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
-[+] 	2550 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom-wordlist.txt
+[qtc@kali ~]$ echo "boolean example_signature(String test)" > custom_wordlist.txt
+[qtc@kali ~]$ rmg --ssl --wordlist-file ./custom_wordlist.txt 172.17.0.2 1090 guess
+[+] Reading method candidates from file /home/qtc/custom_wordlist.txt
 [+] 	1 methods were successfully parsed.
-[...]
+[+]
+[+] Starting Method Guessing on 1 method signature(s).
+[+] Method signature: boolean example_signature(String test).
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 	done.
+[+]
+[+] No remote methods identified :(
 ```
 
 By using the ``--update`` switch during the ``guess`` action, *remote-method-guesser* updates your wordlist to the optimized format:
 
 ```console
-[qtc@kali wordlists]$ cat custom_wordlist.txt
-boolean example_signature(String test); -8079561808652318592; false; false
+[qtc@kali ~]$ rmg --ssl --wordlist-file ./custom_wordlist.txt 172.17.0.2 1090 guess --update
+[...]
+[qtc@kali ~]$ cat custom_wordlist.txt
+boolean example_signature(String test); -8079561808652318592; 0; false
 ```
 
 Since version ``v3.2.0``, *remote-method-guesser* does no longer use a default wordlist directory, but contains it's default wordlists
@@ -716,7 +715,7 @@ You can also create a ``.properties`` file with your own configuration and feed 
 ----
 
 *remote-method-guesser* was heavily influenced by the blog posts of [Hans-Martin Münch](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/)
-and [Jake Miller](https://labs.bishopfox.com/tech-blog/rmiscout). Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the *rmiscout*
+and [Jake Miller](https://labs.bishopfox.com/tech-blog/rmiscout). Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the [rmiscout](https://github.com/BishopFox/rmiscout)
 project (as you can already tell by the different license agreement). Thanks *Jake*, for this awesome wordlist of *remote methods* collected from different *GitHub* repositories.
 
 *Copyright 2021, Tobias Neitzel and the remote-method-guesser contributors.*
