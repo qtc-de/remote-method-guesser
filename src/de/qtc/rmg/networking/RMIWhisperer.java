@@ -139,9 +139,6 @@ public final class RMIWhisperer {
         try {
             boundNames = rmiRegistry.list();
 
-        } catch( java.rmi.UnknownHostException e) {
-            ExceptionHandler.unknownHost(e, "list", "operation", host, true);
-
         } catch( java.rmi.ConnectIOException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
@@ -409,9 +406,6 @@ public final class RMIWhisperer {
         } catch(java.rmi.ConnectException e) {
             ExceptionHandler.connectException(e, callName);
 
-        } catch( java.rmi.UnknownHostException e) {
-            ExceptionHandler.unknownHost(e, callName, "call", host, true);
-
         } catch(java.rmi.ConnectIOException e) {
             ExceptionHandler.connectIOException(e, callName);
         }
@@ -465,9 +459,6 @@ public final class RMIWhisperer {
 
         } catch(java.rmi.ConnectException e) {
             ExceptionHandler.connectException(e, callName);
-
-        } catch( java.rmi.UnknownHostException e) {
-            ExceptionHandler.unknownHost(e, callName, "call", host, true);
 
         } catch(java.rmi.ConnectIOException e) {
             ExceptionHandler.connectIOException(e, callName);

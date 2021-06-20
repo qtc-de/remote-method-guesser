@@ -1,10 +1,12 @@
 package de.qtc.rmg.networking;
 
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.rmi.server.RMISocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -62,6 +64,8 @@ public class LoopbackSocketFactory extends RMISocketFactory {
      */
     public Socket createSocket(String host, int port) throws IOException
     {
+        Socket sock = null;
+
         if(!this.host.equals(host)) {
 
             if( printInfo && Logger.verbose ) {
@@ -89,6 +93,14 @@ public class LoopbackSocketFactory extends RMISocketFactory {
 
             this.printInfo = false;
         }
-        return fac.createSocket(host, port);
+
+        try {
+            sock = fac.createSocket(host, port);
+
+        } catch( UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+        }
+
+        return sock;
     }
 }

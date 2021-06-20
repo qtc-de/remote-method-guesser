@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -46,6 +47,8 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
     @Override
     public Socket createSocket(String target, int port) throws IOException
     {
+        Socket sock = null;
+
         if(!host.equals(target)) {
 
             if( printInfo && Logger.verbose ) {
@@ -73,7 +76,15 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 
             printInfo = false;
         }
-        return fac.createSocket(target, port);
+
+        try {
+            sock = fac.createSocket(host, port);
+
+        } catch( UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+        }
+
+        return sock;
     }
 
     @Override
