@@ -635,24 +635,28 @@ boolean call(String[] dummy); -4301784332653484516; false; false
 However, *remote-method-guesser* is also able to process non-optimized wordlists that contain plain function signatures:
 
 ```console
-[qtc@kali wordlists]$ cat custom_wordlist.txt
-boolean example_signature(String test)
-[qrc@kali ~]$ rmg --ssl --wordlist-folder /opt/remote-method-guesser/wordlists/ 172.17.0.2 1090 guess
-[+] 3 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
-[+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
-[+] 	2550 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/custom-wordlist.txt
+[qtc@kali ~]$ echo "boolean example_signature(String test)" > custom_wordlist.txt
+[qtc@kali ~]$ rmg --ssl --wordlist-file ./custom_wordlist.txt 172.17.0.2 1090 guess
+[+] Reading method candidates from file /home/qtc/custom_wordlist.txt
 [+] 	1 methods were successfully parsed.
-[...]
+[+]
+[+] Starting Method Guessing on 1 method signature(s).
+[+] Method signature: boolean example_signature(String test).
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 	done.
+[+]
+[+] No remote methods identified :(
 ```
 
 By using the ``--update`` switch during the ``guess`` action, *remote-method-guesser* updates your wordlist to the optimized format:
 
 ```console
-[qtc@kali wordlists]$ cat custom_wordlist.txt
-boolean example_signature(String test); -8079561808652318592; false; false
+[qtc@kali ~]$ rmg --ssl --wordlist-file ./custom_wordlist.txt 172.17.0.2 1090 guess --update
+[...]
+[qtc@kali ~]$ cat custom_wordlist.txt
+boolean example_signature(String test); -8079561808652318592; 0; false
 ```
 
 Since version ``v3.2.0``, *remote-method-guesser* does no longer use a default wordlist directory, but contains it's default wordlists

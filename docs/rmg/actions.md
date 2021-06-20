@@ -491,53 +491,39 @@ or ``--wordlist-folder`` options. Methods with zero arguments are skipped by def
 invocation cannot be prevented by using invalid argument types.
 
 ```console
-[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess 
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 3 names are bound to the registry.
-[+] 2 wordlist files found.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmg.txt
+[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess
+[+] Reading method candidates from internal wordlist rmg.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from file /opt/remote-method-guesser/wordlists/rmiscout.txt
+[+] Reading method candidates from internal wordlist rmiscout.txt
 [+] 	2550 methods were successfully parsed.
-[+] 
-[+] Starting RMG Attack
-[+] 	No target name specified. Guessing on all available bound names.
-[+] 	Guessing 3294 method signature(s).
-[+] 	
-[+] 	Current bound name: ssl-server
-[+] 		Guessing methods...
 [+]
-[+] 			HIT! Method with signature String system(String[] dummy) exists!
-[+] 			HIT! Method with signature int execute(String dummy) exists!
-[+] 			HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 		
-[+] 	Current bound name: plain-server
-[+] 		Guessing methods...
+[+] Starting Method Guessing on 3294 method signature(s).
 [+]
-[+] 			HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 			HIT! Method with signature String execute(String dummy) exists!
-[+] 		
-[+] 	Current bound name: secure-server
-[+] 		Guessing methods...
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 		[ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 	done.
 [+]
-[+] 			HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+] 			HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
-[+] 			HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+] 		
-[+] 
 [+] Listing successfully guessed methods:
-[+] 	-  ssl-server
+[+]
+[+] 	- plain-server
+[+] 		--> String system(String dummy, String[] dummy2)
+[+] 		--> String execute(String dummy)
+[+] 	- secure-server
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
+[+] 		--> String login(java.util.HashMap dummy1)
+[+] 	- ssl-server
 [+] 		--> String system(String[] dummy)
 [+] 		--> int execute(String dummy)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-[+] 	-  plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
-[+] 		--> String execute(String dummy)
-[+] 	-  secure-server
-[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
-[+] 		--> void logMessage(int dummy1, Object dummy2)
-[+] 		--> String login(java.util.HashMap dummy1)
 ```
 
 To reduce the overhead of dynamic class generation, *rmg* also supports an optimized wordlist format that
