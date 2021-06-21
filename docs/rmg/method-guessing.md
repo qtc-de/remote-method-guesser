@@ -16,7 +16,7 @@ mentioned speedup.
 
 - [Why Method Guessing?](#why-method-guessing)
 - [Implementation](#implementation)
-  - [Most Naive Approach](#most-naive-approach)
+  - [The Most Naive Approach](#the-most-naive-approach)
   - [Guessing Without Invoking](#guessing-without-invoking)
   - [Making it Fast](#making-it-fast)
   - [Preventing Stream Corruption](#preventing-stream-corruption)
@@ -30,20 +30,20 @@ mentioned speedup.
 
 *Java RMI* is a *remote procedure call* (*RPC*) technology for *Java* and allows a client to invoke
 remote methods that are defined on the server side. Knowledge of these exposed methods is an important
-part to evaluate the attack surface on a *RMI endpoint*. However, apart from some well known (and in
+part to evaluate the attack surface on an *RMI endpoint*. However, apart from some well known (and in
 current *Java* versions, well protected) methods, that are available on (almost) each *RMI endpoint*,
-it is usually not possible to obtain the signature of other methods that may be exposed.
+it is usually not possible to obtain the signatures of other methods that may be exposed.
 
 This makes evaluating the security state of *RMI endpoints* difficult, because the analyst has only
-a limit view on the actual exposed services. The simplest example could be a method with signature
+a limited view on the actual exposed services. The simplest example could be a method with signature
 ``String execute(String cmd)``, which is obviously dangerous but hidden during a blackbox assessment.
-But not only such obviously dangerous functions are of interest. As [Hans-Martin Münch](https://twitter.com/h0ng10) explains in
+But not only such obviously dangerous methods are of interest. As [Hans-Martin Münch](https://twitter.com/h0ng10) explains in
 [this blog post](https://mogwailabs.de/en/blog/2019/03/attacking-java-rmi-services-after-jep-290/), also
 harmless looking method signatures can be exploited for deserialization attacks, if the methods
 signature is known to the attacker.
 
-Despite *Java RMI* does not expose any *API* calls to obtain the available methods signatures defined on
-a *RMI endpoint*, it is possible to guess valid signatures by using a wordlist approach. The idea is pretty
+Despite *Java RMI* does not expose any *API* calls to obtain the available methods signatures of
+an *RMI endpoint*, it is possible to guess valid signatures by using a wordlist approach. The idea is pretty
 simple: For each method defined in the wordlist, an *RMI* call with invalid argument types is dispatched and
 send to the server. Depending on the server exception, it can be determined whether the corresponding method
 exists. More details on the different challenges and pitfalls when implementing this technique can be found
@@ -56,64 +56,70 @@ within the next chapters.
 
 One challenge of implementing *method guessing* is that *Java RMI* is an object oriented *RPC* mechanism.
 Invoking remote methods is done via local objects, that wrap references to a corresponding remote object. 
-The class of the local object (usually an interface) needs to match the class (interface) name on the server
-side and needs to contain the desired method definitions. The following code snipped shows an simple
+The class of the local object (usually an interface) needs to match the class (or interface) name on the server
+side and needs to contain the remote method definitions. The following code snipped shows a simple
 example on how to obtain such a local object that wraps a reference to the remote object that is bound as
-``example-server`` within the registry.
+``example-server`` within the registry:
 
 ```java
 Registry registry = LocateRegistry.getRegistry(rmiHost);
 ExampleInterface stub = (ExampleInterface)registry.lookup("example-server");
 ```
 
-For the ``lookup`` operation to work, it is required that the ``ExampleInterface`` is available within
-the classpath before the lookup. Otherwise, *Java* throws a ``ClassNotFoundException`` and the lookup
+For the ``lookup`` operation to work, it is required that the ``ExampleInterface`` class is available within
+the classpath before the lookup action is performed. Otherwise, *Java* throws a ``ClassNotFoundException`` and the lookup
 fails. This design is fine for ordinary *RMI* use cases, as the *RMI* developer can include all required
-interface into the clients codebase. From a blackbox perspective however, this behavior is an obstacle.
+interfaces into the clients codebase. From a blackbox perspective however, this behavior is an obstacle.
 
 
-#### Most Naive Approach
+#### The Most Naive Approach
 
-To overcome the obstacle mentioned before and to implement a first approach to *method guessing*, one could
+To overcome the obstacle mentioned above and to implement a first approach of *method guessing*, one could
 do the following steps:
 
-  1. Lookup the associated class or interface name that belongs to the desired bound name (e.g. ``org.example.ExampleInterface``).
-  2. Create the corresponding class or interface dynamically (e.g. by using [Javassist](https://www.javassist.org/)).
-  3. Add the desired methods to the dynamically created class or interface.
-  4. Invoke the methods and use the servers exceptions to identify valid methods.
+  1. Perform a ``lookup`` operation on the desired bound name and catch the ``ClassNotFoundException``
+  2. Extract the missing class or interface  name from the exception (e.g. ``org.example.ExampleInterface``).
+  3. Create the corresponding class or interface dynamically (e.g. by using [Javassist](https://www.javassist.org/)).
+  4. Add the desired methods to the dynamically created class or interface.
+  5. Invoke the methods and use the server side exceptions to identify valid method signatures.
 
-This approach works fine, but has some drawbacks. The most significant one is that you perform valid method calls
+This approach works fine, but has some drawbacks. The most significant one is that you perform valid *RMI* method calls
 that lead to real method invocations on the server side. Even when using dummy arguments (e.g. ``null`` for each
 object type argument, ``true`` for each boolean, ``0`` for each numeric, ...) the method call could still cause an
-undesired behavior on the server. 
+undesired behavior on the server. A simple example could be the method signature ``logError(String msg, boolean verbose)``
+that is contained within your wordlist, but actually maps to the method ``logError(String msg, boolean shutdownServer)`` on the
+server side (only the *method name*, *return type* and *argument types* are used to distinguish remote methods. Argument
+names are not important). Invoking such methods with dummy arguments is still dangerous and it would be better to guess methods
+without executing them on the server side.
 
 
 #### Guessing Without Invoking
 
 The [rmiscout](https://github.com/BishopFox/rmiscout) project was the first one (best to my knowledge) that allowed
-guessing of remote methods without actually invoking them on the server side. To understand how it works, we should
+guessing of remote method signatures without actually invoking them on the server side. To understand how this works, we should
 take a look at the structure of a *Java RMI* call:
 
 ![RMI Message Structure](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-method-guessing-01.png)
 
 The first three parts of the call are not that interesting for method guessing:
 
-  * The *OperationType* is always ``0x50`` in our case, as we want to perform a method call
-  * The *ObjID* is obtained during the ``lookup`` operation from the registry and is just a
+  * The *OperationType* is always ``0x50``, as this operation type is used for method calls
+  * The *ObjID* is obtained during the ``lookup`` operation from the *RMI registry* and is just a
     static identifier for the targeted remote object.
   * The *OperationNumber* is always set to ``-1``, as we call methods by their method hash.
     In earlier *RMI* implementations, methods could also be called by using an *interface hash*
     that was valid for the whole interface and by specifying the desired method as a numeric
     identifier (compare e.g. to [RegistryImpl_Skel.java](https://github.com/openjdk/jdk/blob/90c1034cd4077e63afc0aad53191a04699a816ce/src/java.rmi/share/classes/sun/rmi/registry/RegistryImpl_Skel.java)).
 
-The *MethodHash* is used by modern *RMI* servers to obtain a reference to the desired remote method. It is calculated
+The *MethodHash* is used by modern *RMI* servers to identify the remote method that was called by the client. It is calculated
 by using the methods signature, which includes the *method name*, *return type* and all *argument types*. When an *RMI server*
-encounters an unknown method hast (method is not defined on the server side) it throws a corresponding exception (see
-implementation of [UnicastServerRef](https://github.com/openjdk/jdk/blob/90c1034cd4077e63afc0aad53191a04699a816ce/src/java.rmi/share/classes/sun/rmi/server/UnicastServerRef.java)):
+encounters an unknown method hash (method is not defined on the server side) it throws a corresponding exception. This behavior
+can be checked within the definition of the [UnicastServerRef](https://github.com/openjdk/jdk/blob/90c1034cd4077e63afc0aad53191a04699a816ce/src/java.rmi/share/classes/sun/rmi/server/UnicastServerRef.java)):
+class:
 
 ```java
 try {
-    op = in.readLong();
+    op = in.readLong(); // obtain method hash from incoming stream
 } catch (Exception readEx) {
     throw new UnmarshalException("error unmarshalling call header",
             readEx);
@@ -128,9 +134,9 @@ if (method == null) {
 }
 ```
 
-This exception is used to determine invalid remote methods during method guessing. In case of an existing
+The second exception can be used to determine invalid remote methods during method guessing. In case of an existing
 method call, ``UnicastServerRef`` goes ahead and unmarshals the call arguments by using the methods parameter
-types that were obtained using reflection:
+types that are obtained using reflection:
 
 ```java
 Class<?>[] types = method.getParameterTypes();
@@ -144,23 +150,24 @@ try {
     }
 ```
 
-When using the high-level *Java RMI API*, *Java* automatically computes the method hash for you and makes sure
-that all specified parameters match the expected parameter types. The *rmiscout* project uses low level *Java RMI*
+When using the high-level *Java RMI API*, *Java* automatically computes the method hash and makes sure
+that all specified parameters match the expected argument types. The *rmiscout* project uses low level *Java RMI*
 calls instead, to manipulate the call arguments. Instead of the expected parameter types, a randomly generated class
 is send to the *RMI server* and the servers exception is inspected:
 
-  * When the method does not exist on the *RMI* endpoint, the ``unrecognized method hash`` exception is thrown as usual.
-  * When the method does exist, the *RMI endpoint* attempts to unmarshal the call arguments but cannot find the randomly
-    generated class within it's own class path. This aborts the actual method call and leads to a different exception that
-    indicates the existence of the remote method.
+  * When the remote method does not exist on the *RMI* endpoint, the ``unrecognized method hash`` exception is thrown as usual.
+  * When the remote method does exist, the *RMI endpoint* attempts to unmarshal the call arguments but cannot find the randomly
+    generated class within the servers class path. This aborts the actual method call and leads to a different exception that
+    indicates the existence of the remote method. As the method call gets aborted, there is no real method invocation on the server
+    side. One exception are argument less methods (e.g. ``String getVersion()``), where you can't specify invalid argument types. 
 
 
 #### Making it Fast
 
 Before *rmg v3.3.0* we basically used the same approach as the *rmiscout* project. Instead of randomly generated classes,
-we used a *type confusion approach* (sending object types when the server expects primitive ones and the other way around),
+we used a *type confusion approach* (sending object types when the server expects a primitive argument and the other way around),
 but this is only a minor difference. In the current version however, we changed the implementation to achieve a noticeable
-speedup. To understand how, we need again to take a look at the internal structure and the server-side processing of *RMI messages*.
+speedup. To understand how this works, we need again to take a look at the internal structure and the server-side processing of *RMI messages*.
 
 *Java RMI* allows reuse of already existing *TCP connections*. After invoking a remote method once, subsequent remote method
 invocations may use the same *TCP channel* and do not have to establish a new connection. This behavior is handled by *Java RMI*
@@ -168,14 +175,14 @@ automatically and does not require manual control by the developer. However, reu
 non corrupted state, which is usually not the case for method guessing.
 
 Internally, *Java RMI* uses the ``invoke`` method from the [UnicastRef](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/server/UnicastRef.java) class
-to invoke remote methods from the client side. This is also the call that the *rmiscout* project and (in earlier versions)
+to invoke remote methods on the client side. This is also the call that the *rmiscout* project and (in earlier versions)
 *remote-method-guesser* used. The problem with this method is that it sends the above visualized *RMI* message at once, without
 handling intermediate exceptions. The following diagram tries to visualize that behavior when calling an non existing remote method:
 
 ![RMI Message Structure](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-method-guessing-02.png)
 
 As one can see, this behavior causes the *MethodArguments* to stay within the *TCP stream*, which makes the stream corrupted
-and not reusable. This behavior can also be observed within the ``invoke`` method of the [UnicastRef](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/server/UnicastRef.java) class.
+and not reusable. This behavior can also be observed in a comment within the ``invoke`` method of the [UnicastRef](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/server/UnicastRef.java) class.
 
 ```java
 public void invoke(RemoteCall call) throws Exception {
@@ -193,32 +200,38 @@ public void invoke(RemoteCall call) throws Exception {
       throw e;
 ```
 
-Not reusing existing *TCP streams* slows down the overall speed of method guessing, as *TCP connections* need to be reestablished.
-For plain *TCP* connections the impact is not that big of a deal, although it increases with a larger wordlist size. For *TLS* protected
-connections, the slowdown is more significant and we observed speedups up to a factor of ``8`` when implementing reusable streams.
+Not reusing existing *TCP streams* slows down the overall speed of method guessing, as a *TCP connection* needs to be reestablished for each
+method candidate in the wordlist. For plain *TCP* connections the impact is not that big of a deal, although it increases with a larger wordlist size.
+For *TLS* protected connections however, the slowdown is more significant and we observed speedups up to a factor of ``8`` when implementing reusable streams.
 
 
 #### Preventing Stream Corruption
 
-The open question is now how to prevent stream corruption during method guessing. From our perspective there are two approaches to that:
+The open question is now how to prevent stream corruption during method guessing. From our perspective there are two approaches to do that:
 
   1. *Argument less guessing* - When looking at the *RMI* message structure displayed above and the behavior how *RMI endpoints* parse
-     the corresponding data, it seems that one can just skip sending of method arguments during method guessing. In case of non existing
-     remote methods this is indeed fine, as the *RMI endpoint* will only parse the data up to the method hash and then raise an exception.
+     the corresponding data, it seems that one can just skip sending the method arguments during method guessing. In case of non existing
+     remote methods this is indeed fine, as the *RMI endpoint* will only parse the data up to the method hash and then throw an exception.
      When no arguments were sent, the *TCP* streams stays clean and can be reused.
 
-     In case of existing methods, *argument less guessing* causes a small problem: The *RMI endpoint* waits for the method arguments to appear
-     within the *TCP* stream. When not sending any arguments, this will cause a timeout. Obviously, this timeout would be sufficient as an
-     indicator that the corresponding method exists, but such time based approaches are not that reliable an error prone.
+     In case of existing methods, however, *argument less guessing* causes a problem: After obtaining a reference to the desired remote method
+     by using the transmitted method hash, the *RMI endpoint* waits for the method arguments to appear on the *TCP* stream. When not sending any
+     arguments, this will cause a timeout. Obviously, this timeout would be sufficient as an indicator that the corresponding method exists, but
+     such time based approaches are not that reliable an error prone.
 
-  2. *Polyglot argument* - Method arguments usually corrupt the *TCP* stream, as they do not match the format of a valid *RMI call*. If it is
-     possible to send method arguments that form a valid *RMI call* on their own, stream corruption could be prevented and the *TCP* connection
-     could be reused. Moreover, in the case of existing methods, the method arguments lead to an invalid *RMI call* on the server side, to prevent
-     the method from actually being invoked.
+  2. *Polyglot argument* - In the case of non existing remote methods, method arguments corrupt the *TCP* stream, as they are not parsed by the server
+     during the method call and are interpreted as the start of a new *RMI call* instead. As the method arguments usually not form a valid *RMI message*,
+     this causes an exception on the server side and the corresponding *TCP* stream is closed by the server. However, if it is possible to send method
+     arguments that form a valid *RMI call* on their own, stream corruption could be prevented and the *TCP* connection could be reused.
 
-In *rmg v3.3.0*, we implemented the second approach and looked for a corresponding *polyglot* method argument, that was surprisingly simple to find.
+     In the case of existing methods, on the other hand, the corresponding method arguments need to invalidate the current *RMI call* to prevent the method
+     from actually being invoked on the server side.
+
+In *rmg v3.3.0*, we implemented the second approach and looked for a corresponding *polyglot* method argument. Luckily, such a *polyglot* was surprisingly
+simply to find.
+
 *RMI messages* usually start with a *TransportConstant* as it was explained earlier. During method calls, this transport constant is always set to
-``0x50``, but also other transport constants exist. In case of other transport constants, the structure of an *RMI* differs from the above mentioned
+``0x50``, but also other *TransportConstants* exist. In case of other *TransportConstants*, the structure of an *RMI message* differs from the above mentioned
 structure and it is parsed differently by the server. The following snipped shows an excerpt of the [TCPTransport](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/transport/tcp/TCPTransport.java) class, that handles the different
 message types:
 
@@ -256,8 +269,9 @@ do {
 ```
 
 Notice that in case of the *TransportConstant* being *Ping* (``0x52``), no further data is read from the input stream.
-Therefore, an *RMI Ping* message just consists out of the *TransportConstant*, which is pretty handy for our purposes.
-The following diagram shows, how the used the *RMI Ping* message as a *polyglot* method argument:
+Therefore, an *RMI Ping* message just consists out of the *TransportConstant* and represents a valid *RMI call* on it's own.
+This makes the *RMI Ping* message an optimal candidate for a *polyglot* argument and the following diagram shows how it can
+be used during method guessing:
 
 ![RMI Ping Polyglot](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-method-guessing-03.png)
 
