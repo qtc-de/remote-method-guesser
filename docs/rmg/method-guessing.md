@@ -77,8 +77,8 @@ interfaces into the clients codebase. From a blackbox perspective however, this 
 To overcome the obstacle mentioned above and to implement a first approach of *method guessing*, one could
 do the following steps:
 
-  1. Perform a ``lookup`` operation on the desired bound name and catch the ``ClassNotFoundException``
-  2. Extract the missing class or interface  name from the exception (e.g. ``org.example.ExampleInterface``).
+  1. Perform a ``lookup`` operation on the desired bound name and catch the ``ClassNotFoundException``.
+  2. Extract the missing class or interface name from the exception (e.g. ``org.example.ExampleInterface``).
   3. Create the corresponding class or interface dynamically (e.g. by using [Javassist](https://www.javassist.org/)).
   4. Add the desired methods to the dynamically created class or interface.
   5. Invoke the methods and use the server side exceptions to identify valid method signatures.
@@ -114,7 +114,7 @@ The first three parts of the call are not that interesting for method guessing:
 The *MethodHash* is used by modern *RMI* servers to identify the remote method that was called by the client. It is calculated
 by using the methods signature, which includes the *method name*, *return type* and all *argument types*. When an *RMI server*
 encounters an unknown method hash (method is not defined on the server side) it throws a corresponding exception. This behavior
-can be checked within the definition of the [UnicastServerRef](https://github.com/openjdk/jdk/blob/90c1034cd4077e63afc0aad53191a04699a816ce/src/java.rmi/share/classes/sun/rmi/server/UnicastServerRef.java)):
+can be checked within the definition of the [UnicastServerRef](https://github.com/openjdk/jdk/blob/90c1034cd4077e63afc0aad53191a04699a816ce/src/java.rmi/share/classes/sun/rmi/server/UnicastServerRef.java)
 class:
 
 ```java
@@ -217,18 +217,18 @@ The open question is now how to prevent stream corruption during method guessing
      In case of existing methods, however, *argument less guessing* causes a problem: After obtaining a reference to the desired remote method
      by using the transmitted method hash, the *RMI endpoint* waits for the method arguments to appear on the *TCP* stream. When not sending any
      arguments, this will cause a timeout. Obviously, this timeout would be sufficient as an indicator that the corresponding method exists, but
-     such time based approaches are not that reliable an error prone.
+     such time based approaches are not that reliable, error prone and usually slower.
 
-  2. *Polyglot argument* - In the case of non existing remote methods, method arguments corrupt the *TCP* stream, as they are not parsed by the server
-     during the method call and are interpreted as the start of a new *RMI call* instead. As the method arguments usually not form a valid *RMI message*,
+  2. *Polyglot argument* - In the case of non existing remote methods, method arguments corrupt the *TCP* stream, as they are not read by the server
+     during the method call and are interpreted as the start of a new *RMI call* instead. As the method arguments do not form a valid *RMI message*,
      this causes an exception on the server side and the corresponding *TCP* stream is closed by the server. However, if it is possible to send method
      arguments that form a valid *RMI call* on their own, stream corruption could be prevented and the *TCP* connection could be reused.
 
-     In the case of existing methods, on the other hand, the corresponding method arguments need to invalidate the current *RMI call* to prevent the method
-     from actually being invoked on the server side.
+     In the case of existing methods, on the other hand, the corresponding method arguments need to invalidate the current *RMI call* to prevent the
+     method from actually being invoked on the server side.
 
-In *rmg v3.3.0*, we implemented the second approach and looked for a corresponding *polyglot* method argument. Luckily, such a *polyglot* was surprisingly
-simply to find.
+In *rmg v3.3.0*, we implemented the second approach and looked for a corresponding *polyglot* method argument. Luckily, such a *polyglot* was
+surprisingly simple to find.
 
 *RMI messages* usually start with a *TransportConstant* as it was explained earlier. During method calls, this transport constant is always set to
 ``0x50``, but also other *TransportConstants* exist. In case of other *TransportConstants*, the structure of an *RMI message* differs from the above mentioned
@@ -275,48 +275,71 @@ be used during method guessing:
 
 ![RMI Ping Polyglot](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-method-guessing-03.png)
 
-With the *RMI Ping* message being used as a method argument, the *TCP* streams stays in a clean state and can be reused
+With an *RMI Ping* message being used as a method argument, the *TCP* streams stays in a clean state and can be reused
 for further guessing attempts in case of non existing methods. But how about existing methods? The *RMI Ping TransportConstant*
-is just an ``int`` doesn't this cause problems with methods that expected an ``int`` as argument? Luckily, the answer is *no*
-if you write the data to the correct output stream.
+is just an ``int``. Doesn't this cause problems with methods that expected an ``int`` as argument? Luckily, the answer is *no*.
+But you have to write the data to the correct output stream.
 
-Almost all data written during a *RMI call* is wrapped within an ``ObjectOutputStream`` (only the *TransportConstant* is written
+Almost all data written during an *RMI call* is wrapped within an ``ObjectOutputStream`` (only the *TransportConstant* is written
 to the raw ``OutputStream`` directly). Within an ``ObjectOuputStream``, data is aligned to match a specific format. This is not only
 true for non primitive data (e.g. objects or classes), but also primitive types are aligned within a special data structure.
 The following listing shows an example of this situation, where the contents of an *RMI call* are visualized by using the tool
-[SerializationDumper](https://github.com/NickstaDB/SerializationDumper) (the *TransportConstant* was stripped before):
+[SerializationDumper](https://github.com/NickstaDB/SerializationDumper). Notice, that the *TransportConstant* (``0x50``) was stripped
+before and only primitive method arguments were used during the call. Furthermore, the output of the tool was modified a little bit to
+show the different components of the method call:
 
 ```
+RAW: 0xaced000577266ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec00000001
 STREAM_MAGIC - 0xac ed
 STREAM_VERSION - 0x00 05
 Contents
   TC_BLOCKDATA - 0x77
-    Length - 38 - 0x26
-    Contents - 0x6ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec00000001
+    Length:   0x26
+    Contents:
+    --------------------------------------------------------
+                 6ca04bad45b46f47 // ObjID.objNum
+                         b2def154 // ObjID.UID.unique
+                 0000017a039eabde // ObjID.UID.time
+                             8009 // ObjID.UID.count
+                         ffffffff // OperationNumber
+                 67e2a9311d3dd3ec // Method Hash
+                         00000001 // Method Argument: (int)1
+    --------------------------------------------------------
 ```
 
 Instead of raw bytes, the *ObjID*, *OperationNumber* and the *MethodHash* are wrapped into a ``TC_BLOCKDATA`` element,
-that includes the length of the contained data. During method guessing, we write the *RMI Ping* message not on the
-``ObjectOutputStream``, but on the underlying raw ``OutputStream``. The *RMI Ping* message is then not treated as part
-of the ``TC_BLOCKDATA`` structure, but as a new element within the ``ObjectOutputStream``. However, as the code ``0x52``
-is not a valid element type, parsing the corresponding ``ObjectInputStream`` now leads to an error:
+that includes the length of the contained data. If we just write the *RMI Ping TransportConstant* to the ``ObjectOutputStream``
+too, it would also be contained within the ``TC_BLOCKDATA`` structure and treated as a regular method argument. Therefore,
+during method guessing, we write the *RMI Ping* message not on the ``ObjectOutputStream``, but on the underlying raw ``OutputStream``.
+The *RMI Ping* message is then not treated as part of the ``TC_BLOCKDATA`` structure, but as a new element within the
+``ObjectOutputStream``. Since the code ``0x52`` (*RMI Ping TransportConstant*) is not a valid element type within ``ObjectOutputStream``,
+parsing the corresponding ``ObjectInputStream`` now leads to an error:
 
 ```
+RAW: 0xaced000577266ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec52
 STREAM_MAGIC - 0xac ed
 STREAM_VERSION - 0x00 05
 Contents
   TC_BLOCKDATA - 0x77
-    Length - 38 - 0x26
-    Contents - 0x6ca04bad45b46f47b2def1540000017a039eabde8009ffffffff67e2a9311d3dd3ec00000001
+    Length:   0x26
+    Contents:
+    --------------------------------------------------------
+                 6ca04bad45b46f47 // ObjID.objNum
+                         b2def154 // ObjID.UID.unique
+                 0000017a039eabde // ObjID.UID.time
+                             8009 // ObjID.UID.count
+                         ffffffff // OperationNumber
+                 67e2a9311d3dd3ec // Method Hash
+    --------------------------------------------------------
   Invalid content element type 0x52
 ```
 
-This is exactly the behavior we want during method guessing. As the ``ObjectInputStream`` is valid up to the method hash,
+This is exactly the behavior we want during method guessing. As the ``ObjectInputStream`` is valid up to the method hash and
 the *RMI endpoint* successfully parses all the elements before the *RMI Ping* message. When attempting to read the method arguments
-however, the *RMI endpoint* will read the next ``ObjectInputStream`` element (``0x52``) and raise an exception. Due to the different
-exception message, we know that the method exists and because the *RMI Ping* message was read and removed from the *TCP stream*, the
-stream stays clean and can be reused. Furthermore, the corresponding remote method was never really invoked, as there was an error when
-parsing the method arguments.
+however, the *RMI endpoint* will read the next element (``0x52``) and the underlying ``ObjectInputStream`` throws an exception. Due
+to the different exception message, we know that the method exists and because the *RMI Ping* message was read and removed from the
+*TCP stream*, the stream stays clean and can be reused. Furthermore, the corresponding remote method was never really invoked, as there
+was an error when unmarshalling the method arguments.
 
 
 #### The Full Story
@@ -326,41 +349,51 @@ that is explained in this chapter. When we initially researched for a way to pre
 method arguments never corrupt the *TCP stream*. This is most likely related to how the ``ObjectInputStream`` class reads ``TC_BLOCKDATA``
 structures from the stream.
 
-When a method only accepts primitive argument types, the whole argument data is contained within the same ``TC_BLOCKDATA`` structure
-as the *ObjID* and the *MethodHash*. As the length of the ``TC_BLOCKDATA`` is contained within the structure, ``ObjectInputStream`` probably
-parses the whole structure at once and removes it completely from the *TCP* stream. Even in case of a non existing method hash, the *stream*
-stays clean and the already read method arguments would be ignored. This makes pure primitive method arguments another great candidate
-for fast method guessing. That being said, there is a problem concerning real method invocations on the server side.
+When a method only expects primitive argument types, the whole argument data is contained within the same ``TC_BLOCKDATA`` structure
+that already contains the *ObjID*, the *OperationNumber* and the *MethodHash*. As the length of the ``TC_BLOCKDATA`` content is contained
+within the structure itself, ``ObjectInputStream`` parses the whole structure at once and removes it completely from the *TCP* stream.
+Even in case of a non existing method hash, the *stream* stays clean as the method arguments were read and removed from the *TCP stream*.
+This makes pure primitive method arguments another great candidate for fast method guessing. That being said, there is a problem concerning
+real method invocations on the server side.
 
-A major goal of method guessing was to prevent valid method calls on the server side and we already saw that it is implemented by tampering
+A major goal of method guessing was to prevent valid method calls on the server side and we already saw that this is implemented by tampering
 with the type of method arguments. When enforcing method arguments to be pure primitive (to prevent stream corruption) it is no longer
-possible to tamper with the argument types that are expected by the remote method. Each method that expects only primitive argument types would
-be able to parse arguments from the stream and lead to a real invocation on the server side. Confusing different primitive argument types is also
-not possible, as they are all represented as raw bytes in the ``TC_BLOCKDATA`` structure.
+possible to tamper with the argument types in a way that leads to server side exceptions. As demonstrated above, primitive arguments are written
+as raw bytes within a ``TC_BLOCKDATA`` element. Therefore, if the remote method expects e.g. a ``short`` value as argument and a ``long`` is
+transmitted, the method will just take the first two bytes of the ``long`` and parse them as ``short``. On the other hand, if the method
+expects a ``long``, but a ``short`` is transmitted, the method will wait for the remaining data, which causes a timeout.
 
 Therefore, the technique mentioned above can only be used for methods that accept at least one non primitive argument type. In this case,
 the *RMI endpoint* expects the ``TC_BLOCKDATA`` structure to have a specific length and to be followed by another ``ObjectInput`` structure.
-We can just append data to the ``TC_BLOCKDATA`` structure, which causes an exception on the server side. But it is even worth the effort?
-Well, it is difficult to estimate. The approach mentioned above requires usually to send more data to the *RMI server*. The polyglot approach,
-on the other hand, causes one additional processing loop on the *RMI server*. In our tests, combining the two approaches was the fastest
-implementation, although this might not be true in each situation.
+We can just append data to the ``TC_BLOCKDATA`` structure, which makes it longer than expected and causes an [OptionalDataException](https://docs.oracle.com/javase/7/docs/api/java/io/OptionalDataException.html)
+on the server side. Looking at the documentation of ``OptionalDataException`` you can find a description that matches exactly the above
+described case:
 
-Nonetheless, *rmg v3.3.0* implements the hybrid approach. Pure primitive methods are guessed by using the *Ping polyglot* technique, whereas methods
-with non primitive argument types are guessed by extending the ``TC_BLOCKDATA`` structure over it's expected length (needs to be extended up to the
-point where the corresponding remote method expects a non primitive type).
+> Exception indicating the failure of an object read operation due to unread primitive data...
+
+But it is even worth the effort to implement a separate guessing approach for methods that take at least one non primitive arguments?
+Well, it is difficult to estimate. The approach mentioned above requires usually to send more data to the *RMI server*, as you need
+to supply as many primitive arguments as it takes to reach the first non primitive one. The polyglot approach, on the other hand,
+causes one additional processing loop on the *RMI server*. In our tests, combining the two approaches was the fastest implementation,
+although the speedup was just marginal.
+
+Summarized: *rmg v3.3.0* implements the hybrid approach. Pure primitive methods are guessed by using the *Ping polyglot* technique, whereas methods
+with at least one non primitive argument type are guessed by extending the ``TC_BLOCKDATA`` structure over it's expected length. The corresponding
+implementation can be found in the [MethodCandidate](https://github.com/qtc-de/remote-method-guesser/blob/develop/src/de/qtc/rmg/internal/MethodCandidate.java)
+class within the ``sendArguments`` method.
 
 
 ### About Threading
 
 ----
 
-*Java RMI* uses threading by default and creates a separate thread for each connection. If a *remote method* is invoked multiple times simultaneously,
-these method invocations are executed in parallel on the server side. This behavior is independent of whether the method invocations originate from
+*Java RMI* uses threading by default and creates a separate thread for each connection on the server side. If an *RMI client* invokes the same *remote method* multiple
+times simultaneously, these method invocations are executed in parallel on the server side. This behavior is independent of whether the method invocations originate from
 the same or different clients. Making *remote objects* thread safe is the responsibility of the developer.
 
 For method guessing, the multi threaded behavior of *Java RMI* is nice and we may be able to speedup the ``guess`` action by using multiple
 threads. Initially we thought that one has to create separate [TCPEndpoint](https://github.com/openjdk/jdk/blob/master/src/java.rmi/share/classes/sun/rmi/transport/tcp/TCPEndpoint.java)
-objects on the client side to profit from multiple threads, but this seems not to be true. A ``TCPEndpoint`` object just saves the remote host,
+objects on the client side to profit from multiple threads, but this is not true. A ``TCPEndpoint`` object just saves the remote host,
 port and the ``RMIClientSocketFactory`` that should be used to establish connections. Therefore, a ``TCPEndpoint`` is not bound to exactly one
 *TCP connection*, as we expected earlier, but is used as a socket factory instead.
 
@@ -369,18 +402,18 @@ class. This function checks whether there is already a free and reusable connect
 The connection is then used to perform the *RMI call* and is freed afterwards. If no exception occurred, the connection is marked as
 *reusable* before it is freed, which causes the connection to be cached for later calls. If another call is dispatched (within
 the cache interval for *RMI connections*) the *RMI client* will find the cached connection and reuse it for the call. This is closely related
-to the *stream corruption prevention* discussed above, as *stream corruptions* make a stream not reusable.
+to the *stream corruption prevention* discussed above, as *stream corruptions* make a stream *not reusable*.
 
 The behavior described above is also true for multiple threads operating on the same ``RemoteObject``. When two threads call a method on
-the same ``RemoteObject`` in parallel, they will both use a separate *TCP connection* and create a new thread on the server side. If the
+the same ``RemoteObject`` in parallel, they will both use a separate *TCP connection* and create new threads on the server side. If the
 corresponding method calls don't cause the connections to be in a corrupted state, they will be cached and reused for later calls that are
 requested within the caching interval. This makes the implementation of multi threaded guessing easy, as the *RMI runtime* handles most of
 the complicated stuff.
 
 To get an optimal distribution of tasks that is independent of the number of *bound names*, *rmg v3.3.0* divides the method candidates obtained
-from the wordlists into as many parts as threads are available. For each *bound name* - *wordlist* combination, one task is created and executed
+from the wordlists into as many parts as threads are available. For each *bound name* - *wordlist part* combination, one task is created and executed
 within a thread pool. Or, to put it another way: *rmg v3.3.0* distributes guessing in ``n * t`` tasks, where ``n`` is the number of *bound names*
-and ``t`` is the number of threads. These tasks are executed in a thread pool with ``t`` worker threads.
+and ``t`` is the number of available threads. These tasks are executed in a thread pool with ``t`` worker threads.
 
 
 ### Conclusion
