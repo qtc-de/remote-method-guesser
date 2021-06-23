@@ -179,7 +179,7 @@ public class MethodCandidate {
 
         } else {
             oo.write(new byte[this.primitiveSize]);
-            oo.writeInt(1);
+            oo.writeByte(1);
         }
     }
 
