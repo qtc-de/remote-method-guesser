@@ -938,4 +938,22 @@ public class RMGUtils {
 
         return -1;
     }
+
+    /**
+     * Converts a byte array into a hex string. Copied from:
+     *  https://stackoverflow.com/questions/15429257/how-to-convert-byte-array-to-hexstring-in-java
+     *
+     * @param in byte array to convert
+     * @return hex string representing the byte array
+     */
+    public static String bytesToHex(byte[] in)
+    {
+        final StringBuilder builder = new StringBuilder();
+
+        for (byte b : in) {
+            builder.append(String.format("%02x", b));
+        }
+
+        return builder.toString();
+    }
 }

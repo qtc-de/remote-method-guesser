@@ -21,10 +21,12 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
+import de.qtc.rmg.exceptions.SSRFException;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.Pair;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
@@ -105,10 +107,13 @@ public final class RMIWhisperer {
              ExceptionHandler.showStackTrace(e);
          }
 
-         if( ssl )
+         if( ssl ) {
              csf = new SslRMIClientSocketFactory();
-         else
+         } else if( RMGOption.SSRF.getBool() ) {
+             csf = new SSRFSocketFactory();
+         } else {
              csf = my;
+         }
     }
 
     /**
@@ -408,6 +413,9 @@ public final class RMIWhisperer {
 
         } catch(java.rmi.ConnectIOException e) {
             ExceptionHandler.connectIOException(e, callName);
+
+        } catch( SSRFException e ) {
+            Logger.printlnMixedYellow("SSRF-Data:", RMGUtils.bytesToHex(SSRFSocket.getContent()));
         }
     }
 

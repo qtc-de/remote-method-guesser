@@ -148,6 +148,7 @@ public class ArgumentParser {
         RMGOption.DGC_METHOD.setValue(cmdLine, "clean");
 
         RMGOption.SSL.setBoolean(cmdLine);
+        RMGOption.SSRF.setBoolean(cmdLine);
         RMGOption.FOLLOW.setBoolean(cmdLine);
         RMGOption.UPDATE.setBoolean(cmdLine);
         RMGOption.CREATE_SAMPLES.setBoolean(cmdLine);
@@ -284,6 +285,10 @@ public class ArgumentParser {
         Option ssl = new Option(null, RMGOption.SSL.name, RMGOption.SSL.requiresValue, RMGOption.SSL.description);
         ssl.setRequired(false);
         options.addOption(ssl);
+
+        Option ssrf = new Option(null, RMGOption.SSRF.name, RMGOption.SSRF.requiresValue, RMGOption.SSRF.description);
+        ssrf.setRequired(false);
+        options.addOption(ssrf);
 
         Option stackTrace = new Option(null, RMGOption.STACK_TRACE.name, RMGOption.STACK_TRACE.requiresValue, RMGOption.STACK_TRACE.description);
         stackTrace.setRequired(false);

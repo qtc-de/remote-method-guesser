@@ -31,6 +31,7 @@ public enum RMGOption {
     SAMPLE_FOLDER("sample-folder", "folder used for sample generation", true),
     SIGNATURE("signature", "function signature or one of (dgc|reg|act)", true),
     SSL("ssl", "use SSL for the rmi-registry connection", false),
+    SSRF("ssrf", "print SSRF payload instead of contacting a server", false),
     STACK_TRACE("stack-trace", "display stack traces for caught exceptions", false),
     TEMPLATE_FOLDER("template-folder", "location of the template folder", true),
     THREADS("threads", "maximum number of threads (default: 5)", true),
