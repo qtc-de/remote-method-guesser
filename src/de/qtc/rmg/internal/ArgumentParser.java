@@ -156,6 +156,7 @@ public class ArgumentParser {
         RMGOption.LOCALHOST_BYPASS.setBoolean(cmdLine);
         RMGOption.FORCE_GUESSING.setBoolean(cmdLine);
         RMGOption.GUESS_DUPLICATES.setBoolean(cmdLine);
+        RMGOption.GOPHER.setBoolean(cmdLine);
 
         try {
             RMGOption.OBJID.setInt(cmdLine, null);
@@ -235,6 +236,10 @@ public class ArgumentParser {
         Option forceLegacy = new Option(null, RMGOption.FORCE_LEGACY.name, RMGOption.FORCE_LEGACY.requiresValue, RMGOption.FORCE_LEGACY.description);
         forceLegacy.setRequired(false);
         options.addOption(forceLegacy);
+
+        Option gopher = new Option(null, RMGOption.GOPHER.name, RMGOption.GOPHER.requiresValue, RMGOption.GOPHER.description);
+        gopher.setRequired(false);
+        options.addOption(gopher);
 
         Option guessDuplicates = new Option(null, RMGOption.GUESS_DUPLICATES.name, RMGOption.GUESS_DUPLICATES.requiresValue, RMGOption.GUESS_DUPLICATES.description);
         guessDuplicates.setRequired(false);

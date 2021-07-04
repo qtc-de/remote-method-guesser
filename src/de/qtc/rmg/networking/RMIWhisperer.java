@@ -183,6 +183,9 @@ public final class RMIWhisperer {
             } else if( t instanceof java.rmi.NoSuchObjectException ) {
                 throw (java.rmi.NoSuchObjectException)t;
 
+            } else if( t instanceof SSRFException ) {
+                SSRFSocket.printContent(host, port);
+
             } else {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
             }
@@ -267,6 +270,7 @@ public final class RMIWhisperer {
               Logger.printlnPlainBlue(boundName + ".");
               Logger.eprintln("The corresponding bound name is not bound to the registry.");
               RMGUtils.exit();
+
           }
         }
 
@@ -415,7 +419,7 @@ public final class RMIWhisperer {
             ExceptionHandler.connectIOException(e, callName);
 
         } catch( SSRFException e ) {
-            Logger.printlnMixedYellow("SSRF-Data:", RMGUtils.bytesToHex(SSRFSocket.getContent()));
+            SSRFSocket.printContent(host, port);
         }
     }
 

@@ -10,6 +10,9 @@ import java.net.Socket;
 import java.rmi.server.UID;
 
 import de.qtc.rmg.exceptions.SSRFException;
+import de.qtc.rmg.internal.RMGOption;
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.RMGUtils;
 import sun.rmi.server.MarshalOutputStream;
 import sun.rmi.transport.TransportConstants;
 
@@ -47,8 +50,28 @@ public class SSRFSocket extends Socket {
         return bos;
     }
 
-    public static byte[] getContent()
+    public static void printContent(String host, int port)
     {
-        return bos.toByteArray();
+        byte[] content = bos.toByteArray();
+        String hexContent = RMGUtils.bytesToHex(content);
+
+        if( RMGOption.GOPHER.getBool()) {
+
+            StringBuilder builder = new StringBuilder();
+            builder.append("gopher://" + host + ":" + port +"/");
+
+            for(int ctr = 0; ctr < hexContent.length(); ctr++) {
+
+                if( (ctr % 2) == 0)
+                    builder.append("%");
+
+                builder.append(hexContent.charAt(ctr));
+            }
+
+            hexContent = builder.toString();
+        }
+
+        Logger.printlnMixedYellow("SSRF Payload:", hexContent);
+        System.exit(0);
     }
 }
