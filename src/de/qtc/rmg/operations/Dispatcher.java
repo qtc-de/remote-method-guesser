@@ -54,7 +54,7 @@ public class Dispatcher {
     public Dispatcher(ArgumentParser p)
     {
         this.p = p;
-        rmi = new RMIWhisperer(p.getHost(), p.getPort(), RMGOption.SSL.getBool(), RMGOption.FOLLOW.getBool());
+        rmi = new RMIWhisperer(p.getHost(), p.getPort());
 
         if(p.containsMethodSignature())
             this.createMethodCandidate();
@@ -76,9 +76,16 @@ public class Dispatcher {
         rmi.locateRegistry();
         boundNames = rmi.getBoundNames(RMGOption.BOUND_NAME.getString());
 
-        boundClasses = rmi.getClassNames(boundNames);
-        allClasses = (HashMap<String, String>)boundClasses[0].clone();
-        allClasses.putAll(boundClasses[1]);
+        if( RMGOption.SSRFResponse.notNull() ) {
+            boundClasses = new HashMap[] { new HashMap<String,String>(), null };
+            for(String name : boundNames)
+                boundClasses[0].put(name, null);
+
+        } else {
+            boundClasses = rmi.getClassNames(boundNames);
+            allClasses = (HashMap<String, String>)boundClasses[0].clone();
+            allClasses.putAll(boundClasses[1]);
+        }
     }
 
     /**
@@ -400,6 +407,9 @@ public class Dispatcher {
 
             Formatter format = new Formatter();
             format.listBoundNames(boundClasses);
+
+            if( RMGOption.SSRFResponse.notNull() )
+                return;
 
             Logger.println("");
             format.listCodeases();

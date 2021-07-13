@@ -75,13 +75,13 @@ public final class RMIWhisperer {
      * @param ssl if true, use SSL for registry communication
      * @param followRedirects if true, do not redirect calls to the specified target
      */
-    public RMIWhisperer(String host, int port, boolean ssl, boolean followRedirects)
+    public RMIWhisperer(String host, int port)
     {
          this.host = host;
          this.port = port;
 
          RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-         RMISocketFactory my = new LoopbackSocketFactory(host, fac, followRedirects);
+         RMISocketFactory my = new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
 
          try {
              RMISocketFactory.setSocketFactory(my);
@@ -98,7 +98,7 @@ public final class RMIWhisperer {
 
              LoopbackSslSocketFactory.host = host;
              LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-             LoopbackSslSocketFactory.followRedirect = followRedirects;
+             LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
              java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
 
          } catch (NoSuchAlgorithmException | KeyManagementException e) {
@@ -107,10 +107,16 @@ public final class RMIWhisperer {
              ExceptionHandler.showStackTrace(e);
          }
 
-         if( ssl ) {
+         if( RMGOption.SSL.getBool() ) {
              csf = new SslRMIClientSocketFactory();
+
          } else if( RMGOption.SSRF.getBool() ) {
              csf = new SSRFSocketFactory();
+
+         } else if( RMGOption.SSRFResponse.notNull() ) {
+             byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFResponse.getString());
+             csf = new SSRFResponseSocketFactory(content);
+
          } else {
              csf = my;
          }

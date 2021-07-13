@@ -35,6 +35,10 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
+/**
+ * @author pentester
+ *
+ */
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
 
@@ -941,7 +945,7 @@ public class RMGUtils {
 
     /**
      * Converts a byte array into a hex string. Copied from:
-     *  https://stackoverflow.com/questions/15429257/how-to-convert-byte-array-to-hexstring-in-java
+     * https://stackoverflow.com/questions/15429257/how-to-convert-byte-array-to-hexstring-in-java
      *
      * @param in byte array to convert
      * @return hex string representing the byte array
@@ -955,5 +959,24 @@ public class RMGUtils {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * Converts a hex string into a byte array. Copied from:
+     * https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+     *
+     * @param s Hex string to convert from
+     * @return byte array representation of the hex data
+     */
+    public static byte[] hexToBytes(String s)
+    {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+
+        for(int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte)((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+
+        return data;
     }
 }

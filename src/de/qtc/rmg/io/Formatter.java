@@ -30,10 +30,20 @@ public class Formatter {
      *
      * @param classes array of maps containing boundname-classes pairs
      */
+    @SuppressWarnings("unchecked")
     public void listBoundNames(HashMap<String,String>[] classes)
     {
+        if( classes == null )
+            classes = new HashMap[] {null, null};
+
         HashMap<String,String> knownClasses = classes[0];
         HashMap<String,String>  unknownClasses = classes[1];
+
+        if( knownClasses == null )
+            knownClasses = new HashMap<String,String>();
+
+        if( unknownClasses == null )
+            unknownClasses = new HashMap<String,String>();
 
         Logger.printlnBlue("RMI registry bound names:");
         Logger.println("");
@@ -50,18 +60,13 @@ public class Formatter {
         for( String name : boundNames ) {
 
             Logger.printlnMixedYellow("-", name);
-
-            if( knownClasses == null || unknownClasses == null ) {
-                continue;
-            }
-
             Logger.increaseIndent();
 
-            if( knownClasses.containsKey(name) ) {
+            if( knownClasses.get(name) != null ) {
                 Logger.printlnMixedBlue("-->", knownClasses.get(name), "(known class)");
             }
 
-            if( unknownClasses.containsKey(name) ) {
+            if( unknownClasses.get(name) != null ) {
                 Logger.printlnMixedBlue("-->", unknownClasses.get(name), "(unknown class)");
             }
 

@@ -144,6 +144,7 @@ public class ArgumentParser {
         RMGOption.WORDLIST_FOLDER.setValue(cmdLine, config.getProperty("wordlist-folder"));
         RMGOption.SIGNATURE.setValue(cmdLine);
         RMGOption.BOUND_NAME.setValue(cmdLine);
+        RMGOption.SSRFResponse.setValue(cmdLine);
         RMGOption.REG_METHOD.setValue(cmdLine, "lookup");
         RMGOption.DGC_METHOD.setValue(cmdLine, "clean");
 
@@ -294,6 +295,10 @@ public class ArgumentParser {
         Option ssrf = new Option(null, RMGOption.SSRF.name, RMGOption.SSRF.requiresValue, RMGOption.SSRF.description);
         ssrf.setRequired(false);
         options.addOption(ssrf);
+
+        Option ssrfResponse = new Option(null, RMGOption.SSRFResponse.name, RMGOption.SSRFResponse.requiresValue, RMGOption.SSRFResponse.description);
+        ssrfResponse.setRequired(false);
+        options.addOption(ssrfResponse);
 
         Option stackTrace = new Option(null, RMGOption.STACK_TRACE.name, RMGOption.STACK_TRACE.requiresValue, RMGOption.STACK_TRACE.description);
         stackTrace.setRequired(false);

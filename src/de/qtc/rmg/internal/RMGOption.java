@@ -33,6 +33,7 @@ public enum RMGOption {
     SIGNATURE("signature", "function signature or one of (dgc|reg|act)", true),
     SSL("ssl", "use SSL for the rmi-registry connection", false),
     SSRF("ssrf", "print SSRF payload instead of contacting a server", false),
+    SSRFResponse("ssrf-response", "evaluate ssrf response from the server", true),
     STACK_TRACE("stack-trace", "display stack traces for caught exceptions", false),
     TEMPLATE_FOLDER("template-folder", "location of the template folder", true),
     THREADS("threads", "maximum number of threads (default: 5)", true),
@@ -64,6 +65,19 @@ public enum RMGOption {
         this.name = name;
         this.description = description;
         this.requiresValue = requiresValue;
+    }
+
+    /**
+     * Returns true if a value is set.
+     *
+     * @return true or false
+     */
+    public boolean notNull()
+    {
+        if( this.value == null)
+            return false;
+
+        return true;
     }
 
     /**
