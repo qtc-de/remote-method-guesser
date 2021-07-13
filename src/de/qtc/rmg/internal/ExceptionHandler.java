@@ -337,6 +337,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void unrecognizedMethodHash(String action, String signature)
+    {
+        Logger.printlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
+        Logger.printlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
+        RMGUtils.exit();
+    }
+
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);

@@ -274,6 +274,12 @@ public class RemoteObjectClient {
         try {
             rmi.genericCall(null, -1, targetMethod.getHash(), callArguemnts, false, getMethodName(targetMethod), remoteRef, rtype);
 
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+            if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash"))
+                ExceptionHandler.unrecognizedMethodHash("call", targetMethod.getSignature());
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
         }
