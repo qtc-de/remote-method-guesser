@@ -169,7 +169,7 @@ public class RegistryClient {
      */
     public void unbindObject(String boundName, boolean localhostBypass)
     {
-        Logger.printlnMixedBlue("Ubinding bound name", boundName, "from the registry.");
+        Logger.printlnMixedBlue("Unbinding bound name", boundName, "from the registry.");
         Logger.println("");
         Logger.increaseIndent();
 
