@@ -21,6 +21,7 @@ public class Starter {
 
         RMGUtils.init();
         RMGUtils.disableWarning();
+        RMGUtils.enableCodebaseCollector();
         Dispatcher dispatcher = new Dispatcher(parser);
 
         operation.invoke(dispatcher);

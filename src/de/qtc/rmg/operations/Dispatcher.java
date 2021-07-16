@@ -82,7 +82,7 @@ public class Dispatcher {
                 boundClasses[0].put(name, null);
 
         } else {
-            boundClasses = rmi.getClassNames(boundNames);
+            boundClasses = rmi.lookup(boundNames);
             allClasses = (HashMap<String, String>)boundClasses[0].clone();
             allClasses.putAll(boundClasses[1]);
         }
@@ -117,7 +117,7 @@ public class Dispatcher {
         Object objID = RMGOption.OBJID.value;
 
         if(objID != null) {
-            return new RemoteObjectClient(rmi, (int)objID, p.getLegacyMode());
+            return new RemoteObjectClient(rmi, (int)objID);
 
         } else {
 
@@ -127,7 +127,7 @@ public class Dispatcher {
                 ExceptionHandler.noSuchObjectException(e, "registry", true);
             }
 
-            return new RemoteObjectClient(rmi, boundName, allClasses.get(boundName), p.getLegacyMode());
+            return new RemoteObjectClient(rmi, boundName);
         }
     }
 
@@ -144,7 +144,6 @@ public class Dispatcher {
         String sampleFolder = RMGOption.SAMPLE_FOLDER.getString();
         boolean sslValue = RMGOption.SSL.getBool();
         boolean followRedirect = RMGOption.FOLLOW.getBool();
-        int legacyMode = p.getLegacyMode();
 
         Logger.println("");
         Logger.println("Starting creation of sample files:");
@@ -154,7 +153,7 @@ public class Dispatcher {
         try {
             String className;
             boolean unknownClass = false;
-            SampleWriter writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect, legacyMode);
+            SampleWriter writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect);
 
             for(String name : results.keySet()) {
 
@@ -461,7 +460,7 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        MethodGuesser guesser = new MethodGuesser(rmi, this.boundClasses, candidates, p.getLegacyMode());
+        MethodGuesser guesser = new MethodGuesser(rmi, this.boundClasses, candidates);
         guesser.printGuessingIntro();
 
         Map<String, ArrayList<MethodCandidate>> results = guesser.guessMethods();

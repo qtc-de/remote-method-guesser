@@ -35,9 +35,7 @@ public class RemoteObjectClient {
     private Field proxyField;
     private Field remoteField;
 
-    private int legacyMode;
     private String boundName;
-    private String remoteClass;
     private String randomClassName;
 
 
@@ -50,16 +48,12 @@ public class RemoteObjectClient {
      *
      * @param rmiRegistry registry to perform lookup operations
      * @param boundName for the lookup on the registry
-     * @param remoteClass class name of the bound name (is created dynamically to prevent ClassNotFoundExceptions)
-     * @param legacyMode the user specified legacyMode setting
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName, String remoteClass, int legacyMode)
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName)
     {
         this.objID = null;
         this.rmi = rmiRegistry;
         this.boundName = boundName;
-        this.legacyMode = legacyMode;
-        this.remoteClass = remoteClass;
 
         try {
             this.proxyField = Proxy.class.getDeclaredField("h");
@@ -83,10 +77,9 @@ public class RemoteObjectClient {
      * @param objID ID of the remote object to talk to
      * @param legacyMode user specified legacyMode setting
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID, int legacyMode)
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID)
     {
         this.rmi = rmiRegistry;
-        this.legacyMode = legacyMode;
         this.objID = new ObjID(objID);
 
         remoteRef = getRemoteRef();
@@ -350,35 +343,17 @@ public class RemoteObjectClient {
      */
     private RemoteRef getRemoteRefByName()
     {
-        boolean isLegacy = RMGUtils.isLegacy(this.remoteClass, this.legacyMode, true);
-
-        Remote instance = null;
-        RemoteRef remoteReference = null;
+        RemoteRef remoteRef = null;
 
         try {
-            if( !isLegacy ) {
-                RMGUtils.makeInterface(this.remoteClass);
-                instance = rmi.getRegistry().lookup(boundName);
-
-                RemoteObjectInvocationHandler ref = (RemoteObjectInvocationHandler)proxyField.get(instance);
-                remoteReference = ref.getRef();
-
-            } else {
-                RMGUtils.makeLegacyStub(this.remoteClass);
-                instance = rmi.getRegistry().lookup(boundName);
-
-                remoteReference = (RemoteRef)remoteField.get(instance);
-            }
-
-        } catch(java.rmi.NotBoundException e) {
-            Logger.eprintlnMixedYellow("Specified bound name", boundName, "is not bound to the registry.");
-            RMGUtils.exit();
+            Remote instance = rmi.lookup(boundName);
+            remoteRef = extractRef(instance);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
         }
 
-        return remoteReference;
+        return remoteRef;
     }
 
     /**
@@ -483,5 +458,18 @@ public class RemoteObjectClient {
         }
 
         return methodName;
+    }
+
+    private RemoteRef extractRef(Remote instance) throws IllegalArgumentException, IllegalAccessException
+    {
+        RemoteRef remoteRef = null;
+
+        if( Proxy.isProxyClass(instance.getClass()) )
+            remoteRef = ((RemoteObjectInvocationHandler)proxyField.get(instance)).getRef();
+
+        else
+            remoteRef = (RemoteRef)remoteField.get(instance);
+
+        return remoteRef;
     }
 }

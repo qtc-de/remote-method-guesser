@@ -50,7 +50,6 @@ import de.qtc.rmg.utils.RMGUtils;
 public class MethodGuesser {
 
     private int padding = 0;
-    private int legacyMode;
 
     private RMIWhisperer rmiEndpoint;
     private Set<MethodCandidate> candidates;
@@ -73,12 +72,10 @@ public class MethodGuesser {
      * @param rmi RMIWhisperer for the current registry
      * @param classArray Two HashMap that contain boundName -> className pairs for known and unknown classes
      * @param candidates MethodCandidates that should be guessed
-     * @param legacyMode Determines how to handle legacy objects during guessing
      */
-    public MethodGuesser(RMIWhisperer rmi, HashMap<String,String>[] classArray, Set<MethodCandidate> candidates, int legacyMode)
+    public MethodGuesser(RMIWhisperer rmi, HashMap<String,String>[] classArray, Set<MethodCandidate> candidates)
     {
         this.rmiEndpoint = rmi;
-        this.legacyMode = legacyMode;
         this.candidates = candidates;
 
         this.duplicateMap = new HashMap<String, String[]>();
@@ -121,12 +118,11 @@ public class MethodGuesser {
 
         for( Map.Entry<String, ArrayList<String>> entry : classBoundnameMap.entrySet() ) {
 
-            String className = entry.getKey();
             ArrayList<String> boundNames = entry.getValue();
             String[] boundNamesStr = boundNames.toArray(new String[0]);
 
             for( String boundName : boundNames ) {
-                client = new RemoteObjectClient(rmiEndpoint, boundName, className, legacyMode);
+                client = new RemoteObjectClient(rmiEndpoint, boundName);
                 clientList.add(client);
 
                 if( RMGOption.GUESS_DUPLICATES.getBool() )

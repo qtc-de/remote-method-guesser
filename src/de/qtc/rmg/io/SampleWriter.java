@@ -30,8 +30,6 @@ import javassist.NotFoundException;
  */
 public class SampleWriter {
 
-    private int legacyMode;
-
     private String ssl;
     private String followRedirects;
 
@@ -51,13 +49,10 @@ public class SampleWriter {
      * @param sampleFolder folder where created samples should be created
      * @param ssl whether the targeted RMI endpoint uses ssl on the registry
      * @param followRedirects whether redirects of remote objects should be followed
-     * @param legacyMode whether to use legacy stubs or proxy objects for invocation
      * @throws IOException may be thrown when one of the required folders is not present
      */
-    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects, int legacyMode) throws IOException
+    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects) throws IOException
     {
-        this.legacyMode = legacyMode;
-
         this.ssl = ssl ? "true" : "false";
         this.followRedirects = followRedirects ? "true" : "false";
 
@@ -205,8 +200,7 @@ public class SampleWriter {
      */
     public void createSample(String className, boolean unknownClass, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-        if(isLegacy && unknownClass)
+        if(className.endsWith("_Stub") && unknownClass)
             className += "_Interface";
 
         Security.checkBoundName(boundName);
@@ -277,9 +271,7 @@ public class SampleWriter {
      */
     public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-
-        if(isLegacy) {
+        if(className.endsWith("_Stub")) {
             createInterfaceSample(boundName, className + "_Interface", methods);
             createLegacyStub(boundName, className, methods);
         } else {

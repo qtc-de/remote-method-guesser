@@ -234,10 +234,6 @@ public class ArgumentParser {
         forceGuessing.setRequired(false);
         options.addOption(forceGuessing);
 
-        Option forceLegacy = new Option(null, RMGOption.FORCE_LEGACY.name, RMGOption.FORCE_LEGACY.requiresValue, RMGOption.FORCE_LEGACY.description);
-        forceLegacy.setRequired(false);
-        options.addOption(forceLegacy);
-
         Option gopher = new Option(null, RMGOption.GOPHER.name, RMGOption.GOPHER.requiresValue, RMGOption.GOPHER.description);
         gopher.setRequired(false);
         options.addOption(gopher);
@@ -257,10 +253,6 @@ public class ArgumentParser {
         Option noColor = new Option(null, RMGOption.NO_COLOR.name, RMGOption.NO_COLOR.requiresValue, RMGOption.NO_COLOR.description);
         noColor.setRequired(false);
         options.addOption(noColor);
-
-        Option noLegacy = new Option(null, RMGOption.NO_LEGACY.name, RMGOption.NO_LEGACY.requiresValue, RMGOption.NO_LEGACY.description);
-        noLegacy.setRequired(false);
-        options.addOption(noLegacy);
 
         Option objID = new Option(null, RMGOption.OBJID.name, RMGOption.OBJID.requiresValue, RMGOption.OBJID.description);
         objID.setRequired(false);
@@ -474,30 +466,6 @@ public class ArgumentParser {
              System.err.println("Error: insufficient number of arguments.\n");
              printHelpAndExit(1);
          }
-    }
-
-    /**
-     * rmg allows uses to specify whether RMI calls should be made by using the legacy
-     * Stub-Skeleton approach. Internally, these modes are represented by an integer:
-     *
-     *         2    ->    Never use legacy Stub-Skeleton approach
-     *         1    ->    Always use legacy Stub-Skeleton approach
-     *         0    ->    Automatically decide whether using Stub-Skeleton approach
-     *
-     * This function returns the corresponding integer depending on the specified arguments.
-     *
-     * @return legacy mode.
-     */
-    public int getLegacyMode()
-    {
-        if( this.cmdLine.hasOption(RMGOption.NO_LEGACY.name) )
-            return 2;
-
-        else if( this.cmdLine.hasOption(RMGOption.FORCE_LEGACY.name) )
-            return 1;
-
-        else
-            return 0;
     }
 
     /**

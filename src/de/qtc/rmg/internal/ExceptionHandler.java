@@ -344,6 +344,14 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void lookupClassNotFoundException(String name)
+    {
+        Logger.printlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
+        Logger.printlnMixedBlue("The class", name, "could not be resolved within your class path.");
+        Logger.println("This usually means that the RemoteObject is using a custom RMIClientSocketFactory or InvocationHandler.");
+        RMGUtils.exit();
+    }
+
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);

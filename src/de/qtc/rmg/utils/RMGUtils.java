@@ -47,6 +47,7 @@ public class RMGUtils {
     private static CtClass remoteClass;
     private static CtClass serializable;
     private static CtClass remoteStubClass;
+    private static Set<String> createdClasses;
 
     /**
      * The init function has to be called before the javassist library can be utilized via RMGUtils.
@@ -67,6 +68,7 @@ public class RMGUtils {
         }
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
+        createdClasses = new HashSet<String>();
     }
 
     /**
@@ -88,57 +90,7 @@ public class RMGUtils {
         } catch (ClassNotFoundException e) {}
 
         CtClass intf = pool.makeInterface(className, remoteClass);
-        CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
-
-        intf.addMethod(dummyMethod);
-        dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
-
-        return intf.toClass();
-    }
-
-    /**
-     * This function is basically equivalent to the previous makeInterface function, apart that it creates the interface
-     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
-     * remote interfaces that contain a user specified method signature.
-     *
-     * The function first checks whether the specified class does already exist and contains the requested method. If
-     * this is the case, the corresponding Class object is simply returned. If the class exists, but the method is not
-     * available, the class needs to be defrosted to allow modifications to it.
-     *
-     * For non existing and defrosted classes, the requested MethodCandidate is then added to the interface and the corresponding
-     * interface class Object is returned by the function.
-     *
-     * @param className full qualified name of the class to create
-     * @param candidate MethodCandidate to include within the created interface
-     * @return Class object of the dynamically created class
-     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
-     */
-    public static Class makeInterface(String className, MethodCandidate candidate) throws CannotCompileException
-    {
-        CtClass intf = null;
-
-        try {
-            intf = pool.getCtClass(className);
-
-            for(CtMethod method : intf.getDeclaredMethods()) {
-
-                if(method.getSignature().equals(candidate.getMethod().getSignature()))
-                    return Class.forName(className);
-            }
-
-            intf.defrost();
-
-        } catch (ClassNotFoundException | NotFoundException e) {
-            /*
-             * className is not known and was not created before. This is usually expected.
-             * In this case, we just create the class :)
-             */
-            intf = pool.makeInterface(className, remoteClass);
-        }
-
-        CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
+        createdClasses.add(className);
 
         return intf.toClass();
     }
@@ -165,48 +117,15 @@ public class RMGUtils {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {}
 
-        Class intfClass = RMGUtils.makeInterface(className + "Interface");
+        RMGUtils.makeInterface(className + "Interface");
         CtClass intf = pool.getCtClass(className + "Interface");
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
         addSerialVersionUID(ctClass);
 
-        ctClass.toClass();
-        return intfClass;
-    }
-
-    /**
-     * Basically the same function as the previously defined makeLegacyStub function, apart that it creates the interface
-     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
-     * remote interfaces that contain a user specified method signature.
-     *
-     * As the remote interface is created using the makeInterface method, we may do not need to care about defrosting. I'm
-     * not totally sure how Java behaves when a class already exists and you change the interface that it implements.
-     * However, at the current state of the remote-method-guesser, this should not happen anyway, as this method is only
-     * used by MethodAttacker, which only accepts a single function signature.
-     *
-     * @param className full qualified name of the stub class to create
-     * @param candidate MethodCandidate to include within the created interface
-     * @return Class object of the dynamically created stub class
-     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
-     * @throws NotFoundException should never be thrown in practice
-     */
-    public static Class makeLegacyStub(String className, MethodCandidate candidate) throws CannotCompileException, NotFoundException
-    {
-        try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {}
-
-        Class intfClass = RMGUtils.makeInterface(className + "Interface", candidate);
-        CtClass intf = pool.getCtClass(className + "Interface");
-
-        CtClass ctClass = pool.makeClass(className, remoteStubClass);
-        ctClass.setInterfaces(new CtClass[] { intf });
-        addSerialVersionUID(ctClass);
-
-        ctClass.toClass();
-        return intfClass;
+        createdClasses.add(className);
+        return ctClass.toClass();
     }
 
     /**
@@ -591,6 +510,16 @@ public class RMGUtils {
     }
 
     /**
+     * Since version 3.4.0 of remote-method-guesser, the CodebaseCollectorClass has the additional purpose of creating
+     * unknown remote classes at runtime. This behavior needs to be always enabled, independently of the useCodebaseOnly
+     * property.
+     */
+    public static void enableCodebaseCollector()
+    {
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
+    }
+
+    /**
      * This code was copied from the following link and is just used to disable the annoying reflection warnings:
      *
      * https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
@@ -607,36 +536,6 @@ public class RMGUtils {
             Field logger = cls.getDeclaredField("logger");
             u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
         } catch (Exception e) {}
-    }
-
-    /**
-     * Determines the legacy mode setting. Legacy mode decides whether to detect usage of legacy RMI objects automatically
-     * (legacyMode = 0), to enforce usage of legacy objects (legacyMode = 1) or to treat all classes as non legacy classes
-     * (legacyMode = 2).
-     *
-     * When automatic detection is used, the function checks for the "_Stub" suffix, which is usually present for legacy
-     * stub objects. Otherwise, it just returns true or false depending on the value of legacyMode.
-     *
-     * Whenever legacyMode is enabled, a warning is printed to the user, as it might not be intended.
-     *
-     * @param className the class name to determine the legacy status from
-     * @param legacyMode the user defined setting of legacyMode (0 is the default)
-     * @param verbose whether or not to print the warning message
-     * @return true if legacy mode should be used, false otherwise
-     */
-    public static boolean isLegacy(String className, int legacyMode, boolean verbose)
-    {
-        if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-            if( Logger.verbose && verbose) {
-                Logger.printInfoBox();
-                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-                Logger.printlnMixedYellow("You can use", "--no-legacy", "to prevent this.");
-                Logger.decreaseIndent();
-            }
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -978,5 +877,20 @@ public class RMGUtils {
         }
 
         return data;
+    }
+
+
+    /**
+     * Checks whether the specified class name was generated dynamically by RMGUtils.
+     *
+     * @param className class to check for
+     * @return true if it was generated dynamically
+     */
+    public static boolean dynamicallyCreated(String className)
+    {
+        if( createdClasses.contains(className) )
+            return true;
+
+        return false;
     }
 }

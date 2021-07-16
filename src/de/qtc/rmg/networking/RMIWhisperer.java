@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,6 +17,7 @@ import java.rmi.server.RemoteRef;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -31,6 +33,7 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
+import de.qtc.rmg.plugin.ResponseHandlerType;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
@@ -55,6 +58,7 @@ public final class RMIWhisperer {
 
     private Registry rmiRegistry;
     private RMIClientSocketFactory csf;
+    private Map<String,Remote> remoteObjectCache;
 
     /**
      * The main purpose of this constructor function is to setup the different socket factories.
@@ -120,6 +124,8 @@ public final class RMIWhisperer {
          } else {
              csf = my;
          }
+
+         remoteObjectCache = new HashMap<String,Remote>();
     }
 
     /**
@@ -216,74 +222,83 @@ public final class RMIWhisperer {
     }
 
     /**
-     * Attempt to obtain the class name for each available bound name. This function simply
-     * attempts to lookup the specified bound names and catches the ClassNotFoundException.
-     * From the exception, the class name can be obtained.
-     *
-     * If no ClassNotFoundException was thrown, the class is known and available within the
-     * current classpath. These classes are reported separately.
+     * Performs the RMI registries lookup operation to obtain a remote reference for the specified
+     * bound names. However, the main purpose of this function is not to obtain the remote references
+     * them self's, but the associated class names. These are returned within an array of HashMaps, where
+     * the first element contains "known" classes (available within the current class path), whereas the
+     * second one contains "unknown" classes. Nonetheless, the function stores already obtained remote
+     * references within the remoteObjectCache, so that later lookups have not to be performed again.
      *
      * @param boundNames list of bound names to determine the classes from
-     * @return HashMaps of bound name -> class name pairs. Returns two HashMaps, one for
-     *            known and one for unknown classes
+     * @return Array of HashMap - HashMap[0] -> Known classes, HashMap[1] -> Unknown classes
      */
     @SuppressWarnings("unchecked")
-    public HashMap<String, String>[] getClassNames(String[] boundNames)
+    public HashMap<String, String>[] lookup(String[] boundNames)
     {
         HashMap<String, String>[] returnList = (HashMap<String, String>[])new HashMap[2];
 
-        HashMap<String, String> knownClasses = new HashMap<String,String>();
-        HashMap<String, String> unknownClasses = new HashMap<String,String>();
+        returnList[0] = new HashMap<String,String>();
+        returnList[1] = new HashMap<String,String>();
 
-        Object object = null;
+        Remote object = null;
         String className = null;
 
         for( String boundName : boundNames ) {
 
-          try {
+            object = this.lookup(boundName);
+            className = object.getClass().getName();
 
-              object = rmiRegistry.lookup(boundName);
-              className = object.getClass().getName();
+            if( className.startsWith("com.sun.proxy.") )
+                className = object.getClass().getInterfaces()[0].getName();
 
-              if( className.startsWith("com.sun.proxy.") )
-                  className = object.getClass().getInterfaces()[0].getName();
-
-              knownClasses.put(boundName, className);
-
-          } catch( RemoteException e ) {
-
-              Throwable cause = ExceptionHandler.getCause(e);
-              if( cause instanceof ClassNotFoundException ) {
-
-                  /*
-                   * Expected exception message is: <CLASSNAME> (no security manager: RMI class loader disabled).
-                   * This is always true, as long as no security manager is used when starting rmg. As the exception
-                   * is thrown on the client-side, server-side security managers are not important here.
-                   * Since class names cannot contain spaces, cutting on the first space should be sufficient.
-                   */
-                  String message = cause.getMessage();
-                  int end = message.indexOf(" ");
-
-                  message = message.substring(0, end);
-                  unknownClasses.put(boundName, message);
-
-              } else {
-                  ExceptionHandler.unexpectedException(e, "lookup", "call", false);
-              }
-
-          } catch( NotBoundException e) {
-              Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
-              Logger.printlnPlainBlue(boundName + ".");
-              Logger.eprintln("The corresponding bound name is not bound to the registry.");
-              RMGUtils.exit();
-
-          }
+            if( RMGUtils.dynamicallyCreated(className) )
+                returnList[1].put(boundName, className);
+            else
+                returnList[0].put(boundName, className);
         }
 
-        returnList[0] = knownClasses;
-        returnList[1] = unknownClasses;
-
         return returnList;
+    }
+
+    /**
+     * Just a wrapper around the lookup method of the RMI registry. Performs exception handling
+     * and caches remote objects that have already been looked up.
+     *
+     * @param boundName name to lookup within the registry
+     * @return Remote representing the requested remote object
+     */
+    public Remote lookup(String boundName)
+    {
+        Remote remoteObject = remoteObjectCache.get(boundName);
+
+        if( remoteObject == null ) {
+
+            try {
+
+                remoteObject = rmiRegistry.lookup(boundName);
+                remoteObjectCache.put(boundName, remoteObject);
+
+            } catch( RemoteException e ) {
+
+                Throwable cause = ExceptionHandler.getCause(e);
+
+                if( cause instanceof ClassNotFoundException ) {
+                    ExceptionHandler.lookupClassNotFoundException(cause.getMessage());
+
+                } else {
+                    ExceptionHandler.unexpectedException(e, "lookup", "call", false);
+                }
+
+            } catch( NotBoundException e) {
+                Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
+                Logger.printlnPlainBlue(boundName + ".");
+                Logger.eprintln("The specified bound name is not bound to the registry.");
+                RMGUtils.exit();
+
+            }
+        }
+
+        return remoteObject;
     }
 
     /**
