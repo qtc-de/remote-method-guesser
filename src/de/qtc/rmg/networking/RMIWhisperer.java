@@ -33,7 +33,6 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
-import de.qtc.rmg.plugin.ResponseHandlerType;
 import de.qtc.rmg.utils.RMGUtils;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
