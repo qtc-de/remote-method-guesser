@@ -301,6 +301,17 @@ public final class RMIWhisperer {
     }
 
     /**
+     * Return the specified boundname from cache or null if it is not available.
+     *
+     * @param boundName name to lookup within the cache
+     * @return Remote representing the requested remote object
+     */
+    public Remote getFromCache(String boundName)
+    {
+        return remoteObjectCache.get(boundName);
+    }
+
+    /**
      * Constructs a RemoteRef (class used by internal RMI communication) using the specified
      * host, port, csf and objID values..
      *

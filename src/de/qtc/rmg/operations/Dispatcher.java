@@ -1,7 +1,9 @@
 package de.qtc.rmg.operations;
 
 import java.io.IOException;
+import java.rmi.NoSuchObjectException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -68,7 +70,7 @@ public class Dispatcher {
      * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not a registry
      */
     @SuppressWarnings("unchecked")
-    private void obtainBoundNames() throws java.rmi.NoSuchObjectException
+    private void obtainBoundNames() throws NoSuchObjectException
     {
         if(boundNames != null && boundClasses != null && allClasses != null)
             return;
@@ -76,16 +78,20 @@ public class Dispatcher {
         rmi.locateRegistry();
         boundNames = rmi.getBoundNames(RMGOption.BOUND_NAME.getString());
 
-        if( RMGOption.SSRFResponse.notNull() ) {
-            boundClasses = new HashMap[] { new HashMap<String,String>(), null };
-            for(String name : boundNames)
-                boundClasses[0].put(name, null);
+        boundClasses = new HashMap[] { new HashMap<String,String>(), null };
+        for(String name : boundNames)
+            boundClasses[0].put(name, null);
+    }
 
-        } else {
-            boundClasses = rmi.lookup(boundNames);
-            allClasses = (HashMap<String, String>)boundClasses[0].clone();
-            allClasses.putAll(boundClasses[1]);
-        }
+    @SuppressWarnings("unchecked")
+    private void obtainBoundObjects() throws NoSuchObjectException
+    {
+        if( boundNames == null )
+            obtainBoundNames();
+
+        boundClasses = rmi.lookup(boundNames);
+        allClasses = (HashMap<String, String>)boundClasses[0].clone();
+        allClasses.putAll(boundClasses[1]);
     }
 
     /**
@@ -112,7 +118,7 @@ public class Dispatcher {
      * @param boundName to create the client for. If ObjID was specified on the command line, it is preferred.
      * @return RemoteObjectClient that can be used to communicate to the specified RMI object
      */
-    private RemoteObjectClient getRemoteObjectClient(String boundName)
+    private RemoteObjectClient getRemoteObjectClient()
     {
         Object objID = RMGOption.OBJID.value;
 
@@ -120,14 +126,7 @@ public class Dispatcher {
             return new RemoteObjectClient(rmi, (int)objID);
 
         } else {
-
-            try {
-                obtainBoundNames();
-            } catch( java.rmi.NoSuchObjectException e ) {
-                ExceptionHandler.noSuchObjectException(e, "registry", true);
-            }
-
-            return new RemoteObjectClient(rmi, boundName);
+            return new RemoteObjectClient(rmi, RMGOption.BOUND_NAME.getString());
         }
     }
 
@@ -276,7 +275,7 @@ public class Dispatcher {
     {
         int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
-        RemoteObjectClient client = getRemoteObjectClient(RMGOption.BOUND_NAME.getString());
+        RemoteObjectClient client = getRemoteObjectClient();
         client.gadgetCall(candidate, p.getGadget(), argumentPosition);
     }
 
@@ -289,7 +288,7 @@ public class Dispatcher {
     {
         Object[] argumentArray = p.getCallArguments();
 
-        RemoteObjectClient client = getRemoteObjectClient(RMGOption.BOUND_NAME.getString());
+        RemoteObjectClient client = getRemoteObjectClient();
         client.genericCall(candidate, argumentArray);
     }
 
@@ -319,13 +318,12 @@ public class Dispatcher {
         }
 
         if( candidate != null ) {
-            String boundName = RMGOption.BOUND_NAME.getString();
 
-            if( boundName == null ) {
+            if( !RMGOption.BOUND_NAME.notNull() ) {
                 ExceptionHandler.missingBoundName("codebase");
             }
 
-            RemoteObjectClient client = getRemoteObjectClient(boundName);
+            RemoteObjectClient client = getRemoteObjectClient();
             client.codebaseCall(candidate, payload, argumentPosition);
 
         } else if( signature.matches("dgc") ) {
@@ -392,56 +390,73 @@ public class Dispatcher {
     public void dispatchEnum()
     {
         RMGUtils.enableCodebase();
-        RegistryClient registryClient = new RegistryClient(rmi);
 
-        String regMethod = p.getRegMethod();
-        String dgcMethod = p.getDgcMethod();
-        boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
+        DGCClient dgc = new DGCClient(rmi);
+        RegistryClient registryClient = new RegistryClient(rmi);
+        EnumSet<ScanAction> actions = p.getScanActions();
 
         boolean enumJEP290Bypass = true;
         boolean marshal = true;
 
+        Logger.printlnYellow("Starting RMI Enumeration:");
+        Logger.increaseIndent();
+
         try {
-            obtainBoundNames();
 
-            Formatter format = new Formatter();
-            format.listBoundNames(boundClasses);
+            if( actions.contains(ScanAction.LIST) ) {
+                obtainBoundNames();
 
-            if( RMGOption.SSRFResponse.notNull() )
-                return;
+                if( !RMGOption.SSRFResponse.notNull() || RMGOption.BOUND_NAME.notNull() )
+                    obtainBoundObjects();
 
-            Logger.println("");
-            format.listCodeases();
+                Formatter format = new Formatter();
+                Logger.println("");
+                format.listBoundNames(boundClasses, rmi);
 
-            Logger.println("");
-            marshal = registryClient.enumerateStringMarshalling();
+                Logger.println("");
+                format.listCodeases();
+            }
 
-            Logger.println("");
-            registryClient.enumCodebase(marshal, regMethod, localhostBypass);
+            if( actions.contains(ScanAction.STRING_MARSHALLING) ) {
+                Logger.println("");
+                marshal = registryClient.enumerateStringMarshalling();
+            }
 
-            Logger.println("");
-            registryClient.enumLocalhostBypass();
+            if( actions.contains(ScanAction.CODEBASE) ) {
+                Logger.println("");
+                registryClient.enumCodebase(marshal, RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool());
+            }
+
+            if( actions.contains(ScanAction.LOCALHOST_BYPASS) ) {
+                Logger.println("");
+                registryClient.enumLocalhostBypass();
+            }
 
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectExceptionRegistryEnum();
             enumJEP290Bypass = false;
         }
 
-        Logger.println("");
-        DGCClient dgc = new DGCClient(rmi);
-        dgc.enumDGC(dgcMethod);
-
-        Logger.println("");
-        dgc.enumJEP290(dgcMethod);
-
-        if(enumJEP290Bypass) {
+        if( actions.contains(ScanAction.DGC) ) {
             Logger.println("");
-            registryClient.enumJEP290Bypass(regMethod, localhostBypass, marshal);
+            dgc.enumDGC(RMGOption.DGC_METHOD.getString());
         }
 
-        Logger.println("");
-        ActivationClient activationClient = new ActivationClient(rmi);
-        activationClient.enumActivator();
+        if( actions.contains(ScanAction.JEP290) ) {
+            Logger.println("");
+            dgc.enumJEP290(RMGOption.DGC_METHOD.getString());
+        }
+
+        if(enumJEP290Bypass && actions.contains(ScanAction.JEP290_BYPASS) ) {
+            Logger.println("");
+            registryClient.enumJEP290Bypass(RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
+        }
+
+        if( actions.contains(ScanAction.ACTIVATOR) ) {
+            Logger.println("");
+            ActivationClient activationClient = new ActivationClient(rmi);
+            activationClient.enumActivator();
+        }
     }
 
     /**
@@ -455,7 +470,7 @@ public class Dispatcher {
         Set<MethodCandidate> candidates = getCandidates();
 
         try {
-            obtainBoundNames();
+            obtainBoundObjects();
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }

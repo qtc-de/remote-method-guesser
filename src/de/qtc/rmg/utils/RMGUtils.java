@@ -2,7 +2,11 @@ package de.qtc.rmg.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.rmi.Remote;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.RemoteObjectInvocationHandler;
+import java.rmi.server.RemoteRef;
 import java.rmi.server.RemoteStub;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -869,6 +873,8 @@ public class RMGUtils {
      */
     public static byte[] hexToBytes(String s)
     {
+        s = s.replace("0x", "").replace("\\x", "").replace("%", "");
+
         int len = s.length();
         byte[] data = new byte[len / 2];
 
@@ -878,7 +884,6 @@ public class RMGUtils {
 
         return data;
     }
-
 
     /**
      * Checks whether the specified class name was generated dynamically by RMGUtils.
@@ -892,5 +897,38 @@ public class RMGUtils {
             return true;
 
         return false;
+    }
+
+    /**
+     * Extracts the underlying RemoteRef within an instance of Remote. The RemoteRef contains
+     * information regarding the actual TCP endpoint and the ObjID that is used within the call.
+     *
+     * @param instance An Instance of Remote - Usually obtained by the RMI lookup method
+     * @return underlying RemoteRef that is used by the Remote instance
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static RemoteRef extractRef(Remote instance) throws IllegalArgumentException, IllegalAccessException
+    {
+        Field proxyField = null;
+        Field remoteField= null;
+        RemoteRef remoteRef = null;
+
+        try {
+            proxyField = Proxy.class.getDeclaredField("h");
+            remoteField = RemoteObject.class.getDeclaredField("ref");
+            proxyField.setAccessible(true);
+            remoteField.setAccessible(true);
+
+        } catch(NoSuchFieldException | SecurityException e) {
+            ExceptionHandler.unexpectedException(e, "reflective access in", "extractRef", true);
+        }
+
+        if( Proxy.isProxyClass(instance.getClass()) )
+            remoteRef = ((RemoteObjectInvocationHandler)proxyField.get(instance)).getRef();
+
+        else
+            remoteRef = (RemoteRef)remoteField.get(instance);
+
+        return remoteRef;
     }
 }

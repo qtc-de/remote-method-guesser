@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -18,6 +19,7 @@ import org.apache.commons.cli.ParseException;
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.Operation;
+import de.qtc.rmg.operations.ScanAction;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
@@ -605,5 +607,15 @@ public class ArgumentParser {
     {
         String argumentString = this.getPositionalString(3);
         return PluginSystem.getArgumentArray(argumentString);
+    }
+
+    public EnumSet<ScanAction> getScanActions()
+    {
+        int argumentCount = this.getArgumentCount();
+
+        if( argumentCount <= 3 )
+            return EnumSet.allOf(ScanAction.class);
+
+        return ScanAction.parseScanActions(argList.subList(3, argumentCount));
     }
 }

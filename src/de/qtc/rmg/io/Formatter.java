@@ -12,6 +12,8 @@ import java.util.TreeSet;
 
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.utils.AccessibleLiveRef;
 
 /**
  * The Formatter class is basically a legacy class. In previous versions, rmg supported JSON
@@ -31,7 +33,7 @@ public class Formatter {
      * @param classes array of maps containing boundname-classes pairs
      */
     @SuppressWarnings("unchecked")
-    public void listBoundNames(HashMap<String,String>[] classes)
+    public void listBoundNames(HashMap<String,String>[] classes, RMIWhisperer rmi)
     {
         if( classes == null )
             classes = new HashMap[] {null, null};
@@ -62,12 +64,20 @@ public class Formatter {
             Logger.printlnMixedYellow("-", name);
             Logger.increaseIndent();
 
+            AccessibleLiveRef liveRef = null;
+
+            try {
+                liveRef = new AccessibleLiveRef(rmi.getFromCache(name));
+            } catch( Exception e ) { e.printStackTrace();}
+
             if( knownClasses.get(name) != null ) {
                 Logger.printlnMixedBlue("-->", knownClasses.get(name), "(known class)");
+                printLiveRef(liveRef);
             }
 
             if( unknownClasses.get(name) != null ) {
                 Logger.printlnMixedBlue("-->", unknownClasses.get(name), "(unknown class)");
+                printLiveRef(liveRef);
             }
 
             Logger.decreaseIndent();
@@ -146,5 +156,21 @@ public class Formatter {
         }
 
         Logger.decreaseIndent();
+    }
+
+    /**
+     * Print formatted output to display a LiveRef. To make fields more accessible, the ref needs to
+     * be wrapped into an AccessibleLiveRef first.
+     *
+     * @param ref AccessibleLiveRef wrapper around a LiveRef
+     */
+    private void printLiveRef(AccessibleLiveRef ref)
+    {
+        if(ref == null)
+            return;
+
+        Logger.print("    ");
+        Logger.printPlainMixedBlue("Endpoint:", ref.getTarget());
+        Logger.printlnPlainMixedBlue(" ObjID:", ref.objID.toString());
     }
 }

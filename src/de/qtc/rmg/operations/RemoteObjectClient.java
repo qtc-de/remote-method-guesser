@@ -1,11 +1,7 @@
 package de.qtc.rmg.operations;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.rmi.Remote;
 import java.rmi.server.ObjID;
-import java.rmi.server.RemoteObject;
-import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
 
 import de.qtc.rmg.internal.ExceptionHandler;
@@ -32,9 +28,6 @@ public class RemoteObjectClient {
     private RMIWhisperer rmi;
     private RemoteRef remoteRef;
 
-    private Field proxyField;
-    private Field remoteField;
-
     private String boundName;
     private String randomClassName;
 
@@ -54,16 +47,6 @@ public class RemoteObjectClient {
         this.objID = null;
         this.rmi = rmiRegistry;
         this.boundName = boundName;
-
-        try {
-            this.proxyField = Proxy.class.getDeclaredField("h");
-            this.remoteField = RemoteObject.class.getDeclaredField("ref");
-            proxyField.setAccessible(true);
-            remoteField.setAccessible(true);
-
-        } catch(NoSuchFieldException | SecurityException e) {
-            ExceptionHandler.unexpectedException(e, "MethodAttacker", "instantiation", true);
-        }
 
         remoteRef = getRemoteRef();
     }
@@ -347,7 +330,7 @@ public class RemoteObjectClient {
 
         try {
             Remote instance = rmi.lookup(boundName);
-            remoteRef = extractRef(instance);
+            remoteRef = RMGUtils.extractRef(instance);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
@@ -458,18 +441,5 @@ public class RemoteObjectClient {
         }
 
         return methodName;
-    }
-
-    private RemoteRef extractRef(Remote instance) throws IllegalArgumentException, IllegalAccessException
-    {
-        RemoteRef remoteRef = null;
-
-        if( Proxy.isProxyClass(instance.getClass()) )
-            remoteRef = ((RemoteObjectInvocationHandler)proxyField.get(instance)).getRef();
-
-        else
-            remoteRef = (RemoteRef)remoteField.get(instance);
-
-        return remoteRef;
     }
 }

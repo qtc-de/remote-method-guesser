@@ -23,7 +23,7 @@ public enum Operation {
     CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments"),
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks"),
     DGC("dispatchDGC", "<gadget> <command>", "Perform DGC based deserialization attacks"),
-    ENUM("dispatchEnum", "", "Enumerate bound names, classes, SecurityManger and JEP290"),
+    ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints"),
     GUESS("dispatchGuess", "", "Guess methods on bound names"),
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
     METHOD("dispatchMethod", "<gadget> <command>", "Perform method based deserialization attacks"),
