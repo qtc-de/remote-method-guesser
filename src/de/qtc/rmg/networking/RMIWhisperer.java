@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Proxy;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -245,10 +246,11 @@ public final class RMIWhisperer {
         for( String boundName : boundNames ) {
 
             object = this.lookup(boundName);
-            className = object.getClass().getName();
 
-            if( className.startsWith("com.sun.proxy.") )
+            if( Proxy.isProxyClass(object.getClass()) )
                 className = object.getClass().getInterfaces()[0].getName();
+            else
+                className = object.getClass().getName();
 
             if( RMGUtils.dynamicallyCreated(className) )
                 returnList[1].put(boundName, className);

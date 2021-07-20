@@ -331,9 +331,17 @@ public class ExceptionHandler {
 
     public static void missingBoundName(String action)
     {
-        Logger.eprintMixedYellow("Either ", "--bound-name", "or  ");
+        Logger.eprintMixedYellow("Either", "--bound-name", "or ");
         Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
         Logger.printlnPlainMixedBlueFirst(action, "action.");
+        RMGUtils.exit();
+    }
+
+    public static void invalidObjectId(String objID)
+    {
+        Logger.eprintlnMixedYellow("The specified ObjID", objID, "is invalid.");
+        Logger.eprintlnMixedBlue("Use plain numbers to target default components:", "Registry: 0, Activator: 1, DGC: 2");
+        Logger.eprintlnMixedBlue("Or the full ObjID string for other remote objects:", "[unique:time:count, objNum]");
         RMGUtils.exit();
     }
 

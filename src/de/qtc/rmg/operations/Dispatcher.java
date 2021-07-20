@@ -2,6 +2,7 @@ package de.qtc.rmg.operations;
 
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
+import java.rmi.server.ObjID;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -120,10 +121,9 @@ public class Dispatcher {
      */
     private RemoteObjectClient getRemoteObjectClient()
     {
-        Object objID = RMGOption.OBJID.value;
-
-        if(objID != null) {
-            return new RemoteObjectClient(rmi, (int)objID);
+        if( RMGOption.OBJID.notNull() ) {
+            ObjID objID = RMGUtils.parseObjID(RMGOption.OBJID.getString());
+            return new RemoteObjectClient(rmi, objID);
 
         } else {
             return new RemoteObjectClient(rmi, RMGOption.BOUND_NAME.getString());

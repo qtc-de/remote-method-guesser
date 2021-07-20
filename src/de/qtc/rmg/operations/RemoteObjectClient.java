@@ -60,10 +60,10 @@ public class RemoteObjectClient {
      * @param objID ID of the remote object to talk to
      * @param legacyMode user specified legacyMode setting
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, int objID)
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, ObjID objID)
     {
         this.rmi = rmiRegistry;
-        this.objID = new ObjID(objID);
+        this.objID = objID;
 
         remoteRef = getRemoteRef();
     }

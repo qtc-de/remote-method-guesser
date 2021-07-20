@@ -149,6 +149,7 @@ public class ArgumentParser {
         RMGOption.SSRFResponse.setValue(cmdLine);
         RMGOption.REG_METHOD.setValue(cmdLine, "lookup");
         RMGOption.DGC_METHOD.setValue(cmdLine, "clean");
+        RMGOption.OBJID.setValue(cmdLine, null);
 
         RMGOption.SSL.setBoolean(cmdLine);
         RMGOption.SSRF.setBoolean(cmdLine);
@@ -162,18 +163,18 @@ public class ArgumentParser {
         RMGOption.GOPHER.setBoolean(cmdLine);
 
         try {
-            RMGOption.OBJID.setInt(cmdLine, null);
             RMGOption.ARGUMENT_POS.setInt(cmdLine, -1);
             RMGOption.THREADS.setInt(cmdLine, Integer.valueOf(config.getProperty("threads")));
 
         } catch(ParseException e) {
-            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", "OBJID | ARGUMENT_POS | THREADS");
+            Logger.printlnPlainMixedYellow("Error: Invalid parameter type for argument", "ARGUMENT_POS | THREADS");
             System.out.println("");
             printHelpAndExit(1);
         }
 
         if( RMGOption.OBJID.value != null )
             RMGOption.TARGET.setValue(RMGOption.OBJID.value);
+
         else if( RMGOption.BOUND_NAME.value != null )
             RMGOption.TARGET.setValue(RMGOption.BOUND_NAME.value);
     }
@@ -259,7 +260,6 @@ public class ArgumentParser {
         Option objID = new Option(null, RMGOption.OBJID.name, RMGOption.OBJID.requiresValue, RMGOption.OBJID.description);
         objID.setRequired(false);
         objID.setArgName("objID");
-        objID.setType(Number.class);
         options.addOption(objID);
 
         Option plugin = new Option(null, RMGOption.PLUGIN.name, RMGOption.PLUGIN.requiresValue, RMGOption.PLUGIN.description);

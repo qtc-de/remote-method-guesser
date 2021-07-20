@@ -1,13 +1,16 @@
 package de.qtc.rmg.utils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.rmi.Remote;
+import java.rmi.server.ObjID;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
 import java.rmi.server.RemoteStub;
+import java.rmi.server.UID;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
@@ -930,5 +935,59 @@ public class RMGUtils {
             remoteRef = (RemoteRef)remoteField.get(instance);
 
         return remoteRef;
+    }
+
+    /**
+     * Parses an ObjID from a String. In previous versions of rmg, only well known ObjID's were supported,
+     * as it was only possible to specify the ObjNum property of an ObjID. For non well known RemoteObjects,
+     * an UID is required too. This function accepts now both inputs. You can just specify a number like
+     * 1, 2 or 3 to target one of the well known RMI components or a full ObjID string to target a different
+     * RemoteObject. Full ObjID strings can be obtained by rmg's enum action and look usually like this:
+     * [196e60b8:17ac2551248:-7ffc, -7934078052539650836]
+     *
+     * @param objIdString Either a plain number or an ObjID value formatted as String
+     * @return ObjID object constructed from the specified input string
+     */
+    public static ObjID parseObjID(String objIdString)
+    {
+        ObjID returnValue = null;
+
+        if( !objIdString.contains(":") ) {
+
+            try {
+                long objNum = Long.parseLong(objIdString);
+                return new ObjID((int)objNum);
+
+            } catch( java.lang.NumberFormatException e ) {
+                ExceptionHandler.invalidObjectId(objIdString);
+            }
+        }
+
+        Pattern pattern = Pattern.compile("\\[([0-9a-f-]+):([0-9a-f-]+):([0-9a-f-]+), ([0-9-]+)\\]");
+        Matcher matcher = pattern.matcher(objIdString);
+
+        if( !matcher.find() )
+            ExceptionHandler.invalidObjectId(objIdString);
+
+        try {
+            Constructor<UID> conUID = UID.class.getDeclaredConstructor(int.class, long.class, short.class);
+            Constructor<ObjID> conObjID = ObjID.class.getDeclaredConstructor(long.class, UID.class);
+
+            int unique = Integer.parseInt(matcher.group(1), 16);
+            long time = Long.parseLong(matcher.group(2), 16);
+            short count = (short)Integer.parseInt(matcher.group(3), 16);
+            long objNum = Long.parseLong(matcher.group(4));
+
+            conUID.setAccessible(true);
+            UID uid = conUID.newInstance(unique, time, count);
+
+            conObjID.setAccessible(true);
+            returnValue = conObjID.newInstance(objNum, uid);
+
+        } catch (Exception e) {
+            ExceptionHandler.invalidObjectId(objIdString);
+        }
+
+        return returnValue;
     }
 }
