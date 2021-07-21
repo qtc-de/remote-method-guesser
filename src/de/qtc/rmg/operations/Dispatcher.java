@@ -403,6 +403,8 @@ public class Dispatcher {
 
         try {
 
+            Logger.println("");
+
             if( actions.contains(ScanAction.LIST) ) {
                 obtainBoundNames();
 
@@ -410,7 +412,6 @@ public class Dispatcher {
                     obtainBoundObjects();
 
                 Formatter format = new Formatter();
-                Logger.println("");
                 format.listBoundNames(boundClasses, rmi);
 
                 Logger.println("");

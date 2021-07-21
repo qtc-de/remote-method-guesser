@@ -150,6 +150,11 @@ public class MethodGuesser {
             padding = value.length();
     }
 
+    /**
+     * This function prints a short info text that multiple bound names on the RMI server implement
+     * the same class / interface and that only one of them is used during method guessing. The
+     * output is disabled by default and only enabled if --verbose was used.
+     */
     private void printDuplicates()
     {
         if( duplicateMap.size() == 0 )
