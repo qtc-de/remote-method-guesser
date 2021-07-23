@@ -5,7 +5,7 @@ import java.util.Map;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.AccessibleLiveRef;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 import de.qtc.rmg.plugin.IResponseHandler;
 
 /**
@@ -94,7 +94,7 @@ public class GenericPrint implements IResponseHandler {
     public void handleRemote(Object o)
     {
     	try {
-			AccessibleLiveRef liveRef = new AccessibleLiveRef((Remote)o);
+			RemoteObjectWrapper liveRef = new RemoteObjectWrapper((Remote)o);
 			
 			Logger.printlnYellow("Printing RemoteObject:");
 			Logger.increaseIndent();
