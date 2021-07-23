@@ -3,6 +3,10 @@ package de.qtc.rmg.operations;
 import java.rmi.Remote;
 import java.rmi.server.ObjID;
 import java.rmi.server.RemoteRef;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
@@ -11,6 +15,7 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -31,6 +36,8 @@ public class RemoteObjectClient {
     private String boundName;
     private String randomClassName;
 
+    public RemoteObjectWrapper remoteObject;
+    public List<MethodCandidate> remoteMethods;
 
     /**
      * The RemoteObjectClient makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
@@ -47,6 +54,7 @@ public class RemoteObjectClient {
         this.objID = null;
         this.rmi = rmiRegistry;
         this.boundName = boundName;
+        this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
         remoteRef = getRemoteRef();
     }
@@ -58,14 +66,52 @@ public class RemoteObjectClient {
      *
      * @param rmiRegistry target where the object is located
      * @param objID ID of the remote object to talk to
-     * @param legacyMode user specified legacyMode setting
      */
     public RemoteObjectClient(RMIWhisperer rmiRegistry, ObjID objID)
     {
         this.rmi = rmiRegistry;
         this.objID = objID;
+        this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
         remoteRef = getRemoteRef();
+    }
+
+    /**
+     * If you already obtained a reference to the remote object, you can also use it directly
+     * in form of passing an RemoteObjectWrapper.
+     *
+     * @param rmiRegistry target where the object is located
+     * @param remoteObject Previously obtained remoteObject wrapped into the wrapper class
+     */
+    public RemoteObjectClient(RMIWhisperer rmiRegistry, RemoteObjectWrapper remoteObject)
+    {
+        this.rmi = rmiRegistry;
+        this.objID = remoteObject.objID;
+        this.boundName = remoteObject.boundName;
+        this.remoteObject = remoteObject;
+        this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
+
+        remoteRef = remoteObject.remoteRef;
+    }
+
+    /**
+     * Adds a successfully guessed MethodCandidate to the client's method list.
+     *
+     * @param candidate Successfully guessed method candidate
+     */
+    public void addRemoteMethod(MethodCandidate candidate)
+    {
+        this.remoteMethods.add(candidate);
+    }
+
+    /**
+     * Adds a list of successfully guessed MethodCandidates to the client's method list.
+     *
+     * @param candidates Successfully guessed method candidates
+     */
+    public void addRemoteMethods(List<MethodCandidate> candidates)
+    {
+        this.remoteMethods.addAll(candidates);
     }
 
     /**
@@ -76,6 +122,26 @@ public class RemoteObjectClient {
     public String getBoundName()
     {
         return this.boundName;
+    }
+
+    /**
+     * Gets a list of bound names associated with the RemoteObjectClient itself and
+     * all of it's duplicates.
+     *
+     * @return bound name associated with the RemoteObjectClient
+     */
+    public String[] getBoundNames()
+    {
+        int boundNamesSize = remoteObject.duplicates.size();
+
+        String[] boundNames = new String[boundNamesSize + 1];
+        boundNames[0] = this.boundName;
+
+        for(int ctr = 0; ctr < boundNamesSize; ctr++) {
+            boundNames[ctr + 1] = remoteObject.duplicates.get(ctr).boundName;
+        }
+
+        return boundNames;
     }
 
     /**
@@ -288,6 +354,25 @@ public class RemoteObjectClient {
     }
 
     /**
+     * Takes a list of RemoteObjectClients and filters clients that have no methods within
+     * their method list.
+     *
+     * @param clientList List of RemoteObjectClients to filter
+     * @return List of RemoteObjectClients that contain methods
+     */
+    public static List<RemoteObjectClient> filterEmpty(List<RemoteObjectClient> clientList)
+    {
+        Iterator<RemoteObjectClient> it = clientList.iterator();
+        while(it.hasNext()) {
+
+            if( it.next().remoteMethods.isEmpty() )
+                it.remove();
+        }
+
+        return clientList;
+    }
+
+    /**
      * Helper function that is used during deserialization and codebase attacks. It prints information on the selected
      * argument position for the attack and also displays the parsed method signature again.
      *
@@ -300,7 +385,7 @@ public class RemoteObjectClient {
         Logger.printlnPlainMixedBlue(" on position", String.valueOf(attackArgument));
         Logger.printlnMixedYellow("Specified method signature is", targetMethod.getSignature());
 
-        Logger.println("");
+        Logger.lineBreak();
     }
 
     /**

@@ -123,7 +123,7 @@ public class ExceptionHandler {
         Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", className);
         Logger.printlnMixedYellow("Codebase attack", "probably worked :)");
 
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnMixedYellow("If where was no callback, the server did not load the attack class", payloadName + ".class.");
         Logger.println("The class is probably known by the server or it was already loaded before.");
         Logger.printlnMixedBlue("In this case, you should try a", "different classname.");
@@ -211,7 +211,7 @@ public class ExceptionHandler {
     public static void noSuchObjectExceptionRegistryEnum()
     {
         Logger.printlnBlue("RMI Registry Enumeration");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
         Logger.printlnMixedYellow("- Specified endpoint", "is not", "an RMI registry");
         Logger.println("  Skipping registry related checks.");
@@ -303,7 +303,7 @@ public class ExceptionHandler {
 
     public static void bindException(Throwable t)
     {
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
         Logger.printlnMixedBlue("Exception message:", t.getMessage());
         RMGUtils.exit();

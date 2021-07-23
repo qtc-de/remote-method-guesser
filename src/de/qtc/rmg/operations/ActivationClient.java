@@ -59,7 +59,7 @@ public class ActivationClient {
     public void enumActivator()
     {
         Logger.printlnBlue("RMI ActivationSystem enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         try {

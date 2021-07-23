@@ -53,7 +53,7 @@ public class DGCClient {
     {
         try {
             Logger.printlnBlue("RMI DGC enumeration:");
-            Logger.println("");
+            Logger.lineBreak();
             Logger.increaseIndent();
 
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
@@ -118,7 +118,7 @@ public class DGCClient {
     {
         try {
             Logger.printlnBlue("RMI server JEP290 enumeration:");
-            Logger.println("");
+            Logger.lineBreak();
             Logger.increaseIndent();
 
             dgcCall(callName, packArgsByName(callName, new HashMap<String,String>()), false);

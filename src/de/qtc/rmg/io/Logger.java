@@ -105,6 +105,12 @@ public class Logger {
         }
     }
 
+    public static void lineBreak()
+    {
+        if( printCount != 0 )
+            log(prefix(), true);
+    }
+
     public static void print(String msg)
     {
         log(prefix() + msg, false);
@@ -436,7 +442,7 @@ public class Logger {
 
     public static void printInfoBox()
     {
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnBlue("Info:");
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
@@ -506,15 +512,15 @@ public class Logger {
         Logger.print("Using class ");
         Logger.printPlainMixedBlueFirst(className, "with codebase", MaliciousOutputStream.getDefaultLocation());
         Logger.printlnPlainMixedYellow(" during", callName, "call.");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
     }
 
     public static void printGadgetCallIntro(String endpointName)
     {
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnBlue("Attempting deserialization attack on " + endpointName + " endpoint...");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
     }
 

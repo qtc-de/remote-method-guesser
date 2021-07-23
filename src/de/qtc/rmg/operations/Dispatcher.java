@@ -3,12 +3,9 @@ package de.qtc.rmg.operations;
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import de.qtc.rmg.annotations.Parameters;
@@ -23,6 +20,7 @@ import de.qtc.rmg.io.SampleWriter;
 import de.qtc.rmg.io.WordlistHandler;
 import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
@@ -46,8 +44,7 @@ public class Dispatcher {
 
     private String[] boundNames = null;
     private MethodCandidate candidate = null;
-    private HashMap<String,String> allClasses = null;
-    private HashMap<String,String>[] boundClasses = null;
+    private RemoteObjectWrapper[] remoteObjects = null;
 
     /**
      * Creates the dispatcher object.
@@ -64,35 +61,36 @@ public class Dispatcher {
     }
 
     /**
-     * Obtains a list of bound names from the RMI registry. Additionally, each object is looked up to obtain
-     * the name of the class that it implements. All results are saved within of class variables within the
-     * Dispatcher class.
+     * Obtains a list of bound names from the RMI registry and stores it into an object attribute.
      *
-     * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not a registry
+     * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not an RMI registry
      */
-    @SuppressWarnings("unchecked")
     private void obtainBoundNames() throws NoSuchObjectException
     {
-        if(boundNames != null && boundClasses != null && allClasses != null)
+        if(boundNames != null)
             return;
 
-        rmi.locateRegistry();
-        boundNames = rmi.getBoundNames(RMGOption.BOUND_NAME.getString());
-
-        boundClasses = new HashMap[] { new HashMap<String,String>(), null };
-        for(String name : boundNames)
-            boundClasses[0].put(name, null);
+        boundNames = rmi.getBoundNames();
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Performs the RMI lookup operation to request remote objects from the RMI registry. If no bound name
+     * was specified on the command line, all registered bound names within the RMI registry are looked up.
+     * The result is stored within an object attribute.
+     *
+     * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not an RMI registry
+     */
     private void obtainBoundObjects() throws NoSuchObjectException
     {
         if( boundNames == null )
             obtainBoundNames();
 
-        boundClasses = rmi.lookup(boundNames);
-        allClasses = (HashMap<String, String>)boundClasses[0].clone();
-        allClasses.putAll(boundClasses[1]);
+        try {
+            remoteObjects = rmi.lookup(boundNames);
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "looup", "operation", true);
+        }
     }
 
     /**
@@ -135,43 +133,42 @@ public class Dispatcher {
      * pairs and writes sample files for each bound name. The sample files contain Java code that can be used to
      * call the corresponding remote methods.
      *
-     * @param results HashMap of bound name -> [MethodCanidate] pairs
+     * @param results List of RemoteObjectClients containing successfully guessed methods.
      */
-    private void writeSamples(Map<String,ArrayList<MethodCandidate>> results)
+    private void writeSamples(List<RemoteObjectClient> results)
     {
+        if( results.size() == 0 )
+            return;
+
         String templateFolder = RMGOption.TEMPLATE_FOLDER.getString();
         String sampleFolder = RMGOption.SAMPLE_FOLDER.getString();
         boolean sslValue = RMGOption.SSL.getBool();
         boolean followRedirect = RMGOption.FOLLOW.getBool();
 
-        Logger.println("");
+        Logger.lineBreak();
         Logger.println("Starting creation of sample files:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         try {
-            String className;
-            boolean unknownClass = false;
             SampleWriter writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect);
 
-            for(String name : results.keySet()) {
+            for(RemoteObjectClient client: results) {
 
-                if( name.contains("(==") )
-                    continue;
+                RemoteObjectWrapper remoteObject = client.remoteObject;
 
-                Logger.printlnMixedYellow("Creating samples for bound name", name + ".");
-                Logger.increaseIndent();
+                for(String boundName : client.getBoundNames()) {
 
-                className = allClasses.get(name);
+                    Logger.printlnMixedYellow("Creating samples for bound name", boundName + ".");
+                    Logger.increaseIndent();
 
-                if(boundClasses[1].keySet().contains(name)) {
-                    writer.createInterface(name, className, (List<MethodCandidate>)results.get(name));
-                    unknownClass = true;
+                    if(!remoteObject.isKnown)
+                        writer.createInterface(boundName, remoteObject.className, client.remoteMethods);
+
+                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown, client.remoteMethods, rmi);
+
+                    Logger.decreaseIndent();
                 }
-
-                writer.createSamples(name, className, unknownClass, (List<MethodCandidate>)results.get(name), rmi);
-
-                Logger.decreaseIndent();
             }
 
         } catch (IOException | CannotCompileException | NotFoundException e) {
@@ -398,12 +395,7 @@ public class Dispatcher {
         boolean enumJEP290Bypass = true;
         boolean marshal = true;
 
-        Logger.printlnYellow("Starting RMI Enumeration:");
-        Logger.increaseIndent();
-
         try {
-
-            Logger.println("");
 
             if( actions.contains(ScanAction.LIST) ) {
                 obtainBoundNames();
@@ -412,24 +404,24 @@ public class Dispatcher {
                     obtainBoundObjects();
 
                 Formatter format = new Formatter();
-                format.listBoundNames(boundClasses, rmi);
+                format.listBoundNames(remoteObjects);
 
-                Logger.println("");
+                Logger.lineBreak();
                 format.listCodeases();
             }
 
             if( actions.contains(ScanAction.STRING_MARSHALLING) ) {
-                Logger.println("");
+                Logger.lineBreak();
                 marshal = registryClient.enumerateStringMarshalling();
             }
 
             if( actions.contains(ScanAction.CODEBASE) ) {
-                Logger.println("");
+                Logger.lineBreak();
                 registryClient.enumCodebase(marshal, RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool());
             }
 
             if( actions.contains(ScanAction.LOCALHOST_BYPASS) ) {
-                Logger.println("");
+                Logger.lineBreak();
                 registryClient.enumLocalhostBypass();
             }
 
@@ -439,22 +431,22 @@ public class Dispatcher {
         }
 
         if( actions.contains(ScanAction.DGC) ) {
-            Logger.println("");
+            Logger.lineBreak();
             dgc.enumDGC(RMGOption.DGC_METHOD.getString());
         }
 
         if( actions.contains(ScanAction.JEP290) ) {
-            Logger.println("");
+            Logger.lineBreak();
             dgc.enumJEP290(RMGOption.DGC_METHOD.getString());
         }
 
         if(enumJEP290Bypass && actions.contains(ScanAction.JEP290_BYPASS) ) {
-            Logger.println("");
+            Logger.lineBreak();
             registryClient.enumJEP290Bypass(RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
         }
 
         if( actions.contains(ScanAction.ACTIVATOR) ) {
-            Logger.println("");
+            Logger.lineBreak();
             ActivationClient activationClient = new ActivationClient(rmi);
             activationClient.enumActivator();
         }
@@ -476,10 +468,10 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        MethodGuesser guesser = new MethodGuesser(rmi, this.boundClasses, candidates);
+        MethodGuesser guesser = new MethodGuesser(rmi, remoteObjects, candidates);
         guesser.printGuessingIntro();
 
-        Map<String, ArrayList<MethodCandidate>> results = guesser.guessMethods();
+        List<RemoteObjectClient> results = guesser.guessMethods();
 
         Logger.decreaseIndent();
         format.listGuessedMethods(results);

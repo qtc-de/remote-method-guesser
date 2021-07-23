@@ -3,12 +3,8 @@ package de.qtc.rmg.operations;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +15,7 @@ import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 
 /**
  * The MethodGuesser class is used to brute force available remote methods on Java RMI endpoints. It uses
@@ -33,17 +30,10 @@ import de.qtc.rmg.utils.RMGUtils;
  *         - A collection of method arguments to be used for the call
  *
  * During method guessing, remote-method-guesser uses a wordlist of Java methods and computes their hash
- * values. The corresponding hashes are then sent to the server, together with an collection of argument types
- * that do NOT match the expected argument types by the remote method. If a remote method does not
- * exist, the server throws an exception complaining about an unknown hash value. On the other hand, if the
- * remote method exists, the server will complain about the mismatch of argument types.
- *
- * This allows to reliably detect remote methods without the risk of causing unwanted actions on the server
- * side by actually invoking them. The idea for such a guessing approach was not invented by remote-method-guesser,
- * but was, to the best of our knowledge, first implemented by the rmiscout project. However, remote-method-guesser
- * takes this approach further and implements the mismatch of argument types in a way that prevents the underlying
- * TCP stream from being corrupted. This allows remote-method-guesser to reuse already established TCP connections
- * which provides a great performance boost, especially on TLS protected endpoints.
+ * values. The corresponding hashes are then sent to the server, together with invalid method arguments.
+ * If the remote method does not exist, the server throws an exception complaining about an unknown method
+ * hash. On the other hand, if the remote method exists, the server will complain about the invalid method
+ * arguments.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -54,44 +44,33 @@ public class MethodGuesser {
     private RMIWhisperer rmiEndpoint;
     private Set<MethodCandidate> candidates;
     private List<RemoteObjectClient> clientList;
-    private HashMap<String, String[]> duplicateMap;
+    private List<RemoteObjectClient> knownClientList;
     private List<Set<MethodCandidate>> candidateSets;
-    private Map<String, ArrayList<MethodCandidate>> knownMethods;
 
     /**
      * To create a MethodGuesser object, you usually pass the obtained information from an RMI registry endpoint.
-     * This includes the RMIWhisperer to the registry itself together with an ArrayList containing the bound- and
-     * corresponding class names. Moreover, the method candidates to be guessed and the current legacy mode are
-     * required.
+     * This includes the RMIWhisperer to the registry itself together with an Array of the looked up bound objects.
+     * Moreover, the method candidates to be guessed are required.
      *
-     * The MethodGuesser creates a RemoteObjectClient for each unique remote class and guess the specified candidates
-     * on it when invoking the guess action. The list of candidates is split to the number of available threads
-     * first. Therefore, method guessing is performed in n * t tasks, where n is the number of bound names and t is
-     * the number of threads.
+     * Passing the RMIWhisperer is only required, because the methods to dispatch raw RMI calls are currently defined
+     * in this class. In future, this will probably be relocated.
      *
      * @param rmi RMIWhisperer for the current registry
-     * @param classArray Two HashMap that contain boundName -> className pairs for known and unknown classes
+     * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @param candidates MethodCandidates that should be guessed
      */
-    public MethodGuesser(RMIWhisperer rmi, HashMap<String,String>[] classArray, Set<MethodCandidate> candidates)
+    public MethodGuesser(RMIWhisperer rmi, RemoteObjectWrapper[] remoteObjects, Set<MethodCandidate> candidates)
     {
         this.rmiEndpoint = rmi;
         this.candidates = candidates;
 
-        this.duplicateMap = new HashMap<String, String[]>();
-        this.knownMethods = new HashMap<String,ArrayList<MethodCandidate>>();
+        this.knownClientList = new ArrayList<RemoteObjectClient>();
         this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getInt());
 
-        HashMap<String, String> boundClasses = (HashMap<String, String>)classArray[1];
+        if( !RMGOption.FORCE_GUESSING.getBool() )
+            remoteObjects = handleKnownMethods(remoteObjects);
 
-        if( classArray[0].size() != 0 && RMGOption.FORCE_GUESSING.getBool() )
-            boundClasses.putAll(classArray[0]);
-
-        else
-            handleKnownMethods(classArray[0]);
-
-        this.clientList = new ArrayList<RemoteObjectClient>();
-        initClientList(boundClasses);
+        this.clientList = initClientList(remoteObjects);
     }
 
     /**
@@ -100,42 +79,30 @@ public class MethodGuesser {
      * what you want, as they use the same implementation. This function checks the bound class names for
      * duplicates and handles them according to the RMGOption.GUESS_DUPLICATES value.
      *
-     * If guessing duplicates was requested, the function creates a new RemoteObjectClient for each boundName.
+     * If guessing duplicates was requested, the function creates a new RemoteObjectClient for each bound name.
      * If guessing duplicates was not requested, only the first boundName is used to create a RemoteObjectClient
      * and all other bound names that are based on the same class are registered as duplicates.
      *
-     * @param boundClasses Map of boundName -> className pairs
+     * @param remoteObjects Array of looked up remote objects from the RMI registry
      */
-    private void initClientList(HashMap<String, String> boundClasses)
+    private List<RemoteObjectClient> initClientList(RemoteObjectWrapper[] remoteObjects)
     {
-        RemoteObjectClient client = null;
-        HashMap<String, ArrayList<String>> classBoundnameMap = new HashMap<String, ArrayList<String>>();
+        List<RemoteObjectClient> remoteObjectClients = new ArrayList<RemoteObjectClient>();
+        setPadding(remoteObjects);
 
-        for( Map.Entry<String, String> entry : boundClasses.entrySet() ) {
-            setPadding(entry.getKey());
-            classBoundnameMap.computeIfAbsent(entry.getValue(), k -> new ArrayList<String>()).add(entry.getKey());
+        if( !RMGOption.GUESS_DUPLICATES.getBool() )
+            remoteObjects = RemoteObjectWrapper.handleDuplicates(remoteObjects);
+
+        for( RemoteObjectWrapper o : remoteObjects ) {
+
+            RemoteObjectClient client = new RemoteObjectClient(rmiEndpoint, o);
+            remoteObjectClients.add(client);
         }
 
-        for( Map.Entry<String, ArrayList<String>> entry : classBoundnameMap.entrySet() ) {
+        if( RemoteObjectWrapper.hasDuplicates(remoteObjects) )
+            printDuplicates(remoteObjects);
 
-            ArrayList<String> boundNames = entry.getValue();
-            String[] boundNamesStr = boundNames.toArray(new String[0]);
-
-            for( String boundName : boundNames ) {
-                client = new RemoteObjectClient(rmiEndpoint, boundName);
-                clientList.add(client);
-
-                if( RMGOption.GUESS_DUPLICATES.getBool() )
-                    continue;
-
-                if( boundNamesStr.length > 1 )
-                    duplicateMap.put(boundName, (String[]) Arrays.copyOfRange(boundNamesStr, 1, boundNamesStr.length));
-
-                break;
-            }
-        }
-
-        printDuplicates();
+        return remoteObjectClients;
     }
 
     /**
@@ -144,10 +111,13 @@ public class MethodGuesser {
      *
      * @param value String to obtain the length from
      */
-    private void setPadding(String value)
+    private void setPadding(RemoteObjectWrapper[] list)
     {
-        if( padding < value.length() )
-            padding = value.length();
+        for(RemoteObjectWrapper o : list) {
+
+            if( padding < o.boundName.length() )
+                padding = o.boundName.length();
+        }
     }
 
     /**
@@ -155,24 +125,21 @@ public class MethodGuesser {
      * the same class / interface and that only one of them is used during method guessing. The
      * output is disabled by default and only enabled if --verbose was used.
      */
-    private void printDuplicates()
+    private void printDuplicates(RemoteObjectWrapper[] remoteObjects)
     {
-        if( duplicateMap.size() == 0 )
-            return;
-
         Logger.disableIfNotVerbose();
         Logger.printInfoBox();
 
         Logger.println("The following bound names use the same remote class:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
-        for( Map.Entry<String, String[]> entry : duplicateMap.entrySet() ) {
+        for( RemoteObjectWrapper remoteObject : remoteObjects ) {
 
-            Logger.printlnMixedBlue("-", entry.getKey());
+            Logger.printlnMixedBlue("-", remoteObject.boundName);
             Logger.increaseIndent();
 
-            for(String dup : entry.getValue() ) {
+            for(String dup : remoteObject.getDuplicateBoundNames() ) {
                 Logger.printlnMixedYellow("-->", dup);
             }
 
@@ -180,7 +147,7 @@ public class MethodGuesser {
         }
 
         Logger.decreaseIndent();
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnMixedBlue("Method guessing", "is skipped", "for duplicate remote classes.");
         Logger.printlnMixedYellow("You can use", "--guess-duplicates", "to guess them anyway.");
         Logger.decreaseIndent();
@@ -192,60 +159,48 @@ public class MethodGuesser {
      * are added automatically to the list of guessed methods. This function performs this task and also prints according
      * information for the user.
      *
-     * @param classArray Map of boundName -> knownClass pairs
+     * @param remoteObjects Array of looked up remote objects from the RMI registry
+     * @return Array of unknown remote objects
      */
-    private void handleKnownMethods(HashMap<String,String> classArray)
+    private RemoteObjectWrapper[] handleKnownMethods(RemoteObjectWrapper[] remoteObjects)
     {
-        if( classArray.size() == 0 )
-            return;
+        ArrayList<RemoteObjectWrapper> unknown = new ArrayList<RemoteObjectWrapper>();
 
-        ArrayList<String> knownBoundNames = new ArrayList<String>();
+        for(RemoteObjectWrapper o : remoteObjects) {
 
-        for( Map.Entry<String, String> entry : classArray.entrySet() ) {
-            knownBoundNames.add(entry.getKey() + " (" + entry.getValue() + ")");
-            RMGUtils.addKnownMethods(entry.getKey(), entry.getValue(), knownMethods);
-        }
+            if(!o.isKnown)
+                unknown.add(o);
 
-        Logger.disableIfNotVerbose();
-        Logger.printInfoBox();
+            else {
+                RemoteObjectClient knownClient = new RemoteObjectClient(rmiEndpoint, o);
+                knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.className));
 
-        Logger.println("The following bound names use a known remote object class:");
-        Logger.println("");
-        Logger.increaseIndent();
-
-        for(String boundName : knownBoundNames )
-            Logger.printlnMixedBlue("-", boundName);
-
-        Logger.decreaseIndent();
-        Logger.println("");
-        Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
-        Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
-        Logger.decreaseIndent();
-        Logger.println("");
-        Logger.enable();
-    }
-
-    /**
-     * When bound names were skipped because they are duplicates, they still need to obtain valid methods
-     * that were guessed on the chosen duplicate. This function adds each duplicate boundName to the results
-     * list and appends the methods that were found in the chosen duplicate.
-     *
-     * @param results ResultList that was obtained after method guessing.
-     */
-    private void handleDuplicates(Map<String, ArrayList<MethodCandidate>> results)
-    {
-        for( Map.Entry<String, String[]> entry: duplicateMap.entrySet()) {
-
-            String boundName = entry.getKey();
-            String[] boundNames = entry.getValue();
-
-            ArrayList<MethodCandidate> existingMethods = results.get(boundName);
-
-            if( existingMethods != null ) {
-                for( String duplicate : boundNames )
-                    results.put(duplicate + " (== " + boundName + ")", existingMethods);
+                knownClientList.add(knownClient);
             }
         }
+
+        if(knownClientList.size() != 0) {
+
+            Logger.disableIfNotVerbose();
+            Logger.printInfoBox();
+
+            Logger.println("The following bound names use a known remote object class:");
+            Logger.lineBreak();
+            Logger.increaseIndent();
+
+            for(RemoteObjectClient o : knownClientList)
+                Logger.printlnMixedBlue("-", o.getBoundName() + " (" + o.getBoundName() + ")");
+
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+            Logger.printlnMixedBlue("Method guessing", "is skipped", "and known methods are listed instead.");
+            Logger.printlnMixedYellow("You can use", "--force-guessing", "to guess methods anyway.");
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+            Logger.enable();
+        }
+
+        return unknown.toArray(new RemoteObjectWrapper[0]);
     }
 
     /**
@@ -265,7 +220,7 @@ public class MethodGuesser {
             return;
         }
 
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnMixedYellow("Starting Method Guessing on", String.valueOf(count), "method signature(s).");
 
         if( count == 1 ) {
@@ -274,29 +229,31 @@ public class MethodGuesser {
     }
 
     /**
-     * This method starts the actual guessing process. It creates a GuessingWorker for each remoteClient in the clientMap
+     * This method starts the actual guessing process. It creates a GuessingWorker for each remoteClient in the clientList
      * and for each Set of MethodCandidates in the candidateSets.
      *
-     * @return Map of successfully guessed methods (boundName -> List<MethodCandidates>)
+     * @return List of RemoteObjectClient containing the successfully guessed methods. Only clients containing
+     *         guessed methods are returned. Clients without guessed methods are filtered.
      */
-    public Map<String, ArrayList<MethodCandidate>> guessMethods()
+    public List<RemoteObjectClient> guessMethods()
     {
-        Logger.println("");
+        Logger.lineBreak();
 
-        if( clientList.size() == 0 )
-            return knownMethods;
+        if( clientList.size() == 0 ) {
+            clientList.addAll(knownClientList);
+            return clientList;
+        }
 
         Logger.increaseIndent();
         Logger.printlnYellow("MethodGuesser is running:");
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
 
-        ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods = new ConcurrentHashMap<String, ArrayList<MethodCandidate>>();
         ExecutorService pool = Executors.newFixedThreadPool(RMGOption.THREADS.getInt());
 
         for( RemoteObjectClient client : clientList ) {
             for( Set<MethodCandidate> candidates : candidateSets ) {
-                Runnable r = new GuessingWorker(client, candidates, client.getBoundName(), existingMethods);
+                Runnable r = new GuessingWorker(client, candidates);
                 pool.execute(r);
             }
         }
@@ -311,11 +268,12 @@ public class MethodGuesser {
 
         Logger.decreaseIndent();
         Logger.printlnYellow("done.");
-        Logger.println("");
+        Logger.lineBreak();
 
-        handleDuplicates(existingMethods);
-        existingMethods.putAll(knownMethods);
-        return existingMethods;
+        clientList = RemoteObjectClient.filterEmpty(clientList);
+        clientList.addAll(knownClientList);
+
+        return clientList;
     }
 
     /**
@@ -331,22 +289,18 @@ public class MethodGuesser {
         private String boundName;
         private Set<MethodCandidate> candidates;
         private RemoteObjectClient client;
-        private ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods;
 
         /**
          * Initialize the guessing worker with all the required information.
          *
          * @param client RemoteObjectClient to the targeted remote object
          * @param candidate MethodCanidates to guess
-         * @param boundName BoundName that is currently guessed by this guesser
-         * @param existingMethods Map of existing methods. If a candidate exists, it is pushed here
          */
-        public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates, String boundName, ConcurrentHashMap<String, ArrayList<MethodCandidate>> existingMethods)
+        public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates)
         {
             this.client = client;
-            this.boundName = boundName;
+            this.boundName = client.getBoundName();
             this.candidates = candidates;
-            this.existingMethods = existingMethods;
         }
 
         /**
@@ -359,7 +313,7 @@ public class MethodGuesser {
         {
             String prefix = Logger.blue("[ " + Logger.padRight(boundName, padding) + " ] ");
             Logger.printlnMixedYellow(prefix + "HIT! Method with signature", candidate.getSignature(), "exists!");
-            existingMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).add(candidate);
+            client.addRemoteMethod(candidate);
         }
 
         /**

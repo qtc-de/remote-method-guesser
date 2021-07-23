@@ -177,7 +177,7 @@ public class YsoIntegration {
                 ExceptionHandler.bindException(t);
 
             } else if( t instanceof java.lang.IllegalArgumentException) {
-                Logger.println("");
+                Logger.lineBreak();
                 Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during JRMPListener creation.");
                 Logger.printlnMixedBlue("Exception message:", t.getMessage());
                 RMGUtils.exit();

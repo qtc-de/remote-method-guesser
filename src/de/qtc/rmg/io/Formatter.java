@@ -1,25 +1,18 @@
 package de.qtc.rmg.io;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.networking.RMIWhisperer;
-import de.qtc.rmg.utils.AccessibleLiveRef;
+import de.qtc.rmg.operations.RemoteObjectClient;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 
 /**
- * The Formatter class is basically a legacy class. In previous versions, rmg supported JSON
- * output and the formatter was used to print results either as plain text or as JSON. In
- * current versions, JSON support was removed, which make the class basically no longer required.
- * It will be probably removed in future.
+ * The formatter class is used to print formatted output for the enum and guess operations.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -28,58 +21,35 @@ public class Formatter {
     /**
      * Creates a formatted list of available bound names and their corresponding classes. Classes
      * are divided in known classes (classes that are available on the current class path) and
-     * unknown classes (not available on the current class path).
+     * unknown classes (not available on the current class path). Furthermore, some other meta
+     * information for each bound name is printed (TCP endpoint + ObjID).
      *
-     * @param classes array of maps containing boundname-classes pairs
+     * @param remoteObjects Array of RemoteObjectWrappers obtained from the RMI registry
      */
-    @SuppressWarnings("unchecked")
-    public void listBoundNames(HashMap<String,String>[] classes, RMIWhisperer rmi)
+    public void listBoundNames(RemoteObjectWrapper[] remoteObjects)
     {
-        if( classes == null )
-            classes = new HashMap[] {null, null};
-
-        HashMap<String,String> knownClasses = classes[0];
-        HashMap<String,String>  unknownClasses = classes[1];
-
-        if( knownClasses == null )
-            knownClasses = new HashMap<String,String>();
-
-        if( unknownClasses == null )
-            unknownClasses = new HashMap<String,String>();
-
         Logger.printlnBlue("RMI registry bound names:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
-        Set<String> boundNames = new HashSet<String>();
-        boundNames.addAll(knownClasses.keySet());
-        boundNames.addAll(unknownClasses.keySet());
-
-        if( boundNames.size() == 0 ) {
+        if( remoteObjects.length == 0 ) {
             Logger.println("- No objects are bound to the registry.");
         }
 
-        for( String name : boundNames ) {
+        for(RemoteObjectWrapper remoteObject : remoteObjects) {
 
-            Logger.printlnMixedYellow("-", name);
+            Logger.printlnMixedYellow("-", remoteObject.boundName);
             Logger.increaseIndent();
 
-            AccessibleLiveRef liveRef = null;
+            if(remoteObjects == null)
+                continue;
 
-            try {
-                liveRef = new AccessibleLiveRef(rmi.getFromCache(name));
-            } catch( Exception e ) { e.printStackTrace();}
+            if( remoteObject.isKnown )
+                Logger.printlnMixedBlue("-->", remoteObject.className, "(known class)");
+            else
+                Logger.printlnMixedBlue("-->", remoteObject.className, "(unknown class)");
 
-            if( knownClasses.get(name) != null ) {
-                Logger.printlnMixedBlue("-->", knownClasses.get(name), "(known class)");
-                printLiveRef(liveRef);
-            }
-
-            if( unknownClasses.get(name) != null ) {
-                Logger.printlnMixedBlue("-->", unknownClasses.get(name), "(unknown class)");
-                printLiveRef(liveRef);
-            }
-
+            printLiveRef(remoteObject);
             Logger.decreaseIndent();
         }
 
@@ -89,30 +59,25 @@ public class Formatter {
     /**
      * Prints a formatted list of successfully guessed remote methods.
      *
-     * @param results HashMap that contains the guessed MethodCandidates for each bound name
+     * @param results Array of RemoteObjectClients containing the successfully guessed methods
      */
-    public void listGuessedMethods(Map<String, ArrayList<MethodCandidate>> results)
+    public void listGuessedMethods(List<RemoteObjectClient> results)
     {
-        if( results.size() == 0 ) {
+        if( results.isEmpty() ) {
             Logger.printlnBlue("No remote methods identified :(");
             return;
         }
 
         Logger.println("Listing successfully guessed methods:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
-        SortedSet<String> boundNames = new TreeSet<String>(results.keySet());
+        for(RemoteObjectClient client : results ) {
 
-        for(String boundName : boundNames ) {
+            List<MethodCandidate> methods = client.remoteMethods;
 
-            ArrayList<MethodCandidate> methods = results.get(boundName);
-
-            Logger.printlnMixedBlue("-", boundName);
+            Logger.printlnMixedBlue("-", String.join(" == ", client.getBoundNames()));
             Logger.increaseIndent();
-
-            if(methods.size() == 0)
-                Logger.printlnMixedYellow("-->", "0 remote methods have been identified.");
 
             for( MethodCandidate m : methods ) {
                 Logger.printlnMixedYellow("-->", m.getSignature());
@@ -127,12 +92,13 @@ public class Formatter {
     /**
      * Lists enumerated codebases exposed by the RMI server. The corresponding information is fetched
      * from a static method on the CodebaseCollector class. It returns a HashMap that maps codebases
-     * to classes that their annotated with the corresponding codebase during RMI communication.
+     * to classes that their annotated with it. This function prints this HashMap in a human readable
+     * format.
      */
     public void listCodeases()
     {
         Logger.printlnBlue("RMI server codebase enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
@@ -160,11 +126,11 @@ public class Formatter {
 
     /**
      * Print formatted output to display a LiveRef. To make fields more accessible, the ref needs to
-     * be wrapped into an AccessibleLiveRef first.
+     * be wrapped into an RemoteObjectWrapper first.
      *
-     * @param ref AccessibleLiveRef wrapper around a LiveRef
+     * @param ref RemoteObjectWrapper wrapper around a LiveRef
      */
-    private void printLiveRef(AccessibleLiveRef ref)
+    private void printLiveRef(RemoteObjectWrapper ref)
     {
         if(ref == null)
             return;

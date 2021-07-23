@@ -70,7 +70,7 @@ public class RegistryClient {
     {
         Logger.printMixedBlue("Binding name", boundName, "to ");
         Logger.printlnPlainBlue(payloadObject.getClass().getName());
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(2);
@@ -124,7 +124,7 @@ public class RegistryClient {
     {
         Logger.printMixedBlue("Binding name", boundName, "to ");
         Logger.printlnPlainBlue(payloadObject.getClass().getName());
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(2);
@@ -170,7 +170,7 @@ public class RegistryClient {
     public void unbindObject(String boundName, boolean localhostBypass)
     {
         Logger.printlnMixedBlue("Unbinding bound name", boundName, "from the registry.");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -228,7 +228,7 @@ public class RegistryClient {
     public void enumCodebase(boolean marshal, String regMethod, boolean localhostBypass)
     {
         Logger.printlnBlue("RMI server useCodebaseOnly enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         if(!marshal && regMethod == "lookup") {
@@ -308,7 +308,7 @@ public class RegistryClient {
         boolean marshal = false;
 
         Logger.printlnBlue("RMI server String unmarshalling enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -385,7 +385,7 @@ public class RegistryClient {
     public void enumLocalhostBypass()
     {
         Logger.printlnBlue("RMI registry localhost bypass enumeration (CVE-2019-2684):");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -440,7 +440,7 @@ public class RegistryClient {
     public void enumJEP290Bypass(String regMethod, boolean localhostBypass, boolean marshal)
     {
         Logger.printlnBlue("RMI registry JEP290 bypass enmeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         Object payloadObject = null;

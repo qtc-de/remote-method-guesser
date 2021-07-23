@@ -5,7 +5,6 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Proxy;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -35,8 +34,10 @@ import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
+import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
@@ -83,6 +84,7 @@ public final class RMIWhisperer {
     {
          this.host = host;
          this.port = port;
+         this.remoteObjectCache = new HashMap<String,Remote>();
 
          RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
          RMISocketFactory my = new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
@@ -125,14 +127,6 @@ public final class RMIWhisperer {
              csf = my;
          }
 
-         remoteObjectCache = new HashMap<String,Remote>();
-    }
-
-    /**
-     * Just a wrapper around LocateRegistry.getRegistry. Actually not really useful :D
-     */
-    public void locateRegistry()
-    {
         try {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
 
@@ -144,13 +138,17 @@ public final class RMIWhisperer {
     }
 
     /**
-     * Obtains a list of bound names. This is basically a wrapper around the list function of the RMI registry,
-     * but has error handling implemented.
+     * If a bound name was specified on the command line, return this bound name immediately. Otherwise,
+     * obtain a list of bound names from the RMI registry. This is basically a wrapper around the list
+     *  function of the RMI registry, but has error handling implemented.
      *
-     * @return list of available bound names.
+     * @return String array of available bound names.
      */
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
+        if( RMGOption.BOUND_NAME.notNull() )
+            return new String[] { RMGOption.BOUND_NAME.getString() };
+
         String[] boundNames = null;
 
         try {
@@ -207,58 +205,25 @@ public final class RMIWhisperer {
     }
 
     /**
-     * When called with null as parameter, this function just obtains a list of bound names from the registry.
-     * If a string was specified instead, it returns a list that only contains that String.
-     *
-     * @param boundName specified by the user. Is simply returned if not null
-     * @return list of bound names or the user specified bound name
-     */
-    public String[] getBoundNames(String boundName) throws java.rmi.NoSuchObjectException
-    {
-        if( boundName == null )
-            return getBoundNames();
-
-        return new String[] {boundName};
-    }
-
-    /**
      * Performs the RMI registries lookup operation to obtain a remote reference for the specified
-     * bound names. However, the main purpose of this function is not to obtain the remote references
-     * them self's, but the associated class names. These are returned within an array of HashMaps, where
-     * the first element contains "known" classes (available within the current class path), whereas the
-     * second one contains "unknown" classes. Nonetheless, the function stores already obtained remote
-     * references within the remoteObjectCache, so that later lookups have not to be performed again.
+     * bound names. The corresponding remote objects are wrapped inside the RemoteObjectWrapper class
+     * and returned as an array.
      *
      * @param boundNames list of bound names to determine the classes from
-     * @return Array of HashMap - HashMap[0] -> Known classes, HashMap[1] -> Unknown classes
+     * @return List of wrapped remote objects
+     * @throws Reflection related exceptions. RMI related once are caught by the other lookup function.
      */
-    @SuppressWarnings("unchecked")
-    public HashMap<String, String>[] lookup(String[] boundNames)
+    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
-        HashMap<String, String>[] returnList = (HashMap<String, String>[])new HashMap[2];
+        RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
 
-        returnList[0] = new HashMap<String,String>();
-        returnList[1] = new HashMap<String,String>();
+        for(int ctr = 0; ctr < boundNames.length; ctr++) {
 
-        Remote object = null;
-        String className = null;
-
-        for( String boundName : boundNames ) {
-
-            object = this.lookup(boundName);
-
-            if( Proxy.isProxyClass(object.getClass()) )
-                className = object.getClass().getInterfaces()[0].getName();
-            else
-                className = object.getClass().getName();
-
-            if( RMGUtils.dynamicallyCreated(className) )
-                returnList[1].put(boundName, className);
-            else
-                returnList[0].put(boundName, className);
+            Remote remoteObject = this.lookup(boundNames[ctr]);
+            remoteObjects[ctr] = new RemoteObjectWrapper(remoteObject, boundNames[ctr]);
         }
 
-        return returnList;
+        return remoteObjects;
     }
 
     /**
@@ -303,7 +268,7 @@ public final class RMIWhisperer {
     }
 
     /**
-     * Return the specified boundname from cache or null if it is not available.
+     * Return the Remote for the specified bound name from cache or null if it is not available.
      *
      * @param boundName name to lookup within the cache
      * @return Remote representing the requested remote object
