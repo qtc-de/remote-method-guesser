@@ -18,7 +18,8 @@ import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.SampleWriter;
 import de.qtc.rmg.io.WordlistHandler;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
+import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
 import de.qtc.rmg.utils.YsoIntegration;
@@ -39,11 +40,12 @@ import javassist.NotFoundException;
  */
 public class Dispatcher {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
     private ArgumentParser p;
 
     private String[] boundNames = null;
     private MethodCandidate candidate = null;
+    private RMIRegistryEndpoint rmiReg = null;
     private RemoteObjectWrapper[] remoteObjects = null;
 
     /**
@@ -54,7 +56,7 @@ public class Dispatcher {
     public Dispatcher(ArgumentParser p)
     {
         this.p = p;
-        rmi = new RMIWhisperer(p.getHost(), p.getPort());
+        rmi = new RMIEndpoint(p.getHost(), p.getPort());
 
         if(p.containsMethodSignature())
             this.createMethodCandidate();
@@ -70,7 +72,7 @@ public class Dispatcher {
         if(boundNames != null)
             return;
 
-        boundNames = rmi.getBoundNames();
+        boundNames = getRegistry().getBoundNames();
     }
 
     /**
@@ -86,10 +88,10 @@ public class Dispatcher {
             obtainBoundNames();
 
         try {
-            remoteObjects = rmi.lookup(boundNames);
+            remoteObjects = getRegistry().lookup(boundNames);
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "looup", "operation", true);
+            ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
         }
     }
 
@@ -109,12 +111,25 @@ public class Dispatcher {
     }
 
     /**
+     * By default, the dispatcher class treats remote endpoints as generic RMI endpoints. When an RMIRegistryEndpoint
+     * is required, this function should be used to obtain one.
+     *
+     * @return RMIRegistryEndpoint
+     */
+    private RMIRegistryEndpoint getRegistry()
+    {
+        if(rmiReg == null)
+            rmiReg = new RMIRegistryEndpoint(rmi.host, rmi.port);
+
+        return rmiReg;
+    }
+
+    /**
      * A RemoteObjectClient is used for communication to user registered RMI objects (anything other than
      * registry, DGC or activator). This function returns a corresponding object that can be used for the
      * communication. If an ObjID was specified on the command line, this ObjID is used as a target. Otherwise
      * the client needs to be created for one particular bound name.
      *
-     * @param boundName to create the client for. If ObjID was specified on the command line, it is preferred.
      * @return RemoteObjectClient that can be used to communicate to the specified RMI object
      */
     private RemoteObjectClient getRemoteObjectClient()
@@ -124,7 +139,7 @@ public class Dispatcher {
             return new RemoteObjectClient(rmi, objID);
 
         } else {
-            return new RemoteObjectClient(rmi, RMGOption.BOUND_NAME.getString());
+            return new RemoteObjectClient(getRegistry(), RMGOption.BOUND_NAME.getString());
         }
     }
 
@@ -464,11 +479,12 @@ public class Dispatcher {
 
         try {
             obtainBoundObjects();
-        } catch( java.rmi.NoSuchObjectException e ) {
+
+        } catch( NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        MethodGuesser guesser = new MethodGuesser(rmi, remoteObjects, candidates);
+        MethodGuesser guesser = new MethodGuesser(remoteObjects, candidates);
         guesser.printGuessingIntro();
 
         List<RemoteObjectClient> results = guesser.guessMethods();

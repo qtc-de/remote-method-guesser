@@ -12,7 +12,7 @@ import org.apache.commons.io.IOUtils;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 import javassist.CannotCompileException;
@@ -171,13 +171,13 @@ public class SampleWriter {
      * @param boundName bound name to create the sample for
      * @param className underlying class name of the corresponding bound name (usually an interface)
      * @param methods available remote methods represented by MethodCandidates
-     * @param rmi RMIWhisperer to the currently targeted RMI endpoint.
+     * @param rmi RMIEndpoint to the currently targeted RMI endpoint
      * @throws UnexpectedCharacterException is thrown if class or bound names violate the security policies
      * @throws NotFoundException should not occur
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIEndpoint rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         for(MethodCandidate method : methods) {
             createSample(className, unknownClass, boundName, method, rmi.host, rmi.port);

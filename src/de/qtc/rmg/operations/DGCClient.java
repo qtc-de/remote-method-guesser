@@ -7,7 +7,7 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 
 /**
@@ -27,12 +27,12 @@ import de.qtc.rmg.utils.DefinitelyNonExistingClass;
  */
 public class DGCClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long interfaceHash = -669196253586618813L;
     private static final ObjID objID = new ObjID(ObjID.DGC_ID);
 
-    public DGCClient(RMIWhisperer rmiEndpoint)
+    public DGCClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }

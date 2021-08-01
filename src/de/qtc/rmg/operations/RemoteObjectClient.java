@@ -12,7 +12,8 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
+import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
@@ -30,8 +31,9 @@ import javassist.NotFoundException;
 public class RemoteObjectClient {
 
     private ObjID objID;
-    private RMIWhisperer rmi;
     private RemoteRef remoteRef;
+
+    private RMIEndpoint rmi;
 
     private String boundName;
     private String randomClassName;
@@ -40,52 +42,48 @@ public class RemoteObjectClient {
     public List<MethodCandidate> remoteMethods;
 
     /**
-     * The RemoteObjectClient makes use of the official RMI API to obtain the RemoteObject from the RMI registry.
-     * Afterwards, it needs access to the underlying UnicastRemoteRef to perform customized RMi calls. Depending
-     * on the RMI version of the server (current Proxy approach or legacy stub objects), this requires access to
-     * a different field within the Proxy or RemoteObject class. Both fields are made accessible within the constructor
-     * to make the actual attacking code more clean.
+     * The RemoteObjectClient makes use of an RMIRegistryEndpoint to obtain a RemoteObject reference from the RMI
+     * registry. Afterwards, it needs access to the underlying UnicastRemoteRef to perform low level RMi calls.
      *
-     * @param rmiRegistry registry to perform lookup operations
-     * @param boundName for the lookup on the registry
+     * @param rmiRegistry RNIRegistryEndpoint to perform lookup operations
+     * @param boundName for the lookup on the RMI registry
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, String boundName)
+    public RemoteObjectClient(RMIRegistryEndpoint rmiRegistry, String boundName)
     {
         this.objID = null;
         this.rmi = rmiRegistry;
         this.boundName = boundName;
         this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
-        remoteRef = getRemoteRef();
+        remoteRef = getRemoteRefByName();
     }
 
     /**
      * When the ObjID of a remote object is already known, we can talk to this object without a previous lookup
      * operation. In this case, the corresponding remote reference is constructed from scratch, as the ObjID and
-     * the target address (host:port) are the only required informations.
+     * the target address (host:port) are the only required information.
      *
-     * @param rmiRegistry target where the object is located
-     * @param objID ID of the remote object to talk to
+     * @param rmiEndpoint RMIEndpoint that represents the server where the object is located
+     * @param objID ObjID of the remote object to talk to
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, ObjID objID)
+    public RemoteObjectClient(RMIEndpoint rmiEndpoint, ObjID objID)
     {
-        this.rmi = rmiRegistry;
+        this.rmi = rmiEndpoint;
         this.objID = objID;
         this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
-        remoteRef = getRemoteRef();
+        this.remoteRef = getRemoteRefByObjID();
     }
 
     /**
      * If you already obtained a reference to the remote object, you can also use it directly
      * in form of passing an RemoteObjectWrapper.
      *
-     * @param rmiRegistry target where the object is located
-     * @param remoteObject Previously obtained remoteObject wrapped into the wrapper class
+     * @param remoteObject Previously obtained remote reference contained in a RemoteObjectWrapper
      */
-    public RemoteObjectClient(RMIWhisperer rmiRegistry, RemoteObjectWrapper remoteObject)
+    public RemoteObjectClient(RemoteObjectWrapper remoteObject)
     {
-        this.rmi = rmiRegistry;
+        this.rmi = new RMIEndpoint(remoteObject.getHost(), remoteObject.getPort(), remoteObject.csf);
         this.objID = remoteObject.objID;
         this.boundName = remoteObject.boundName;
         this.remoteObject = remoteObject;
@@ -389,32 +387,35 @@ public class RemoteObjectClient {
     }
 
     /**
-     * Obtains a remote reference to the desired remote object. If this.objID is not null, the remote reference is always
-     * constructed manually by using the ObjID value. Otherwise, an RMI lookup is used to obtain it by bound name.
+     * Returns a remote reference created by using the objID value contained within the object.
      *
-     * @return Remote reference to the targeted object
+     * @return Remote reference to the target object
      */
-    private RemoteRef getRemoteRef()
+    private RemoteRef getRemoteRefByObjID()
     {
-        if(this.objID == null)
-            return getRemoteRefByName();
-        else
-            return this.rmi.getRemoteRef(this.objID);
+        if(objID == null)
+            ExceptionHandler.internalError("getRemoteRefByObjID", "Function was called with missing objID.");
+
+        return rmi.getRemoteRef(objID);
     }
 
     /**
-     * This function obtains a remote reference by using the regular way. It looks up the bound name that was specified
-     * during construction of the RemoteObjectClient to obtain the corresponding object from the registry. Reflection
-     * is then used to make the remote reference accessible.
+     * This function obtains a remote reference by using the regular lookup way. It looks up the bound name that was
+     * specified during construction of the RemoteObjectClient to obtain the corresponding object from the registry.
+     * Reflection is then used to make the remote reference accessible.
      *
-     * @return Remote reference to the targeted object
+     * @return Remote reference to the target object
      */
     private RemoteRef getRemoteRefByName()
     {
+        if(boundName == null || !(rmi instanceof RMIRegistryEndpoint))
+            ExceptionHandler.internalError("getRemoteRefByName", "Function was called without the required fields.");
+
         RemoteRef remoteRef = null;
+        RMIRegistryEndpoint rmiReg = (RMIRegistryEndpoint)rmi;
 
         try {
-            Remote instance = rmi.lookup(boundName);
+            Remote instance = rmiReg.lookup(boundName);
             remoteRef = RMGUtils.extractRef(instance);
 
         } catch(Exception e) {

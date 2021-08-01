@@ -8,7 +8,7 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.utils.YsoIntegration;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
@@ -40,13 +40,13 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class RegistryClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long interfaceHash = 4905912898345647071L;
     private static final ObjID objID = new ObjID(ObjID.REGISTRY_ID);
 
 
-    public RegistryClient(RMIWhisperer rmiEndpoint)
+    public RegistryClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }

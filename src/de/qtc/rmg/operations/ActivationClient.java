@@ -6,7 +6,7 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 
 /**
  * In the old days, it was pretty common for RMI endpoints to use an Activator. An Activator
@@ -31,13 +31,13 @@ import de.qtc.rmg.networking.RMIWhisperer;
  */
 public class ActivationClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long methodHash = -8767355154875805558L;
     private static final ObjID objID = new ObjID(ObjID.ACTIVATOR_ID);
 
 
-    public ActivationClient(RMIWhisperer rmiEndpoint)
+    public ActivationClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }

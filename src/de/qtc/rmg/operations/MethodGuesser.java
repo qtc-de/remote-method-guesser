@@ -13,7 +13,6 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.RMIWhisperer;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
 
@@ -41,27 +40,22 @@ public class MethodGuesser {
 
     private int padding = 0;
 
-    private RMIWhisperer rmiEndpoint;
     private Set<MethodCandidate> candidates;
     private List<RemoteObjectClient> clientList;
     private List<RemoteObjectClient> knownClientList;
     private List<Set<MethodCandidate>> candidateSets;
 
     /**
-     * To create a MethodGuesser object, you usually pass the obtained information from an RMI registry endpoint.
-     * This includes the RMIWhisperer to the registry itself together with an Array of the looked up bound objects.
-     * Moreover, the method candidates to be guessed are required.
+     * To create a MethodGuesser you need to pass the references for remote objects you want to guess on.
+     * These are usually obtained from the RMI registry and can be passed as an array of RemoteObjectWrapper.
+     * Furthermore, you need to specify a Set of MethodCandidates that represents the methods you want
+     * to guess.
      *
-     * Passing the RMIWhisperer is only required, because the methods to dispatch raw RMI calls are currently defined
-     * in this class. In future, this will probably be relocated.
-     *
-     * @param rmi RMIWhisperer for the current registry
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @param candidates MethodCandidates that should be guessed
      */
-    public MethodGuesser(RMIWhisperer rmi, RemoteObjectWrapper[] remoteObjects, Set<MethodCandidate> candidates)
+    public MethodGuesser(RemoteObjectWrapper[] remoteObjects, Set<MethodCandidate> candidates)
     {
-        this.rmiEndpoint = rmi;
         this.candidates = candidates;
 
         this.knownClientList = new ArrayList<RemoteObjectClient>();
@@ -95,7 +89,7 @@ public class MethodGuesser {
 
         for( RemoteObjectWrapper o : remoteObjects ) {
 
-            RemoteObjectClient client = new RemoteObjectClient(rmiEndpoint, o);
+            RemoteObjectClient client = new RemoteObjectClient(o);
             remoteObjectClients.add(client);
         }
 
@@ -109,11 +103,11 @@ public class MethodGuesser {
      * This function is just used for displaying the result. It is called when iterating over the boundNames
      * and saves the length of the longest boundName. This is used as a padding value for the other boundNames.
      *
-     * @param value String to obtain the length from
+     * @param remoteObjects List containing all RemoteObjectWrappers used during the guess operation
      */
-    private void setPadding(RemoteObjectWrapper[] list)
+    private void setPadding(RemoteObjectWrapper[] remoteObjects)
     {
-        for(RemoteObjectWrapper o : list) {
+        for(RemoteObjectWrapper o : remoteObjects) {
 
             if( padding < o.boundName.length() )
                 padding = o.boundName.length();
@@ -124,6 +118,8 @@ public class MethodGuesser {
      * This function prints a short info text that multiple bound names on the RMI server implement
      * the same class / interface and that only one of them is used during method guessing. The
      * output is disabled by default and only enabled if --verbose was used.
+     *
+     * @param remoteObjects List containing all RemoteObjectWrappers used during the guess operation
      */
     private void printDuplicates(RemoteObjectWrapper[] remoteObjects)
     {
@@ -172,7 +168,7 @@ public class MethodGuesser {
                 unknown.add(o);
 
             else {
-                RemoteObjectClient knownClient = new RemoteObjectClient(rmiEndpoint, o);
+                RemoteObjectClient knownClient = new RemoteObjectClient(o);
                 knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.className));
 
                 knownClientList.add(knownClient);
@@ -294,7 +290,7 @@ public class MethodGuesser {
          * Initialize the guessing worker with all the required information.
          *
          * @param client RemoteObjectClient to the targeted remote object
-         * @param candidate MethodCanidates to guess
+         * @param candidates MethodCanidates to guess
          */
         public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates)
         {

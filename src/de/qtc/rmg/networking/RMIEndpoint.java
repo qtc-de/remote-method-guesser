@@ -5,22 +5,11 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.rmi.NotBoundException;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
 import java.rmi.server.RemoteRef;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.exceptions.SSRFException;
@@ -29,15 +18,12 @@ import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.Pair;
 import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
-import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.Endpoint;
 import sun.rmi.transport.LiveRef;
@@ -45,73 +31,34 @@ import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 /**
- * The RMIWhisperer class is used to handle the RMI communication. It sets up
- * the required socket factories, is used to obtain bound names and their corresponding
- * classes and also supports methods to dispatch raw RMI calls.
+ * The RMIEndpoint class represents an RMI endpoint on a remote server. It can be used for
+ * low level communication with the corresponding endpoint that are required by the different
+ * functions of remote-method-guesser.
+ *
+ * RMIEndpoint can be extended by RMIRegistryEndpoint, which supports some more registry related
+ * functionalities.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public final class RMIWhisperer {
+public class RMIEndpoint {
 
     public int port;
     public String host;
 
-    private Registry rmiRegistry;
-    private RMIClientSocketFactory csf;
-    private Map<String,Remote> remoteObjectCache;
+    protected RMIClientSocketFactory csf;
 
     /**
-     * The main purpose of this constructor function is to setup the different socket factories.
-     * First of all, a LoopbackSocketFactory is constructed that is used when --ssl was not specified.
-     * This socket factory makes sure that all RMI calls are redirected to the specified target, even
-     * if the bound names are configured to use a different IP or hostname.
+     * Creates a new RMIEndpoint instance and configures the corresponding client side socket
+     * factory according to the options specified on the command line.
      *
-     * Afterwards, a LoopbackSslSocketFactory is constructed, which has certificate validation disabled
-     * and implements the same target redirection as the plain LoopbackSocketFactory. Notice that this step
-     * is required, independent from the setting of --ssl. Remote objects are may bound to a plaintext
-     * registry, but use a SslSocketFactory as their RMIClientSocketFactory.
-     *
-     * If --ssl was specified, the LoopbackSslSocketFactory is additionally used as the RMIClientSocketFactory
-     * for contacting the RMI registry.
-     *
-     * @param host RMI registry host
-     * @param port RMI registry port
-     * @param ssl if true, use SSL for registry communication
-     * @param followRedirects if true, do not redirect calls to the specified target
+     * @param host Remote host where the RMIEndpoint belongs to
+     * @param port Remote port where the RMIEndpoint belongs to
      */
-    public RMIWhisperer(String host, int port)
+    public RMIEndpoint(String host, int port)
     {
          this.host = host;
          this.port = port;
-         this.remoteObjectCache = new HashMap<String,Remote>();
-
-         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-         RMISocketFactory my = new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
-
-         try {
-             RMISocketFactory.setSocketFactory(my);
-         } catch (IOException e) {
-             Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
-             ExceptionHandler.showStackTrace(e);
-             Logger.eprintln("");
-         }
-
-         try {
-             SSLContext ctx = SSLContext.getInstance("TLS");
-             ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
-             SSLContext.setDefault(ctx);
-
-             LoopbackSslSocketFactory.host = host;
-             LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-             LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
-             java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
-
-         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-             Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
-             Logger.eprintln("SSL connections to untrusted hosts might fail.");
-             ExceptionHandler.showStackTrace(e);
-         }
 
          if( RMGOption.SSL.getBool() ) {
              csf = new SslRMIClientSocketFactory();
@@ -124,190 +71,36 @@ public final class RMIWhisperer {
              csf = new SSRFResponseSocketFactory(content);
 
          } else {
-             csf = my;
+             csf = RMISocketFactory.getDefaultSocketFactory();
          }
-
-        try {
-            this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
-
-        } catch( RemoteException e ) {
-            ExceptionHandler.internalError("RMGWhisperer.locateRegistry", "Caught unexpected RemoteException.");
-            ExceptionHandler.stackTrace(e);
-            RMGUtils.exit();
-        }
     }
 
     /**
-     * If a bound name was specified on the command line, return this bound name immediately. Otherwise,
-     * obtain a list of bound names from the RMI registry. This is basically a wrapper around the list
-     *  function of the RMI registry, but has error handling implemented.
+     * Creates a new RMIEndpoint instance and allows the user to specify a client side
+     * socket factory.
      *
-     * @return String array of available bound names.
+     * @param host Remote host where the RMIEndpoint belongs to
+     * @param port Remote port where the RMIEndpoint belongs to
+     * @param csf Socket factory to use for connection attempts
      */
-    public String[] getBoundNames() throws java.rmi.NoSuchObjectException
+    public RMIEndpoint(String host, int port, RMIClientSocketFactory csf)
     {
-        if( RMGOption.BOUND_NAME.notNull() )
-            return new String[] { RMGOption.BOUND_NAME.getString() };
-
-        String[] boundNames = null;
-
-        try {
-            boundNames = rmiRegistry.list();
-
-        } catch( java.rmi.ConnectIOException e ) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.io.EOFException ) {
-                ExceptionHandler.eofException(e, "list", "call");
-
-            } else if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, "list", "call");
-
-            } else if( e.getMessage().equals("non-JRMP server at remote endpoint")) {
-                ExceptionHandler.noJRMPServer(e, "list", "call");
-
-            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
-                ExceptionHandler.networkUnreachable(e, "list", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "list", "call", true);
-            }
-
-        } catch( RemoteException e ) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException ) {
-                ExceptionHandler.noRouteToHost(e, "list", "call");
-
-            } else if( t instanceof java.net.ConnectException ) {
-                ExceptionHandler.connectionRefused(e, "list", "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().equals("non-JRMP server at remote endpoint")) {
-                ExceptionHandler.noJRMPServer(e, "list", "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message") ) {
-                ExceptionHandler.sslError(e, "list", "call");
-
-            } else if( t instanceof java.rmi.NoSuchObjectException ) {
-                throw (java.rmi.NoSuchObjectException)t;
-
-            } else if( t instanceof SSRFException ) {
-                SSRFSocket.printContent(host, port);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "list", "call", true);
-            }
-        }
-
-        return boundNames;
+         this.host = host;
+         this.port = port;
+         this.csf = csf;
     }
 
     /**
-     * Performs the RMI registries lookup operation to obtain a remote reference for the specified
-     * bound names. The corresponding remote objects are wrapped inside the RemoteObjectWrapper class
-     * and returned as an array.
+     * Constructs a RemoteRef by using the endpoint information (host, port, csf) and the
+     * specified objID.
      *
-     * @param boundNames list of bound names to determine the classes from
-     * @return List of wrapped remote objects
-     * @throws Reflection related exceptions. RMI related once are caught by the other lookup function.
-     */
-    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
-    {
-        RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
-
-        for(int ctr = 0; ctr < boundNames.length; ctr++) {
-
-            Remote remoteObject = this.lookup(boundNames[ctr]);
-            remoteObjects[ctr] = new RemoteObjectWrapper(remoteObject, boundNames[ctr]);
-        }
-
-        return remoteObjects;
-    }
-
-    /**
-     * Just a wrapper around the lookup method of the RMI registry. Performs exception handling
-     * and caches remote objects that have already been looked up.
-     *
-     * @param boundName name to lookup within the registry
-     * @return Remote representing the requested remote object
-     */
-    public Remote lookup(String boundName)
-    {
-        Remote remoteObject = remoteObjectCache.get(boundName);
-
-        if( remoteObject == null ) {
-
-            try {
-
-                remoteObject = rmiRegistry.lookup(boundName);
-                remoteObjectCache.put(boundName, remoteObject);
-
-            } catch( RemoteException e ) {
-
-                Throwable cause = ExceptionHandler.getCause(e);
-
-                if( cause instanceof ClassNotFoundException ) {
-                    ExceptionHandler.lookupClassNotFoundException(cause.getMessage());
-
-                } else {
-                    ExceptionHandler.unexpectedException(e, "lookup", "call", false);
-                }
-
-            } catch( NotBoundException e) {
-                Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
-                Logger.printlnPlainBlue(boundName + ".");
-                Logger.eprintln("The specified bound name is not bound to the registry.");
-                RMGUtils.exit();
-
-            }
-        }
-
-        return remoteObject;
-    }
-
-    /**
-     * Return the Remote for the specified bound name from cache or null if it is not available.
-     *
-     * @param boundName name to lookup within the cache
-     * @return Remote representing the requested remote object
-     */
-    public Remote getFromCache(String boundName)
-    {
-        return remoteObjectCache.get(boundName);
-    }
-
-    /**
-     * Constructs a RemoteRef (class used by internal RMI communication) using the specified
-     * host, port, csf and objID values..
-     *
+     * @param objID identifies the targeted remote object on the server side
      * @return newly constructed RemoteRef
      */
     public RemoteRef getRemoteRef(ObjID objID)
     {
         Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
         return new UnicastRef(new LiveRef(objID, endpoint, false));
-    }
-
-    /**
-     * Constructs a RemoteRef (class used by internal RMI communication) using the specified
-     * host, port, csf and objID values.
-     *
-     * @return newly constructed RemoteRef
-     */
-    public RemoteRef getRemoteRef(ObjID objID, int port, RMIClientSocketFactory csf)
-    {
-        Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
-        return new UnicastRef(new LiveRef(objID, endpoint, false));
-    }
-
-    /**
-     * @return the underlying registry object
-     */
-    public Registry getRegistry()
-    {
-        return this.rmiRegistry;
     }
 
     /**
