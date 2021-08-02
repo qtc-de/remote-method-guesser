@@ -7,21 +7,16 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMISocketFactory;
 import java.rmi.server.RemoteRef;
-
-import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.exceptions.SSRFException;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.Pair;
-import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.io.RawObjectInputStream;
 import de.qtc.rmg.plugin.PluginSystem;
-import de.qtc.rmg.utils.RMGUtils;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
 import sun.rmi.server.UnicastRef;
@@ -59,20 +54,7 @@ public class RMIEndpoint {
     {
          this.host = host;
          this.port = port;
-
-         if( RMGOption.SSL.getBool() ) {
-             csf = new SslRMIClientSocketFactory();
-
-         } else if( RMGOption.SSRF.getBool() ) {
-             csf = new SSRFSocketFactory();
-
-         } else if( RMGOption.SSRFResponse.notNull() ) {
-             byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFResponse.getString());
-             csf = new SSRFResponseSocketFactory(content);
-
-         } else {
-             csf = RMISocketFactory.getDefaultSocketFactory();
-         }
+         this.csf = PluginSystem.getClientSocketFactory(host, port);
     }
 
     /**

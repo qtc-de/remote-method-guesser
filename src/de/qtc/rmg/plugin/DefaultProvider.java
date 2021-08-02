@@ -1,9 +1,23 @@
 package de.qtc.rmg.plugin;
 
 import java.lang.reflect.Method;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMISocketFactory;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.DummyTrustManager;
+import de.qtc.rmg.networking.LoopbackSocketFactory;
+import de.qtc.rmg.networking.LoopbackSslSocketFactory;
+import de.qtc.rmg.networking.SSRFResponseSocketFactory;
+import de.qtc.rmg.networking.SSRFSocketFactory;
 import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
@@ -15,17 +29,19 @@ import javassist.CtMethod;
 import javassist.CtNewMethod;
 
 /**
- * The DefaultProvider is a default implementation of an rmg plugin. It implements the IArgumentProvider
- * and IPayloadProvider and is always loaded when no user specified plugin overwrites one of these interfaces.
+ * The DefaultProvider is a default implementation of an rmg plugin. It implements the IArgumentProvider,
+ * IPayloadProvider and ISocketFactoryProvider interfaces and is always loaded when no user specified
+ * plugin overwrites one of these interfaces.
  *
- * Within its IPayloadProvider override, it returns either a RMIServerImpl object as used by JMX (for bind, rebind
+ * Within it's IPayloadProvider override, it returns either a RMIServerImpl object as used by JMX (for bind, rebind
  * and unbin actions) or a ysoserial gadget (for basically all other actions). The IArgumentProvider override attempts
  * to evaluate the user specified argument string as Java code and attempts to create an Object array out of it that
- * is used for method calls.
+ * is used for method calls. The ISocketFactoryProvider implementation returns remote-method-guesser's loopback
+ * factories that prevent redirections from the server side.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
+public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider {
 
     /**
      * Return an RMIServerImpl object as used by JMX endpoints when invoked from the bind, rebind or unbind
@@ -113,5 +129,62 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
         }
 
         return result;
+    }
+
+    /**
+     * Returns an RMIClientSocketFactory according to the specified options on the command line.
+     */
+    @Override
+    public RMIClientSocketFactory getClientSocketFactory(String host, int port)
+    {
+        if( RMGOption.SSL.getBool() ) {
+            return new SslRMIClientSocketFactory();
+
+        } else if( RMGOption.SSRF.getBool() ) {
+            return new SSRFSocketFactory();
+
+        } else if( RMGOption.SSRFResponse.notNull() ) {
+            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFResponse.getString());
+            return new SSRFResponseSocketFactory(content);
+
+        } else {
+            return RMISocketFactory.getDefaultSocketFactory();
+        }
+    }
+
+    /**
+     * The default RMISocketFactory used by remote-method-guesser is the LoopbackSocketFactory, which
+     * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     */
+    @Override
+    public RMISocketFactory getDefaultSocketFactory(String host, int port)
+    {
+        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
+        return new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
+    }
+
+    /**
+     * The default SSLRMISocketFactory used by remote-method-guesser is the LoopbackSslSocketFactory, which
+     * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     */
+    @Override
+    public String getDefaultSSLSocketFactory(String host, int port)
+    {
+        try {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
+            SSLContext.setDefault(ctx);
+
+            LoopbackSslSocketFactory.host = host;
+            LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
+            LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
+
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
+            ExceptionHandler.showStackTrace(e);
+            RMGUtils.exit();
+        }
+
+        return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
     }
 }

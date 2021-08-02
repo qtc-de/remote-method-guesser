@@ -7,18 +7,14 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMISocketFactory;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 
 import de.qtc.rmg.exceptions.SSRFException;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
 import javassist.tools.reflect.Reflection;
@@ -55,11 +51,8 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
 
         this.remoteObjectCache = new HashMap<String,Remote>();
 
-        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-        RMISocketFactory my = new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
-
         try {
-            RMISocketFactory.setSocketFactory(my);
+            RMISocketFactory.setSocketFactory(PluginSystem.getDefaultSocketFactory(host, port));
 
         } catch (IOException e) {
             Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
@@ -67,21 +60,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
             Logger.eprintln("");
         }
 
-        try {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
-            SSLContext.setDefault(ctx);
-
-            LoopbackSslSocketFactory.host = host;
-            LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-            LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
-            java.security.Security.setProperty("ssl.SocketFactory.provider", "de.qtc.rmg.networking.LoopbackSslSocketFactory");
-
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
-            Logger.eprintln("SSL connections to untrusted hosts might fail.");
-            ExceptionHandler.showStackTrace(e);
-        }
+        java.security.Security.setProperty("ssl.SocketFactory.provider", PluginSystem.getDefaultSSLSocketFactory(host, port));
 
         try {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
