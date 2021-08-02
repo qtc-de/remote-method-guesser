@@ -15,7 +15,7 @@ MANIFEST="${DIR}/RMG-MANIFEST.MF"
 
 echo "RmgPluginClass: $CLASS" > $MANIFEST
 
-javac -cp $RMG $SRC
-jar -cfm $JAR $MANIFEST -C ${DIR} ${CLASS}.class
+javac -cp $RMG $SRC \
+&& jar -cfm $JAR $MANIFEST -C ${DIR} ${CLASS}.class
 
-rm "${DIR}/${CLASS}.class" $MANIFEST
+rm -f "${DIR}/${CLASS}.class" $MANIFEST
