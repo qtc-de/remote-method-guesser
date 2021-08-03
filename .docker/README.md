@@ -6,16 +6,12 @@ The *example-server* provided by this repository can be used to test all feature
 You can either build the container from source or pull it from *GitHub Packages*.
 
 * To build from source, just clone the repository, switch to the [docker directory](/.docker) and run ``docker build .``
-  to create the container. If you also want to make adjustments to the example server, just modify the [source code](/.docker/resources/example-server)
+  to create the container. If you also want to make adjustments to the example server, modify the [source code](/.docker/resources/example-server)
   and rebuild the container.
 
-* To load the container from *GitHub Packages*, just authenticate using your personal access token and run the corresponding pull command:
+* To load the container from the *GitHub Container Registry* just use the corresponding pull command:
   ```console
-  $ docker login https://docker.pkg.github.com -u <USERNAME>
-  Password:
-
-  Login Succeeded
-  $ docker pull docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
+  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
   ```
 
 To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/.docker/docker-compose.yml)

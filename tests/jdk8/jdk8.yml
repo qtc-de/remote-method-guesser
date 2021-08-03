@@ -15,7 +15,7 @@ variables:
 
 containers:
   - name: 'rmg-jdk8'
-    image: 'docker.pkg.github.com/qtc-de/beanshooter/tomcat8-jmxmp:1.1'
+    image: 'ghcr.io/qtc-de/beanshooter/tomcat8-jmxmp:1.1'
     volumes:
       - '${volume}:${volume-d}'
     aliases:
