@@ -3,21 +3,15 @@ package de.qtc.rmg.plugin;
 import java.lang.reflect.Method;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.DummyTrustManager;
 import de.qtc.rmg.networking.LoopbackSocketFactory;
 import de.qtc.rmg.networking.LoopbackSslSocketFactory;
 import de.qtc.rmg.networking.SSRFResponseSocketFactory;
 import de.qtc.rmg.networking.SSRFSocketFactory;
+import de.qtc.rmg.networking.TrustAllSocketFactory;
 import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
@@ -138,7 +132,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     public RMIClientSocketFactory getClientSocketFactory(String host, int port)
     {
         if( RMGOption.SSL.getBool() ) {
-            return new SslRMIClientSocketFactory();
+            return new TrustAllSocketFactory();
 
         } else if( RMGOption.SSRF.getBool() ) {
             return new SSRFSocketFactory();
@@ -170,20 +164,11 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public String getDefaultSSLSocketFactory(String host, int port)
     {
-        try {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[] { new DummyTrustManager() }, null);
-            SSLContext.setDefault(ctx);
+        TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
 
-            LoopbackSslSocketFactory.host = host;
-            LoopbackSslSocketFactory.fac = ctx.getSocketFactory();
-            LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
-
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            Logger.eprintlnMixedBlue("Unable to set", "TrustManager", "for SSL connections.");
-            ExceptionHandler.showStackTrace(e);
-            RMGUtils.exit();
-        }
+        LoopbackSslSocketFactory.host = host;
+        LoopbackSslSocketFactory.fac = trustAllFax.getSSLSocketFactory();
+        LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
 
         return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
     }

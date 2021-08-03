@@ -44,10 +44,6 @@ import javassist.tools.reflect.Reflection;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-/**
- * @author pentester
- *
- */
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class RMGUtils {
 
