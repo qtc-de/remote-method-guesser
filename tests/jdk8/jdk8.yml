@@ -23,12 +23,4 @@ containers:
       DOCKER-rmg-jdk8-GATEWAY: DOCKER-GW
 
 testers:
-  - ./tests/act.yml
-  - ./tests/bind.yml
-  - ./tests/call.yml
-  - ./tests/codebase.yml
-  - ./tests/dgc.yml
-  - ./tests/enum.yml
-  - ./tests/guess.yml
-  - ./tests/method.yml
-  - ./tests/reg.yml
+  - ./tests/*

@@ -28,13 +28,4 @@ containers:
       DOCKER-rmg-jdk11-GATEWAY: DOCKER-GW
 
 testers:
-  - ./tests/act.yml
-  - ./tests/bind.yml
-  - ./tests/call.yml
-  - ./tests/codebase.yml
-  - ./tests/dgc.yml
-  - ./tests/enum.yml
-  - ./tests/guess.yml
-  - ./tests/listen.yml
-  - ./tests/method.yml
-  - ./tests/reg.yml
+  - ./tests/*
