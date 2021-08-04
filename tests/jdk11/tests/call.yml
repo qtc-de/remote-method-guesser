@@ -106,6 +106,30 @@ tests:
             - plain-server
 
 
+  - title: Execute Call (Based on complex ObjID)
+    description: >
+      'Invokes the list function on the rmi registry by using the'
+      '--objid option and the complex form of an ObjID.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - ''
+      - --objid
+      - '[0:0:0, 0]'
+      - --signature
+      - 'String[] list()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - plain-server2
+            - legacy-service
+            - plain-server
+
+
   - title: Invalid Bound Name
     description: >
       'Invokes a function on an invalid bound name and checks'

@@ -57,3 +57,23 @@ tests:
             - jmxrmi
 
 
+  - title: Execute Call (Based on complex ObjID)
+    description: >
+      'Invokes the list function on the rmi registry by using the'
+      '--objid option and the complex form of an ObjID.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - call
+      - ''
+      - --objid
+      - '[0:0:0, 0]'
+      - --signature
+      - 'String[] list()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+    validators:
+      - error: False
+      - contains:
+          values:
+            - jmxrmi
