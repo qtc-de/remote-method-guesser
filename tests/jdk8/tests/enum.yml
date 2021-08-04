@@ -17,6 +17,11 @@ tests:
             - 'jmxrmi'
             - 'javax.management.remote.rmi.RMIServerImpl_Stub (known class)'
 
+      - regex:
+          description: 'Check whether objID values are displayed'
+          match:
+            - 'Endpoint: iinsecure.dev:\d+ ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+
       - contains:
           description: 'Check whether all exposed codebase values are detected.'
           ignore_case: True
