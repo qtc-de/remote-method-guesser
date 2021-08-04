@@ -250,7 +250,7 @@ public class DGCClient {
     }
 
     /**
-     * DGC calls are implemented by using the genericCall function of RMIWhisperer. This allows to dispatch raw RMI
+     * DGC calls are implemented by using the genericCall function of the RMIEndpoint class. This allows to dispatch raw RMI
      * calls with fine granular control of the call parameters. The DGC interface on the server side is implemented
      * by using a skeleton, that still uses the old RMI calling convetion. Therefore, we have to use an interfaceHash
      * instead of method hashes and need to specify the call number as callID. The callID can be looked up
@@ -265,6 +265,7 @@ public class DGCClient {
     {
         try {
             rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, "DGC", false);
         }

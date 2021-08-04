@@ -253,7 +253,7 @@ public class ActivationClient {
     }
 
     /**
-     * Implementation of the activate call. Just uses the genericCall function of the RMIWhisperer, which allows to perform
+     * Implementation of the activate call. Just uses the genericCall function of the RMIEndpoint class, which allows to perform
      * raw RMI calls. The activator is not implemented as a skeleton and already uses the new calling convention. As it only
      * supports a single method, we can hardcode the methodHash into the class.
      *

@@ -191,9 +191,6 @@ public class RMIEndpoint {
         } catch(java.rmi.ConnectIOException e) {
             ExceptionHandler.connectIOException(e, callName);
 
-        } catch(java.rmi.NoSuchObjectException e) {
-            ExceptionHandler.noSuchObjectException(e, "such", true);
-
         } catch( SSRFException e ) {
             SSRFSocket.printContent(host, port);
         }

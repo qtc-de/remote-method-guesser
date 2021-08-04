@@ -1,5 +1,7 @@
 package de.qtc.rmg.internal;
 
+import java.rmi.server.ObjID;
+
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
 
@@ -202,6 +204,22 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
         Logger.eprintlnMixedBlue("There seems to be no", object, "object avaibale on the specified endpoint.");
+        showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
+    public static void noSuchObjectException(Exception e, ObjID objID, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
+
+        if(objID != null)
+            Logger.eprintlnMixedBlue("ObjID", objID.toString(), "is not available on this endpoint.");
+
+        else
+            Logger.eprintlnMixedBlue("The targeted object", "is not", "available on this endpoint.");
+
         showStackTrace(e);
 
         if(exit)

@@ -293,7 +293,7 @@ public class RemoteObjectClient {
     /**
      * This function is used for regular RMI calls on the specified MethodCandidate. It takes an array of Objects as
      * input arguments and invokes the MethodCandidate with them accordingly. The function itself is basically just a
-     * wrapper around the genericCall function from the RMIWhisperer class. Especially the transformation from the raw
+     * wrapper around the genericCall function of the RMIEndpoint class. Especially the transformation from the raw
      * Object array into the MethodArguments type is one of it's purposes.
      *
      * @param targetMethod remote method to call
@@ -307,6 +307,7 @@ public class RemoteObjectClient {
         try {
             rtype = targetMethod.getMethod().getReturnType();
             callArguemnts = RMGUtils.applyParameterTypes(targetMethod.getMethod(), argumentArray);
+
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "preparation", "of remote method call", true);
         }
@@ -320,27 +321,16 @@ public class RemoteObjectClient {
             if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash"))
                 ExceptionHandler.unrecognizedMethodHash("call", targetMethod.getSignature());
 
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, this.objID, true);
+
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
         }
     }
 
     /**
-     * Just a wrapper around the genericCall function from the RMIWhisperer class. Invokes the specified MethodCandidate
-     * with the specified set of MethodArguments.
-     *
-     * @param targetMethod method to invoke
-     * @param argumentArray arguments to use for the call
-     * @throws Exception this function is used e.g. for remote method guessing and raising all kind of exceptions is
-     *         required.
-     */
-    public void rawCallNoReturn(MethodCandidate targetMethod, MethodArguments argumentArray) throws Exception
-    {
-        rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef, null);
-    }
-
-    /**
-     * Just a wrapper around the guessingCall function from the RMIWhisperer class.
+     * Just a wrapper around the guessingCall function of the RMIEndpoint class.
      *
      * @param targetMethod method to invoke
      * @throws Exception this function is used e.g. for remote method guessing and raising all kind of exceptions is
@@ -509,7 +499,7 @@ public class RemoteObjectClient {
     }
 
     /**
-     * Due to other internal requirements, the getName function from the MethodCandidate class does not
+     * Due to other internal requirements, the getName function of the MethodCandidate class does not
      * implement exception handling. Therefore, this function provides a simple wrapper class that catches
      * exceptions.
      *

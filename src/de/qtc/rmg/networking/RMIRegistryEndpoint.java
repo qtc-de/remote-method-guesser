@@ -66,7 +66,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
 
         } catch( RemoteException e ) {
-            ExceptionHandler.internalError("RMGWhisperer.locateRegistry", "Caught unexpected RemoteException.");
+            ExceptionHandler.internalError("RMIRegistryEndpoint.locateRegistry", "Caught unexpected RemoteException.");
             ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
         }
