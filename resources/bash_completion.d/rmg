@@ -23,6 +23,9 @@ function _rmg() {
     gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
+    operations="act bind call codebase dgc enum guess listen method rebind reg unbind"
+    enum_operations="list string_marshalling codebase localhost_bypass dgc jep290 jep290_bypass activator"
+
     # Current word is not an option and previous word is not a value_option
     if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then
 
@@ -32,8 +35,8 @@ function _rmg() {
 
         # If host and port are specified - complete actions
         elif [[ $args -eq 3 ]]; then
-            opts="act bind call codebase dgc enum guess listen method rebind reg unbind"
-            mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+            opts=$operations
+            mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}")
             return 0
 
         # If host, port and action are specified - complete depending on action (stored in ${arg} by _comp_get_parameter 3)
@@ -42,6 +45,12 @@ function _rmg() {
             # If action expects an gadget, complete gadgets
             if _comp_contains "act dgc listen method reg" $arg; then
                 opts=$gadgets
+                mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}")
+                return 0
+
+            # If action is enum, complete enum operations
+            elif _comp_contains "enum" $arg; then
+                opts=$enum_operations
                 mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
                 return 0
 
@@ -98,18 +107,20 @@ function _rmg() {
 		opts="$opts --dgc-method"
 		opts="$opts --follow"
 		opts="$opts --force-guessing"
-		opts="$opts --force-legacy"
+		opts="$opts --gopher"
 		opts="$opts --guess-duplicates"
+		opts="$opts --help"
 		opts="$opts --help"
 		opts="$opts --localhost-bypass"
 		opts="$opts --no-color"
-		opts="$opts --no-legacy"
 		opts="$opts --objid"
 		opts="$opts --plugin"
 		opts="$opts --reg-method"
 		opts="$opts --sample-folder"
 		opts="$opts --signature"
 		opts="$opts --ssl"
+		opts="$opts --ssrf"
+		opts="$opts --ssrf-response"
 		opts="$opts --stack-trace"
 		opts="$opts --template-folder"
 		opts="$opts --threads"
