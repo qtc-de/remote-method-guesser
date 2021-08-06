@@ -1,0 +1,70 @@
+tester:
+  name: ssrf-response
+  title: SSRF Response Tests
+  description: "Performs some tests on remote-method-guessers --ssrf-response option"
+
+
+tests:
+  - title: SSRF Response Enum
+    description: >
+      'Simulates server output for remote-method-guessers --ssrf-response option.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 0.0.0.0
+      - 9010
+      - --ssrf-response
+      - 4e000a3137322e31372e302e31000086fc51aced0005770f0179bf1d8a0000017b14e4e4b08016757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b47020000740034687474703a2f2f69696e7365637572652e6465762f77656c6c2d68696464656e2d646576656c6f706d656e742d666f6c6465722f78700000000374000d706c61696e2d7365727665723274000e6c65676163792d7365727669636574000c706c61696e2d736572766572
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'plain-server'
+            - 'plain-server2'
+            - 'legacy-service'
+
+
+  - title: SSRF Response List
+    description: >
+      'Simulates server output for remote-method-guessers --ssrf-response option.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 0.0.0.0
+      - 9010
+      - enum
+      - list
+      - --ssrf-response
+      - 4e000a3137322e31372e302e31000086fc51aced0005770f0179bf1d8a0000017b14e4e4b08016757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b47020000740034687474703a2f2f69696e7365637572652e6465762f77656c6c2d68696464656e2d646576656c6f706d656e742d666f6c6465722f78700000000374000d706c61696e2d7365727665723274000e6c65676163792d7365727669636574000c706c61696e2d736572766572
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'plain-server'
+            - 'plain-server2'
+            - 'legacy-service'
+
+
+  - title: SSRF Response Lookup
+    description: >
+      'Simulates server output for remote-method-guessers --ssrf-response option.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 0.0.0.0
+      - 9010
+      - --bound-name
+      - plain-server
+      - --ssrf-response
+      - 4e000a3137322e31372e302e310000ce3a51aced0005770f0179bf1d8a0000017b14e4e4b08036737d00000001002964652e7174632e726d672e7365727665722e696e74657266616365732e49506c61696e536572766572740034687474703a2f2f69696e7365637572652e6465762f77656c6c2d68696464656e2d646576656c6f706d656e742d666f6c6465722f787200176a6176612e6c616e672e7265666c6563742e50726f7879e127da20cc1043cb0200014c0001687400254c6a6176612f6c616e672f7265666c6563742f496e766f636174696f6e48616e646c65723b71007e000178707372002d6a6176612e726d692e7365727665722e52656d6f74654f626a656374496e766f636174696f6e48616e646c6572000000000000000202000071007e00017872001c6a6176612e726d692e7365727665722e52656d6f74654f626a656374d361b4910c61331e03000071007e000178707736000a556e6963617374526566000d69696e7365637572652e646576000093a58bcdbb1c2ddfeb7f79bf1d8a0000017b14e4e4b080080178
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'plain-server'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'Endpoint: iinsecure.dev:37797 ObjID: [79bf1d8a:17b14e4e4b0:-7ff8, -8372830402508756097]'
+            - 'http://iinsecure.dev/well-hidden-development-folder/'

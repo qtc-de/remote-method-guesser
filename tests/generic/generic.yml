@@ -1,0 +1,13 @@
+tester:
+  name: generic
+  title: Generic Tests
+  description: >
+    'Launches some generic tests that do not require a server to test against'
+
+variables:
+  BASE-CMD:
+    - rmg
+    - --no-color
+
+testers:
+  - ./tests/*
