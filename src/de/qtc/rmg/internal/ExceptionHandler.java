@@ -378,6 +378,14 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void notBoundException(String boundName)
+    {
+        Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
+        Logger.printlnPlainBlue(boundName + ".");
+        Logger.eprintln("The specified bound name is not bound to the registry.");
+        RMGUtils.exit();
+    }
+
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);
@@ -394,7 +402,10 @@ public class ExceptionHandler {
     {
         Throwable t = ExceptionHandler.getCause(e);
 
-        if( t instanceof java.net.NoRouteToHostException) {
+        if( t instanceof java.io.EOFException ) {
+            ExceptionHandler.eofException(e, callName, "call");
+
+        } else if( t instanceof java.net.NoRouteToHostException) {
             ExceptionHandler.noRouteToHost(e, callName, "call");
 
         } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {

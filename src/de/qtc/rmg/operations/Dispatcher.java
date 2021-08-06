@@ -413,16 +413,24 @@ public class Dispatcher {
         try {
 
             if( actions.contains(ScanAction.LIST) ) {
-                obtainBoundNames();
-
-                if( !RMGOption.SSRFResponse.notNull() || RMGOption.BOUND_NAME.notNull() )
-                    obtainBoundObjects();
 
                 Formatter format = new Formatter();
-                format.listBoundNames(remoteObjects);
+                obtainBoundNames();
 
-                Logger.lineBreak();
-                format.listCodeases();
+                if( !RMGOption.SSRFResponse.notNull() || RMGOption.BOUND_NAME.notNull() ) {
+                    obtainBoundObjects();
+                    format.listBoundNames(remoteObjects);
+
+                    Logger.lineBreak();
+                    format.listCodeases();
+
+                } else {
+                    remoteObjects = RemoteObjectWrapper.fromBoundNames(boundNames);
+                    format.listBoundNames(remoteObjects);
+                }
+
+                if( RMGOption.SSRFResponse.notNull() )
+                    return;
             }
 
             if( actions.contains(ScanAction.STRING_MARSHALLING) ) {

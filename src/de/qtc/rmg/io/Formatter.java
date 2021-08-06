@@ -32,17 +32,19 @@ public class Formatter {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        if( remoteObjects.length == 0 ) {
+        if( remoteObjects == null || remoteObjects.length == 0 ) {
             Logger.println("- No objects are bound to the registry.");
+            return;
         }
 
         for(RemoteObjectWrapper remoteObject : remoteObjects) {
 
             Logger.printlnMixedYellow("-", remoteObject.boundName);
-            Logger.increaseIndent();
 
-            if(remoteObjects == null)
+            if( remoteObject.remoteObject == null)
                 continue;
+
+            Logger.increaseIndent();
 
             if( remoteObject.isKnown )
                 Logger.printlnMixedBlue("-->", remoteObject.className, "(known class)");
@@ -132,7 +134,7 @@ public class Formatter {
      */
     private void printLiveRef(RemoteObjectWrapper ref)
     {
-        if(ref == null)
+        if(ref == null || ref.remoteObject == null)
             return;
 
         Logger.print("    ");

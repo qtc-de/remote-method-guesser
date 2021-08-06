@@ -1,7 +1,6 @@
 package de.qtc.rmg.networking;
 
 import java.io.IOException;
-import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -90,50 +89,22 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
             boundNames = rmiRegistry.list();
 
         } catch( java.rmi.ConnectIOException e ) {
+            ExceptionHandler.connectIOException(e, "list");
 
-            Throwable t = ExceptionHandler.getCause(e);
+        } catch( java.rmi.ConnectException e ) {
+            ExceptionHandler.connectException(e, "list");
 
-            if( t instanceof java.io.EOFException ) {
-                ExceptionHandler.eofException(e, "list", "call");
+        } catch( java.rmi.NoSuchObjectException e ) {
+            throw e;
 
-            } else if( t instanceof java.net.NoRouteToHostException) {
-                ExceptionHandler.noRouteToHost(e, "list", "call");
+        } catch( Exception e ) {
 
-            } else if( e.getMessage().equals("non-JRMP server at remote endpoint")) {
-                ExceptionHandler.noJRMPServer(e, "list", "call");
+            Throwable cause = ExceptionHandler.getCause(e);
 
-            } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
-                ExceptionHandler.networkUnreachable(e, "list", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "list", "call", true);
-            }
-
-        } catch( RemoteException e ) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-
-            if( t instanceof java.net.NoRouteToHostException ) {
-                ExceptionHandler.noRouteToHost(e, "list", "call");
-
-            } else if( t instanceof java.net.ConnectException ) {
-                ExceptionHandler.connectionRefused(e, "list", "call");
-
-            } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().equals("non-JRMP server at remote endpoint")) {
-                ExceptionHandler.noJRMPServer(e, "list", "call");
-
-            } else if( t instanceof javax.net.ssl.SSLException && t.getMessage().contains("Unsupported or unrecognized SSL message") ) {
-                ExceptionHandler.sslError(e, "list", "call");
-
-            } else if( t instanceof java.rmi.NoSuchObjectException ) {
-                throw (java.rmi.NoSuchObjectException)t;
-
-            } else if( t instanceof SSRFException ) {
+            if( cause instanceof SSRFException )
                 SSRFSocket.printContent(host, port);
-
-            } else {
+            else
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
-            }
         }
 
         return boundNames;
@@ -175,27 +146,33 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
         if( remoteObject == null ) {
 
             try {
-
                 remoteObject = rmiRegistry.lookup(boundName);
                 remoteObjectCache.put(boundName, remoteObject);
 
-            } catch( RemoteException e ) {
+            } catch( java.rmi.ConnectIOException e ) {
+                ExceptionHandler.connectIOException(e, "lookup");
+
+            } catch( java.rmi.ConnectException e ) {
+                ExceptionHandler.connectException(e, "lookup");
+
+            } catch( java.rmi.NoSuchObjectException e ) {
+                ExceptionHandler.noSuchObjectException(e, "registry", true);
+
+            } catch( java.rmi.NotBoundException e ) {
+                ExceptionHandler.notBoundException(boundName);
+
+            } catch( Exception e ) {
 
                 Throwable cause = ExceptionHandler.getCause(e);
 
-                if( cause instanceof ClassNotFoundException ) {
+                if( cause instanceof ClassNotFoundException )
                     ExceptionHandler.lookupClassNotFoundException(cause.getMessage());
 
-                } else {
-                    ExceptionHandler.unexpectedException(e, "lookup", "call", false);
-                }
+                else if( cause instanceof SSRFException )
+                    SSRFSocket.printContent(host, port);
 
-            } catch( NotBoundException e) {
-                Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
-                Logger.printlnPlainBlue(boundName + ".");
-                Logger.eprintln("The specified bound name is not bound to the registry.");
-                RMGUtils.exit();
-
+                else
+                    ExceptionHandler.unexpectedException(e, "lookup", "call", true);
             }
         }
 
