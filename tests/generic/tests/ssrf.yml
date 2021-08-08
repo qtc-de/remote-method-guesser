@@ -125,7 +125,7 @@ tests:
       - 0.0.0.0
       - 9010
       - enum
-      - jep290_bypass
+      - jep_bypass
       - --ssrf
 
     validators:
