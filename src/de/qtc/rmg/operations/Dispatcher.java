@@ -463,7 +463,7 @@ public class Dispatcher {
             dgc.enumJEP290(RMGOption.DGC_METHOD.getString());
         }
 
-        if(enumJEP290Bypass && actions.contains(ScanAction.JEP290_BYPASS) ) {
+        if(enumJEP290Bypass && actions.contains(ScanAction.JEP_BYPASS) ) {
             Logger.lineBreak();
             registryClient.enumJEP290Bypass(RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
         }

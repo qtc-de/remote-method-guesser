@@ -19,7 +19,7 @@ public enum ScanAction {
     LOCALHOST_BYPASS,
     DGC,
     JEP290,
-    JEP290_BYPASS,
+    JEP_BYPASS,
     ACTIVATOR;
 
     /**
