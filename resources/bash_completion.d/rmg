@@ -24,7 +24,7 @@ function _rmg() {
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
     operations="act bind call codebase dgc enum guess listen method rebind reg unbind"
-    enum_operations="list string_marshalling codebase localhost_bypass dgc jep290 jep290_bypass activator"
+    enum_operations="list string_marshalling codebase localhost_bypass dgc jep290 filter_bypass activator"
 
     # Current word is not an option and previous word is not a value_option
     if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then
@@ -39,6 +39,13 @@ function _rmg() {
             mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}")
             return 0
 
+        # If host and port are specified and action is enum - complete scan actions
+        elif [[ $args -ge 4 && "$arg" = "enum" ]]; then
+            opts=$enum_operations
+            _comp_filter "opts"
+            mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}")
+            return 0
+
         # If host, port and action are specified - complete depending on action (stored in ${arg} by _comp_get_parameter 3)
         elif [[ $args -eq 4 ]]; then
 
@@ -46,12 +53,6 @@ function _rmg() {
             if _comp_contains "act dgc listen method reg" $arg; then
                 opts=$gadgets
                 mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}")
-                return 0
-
-            # If action is enum, complete enum operations
-            elif _comp_contains "enum" $arg; then
-                opts=$enum_operations
-                mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
                 return 0
 
             # If action expects something non guessable, complete nothing
