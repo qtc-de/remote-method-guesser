@@ -21,6 +21,14 @@ public class ExceptionHandler {
 
     private static boolean alwaysShowExceptions = false;
 
+    private static void sslOption()
+    {
+        if(RMGOption.SSL.getBool())
+            Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+        else
+            Logger.eprintlnMixedYellow("You can retry the operation using the", "--ssl", "option.");
+    }
+
     public static void internalError(String functionName, String message)
     {
         Logger.eprintlnMixedYellow("Internal error within the", functionName, "function.");
@@ -165,7 +173,9 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + during1 + " " + during2 + ".");
         Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
         Logger.printlnPlainBlue(" SSL socket.");
-        Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
+
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -173,7 +183,8 @@ public class ExceptionHandler {
     public static void sslError(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -239,7 +250,10 @@ public class ExceptionHandler {
     public static void eofException(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
+        Logger.eprintlnMixedBlue("One possible reason is a missmatch in the", "TLS", "settings.");
+
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -386,6 +400,25 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void timeoutException(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caught", "SocketTimeoutException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("The specified port is probably", "not an RMI service.");
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void connectionReset(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caught", "Connection Reset", "during " + during1 + " " + during2 + ".");
+        Logger.eprintMixedBlue("The specified port is probably", "not an RMI service ");
+        Logger.printlnPlainMixedBlue("or you used a wrong", "TLS", "setting.");
+
+        ExceptionHandler.sslOption();
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);
@@ -405,6 +438,9 @@ public class ExceptionHandler {
         if( t instanceof java.io.EOFException ) {
             ExceptionHandler.eofException(e, callName, "call");
 
+        } else if( t instanceof java.net.SocketTimeoutException) {
+            ExceptionHandler.timeoutException(e, callName, "call");
+
         } else if( t instanceof java.net.NoRouteToHostException) {
             ExceptionHandler.noRouteToHost(e, callName, "call");
 
@@ -416,6 +452,9 @@ public class ExceptionHandler {
 
         } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
             ExceptionHandler.networkUnreachable(e, callName, "call");
+
+        } else if( t instanceof java.net.SocketException && t.getMessage().contains("Connection reset")) {
+            ExceptionHandler.connectionReset(e, callName, "call");
 
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
