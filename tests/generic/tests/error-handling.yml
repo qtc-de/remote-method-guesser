@@ -1,0 +1,128 @@
+tester:
+  name: error
+  title: Error Handling
+  description: >
+    'Performs some tests on remote-method-guessers error handling.'
+    'We are interested in generic errors here (port closed, wrong TLS use,'
+    'no RMI server and so on.'
+
+
+plugins:
+    - os_command:
+        background: true
+        cmd:
+            - ncat
+            - --ssl
+            - -vlp
+            - 4444
+
+    - os_command:
+        shell: true
+        background: true
+        cmd:
+            - echo
+            - "Hey"
+            - "|"
+            - ncat
+            - -vlp
+            - 4445
+
+    - os_command:
+        shell: true
+        background: true
+        cmd:
+            - echo
+            - "Hey"
+            - "|"
+            - ncat
+            - -vlp
+            - 4446
+
+
+tests:
+
+  - title: Closed Port
+    description: >
+      'Attempts to use rmg on a closed port'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 127.0.0.1
+      - 9010
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Caught unexpected ConnectException'
+            - 'Target refused the connection'
+            - 'The specified port is probably closed'
+
+
+  - title: Missing Route
+    description: >
+      'Attempts to use rmg on a host with missing route'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 10.10.10.10
+      - 9010
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Caugth SocketException'
+            - 'The specified target is not reachable'
+
+
+  - title: Connection Reset
+    description: >
+      'Attempts to use rmg without --ssl on ncat ssl listener'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 127.0.0.1
+      - 4444
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Caught Connection Reset'
+            - 'not an RMI service or uses TLS'
+
+
+  - title: EOF
+    description: >
+      'Attempts to use rmg with --ssl on a plain TCP port'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 127.0.0.1
+      - --ssl
+      - 4445
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Caught unexpected EOFException'
+            - 'You probably used --ssl on a plaintext connection'
+
+
+  - title: Non JRMP
+    description: >
+      'Attempts to use rmg on a non JRMP server'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - 127.0.0.1
+      - 4446
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Caught unexpected ConnectIOException'
+            - 'no RMI endpoint or uses an SSL socket'
