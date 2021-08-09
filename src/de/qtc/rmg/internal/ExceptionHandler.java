@@ -390,9 +390,12 @@ public class ExceptionHandler {
 
     public static void lookupClassNotFoundException(Exception e, String name)
     {
-        Logger.printlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
-        Logger.printlnMixedBlue("The class", name, "could not be resolved within your class path.");
-        Logger.println("This usually means that the RemoteObject is using a custom RMIClientSocketFactory or InvocationHandler.");
+        name = name.replace(" (no security manager: RMI class loader disabled)", "");
+
+        Logger.eprintlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
+        Logger.eprintlnMixedBlue("The class", name, "could not be resolved within your class path.");
+        Logger.eprintlnMixedBlue("This usually means that the RemoteObject is using a custom", "RMIClientSocketFactory or InvocationHandler.");
+
         showStackTrace(e);
         RMGUtils.exit();
     }
