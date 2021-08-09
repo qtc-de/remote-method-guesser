@@ -173,8 +173,9 @@ public class YsoIntegration {
         } catch( java.lang.reflect.InvocationTargetException e) {
 
             Throwable t = ExceptionHandler.getCause(e);
+
             if( t instanceof java.net.BindException) {
-                ExceptionHandler.bindException(t);
+                ExceptionHandler.bindException(e);
 
             } else if( t instanceof java.lang.IllegalArgumentException) {
                 Logger.lineBreak();

@@ -318,8 +318,9 @@ public class RemoteObjectClient {
         } catch( java.rmi.ServerException e ) {
 
             Throwable cause = ExceptionHandler.getCause(e);
+
             if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash"))
-                ExceptionHandler.unrecognizedMethodHash("call", targetMethod.getSignature());
+                ExceptionHandler.unrecognizedMethodHash(e, "call", targetMethod.getSignature());
 
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, this.objID, true);

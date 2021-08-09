@@ -62,6 +62,7 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
         Logger.eprintlnMixedBlue("But the boundname", boundName, "is already bound.");
         Logger.eprintlnMixedYellow("Use the", "rebind", "action instead.");
+        showStackTrace(e);
     }
 
     public static void nonLocalhost(Exception e, String callName, boolean bypass)
@@ -194,6 +195,7 @@ public class ExceptionHandler {
         Logger.eprintMixedYellow(endpoint, "rejected", "deserialization of class ");
         Logger.printPlainBlue(className);
         Logger.printlnPlainYellow(" (JEP290 is installed).");
+        showStackTrace(e);
     }
 
     public static void accessControl(Exception e, String during1, String during2)
@@ -309,7 +311,7 @@ public class ExceptionHandler {
     public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
     {
         Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during " + during1 + " " + during2 + ".");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
 
         if(exit)
             RMGUtils.exit();
@@ -319,7 +321,7 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during connection setup.");
         Logger.eprintlnMixedBlue("The IP address of the endpoint", host, "could not be resolved.");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
 
         if(exit)
             RMGUtils.exit();
@@ -329,15 +331,16 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caugth", "SocketException", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("The specified target is", "not reachable", "with your current network configuration.");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
-    public static void bindException(Throwable t)
+    public static void bindException(Exception e)
     {
         Logger.lineBreak();
         Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
-        Logger.printlnMixedBlue("Exception message:", t.getMessage());
+        Logger.printlnMixedBlue("Exception message:", e.getMessage());
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
@@ -377,26 +380,29 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
-    public static void unrecognizedMethodHash(String action, String signature)
+    public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
         Logger.printlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
         Logger.printlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
-    public static void lookupClassNotFoundException(String name)
+    public static void lookupClassNotFoundException(Exception e, String name)
     {
         Logger.printlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
         Logger.printlnMixedBlue("The class", name, "could not be resolved within your class path.");
         Logger.println("This usually means that the RemoteObject is using a custom RMIClientSocketFactory or InvocationHandler.");
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
-    public static void notBoundException(String boundName)
+    public static void notBoundException(Exception e, String boundName)
     {
         Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
         Logger.printlnPlainBlue(boundName + ".");
         Logger.eprintln("The specified bound name is not bound to the registry.");
+        showStackTrace(e);
         RMGUtils.exit();
     }
 

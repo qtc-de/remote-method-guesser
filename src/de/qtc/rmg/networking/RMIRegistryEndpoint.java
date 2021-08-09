@@ -159,14 +159,14 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
                 ExceptionHandler.noSuchObjectException(e, "registry", true);
 
             } catch( java.rmi.NotBoundException e ) {
-                ExceptionHandler.notBoundException(boundName);
+                ExceptionHandler.notBoundException(e, boundName);
 
             } catch( Exception e ) {
 
                 Throwable cause = ExceptionHandler.getCause(e);
 
                 if( cause instanceof ClassNotFoundException )
-                    ExceptionHandler.lookupClassNotFoundException(cause.getMessage());
+                    ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());
 
                 else if( cause instanceof SSRFException )
                     SSRFSocket.printContent(host, port);
