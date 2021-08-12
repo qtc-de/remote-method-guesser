@@ -393,6 +393,7 @@ public class RegistryClient {
 
         try {
             registryCall("unbind", callArguments, false, true);
+            ExceptionHandler.localhostBypassNoException();
 
         } catch( java.rmi.ServerException e ) {
 

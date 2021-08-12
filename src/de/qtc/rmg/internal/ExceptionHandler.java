@@ -388,6 +388,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void localhostBypassNoException()
+    {
+        Logger.printlnMixedYellow("- Server", "did not", "raise any exception during unbind operation.");
+        Logger.printlnMixedBlue("  This can occur for custom RMI implementations like e.g.", "apache-karaf.");
+        Logger.statusNonDefault();
+    }
+
     public static void lookupClassNotFoundException(Exception e, String name)
     {
         name = name.replace(" (no security manager: RMI class loader disabled)", "");
