@@ -5,8 +5,8 @@
 The *example-server* provided by this repository can be used to test all features of *remote-method-guesser*.
 You can either build the container from source or pull it from *GitHub Packages*.
 
-* To build from source, just clone the repository, switch to the [docker directory](/.docker) and run ``docker build .``
-  to create the container. If you also want to make adjustments to the example server, modify the [source code](/.docker/resources/example-server)
+* To build from source, just clone the repository, switch to the [docker directory](/docker/example-server) and run ``docker build .``
+  to create the container. If you also want to make adjustments to the example server, modify the [source code](/docker/example-server/resources/server)
   and rebuild the container.
 
 * To load the container from the *GitHub Container Registry* just use the corresponding pull command:
@@ -14,7 +14,7 @@ You can either build the container from source or pull it from *GitHub Packages*
   $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
   ```
 
-To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/.docker/docker-compose.yml)
+To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](/docker/example-server/docker-compose.yml)
 and start the container using ``docker-compose up``. From container version *v3.0* on, the container is available in two different versions: *jdk9* and *jdk11*.
 As the names suggest, the first one is build based on *openjdk-9*, whereas the second one is based on *openjdk-11*. Since *openjdk-9* is no longer maintained,
 this container version is vulnerable to some older *RMI* vulnerabilities (e.g. *localhost* and *An Trinh bypass*). The *jdk11* version, on the other hand,

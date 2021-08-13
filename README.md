@@ -82,7 +82,7 @@ In the following, short examples for each available operation are presented. For
 you should read the [documentation folder](./docs) that contains more detailed information on *rmg* and *Java RMI*
 in general. All presented examples are based on the [rmg-example-server](https://github.com/qtc-de/remote-method-guesser/packages/414459)
 that is also contained within this project. You can also modify and rebuild the example server yourself, by using
-the sources within the [docker folder](./.docker).
+the sources within the [docker folder](./docker/example-server).
 
 ```console
 [qtc@kali ~]$ rmg --help

@@ -2,7 +2,7 @@
 ###            Build Stage 1            ###
 ###########################################
 FROM maven:3.6.3-openjdk-8 AS maven-builder
-COPY ./resources/example-server /usr/src/app
+COPY ./resources/server /usr/src/app
 WORKDIR /usr/src/app
 RUN mvn clean package
 
@@ -11,9 +11,9 @@ RUN mvn clean package
 ###########################################
 FROM alpine:latest AS jdk-builder
 RUN set -ex \
-    && apk add --no-cache openjdk11 \
-    && /usr/lib/jvm/java-11-openjdk/bin/jlink --add-modules java.rmi,java.management.rmi,jdk.unsupported --verbose --strip-debug --compress 2 \
-       --no-header-files --no-man-pages --output /jdk
+    && apk add --no-cache openjdk9 \
+    && /usr/lib/jvm/java-9-openjdk/bin/jlink --add-modules java.rmi,java.management.rmi,jdk.unsupported --verbose --strip-debug --compress 2 \
+       --no-header-files --no-man-pages --module-path  /usr/lib/jvm/java-9-openjdk/jmods/ --output /jdk
 
 ###########################################
 ###          Container Stage            ###
@@ -25,10 +25,10 @@ COPY ./resources/scripts/start.sh /opt/start.sh
 COPY ./resources/conf/policy /opt/policy
 
 COPY --from=maven-builder /usr/src/app/target/rmg-example-server-*-jar-with-dependencies.jar /opt/example-server.jar
-COPY --from=jdk-builder /jdk /usr/lib/jvm/java-11-openjdk
+COPY --from=jdk-builder /jdk /usr/lib/jvm/java-9-openjdk
 
 RUN set -ex \
-    && ln -s /usr/lib/jvm/java-11-openjdk/bin/java /usr/bin/java \
+    && ln -s /usr/lib/jvm/java-9-openjdk/bin/java /usr/bin/java \
     && chmod +x /opt/start.sh
 
 ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.dev \
