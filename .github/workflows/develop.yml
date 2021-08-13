@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - 'src/**'
+      - 'pom.xml'
   pull_request:
     branches:
       - develop
+    paths:
+      - 'src/**'
+      - 'pom.xml'
 
 jobs:
   build:
