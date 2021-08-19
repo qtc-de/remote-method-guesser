@@ -987,4 +987,29 @@ public class RMGUtils {
 
         return returnValue;
     }
+
+    /**
+     * Determines the className of an object that implements Remote. If the specified object is a Proxy,
+     * the function returns the first implemented interface name that is not java.rmi.Remote.
+     *
+     * @param remoteObject Object to obtain the class from
+     * @return Class name of the implementor or one of it's interfaces in case of a Proxy
+     */
+    public static String getClassName(Remote remoteObject)
+    {
+        if( Proxy.isProxyClass(remoteObject.getClass()) ) {
+
+            Class<?>[] interfaces = remoteObject.getClass().getInterfaces();
+
+            for(Class<?> intf : interfaces) {
+
+                String intfName = intf.getName();
+
+                if(!intfName.equals("java.rmi.Remote"))
+                    return intfName;
+            }
+        }
+
+        return remoteObject.getClass().getName();
+    }
 }

@@ -82,10 +82,7 @@ public class RemoteObjectWrapper {
         this.csf = lRef.getClientSocketFactory();
         this.ssf = lRef.getServerSocketFactory();
 
-        if( Proxy.isProxyClass(remoteObject.getClass()) )
-            this.className = remoteObject.getClass().getInterfaces()[0].getName();
-        else
-            this.className = remoteObject.getClass().getName();
+        this.className = RMGUtils.getClassName(remoteObject);
 
         this.isKnown = !RMGUtils.dynamicallyCreated(className);
         this.duplicates = new ArrayList<RemoteObjectWrapper>();
