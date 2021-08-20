@@ -2,12 +2,12 @@
 
 ---
 
-*remote-method-guesser* (*rmg*) is a command line utility written in *Java* and can be used to identify security
-vulnerabilities on *Java RMI* endpoints. Currently, the following operations are supported:
+*remote-method-guesser* (*rmg*) is a *Java RMI* vulnerability scanner and can be used to identify common security
+vulnerabilities on *Java RMI* endpoints. The following list contains some of the currently supported operations:
 
-* List available *bound names* and their corresponding interface class names
+* List available *bound names* and their corresponding (interface) class names
 * List codebase locations (if exposed by the remote server)
-* Check for known vulnerabilities (enabled class loader, missing *JEP290*, *JEP290* bypass, localhost bypass)
+* Check for common vulnerabilities (enabled class loader, missing *JEP290*, *JEP290* bypasses, localhost bypass)
 * Identify existing remote methods by using a *bruteforce* (wordlist) approach
 * Call remote methods with user specified arguments (no coding required)
 * Call remote methods with *ysoserial gadgets* within the arguments
@@ -16,14 +16,20 @@ vulnerabilities on *Java RMI* endpoints. Currently, the following operations are
 * Perform *bind*, *unbind* and *rebind* operations against a rmi registry
 * Bypass registry filtering using [An Trinhs registry bypass](https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/)
 * Enumerate the unmarshalling behavior of ``java.lang.String``
-* Create Java code dynamically to invoke remote methods manually
+* Create *Java code* to invoke remote methods manually
 
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/master%20maven%20CI/badge.svg?branch=master)
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/develop%20maven%20CI/badge.svg?branch=develop)
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20master/badge.svg?branch=master)
 ![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20develop/badge.svg?branch=develop)
-[![BHUSA Arsenal 2021](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2021.svg)](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
 ![Remote Method Guesser Example](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-example.gif)
+
+*remote-method-guesser* was presented at [Black Hat USA2021](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
+within the *Arsenal* sessions. The recording of the session and the corresponding slides are publicly available and can be found using the following links:
+
+[![BHUSA Arsenal 2021](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2021.svg)](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
+* Slides: [https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal](https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal)
+* Recording: [https://youtu.be/t_aw1mDNhzI](https://youtu.be/t_aw1mDNhzI)
 
 
 ### Table of Contents
