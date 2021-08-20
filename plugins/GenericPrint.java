@@ -1,4 +1,5 @@
 import java.io.File;
+import java.lang.reflect.Array;
 import java.rmi.Remote;
 import java.util.Collection;
 import java.util.Map;
@@ -87,7 +88,20 @@ public class GenericPrint implements IResponseHandler {
      */
     public void handleArray(Object o)
     {
-        for(Object item: (Object[])o)
+        Object[] objectArray = null;
+        Class<?> type = o.getClass().getComponentType();
+
+        if(type.isPrimitive()) {
+            int length = Array.getLength(o);
+            objectArray = new Object[length];
+            for(int ctr = 0; ctr < length; ctr++)
+                objectArray[ctr] = Array.get(o, ctr);
+
+        } else {
+            objectArray = (Object[])o;
+        }
+
+        for(Object item: objectArray)
             handleResponse(item);
     }
 
@@ -140,13 +154,14 @@ public class GenericPrint implements IResponseHandler {
     }
 
     /**
-     * Byte objects are converted to hex and printed.
+     * Byte objects are converted to hex and printed. As a single byte is most likely part of a
+     * sequence, we print without a newline.
      *
      * @param o File object
      */
     public void handleByte(byte o)
     {
-        Logger.println(String.format("%02x", o));
+        Logger.printPlain(String.format("%02x", o));
     }
 
     /**
