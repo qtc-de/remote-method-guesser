@@ -64,11 +64,35 @@ public class FileManager extends UnicastRemoteObject implements IFileManager {
      * @return error or success message
      */
     @Override
-    public String write(String file, byte[] content) throws RemoteException, IOException, InterruptedException
+    public String write(String file, byte[] content) throws RemoteException, IOException
     {
         Path f = Paths.get(file);
         Files.write(f, content);
 
         return "File " + file + " was successfully written.";
+    }
+
+    /**
+     * Copies a file from the specified source to the specified destination. The function is also
+     * vulnerable to OS command injection within the 'dest' parameter.
+     *
+     * @param src Source location to copy a file from
+     * @param dest Destination location to copy a file to
+     * @return Status information whether the copy operation was successfull.
+     */
+    @Override
+    public String copy(String src, String dest) throws RemoteException, IOException, InterruptedException
+    {
+        Process p = Runtime.getRuntime().exec(new String[] {"/bin/sh", "-c", "ls -l " + dest});
+
+        if(p.waitFor() == 0)
+            return "File with name " + dest + " does already exist.";
+
+        Path srcPath = Paths.get(src);
+        Path destPath = Paths.get(dest);
+
+        Files.copy(srcPath, destPath);
+
+        return "File " + src + " copied to " + dest;
     }
 }

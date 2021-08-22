@@ -15,5 +15,6 @@ public interface IFileManager extends Remote
 {
     File[] list(String dir) throws RemoteException;
     byte[] read(String file) throws RemoteException, IOException;
-    String write(String file, byte[] content) throws RemoteException, InterruptedException, IOException;
+    String write(String file, byte[] content) throws RemoteException, IOException;
+    String copy(String src, String dest) throws RemoteException, IOException, InterruptedException;
 }
