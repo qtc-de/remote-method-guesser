@@ -50,7 +50,7 @@
                <finalName>rmg-ssrf-server-${project.version}</finalName>
                <archive>
                    <manifest>
-                       <mainClass>de.qtc.rmg.server.ssrf.Stater</mainClass>
+                       <mainClass>de.qtc.rmg.server.ssrf.Starter</mainClass>
                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                    </manifest>
                </archive>
