@@ -9,13 +9,14 @@ import java.rmi.server.RMISocketFactory;
 import de.qtc.rmg.server.ssrf.http.SSRFServer;
 import de.qtc.rmg.server.ssrf.rmi.FileManager;
 import de.qtc.rmg.server.ssrf.rmi.IFileManager;
+import de.qtc.rmg.server.ssrf.rmi.LocalhostJmxConnector;
 import de.qtc.rmg.server.ssrf.rmi.LocalhostSocketFactory;
 import de.qtc.rmg.server.ssrf.utils.Logger;
 
 /**
  * The Starter class is responsible for creating an HTTP server that is vulnerable
- * to SSRF attacks and an RMI registry that contains a single bound FileManager object.
- * Together, this combination is already sufficient to practice some SSRF attacks on
+ * to SSRF attacks and an RMI registry that contains two bound names: FileManager
+ * and jmxrmi. Together, this combination is usable to practice some SSRF attacks on
  * Java RMI. To make the RMI ports inaccessible from remote, a custom socket factory
  * is used.
  *
@@ -29,9 +30,9 @@ public class Starter {
     private static IFileManager fileManager = null;
 
     /**
-     * Starts the HttpServer, the RMI registry and a FileManager remote object.
+     * Starts the HttpServer, the RMI registry and adds the FileManager and JMX remote objects.
      *
-     * @param args Commandline arguments. None are expected.
+     * @param args command line arguments. None are expected.
      * @throws AlreadyBoundException Should never occur
      * @throws IOException
      */
@@ -48,5 +49,8 @@ public class Starter {
         Logger.printlnMixedBlue("Creating", "FileManager", "object.");
         fileManager = new FileManager();
         registry.bind("FileManager", fileManager);
+
+        LocalhostJmxConnector jmxConnector = new LocalhostJmxConnector(registryPort);
+        jmxConnector.start();
     }
 }
