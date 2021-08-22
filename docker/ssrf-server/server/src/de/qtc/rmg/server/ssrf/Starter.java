@@ -1,21 +1,23 @@
 package de.qtc.rmg.server.ssrf;
 
+import java.io.IOException;
 import java.rmi.AlreadyBoundException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMISocketFactory;
 
 import de.qtc.rmg.server.ssrf.http.SSRFServer;
 import de.qtc.rmg.server.ssrf.rmi.FileManager;
 import de.qtc.rmg.server.ssrf.rmi.IFileManager;
+import de.qtc.rmg.server.ssrf.rmi.LocalhostSocketFactory;
 import de.qtc.rmg.server.ssrf.utils.Logger;
 
 /**
  * The Starter class is responsible for creating an HTTP server that is vulnerable
  * to SSRF attacks and an RMI registry that contains a single bound FileManager object.
  * Together, this combination is already sufficient to practice some SSRF attacks on
- * Java RMI. Notice that non localhost access to the RMI ports is not prevented by default
- * and needs to be achieved manually (e.g. by using a firewall).
+ * Java RMI. To make the RMI ports inaccessible from remote, a custom socket factory
+ * is used.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -30,13 +32,15 @@ public class Starter {
      * Starts the HttpServer, the RMI registry and a FileManager remote object.
      *
      * @param args Commandline arguments. None are expected.
-     * @throws RemoteException
      * @throws AlreadyBoundException Should never occur
+     * @throws IOException
      */
-    public static void main(String[] args) throws RemoteException, AlreadyBoundException
+    public static void main(String[] args) throws AlreadyBoundException, IOException
     {
         SSRFServer server = new SSRFServer(defaultPort);
         server.start();
+
+        RMISocketFactory.setSocketFactory(new LocalhostSocketFactory());
 
         Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
         Registry registry = LocateRegistry.createRegistry(registryPort);
