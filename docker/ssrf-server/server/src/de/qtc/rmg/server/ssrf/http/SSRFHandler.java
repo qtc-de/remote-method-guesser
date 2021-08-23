@@ -37,26 +37,59 @@ public class SSRFHandler implements HttpHandler {
         String urlParam = getUrlParam(t);
         OutputStream response = t.getResponseBody();
 
-        if(urlParam == null) {
-            Logger.printlnMixedYellow("url parameter is", "null.", "Aborting.");
-            Logger.printlnMixedBlue("Sending", "400 Bad Request", "response.");
+        try {
 
-            t.sendResponseHeaders(400, error.length());
-            response.write(error.getBytes());
+            if(urlParam == null) {
+                Logger.printlnMixedYellow("url parameter is", "null.", "Aborting.");
+                Logger.printlnMixedBlue("Sending", "400 Bad Request", "response.");
 
-        } else {
-            Logger.printlnMixedYellow("url parameter:", urlParam.substring(0, 50) + "[...]");
-            Process p = Runtime.getRuntime().exec(new String[] {"curl", urlParam});
+                t.sendResponseHeaders(400, error.length());
+                response.write(error.getBytes());
 
-            try {
-                p.wait();
-            } catch( Exception e ) {};
+            } else {
 
-            byte[] output = IOUtils.toByteArray(p.getInputStream());
+                byte[] output = null;
+                int length = urlParam.length() > 50 ? 50 : urlParam.length();
 
-            Logger.printlnMixedBlue("Sending", "200 OK", "response.");
-            t.sendResponseHeaders(200, output.length);
-            response.write(output);
+                Logger.printlnMixedYellow("url parameter:", urlParam.substring(0, length) + "[...]");
+                Process p = Runtime.getRuntime().exec(new String[] {"curl", urlParam});
+
+                if( p.waitFor() != 0 ) {
+                    output = IOUtils.toByteArray(p.getErrorStream());
+
+                    Logger.println("curl exit status != 0. Stderr:");
+                    Logger.increaseIndent();
+                    Logger.printlnBlue(new String(output));
+                    Logger.decreaseIndent();
+
+                    Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
+                    t.sendResponseHeaders(500, output.length);
+
+                } else {
+                    output = IOUtils.toByteArray(p.getInputStream());
+
+                    Logger.println("curl exit status == 0. Stdout:");
+                    Logger.increaseIndent();
+                    Logger.printlnBlue(new String(output));
+                    Logger.decreaseIndent();
+
+                    Logger.printlnMixedBlue("Sending", "200 OK", "response.");
+                    t.sendResponseHeaders(200, output.length);
+                }
+
+                response.write(output);
+                Logger.decreaseIndent();
+            }
+
+        } catch( IOException | InterruptedException e ){
+
+            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "while handling the incoming request.");
+            Logger.eprintln("StackTrace:");
+            e.printStackTrace();
+
+            Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
+            t.sendResponseHeaders(500, e.getMessage().length());
+            response.write(e.getMessage().getBytes());
         }
 
         response.close();
