@@ -56,10 +56,11 @@ public class SSRFHandler implements HttpHandler {
 
                 if( p.waitFor() != 0 ) {
                     output = IOUtils.toByteArray(p.getErrorStream());
+                    length = output.length > 50 ? 50 : output.length;
 
                     Logger.println("curl exit status != 0. Stderr:");
                     Logger.increaseIndent();
-                    Logger.printlnBlue(new String(output));
+                    Logger.printlnBlue(new String(output).substring(0, length));
                     Logger.decreaseIndent();
 
                     Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
@@ -67,10 +68,11 @@ public class SSRFHandler implements HttpHandler {
 
                 } else {
                     output = IOUtils.toByteArray(p.getInputStream());
+                    length = output.length > 50 ? 50 : output.length;
 
                     Logger.println("curl exit status == 0. Stdout:");
                     Logger.increaseIndent();
-                    Logger.printlnBlue(new String(output));
+                    Logger.printlnBlue(new String(output).substring(0, length));
                     Logger.decreaseIndent();
 
                     Logger.printlnMixedBlue("Sending", "200 OK", "response.");
