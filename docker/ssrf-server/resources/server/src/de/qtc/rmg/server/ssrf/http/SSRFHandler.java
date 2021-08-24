@@ -54,15 +54,13 @@ public class SSRFHandler implements HttpHandler {
                 Logger.printlnMixedYellow("url parameter:", urlParam.substring(0, length) + "[...]");
                 Process p = Runtime.getRuntime().exec(new String[] {"curl", urlParam});
 
-                if( p.waitFor() != 0 ) {
+                int exitStatus = p.waitFor();
+                Logger.printlnMixedBlue("curl exit status:", String.valueOf(exitStatus));
+
+                if( exitStatus != 0 ) {
                     output = IOUtils.toByteArray(p.getErrorStream());
-                    length = output.length > 50 ? 50 : output.length;
 
-                    Logger.println("curl exit status != 0. Stderr:");
-                    Logger.increaseIndent();
-                    Logger.printlnBlue(new String(output).substring(0, length));
-                    Logger.decreaseIndent();
-
+                    Logger.printlnMixedYellow("Stderr:", new String(output));
                     Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
                     t.sendResponseHeaders(500, output.length);
 
@@ -70,11 +68,7 @@ public class SSRFHandler implements HttpHandler {
                     output = IOUtils.toByteArray(p.getInputStream());
                     length = output.length > 50 ? 50 : output.length;
 
-                    Logger.println("curl exit status == 0. Stdout:");
-                    Logger.increaseIndent();
-                    Logger.printlnBlue(new String(output).substring(0, length));
-                    Logger.decreaseIndent();
-
+                    Logger.printlnMixedYellow("Stdout:", new String(output).substring(0, length));
                     Logger.printlnMixedBlue("Sending", "200 OK", "response.");
                     t.sendResponseHeaders(200, output.length);
                 }
