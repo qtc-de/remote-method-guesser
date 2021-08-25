@@ -7,6 +7,7 @@ import java.rmi.server.RMISocketFactory;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.DGCClientSocketFactory;
 import de.qtc.rmg.networking.LoopbackSocketFactory;
 import de.qtc.rmg.networking.LoopbackSslSocketFactory;
 import de.qtc.rmg.networking.SSRFResponseSocketFactory;
@@ -149,10 +150,26 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     /**
      * The default RMISocketFactory used by remote-method-guesser is the LoopbackSocketFactory, which
      * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     *
+     * This function is only used for "managed" RMI calls that rely on an RMI registry. Remote objects that
+     * are looked up from the RMI registry use the RMISocketFactory.getDefaultSocketFactory function to
+     * obtain a SocketFactory. This factory is then used for explicit calls (method invocations) and for
+     * implicit calls (DGC actions like clean or dirty). When contacting an RMI endpoint directly (by
+     * using the RMIEndpoint class) we do not need to call this function as we specify a socket factory
+     * already during the call. When using the RMI registry (RMIRegistryEndpoint class), it is required.
+     * In this case, this function should be called and the result should be used within the
+     * RMISocketFactory.setSocketFactory function.
+     *
+     * When the --ssrf-response option is used, we do neither perform any explicit calls nor we want
+     * DGC actions to take place. For this purpose, we use a custom socket factory that ignores writes
+     * of outgoing DGC requests and simulates incoming DGC responses.
      */
     @Override
     public RMISocketFactory getDefaultSocketFactory(String host, int port)
     {
+        if( RMGOption.SSRFResponse.notNull() )
+            return new DGCClientSocketFactory();
+
         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
         return new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
     }
