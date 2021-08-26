@@ -198,6 +198,16 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void invalidClassBind(Exception e, String className)
+    {
+        Logger.eprintln("Bind operation failed!");
+        Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of class ");
+        Logger.printlnPlainBlue(className);
+        Logger.eprintlnMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry.");
+        Logger.eprintlnMixedYellow("This is common for", "JMX", "based registry services.");
+        showStackTrace(e);
+    }
+
     public static void accessControl(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "AccessControlException", "during " + during1 + " " + during2 + ".");

@@ -68,8 +68,10 @@ public class RegistryClient {
      */
     public void bindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
+        String className = payloadObject.getClass().getName();
+
         Logger.printMixedBlue("Binding name", boundName, "to ");
-        Logger.printlnPlainBlue(payloadObject.getClass().getName());
+        Logger.printlnPlainBlue(className);
         Logger.lineBreak();
         Logger.increaseIndent();
 
@@ -100,6 +102,9 @@ public class RegistryClient {
             } else if( t instanceof java.rmi.AlreadyBoundException) {
                 ExceptionHandler.alreadyBoundException(e, boundName);
 
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassBind(e, className);
+
             } else {
                 ExceptionHandler.unexpectedException(e, "bind", "call", false);
             }
@@ -122,8 +127,10 @@ public class RegistryClient {
      */
     public void rebindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
-        Logger.printMixedBlue("Binding name", boundName, "to ");
-        Logger.printlnPlainBlue(payloadObject.getClass().getName());
+        String className = payloadObject.getClass().getName();
+
+        Logger.printMixedBlue("Rebinding name", boundName, "to ");
+        Logger.printlnPlainBlue(className);
         Logger.lineBreak();
         Logger.increaseIndent();
 
@@ -150,6 +157,9 @@ public class RegistryClient {
                 Logger.eprintlnMixedYellow("Rebind operation", "was accepted", "by the server.");
                 Logger.eprintlnMixedBlue("But the class", "RMIServerImpl_Stub", "was not found.");
                 Logger.eprintln("The server probably runs on a JRE with limited module access.");
+
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassBind(e, className);
 
             } else {
                 ExceptionHandler.unexpectedException(e, "rebind", "call", false);
