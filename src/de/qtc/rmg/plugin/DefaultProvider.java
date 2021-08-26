@@ -132,15 +132,15 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public RMIClientSocketFactory getClientSocketFactory(String host, int port)
     {
-        if( RMGOption.SSL.getBool() ) {
-            return new TrustAllSocketFactory();
-
-        } else if( RMGOption.SSRF.getBool() ) {
+        if( RMGOption.SSRF.getBool() ) {
             return new SSRFSocketFactory();
 
         } else if( RMGOption.SSRFResponse.notNull() ) {
             byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFResponse.getString());
             return new SSRFResponseSocketFactory(content);
+
+        } else if( RMGOption.SSL.getBool() ) {
+            return new TrustAllSocketFactory();
 
         } else {
             return RMISocketFactory.getDefaultSocketFactory();
@@ -151,7 +151,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
      * The default RMISocketFactory used by remote-method-guesser is the LoopbackSocketFactory, which
      * redirects all connection to the original target and thus prevents unwanted RMI redirections.
      *
-     * This function is only used for "managed" RMI calls that rely on an RMI registry. Remote objects that
+     * This function is only used for 'managed' RMI calls that rely on an RMI registry. Remote objects that
      * are looked up from the RMI registry use the RMISocketFactory.getDefaultSocketFactory function to
      * obtain a SocketFactory. This factory is then used for explicit calls (method invocations) and for
      * implicit calls (DGC actions like clean or dirty). When contacting an RMI endpoint directly (by
@@ -163,6 +163,10 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
      * When the --ssrf-response option is used, we do neither perform any explicit calls nor we want
      * DGC actions to take place. For this purpose, we use a custom socket factory that ignores writes
      * of outgoing DGC requests and simulates incoming DGC responses.
+     *
+     * Notice, that the --ssrf option does not affect this function. This is because sockets created
+     * by this function are only used for 'managed' RMI calls. SSRF calls in remote-method-guesser are
+     * always unmanaged.
      */
     @Override
     public RMISocketFactory getDefaultSocketFactory(String host, int port)
@@ -177,10 +181,20 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     /**
      * The default SSLRMISocketFactory used by remote-method-guesser is the LoopbackSslSocketFactory, which
      * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     *
+     * As in the case of plain TCP connections, we use different socket factory if --ssrf-response
+     * was specified on the command line. Check the getDefaultSocketFactory function for more details.
+     *
+     * Notice, that the --ssrf option does not affect this function. This is because sockets created
+     * by this function are only used for 'managed' RMI calls. SSRF calls in remote-method-guesser are
+     * always unmanaged.
      */
     @Override
     public String getDefaultSSLSocketFactory(String host, int port)
     {
+        if( RMGOption.SSRFResponse.notNull() )
+            return "de.qtc.rmg.networking.DGCClientSslSocketFactory";
+
         TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
 
         LoopbackSslSocketFactory.host = host;

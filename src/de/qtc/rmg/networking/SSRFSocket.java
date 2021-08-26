@@ -100,7 +100,12 @@ public class SSRFSocket extends Socket {
         if( RMGOption.GOPHER.getBool()) {
 
             StringBuilder builder = new StringBuilder();
-            builder.append("gopher://" + host + ":" + port +"/_");
+            builder.append("gopher");
+
+            if( RMGOption.SSL.getBool() )
+                builder.append("s");
+
+            builder.append("://" + host + ":" + port +"/_");
 
             for(int ctr = 0; ctr < hexContent.length(); ctr++) {
 
