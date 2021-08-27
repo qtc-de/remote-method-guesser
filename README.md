@@ -18,8 +18,11 @@ vulnerabilities on *Java RMI* endpoints. The following list contains some of the
 * Enumerate the unmarshalling behavior of ``java.lang.String``
 * Create *Java code* to invoke remote methods manually
 
-![](https://github.com/qtc-de/remote-method-guesser/workflows/master%20maven%20CI/badge.svg?branch=master)
-![](https://github.com/qtc-de/remote-method-guesser/workflows/develop%20maven%20CI/badge.svg?branch=develop)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/master%20maven%20CI/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/master.yml)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/develop%20maven%20CI/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop.yml)
+[![](https://img.shields.io/badge/version-4.0.0-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
+![](https://img.shields.io/badge/java-8%2b-blue)
+[![](https://img.shields.io/badge/license-GPL%20v3.0-blue)](https://github.com/qtc-de/remote-method-guesser/blob/master/LICENSE)
 ![Remote Method Guesser Example](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-example.gif)
 
 *remote-method-guesser* was presented at [Black Hat USA2021](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
@@ -29,16 +32,16 @@ within the *Arsenal* sessions. The recording of the session and the correspondin
 * Slides: [https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal](https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal)
 * Recording: [https://youtu.be/t_aw1mDNhzI](https://youtu.be/t_aw1mDNhzI)
 
-The *remote-method-guesser* repository contains two example servers that can be used to pratice *Java RMI* enumeration and attacks.
+The *remote-method-guesser* repository contains two example servers that can be used to practice *Java RMI* enumeration and attacks.
 The [rmg-example-server](/docker/example-server) exposes regular *RMI* services that can be enumerated and exploited using *remote-method-guesser*.
 The [rmg-ssrf-server](/docker/ssrf-server) exposes an *HTTP* service that is vulnerable to *SSRF* attacks and runs *RMI* services that are only
 listening on localhost. This can be used to practice with *remote-method-guesser's* ``--ssrf`` and ``--ssrf-response`` options.
 Both servers are available as containers within the *GitHub Container Registry*:
 
-![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20master/badge.svg?branch=master)
-![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20develop/badge.svg?branch=develop)
-![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20master/badge.svg?branch=master)
-![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20develop/badge.svg?branch=develop)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20master/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/master-example-server.yml)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20develop/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop-example-server.yml)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20master/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/master-ssrf-server.yml)
+[![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20develop/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop-ssrf-server.yml)
 * [SSRF Server GitHub Package](https://github.com/qtc-de/remote-method-guesser/pkgs/container/remote-method-guesser%2Frmg-ssrf-server)
 * [Example Server GitHub Package](https://github.com/qtc-de/remote-method-guesser/pkgs/container/remote-method-guesser%2Frmg-example-server)
 
