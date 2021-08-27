@@ -27,6 +27,7 @@ vulnerabilities on *Java RMI* endpoints. The following list contains some of the
 ![Remote Method Guesser Example](https://tneitzel.eu/73201a92878c0aba7c3419b7403ab604/rmg-example.gif)
 
 [![BHUSA Arsenal 2021](https://raw.githubusercontent.com/toolswatch/badges/master/arsenal/usa/2021.svg)](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
+
 *remote-method-guesser* was presented at [Black Hat USA2021](https://www.blackhat.com/us-21/arsenal/schedule/#remote-method-guesser-a-java-rmi-vulnerability-scanner-24092)
 within the *Arsenal* sessions. The recording of the session and the corresponding slides are publicly available and can be found using the following links:
 
@@ -37,6 +38,7 @@ within the *Arsenal* sessions. The recording of the session and the correspondin
 [![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server%20-%20develop/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop-example-server.yml)
 [![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20master/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/master-ssrf-server.yml)
 [![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server%20-%20develop/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop-ssrf-server.yml)
+
 The *remote-method-guesser* repository contains two example servers that can be used to practice *Java RMI* enumeration and attacks.
 The [rmg-example-server](/docker/example-server) exposes regular *RMI* services that can be enumerated and exploited using *remote-method-guesser*.
 The [rmg-ssrf-server](/docker/ssrf-server) exposes an *HTTP* service that is vulnerable to *SSRF* attacks and runs *RMI* services that are only
