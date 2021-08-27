@@ -103,7 +103,10 @@ public class RegistryClient {
                 ExceptionHandler.alreadyBoundException(e, boundName);
 
             } else if( t instanceof java.io.InvalidClassException) {
-                ExceptionHandler.invalidClassBind(e, className);
+                ExceptionHandler.invalidClassBind(e, "Bind", className);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "bind");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "bind", "call", false);
@@ -159,7 +162,10 @@ public class RegistryClient {
                 Logger.eprintln("The server probably runs on a JRE with limited module access.");
 
             } else if( t instanceof java.io.InvalidClassException) {
-                ExceptionHandler.invalidClassBind(e, className);
+                ExceptionHandler.invalidClassBind(e, "Rebind", className);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "rebind");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "rebind", "call", false);
@@ -276,6 +282,12 @@ public class RegistryClient {
                 Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
                 ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
 
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassEnum(e, regMethod);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, regMethod);
+
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
@@ -340,9 +352,19 @@ public class RegistryClient {
 
             } else if( t instanceof java.io.InvalidClassException ) {
                 Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer");
-                Logger.printlnPlainYellow(" (SingleEntryRegistry?).");
-                Logger.println("  --> Unable to detect String marshalling on this registry type.");
-                Logger.statusUndecided("Configuration");
+                Logger.printlnPlainYellow(" (JMX?)");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
+                ExceptionHandler.showStackTrace(e);
+                marshal = true;
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer", "with an");
+                Logger.printPlainYellow(" UnsupportedOperationException");
+                Logger.printlnPlainBlue(" (NotSoSerial?)");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.lang.ClassNotFoundException && t.getMessage().contains("DefinitelyNonExistingClass")) {
@@ -488,6 +510,12 @@ public class RegistryClient {
                 ExceptionHandler.showStackTrace(e);
                 Logger.statusOk();
 
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassEnum(e, regMethod);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, regMethod);
+
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
             }
@@ -526,6 +554,9 @@ public class RegistryClient {
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.jep290(e);
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, regMethod);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
                 ExceptionHandler.deserializeClassNotFound(e);
@@ -573,7 +604,9 @@ public class RegistryClient {
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "Registry", className);
                 Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
-                ExceptionHandler.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, regMethod);
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                 ExceptionHandler.unsupportedClassVersion(e, regMethod, "call");

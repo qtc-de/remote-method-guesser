@@ -79,8 +79,8 @@ public class ExceptionHandler {
 
     public static void jep290(Exception e)
     {
-        Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget");
-        Logger.printlnPlainYellow(" (JEP290 is installed).");
+        Logger.eprintlnMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget.");
+        Logger.eprintlnMixedBlue("The specified gadget", "did not", "pass the deserialization filter.");
         showStackTrace(e);
     }
 
@@ -194,17 +194,46 @@ public class ExceptionHandler {
     {
         Logger.eprintMixedYellow(endpoint, "rejected", "deserialization of class ");
         Logger.printPlainBlue(className);
-        Logger.printlnPlainYellow(" (JEP290 is installed).");
+        Logger.printlnMixedBlue("The supplied class", "did not", "pass the deserialization filter.");
         showStackTrace(e);
     }
 
-    public static void invalidClassBind(Exception e, String className)
+    public static void invalidClassBind(Exception e, String operation, String className)
     {
-        Logger.eprintln("Bind operation failed!");
+        Logger.eprintln(operation + " operation failed!");
         Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of class ");
         Logger.printlnPlainBlue(className);
         Logger.eprintlnMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry.");
         Logger.eprintlnMixedYellow("This is common for", "JMX", "based registry services.");
+        showStackTrace(e);
+
+        RMGUtils.exit();
+    }
+
+    public static void invalidClassEnum(Exception e, String callName)
+    {
+        Logger.printlnMixedYellow("- Caught", "InvalidClassException", "during " + callName + " call.");
+        Logger.printMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry");
+        Logger.printlnPlainBlue(" (JMX?)");
+        Logger.statusUndecided("Configuration");
+        showStackTrace(e);
+    }
+
+    public static void unsupportedOperationException(Exception e, String callName)
+    {
+        Logger.eprintlnMixedYellow("Caught", "UnsupportedOperationException", "during " + callName + " call.");
+        Logger.eprintlnMixedBlue("The server probably uses a", "custom deserialization filter.");
+        Logger.eprintlnMixedBlue("This behavior is known e.g. by the", "NotSoSerial", "project.");
+        showStackTrace(e);
+
+        RMGUtils.exit();
+    }
+
+    public static void unsupportedOperationExceptionEnum(Exception e, String callName)
+    {
+        Logger.eprintlnMixedYellow("- Caught", "UnsupportedOperationException", "during " + callName + " call.");
+        Logger.eprintlnMixedBlue("  --> The server probably uses a", "custom deserialization filter (NotSoSerial?)");
+        Logger.statusUndecided("Configuration");
         showStackTrace(e);
     }
 
@@ -561,9 +590,10 @@ public class ExceptionHandler {
         Throwable cause = null;
         Throwable result = e;
 
-        while(null != (cause = result.getCause())  && (result != cause) ) {
+        while(null != (cause = result.getCause()) && (result != cause) ) {
             result = cause;
         }
+
         return result;
     }
 }

@@ -95,6 +95,9 @@ public class DGCClient {
                 Logger.statusNonDefault();
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, callName);
+
             } else {
                 ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
             }
@@ -141,6 +144,12 @@ public class DGCClient {
                 Logger.statusVulnerable();
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( cause instanceof java.lang.UnsupportedOperationException) {
+                Logger.printMixedYellow("- DGC", "rejected", "deserialization with an");
+                Logger.printlnPlainBlue("UnsupportedOperationException (NotSoSerial?)");
+                Logger.statusOk();
+                ExceptionHandler.showStackTrace(e);
+
             } else {
                 ExceptionHandler.unexpectedException(e, "JEP290", "enumeration", false);
             }
@@ -182,7 +191,9 @@ public class DGCClient {
 
             if( cause instanceof java.io.InvalidClassException ) {
                 ExceptionHandler.invalidClass(e, "DGC", className);
-                ExceptionHandler.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, callName);
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                 ExceptionHandler.unsupportedClassVersion(e, callName, "call");
@@ -229,7 +240,10 @@ public class DGCClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC", "gadget-class");
+                ExceptionHandler.invalidClass(e, "DGC", payloadObject.getClass().getName());
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, callName);
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
                 ExceptionHandler.deserializeClassNotFound(e);
