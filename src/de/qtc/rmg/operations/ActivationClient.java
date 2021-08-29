@@ -81,8 +81,8 @@ public class ActivationClient {
                 Logger.printlnPlainMixedRed("\t - Vulnerability Status:", "Vulnerable");
                 this.enumCodebase();
 
-            } else if( t instanceof java.io.InvalidClassException ) {
-                Logger.printMixedYellow("- Caught", "InvalidClassException", "during activate call ");
+            } else if( t instanceof java.io.InvalidClassException || t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedYellow("- Caught", t.getClass().getName(), "during activate call ");
                 Logger.printlnPlainYellow("(activator is present).");
                 Logger.printMixedBlue("  --> Deserialization", "filtered");
                 Logger.printlnPlainMixedPurple("\t - Vulnerability Status:", "Undecided");
@@ -117,6 +117,10 @@ public class ActivationClient {
                 Logger.printMixedBlue("  --> Client codebase", "enabled");
                 Logger.printlnPlainMixedRed("\t - Configuration Status:", "Non Default");
                 ExceptionHandler.showStackTrace(e);
+
+            } else if( t instanceof java.io.InvalidClassException || t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedBlue("  --> Client codebase", "filtered");
+                Logger.printlnPlainMixedPurple("\t - Configuration Status:", "Undecided");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "codebase", "enumeration", false);
@@ -153,7 +157,10 @@ public class ActivationClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator", "gadget-class");
+                ExceptionHandler.invalidClass(e, "Activator");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "activate");
 
             } else if( cause instanceof java.lang.ClassNotFoundException) {
                 ExceptionHandler.deserializeClassNotFound(e);
@@ -198,8 +205,10 @@ public class ActivationClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator", className);
-                ExceptionHandler.showStackTrace(e);
+                ExceptionHandler.invalidClass(e, "Activator");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "activate");
 
             } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
                 ExceptionHandler.unsupportedClassVersion(e, "activate", "call");

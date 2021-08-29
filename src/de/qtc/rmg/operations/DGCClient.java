@@ -190,7 +190,7 @@ public class DGCClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC", className);
+                ExceptionHandler.invalidClass(e, "DGC");
 
             } else if( cause instanceof java.lang.UnsupportedOperationException ) {
                 ExceptionHandler.unsupportedOperationException(e, callName);
@@ -240,7 +240,7 @@ public class DGCClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC", payloadObject.getClass().getName());
+                ExceptionHandler.invalidClass(e, "DGC");
 
             } else if( cause instanceof java.lang.UnsupportedOperationException ) {
                 ExceptionHandler.unsupportedOperationException(e, callName);

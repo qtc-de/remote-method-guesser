@@ -190,12 +190,18 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
-    public static void invalidClass(Exception e, String endpoint, String className)
+    public static void invalidClass(Exception e, String endpoint)
     {
-        Logger.eprintMixedYellow(endpoint, "rejected", "deserialization of class ");
-        Logger.printPlainBlue(className);
-        Logger.printlnMixedBlue("The supplied class", "did not", "pass the deserialization filter.");
-        showStackTrace(e);
+        invalidClass(e, endpoint, true);
+    }
+
+    public static void invalidClass(Exception e, String endpoint, boolean trace)
+    {
+        Logger.eprintlnMixedYellow(endpoint, "rejected", "deserialization of one of the transmitted classes.");
+        Logger.eprintlnMixedBlue("The supplied gadget", "did not", "pass the deserialization filter.");
+
+        if( trace )
+            showStackTrace(e);
     }
 
     public static void invalidClassBind(Exception e, String operation, String className)

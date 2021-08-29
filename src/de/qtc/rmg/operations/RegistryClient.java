@@ -602,8 +602,9 @@ public class RegistryClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Registry", className);
-                Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
+                ExceptionHandler.invalidClass(e, "Registry", false);
+                Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject.");
+                ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.UnsupportedOperationException ) {
                 ExceptionHandler.unsupportedOperationException(e, regMethod);

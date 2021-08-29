@@ -157,7 +157,7 @@ public class RemoteObjectClient {
         int attackArgument = findNonPrimitiveArgument(targetMethod, argumentPosition);
 
         Logger.printGadgetCallIntro("RMI");
-        printIntro(targetMethod, attackArgument);
+        printGadgetIntro(targetMethod, attackArgument);
 
         MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
@@ -186,6 +186,12 @@ public class RemoteObjectClient {
 
             } else if( cause instanceof java.security.AccessControlException ) {
                 ExceptionHandler.accessControl(e, "deserialization", "attack");
+
+            } else if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, "RMI endpoint");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "method");
 
             } else {
                 ExceptionHandler.unexpectedException(e, "deserialization", "attack", false);
@@ -232,7 +238,7 @@ public class RemoteObjectClient {
         String methodName = getMethodName(targetMethod);
 
         Logger.printCodebaseAttackIntro("RMI", methodName, gadget.getClass().getName());
-        printIntro(targetMethod, attackArgument);
+        printGadgetIntro(targetMethod, attackArgument);
 
         MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
@@ -249,6 +255,12 @@ public class RemoteObjectClient {
             if( cause instanceof java.rmi.UnmarshalException ) {
                 Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this bound name.");
                 ExceptionHandler.showStackTrace(e);
+
+            } else if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, "RMI endpoint");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "method");
 
             } else if( cause instanceof java.lang.ClassNotFoundException ) {
 
@@ -319,8 +331,15 @@ public class RemoteObjectClient {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash"))
+            if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash")) {
                 ExceptionHandler.unrecognizedMethodHash(e, "call", targetMethod.getSignature());
+
+            } else if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, "RMI endpoint");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "method");
+            }
 
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, this.objID, true);
@@ -368,7 +387,7 @@ public class RemoteObjectClient {
      * @param targetMethod MethodCandidate that is attacked
      * @param attackArgument the argument position of the argument that is attacked
      */
-    private void printIntro(MethodCandidate targetMethod, int attackArgument)
+    private void printGadgetIntro(MethodCandidate targetMethod, int attackArgument)
     {
         Logger.printMixedBlue("Using non primitive argument type", targetMethod.getArgumentTypeName(attackArgument));
         Logger.printlnPlainMixedBlue(" on position", String.valueOf(attackArgument));
