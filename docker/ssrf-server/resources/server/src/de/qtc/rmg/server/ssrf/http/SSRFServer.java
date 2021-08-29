@@ -10,6 +10,8 @@ import de.qtc.rmg.server.ssrf.utils.Logger;
 /**
  * The SSRFServer class creates an HTTP server that is vulnerable to SSRF attacks.
  * For details, check the SSRFHandler class, that implements the actual SSRF vulnerability.
+ * Additionally, a JarHandler is implemented that an be used to obtain classes from the servers
+ * codebase.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -20,18 +22,18 @@ public class SSRFServer {
     private InetSocketAddress address;
 
     /**
-     * Create the HttpServer on the specified port and assign an SSRFHandler to it.
+     * Create the HttpServer on the specified port and assign an SSRFHandler and JarHandler to it.
      *
      * @param bindPort Port number to bind the HttpServer to.
      */
     public SSRFServer(int bindPort)
     {
-        Logger.printlnMixedBlue("Creating HTTP server on port", String.valueOf(bindPort));
         this.address = new InetSocketAddress(bindPort);
 
         try {
             server = HttpServer.create(address, 0);
             server.createContext("/", new SSRFHandler());
+            server.createContext("/rmi-class-definitions.jar", new JarHandler());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,5 +49,3 @@ public class SSRFServer {
         server.start();
     }
 }
-
-

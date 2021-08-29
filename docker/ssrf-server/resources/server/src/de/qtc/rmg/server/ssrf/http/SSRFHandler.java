@@ -31,6 +31,7 @@ public class SSRFHandler implements HttpHandler {
      */
     public void handle(HttpExchange t) throws IOException
     {
+        Logger.println("");
         Logger.println("Obtained incoming request:");
         Logger.increaseIndent();
 

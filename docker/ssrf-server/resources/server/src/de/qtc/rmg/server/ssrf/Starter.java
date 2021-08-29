@@ -24,7 +24,7 @@ import de.qtc.rmg.server.ssrf.utils.Logger;
  */
 public class Starter {
 
-    private final static int defaultPort = 8000;
+    private final static int httpPort = 8000;
     private final static int registryPort = 1090;
 
     private static IFileManager fileManager = null;
@@ -38,7 +38,11 @@ public class Starter {
      */
     public static void main(String[] args) throws AlreadyBoundException, IOException
     {
-        SSRFServer server = new SSRFServer(defaultPort);
+        System.setProperty("java.rmi.server.hostname", "localhost");
+        System.setProperty("java.rmi.server.codebase", "http://localhost:8000/rmi-class-definitions.jar");
+
+        Logger.printlnMixedBlue("Creating HTTP server on port", String.valueOf(httpPort));
+        SSRFServer server = new SSRFServer(httpPort);
         server.start();
 
         RMISocketFactory.setSocketFactory(new LocalhostSocketFactory());
@@ -46,10 +50,11 @@ public class Starter {
         Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
         Registry registry = LocateRegistry.createRegistry(registryPort);
 
-        Logger.printlnMixedBlue("Creating", "FileManager", "object.");
+        Logger.printlnMixedBlue("Creating", "FileManager", "remote object.");
         fileManager = new FileManager();
         registry.bind("FileManager", fileManager);
 
+        Logger.printlnMixedBlue("Creating", "JMX", "remote object.");
         LocalhostJmxConnector jmxConnector = new LocalhostJmxConnector(registryPort);
         jmxConnector.start();
     }
