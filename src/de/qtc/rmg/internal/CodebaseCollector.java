@@ -56,11 +56,10 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     public Class<?> loadClass(String codebase, String name, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
-        if( codebase != null )
-            addCodebase(codebase, name);
-
-        codebase = null;
         Class<?> resolvedClass = null;
+
+        addCodebase(codebase, name);
+        codebase = null;
 
         try {
 
@@ -83,18 +82,16 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     public Class<?> loadProxyClass(String codebase, String[] interfaces, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
-        if( codebase != null )
-            addCodebase(codebase, interfaces[0]);
-
-        codebase = null;
         Class<?> resolvedClass = null;
 
         try {
 
             for(String intf : interfaces) {
                 RMGUtils.makeInterface(intf);
+                addCodebase(codebase, intf);
             }
 
+            codebase = null;
             resolvedClass = originalLoader.loadProxyClass(codebase, interfaces, defaultLoader);
 
         } catch (CannotCompileException e) {
@@ -158,7 +155,7 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     private void addCodebase(String codebase, String className)
     {
-        if( className.startsWith("java.") || className.contains("java.lang.") )
+        if( codebase == null || className.startsWith("java.") )
             return;
 
         if( codebases.containsKey(codebase) ) {
