@@ -29,7 +29,6 @@ RUN set -ex \
     && ln -s /usr/lib/jvm/java-9-openjdk/bin/java /usr/bin/java \
     && chmod +x /opt/start.sh
 
-ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=localhost
 EXPOSE 8000/tcp
 
 CMD ["/opt/start.sh"]
