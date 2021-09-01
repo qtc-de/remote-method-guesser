@@ -516,7 +516,7 @@ public class Dispatcher {
         KnownEndpoint endpoint = keh.lookup(className);
 
         if( endpoint == null )
-            Logger.printlnMixedYellow("The specified class name", className, "isn't a known class.");
+            Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
         else
             formatter.listKnownEndpoints(endpoint);
     }

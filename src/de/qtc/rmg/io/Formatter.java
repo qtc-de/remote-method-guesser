@@ -188,7 +188,7 @@ public class Formatter {
         for( Vulnerability vuln : vulns ) {
 
             Logger.lineBreak();
-            Logger.printlnBlue("-".repeat(35));
+            Logger.printlnBlue("-----------------------------------");
 
             Logger.printlnBlue("Name:");
 
