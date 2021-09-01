@@ -176,6 +176,16 @@ public class Logger {
         log(blue(msg), false);
     }
 
+    public static void printPlainGreen(String msg)
+    {
+        log(green(msg), false);
+    }
+
+    public static void printlnPlainGreen(String msg)
+    {
+        log(green(msg), true);
+    }
+
     public static void eprintlnPlainBlue(String msg)
     {
         elog(blue(msg));

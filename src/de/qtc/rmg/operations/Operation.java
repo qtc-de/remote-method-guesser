@@ -25,6 +25,7 @@ public enum Operation {
     DGC("dispatchDGC", "<gadget> <command>", "Perform DGC based deserialization attacks"),
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints"),
     GUESS("dispatchGuess", "", "Guess methods on bound names"),
+    KNOWN("dispatchKnown", "<className>", "Display details of known remote objects"),
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
     METHOD("dispatchMethod", "<gadget> <command>", "Perform method based deserialization attacks"),
     REBIND("dispatchRebind", "[gadget] <command>", "Rebinds boundname as object that points to listener"),
@@ -81,7 +82,7 @@ public enum Operation {
         try {
             this.method.invoke(dispatcherObject);
         } catch(Exception e) {
-            ExceptionHandler.internalException(e, "Operation invoke", true);
+            ExceptionHandler.internalException(e, "Operation.invoke(...)", true);
         }
     }
 

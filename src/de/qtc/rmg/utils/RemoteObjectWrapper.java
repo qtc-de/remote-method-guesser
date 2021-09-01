@@ -1,7 +1,6 @@
 package de.qtc.rmg.utils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.rmi.Remote;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
@@ -9,6 +8,8 @@ import java.rmi.server.RMIServerSocketFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.qtc.rmg.endpoints.KnownEndpoint;
+import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;
@@ -24,7 +25,6 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 public class RemoteObjectWrapper {
 
     public ObjID objID;
-    public boolean isKnown;
     public String className;
     public String boundName;
     public Remote remoteObject;
@@ -32,6 +32,7 @@ public class RemoteObjectWrapper {
     public TCPEndpoint endpoint;
     public RMIClientSocketFactory csf;
     public RMIServerSocketFactory ssf;
+    public KnownEndpoint knownEndpoint;
 
     public List<RemoteObjectWrapper> duplicates;
 
@@ -84,8 +85,16 @@ public class RemoteObjectWrapper {
 
         this.className = RMGUtils.getClassName(remoteObject);
 
-        this.isKnown = !RMGUtils.dynamicallyCreated(className);
         this.duplicates = new ArrayList<RemoteObjectWrapper>();
+        this.knownEndpoint = KnownEndpointHolder.getHolder().lookup(className);
+    }
+
+    public boolean isKnown()
+    {
+        if( knownEndpoint == null )
+            return false;
+
+        return true;
     }
 
     /**

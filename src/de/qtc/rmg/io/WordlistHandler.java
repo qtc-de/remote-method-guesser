@@ -109,7 +109,7 @@ public class WordlistHandler {
             Logger.printlnMixedBlue("Reading method candidates from internal wordlist", wordlist);
             Logger.increaseIndent();
 
-            InputStream stream = WordlistHandler.class.getResourceAsStream("/wordlists/" + wordlist);
+            InputStream stream = WordlistHandler.class.getResourceAsStream("/resources/wordlists/" + wordlist);
             String content = new String(IOUtils.toByteArray(stream));
             stream.close();
 

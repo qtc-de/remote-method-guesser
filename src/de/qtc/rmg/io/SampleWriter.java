@@ -96,7 +96,7 @@ public class SampleWriter {
      */
     public String loadTemplateStream(String templateName) throws IOException
     {
-        InputStream stream = this.getClass().getResourceAsStream("/templates/" + templateName);
+        InputStream stream = this.getClass().getResourceAsStream("/resources/templates/" + templateName);
         byte[] content = IOUtils.toByteArray(stream);
         stream.close();
         return new String(content);

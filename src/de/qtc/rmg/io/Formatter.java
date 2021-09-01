@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import de.qtc.rmg.endpoints.KnownEndpoint;
+import de.qtc.rmg.endpoints.Vulnerability;
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.operations.RemoteObjectClient;
@@ -46,10 +48,14 @@ public class Formatter {
 
             Logger.increaseIndent();
 
-            if( remoteObject.isKnown )
-                Logger.printlnMixedBlue("-->", remoteObject.className, "(known class)");
-            else
-                Logger.printlnMixedBlue("-->", remoteObject.className, "(unknown class)");
+            if( remoteObject.isKnown() ) {
+                Logger.printMixedBlue("-->", remoteObject.className, "");
+                remoteObject.knownEndpoint.printEnum();
+
+            } else {
+                Logger.printMixedBlue("-->", remoteObject.className);
+                Logger.printlnPlainMixedPurple("", "(unknown class)");
+            }
 
             printLiveRef(remoteObject);
             Logger.decreaseIndent();
@@ -124,6 +130,90 @@ public class Formatter {
         }
 
         Logger.decreaseIndent();
+    }
+
+    public void listKnownEndpoints(KnownEndpoint knownEndpoint)
+    {
+        Logger.printlnBlue("Name:");
+
+        Logger.increaseIndent();
+        Logger.printlnYellow(knownEndpoint.getName());
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Class Name:");
+
+        Logger.increaseIndent();
+        Logger.printlnYellow(knownEndpoint.getClassName());
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Description:");
+        String[] lines = knownEndpoint.getDescription().split("\n");
+
+        Logger.increaseIndent();
+        for( String line : lines)
+            Logger.printlnYellow(line);
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Remote Methods:");
+        Logger.increaseIndent();
+
+        for(String remoteMethod : knownEndpoint.getRemoteMethods())
+            Logger.printlnMixedYellow("-", remoteMethod);
+
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("References:");
+        Logger.increaseIndent();
+
+        for(String reference : knownEndpoint.getReferences())
+            Logger.printlnMixedYellow("-", reference);
+
+        Logger.decreaseIndent();
+        listVulnerabilities(knownEndpoint.getVulnerabilities());
+    }
+
+    private void listVulnerabilities(List<Vulnerability> vulns)
+    {
+        if( vulns == null || vulns.size() == 0 )
+            return;
+
+        Logger.lineBreak();
+        Logger.printlnBlue("Vulnerabilities:");
+        Logger.increaseIndent();
+
+        for( Vulnerability vuln : vulns ) {
+
+            Logger.lineBreak();
+            Logger.printlnBlue("-".repeat(35));
+
+            Logger.printlnBlue("Name:");
+
+            Logger.increaseIndent();
+            Logger.printlnYellow(vuln.getName());
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+
+            Logger.printlnBlue("Description:");
+            String[] lines = vuln.getDescription().split("\n");
+
+            Logger.increaseIndent();
+            for( String line : lines)
+                Logger.printlnYellow(line);
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+
+            Logger.printlnBlue("References:");
+            Logger.increaseIndent();
+
+            for(String reference : vuln.getReferences())
+                Logger.printlnMixedYellow("-", reference);
+
+            Logger.decreaseIndent();
+        }
     }
 
     /**

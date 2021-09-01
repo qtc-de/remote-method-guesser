@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 import de.qtc.rmg.annotations.Parameters;
+import de.qtc.rmg.endpoints.KnownEndpoint;
+import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.ArgumentParser;
 import de.qtc.rmg.internal.ExceptionHandler;
@@ -177,10 +179,10 @@ public class Dispatcher {
                     Logger.printlnMixedYellow("Creating samples for bound name", boundName + ".");
                     Logger.increaseIndent();
 
-                    if(!remoteObject.isKnown)
+                    if(!remoteObject.isKnown())
                         writer.createInterface(boundName, remoteObject.className, client.remoteMethods);
 
-                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown, client.remoteMethods, rmi);
+                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown(), client.remoteMethods, rmi);
 
                     Logger.decreaseIndent();
                 }
@@ -310,7 +312,7 @@ public class Dispatcher {
      * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
      */
     @SuppressWarnings("deprecation")
-    @Parameters(count=4, requires= {RMGOption.SIGNATURE})
+    @Parameters(count=5, requires= {RMGOption.SIGNATURE})
     public void dispatchCodebase()
     {
         String className = p.getPositionalString(3);
@@ -502,5 +504,20 @@ public class Dispatcher {
 
         if(results.size() > 0 && RMGOption.CREATE_SAMPLES.getBool())
             this.writeSamples(results);
+    }
+
+    @Parameters(count=4)
+    public void dispatchKnown()
+    {
+        String className = p.getPositionalString(3);
+        Formatter formatter = new Formatter();
+
+        KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
+        KnownEndpoint endpoint = keh.lookup(className);
+
+        if( endpoint == null )
+            Logger.printlnMixedYellow("The specified class name", className, "isn't a known class.");
+        else
+            formatter.listKnownEndpoints(endpoint);
     }
 }

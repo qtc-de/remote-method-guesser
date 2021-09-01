@@ -164,7 +164,7 @@ public class MethodGuesser {
 
         for(RemoteObjectWrapper o : remoteObjects) {
 
-            if(!o.isKnown)
+            if(!o.isKnown())
                 unknown.add(o);
 
             else {

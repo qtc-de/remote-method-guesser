@@ -37,6 +37,12 @@
             <version>3.27.0-GA</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.29</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -53,8 +59,9 @@
           <resource>
             <directory>.</directory>
             <includes>
-                <include>wordlists/**</include>
-                <include>templates/**</include>
+                <include>resources/wordlists/**</include>
+                <include>resources/templates/**</include>
+                <include>resources/known-endpoints/**</include>
             </includes>
           </resource>
         </resources>
