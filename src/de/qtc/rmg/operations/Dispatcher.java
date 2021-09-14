@@ -509,6 +509,12 @@ public class Dispatcher {
             this.writeSamples(results);
     }
 
+    /**
+     * Is called when using remote-method-guesser's 'known' action. Actually required only a single
+     * argument that is the class name to lookup within the database of KnownEndpoints. However, due
+     * to the argument parsing logic of remote-method-guesser, you need to specify the host and port
+     * arguments as well.
+     */
     @Parameters(count=4)
     public void dispatchKnown()
     {
@@ -521,6 +527,6 @@ public class Dispatcher {
         if( endpoint == null )
             Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
         else
-            formatter.listKnownEndpoints(endpoint);
+            formatter.listKnownEndpoint(endpoint);
     }
 }

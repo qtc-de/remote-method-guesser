@@ -4,12 +4,24 @@ import java.util.List;
 
 import de.qtc.rmg.io.Logger;
 
+/**
+ * The KnownEndpoint class represents a well known RMI endpoint. By the term 'well known' we mean
+ * that the class that implements the remote object was encountered before and meta information does
+ * exist for it within the remote-method-guesser repository. Users can then use the 'known' action
+ * to get additional information on the endpoint, like implemented remote methods or known vulnerabilities.
+ *
+ * KnownEndpoints are stored within a YAML file in the remote-method-guesser repository. The objects
+ * are directly constructed from this file and the KnownEndpoint class needs to implement corresponding
+ * getters and setters.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 public class KnownEndpoint {
 
     private String name;
-    private String className;
     private String description;
 
+    private List<String> className;
     private List<String> remoteMethods;
     private List<String> references;
 
@@ -20,7 +32,7 @@ public class KnownEndpoint {
         this.name = name;
     }
 
-    public void setClassName(String className)
+    public void setClassName(List<String> className)
     {
         this.className = className;
     }
@@ -50,7 +62,7 @@ public class KnownEndpoint {
         return name;
     }
 
-    public String getClassName()
+    public List<String> getClassName()
     {
         return className;
     }
@@ -75,6 +87,10 @@ public class KnownEndpoint {
         return vulnerabilities;
     }
 
+    /**
+     * This function is called during the 'enum' action of remote-method-guesser to print
+     * meta information for a KnownEndpoint in a formatted way.
+     */
     public void printEnum()
     {
         String format = String.format("(known class: %s)", name);

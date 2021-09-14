@@ -132,28 +132,38 @@ public class Formatter {
         Logger.decreaseIndent();
     }
 
-    public void listKnownEndpoints(KnownEndpoint knownEndpoint)
+    /**
+     * Prints the meta information contained in a KnownEndpoint in formatted way. This function
+     * generates the output that is displayed when using remote-method-guesser's 'known' action.
+     *
+     * @param knownEndpoint The KnownEndpoint to print
+     */
+    public void listKnownEndpoint(KnownEndpoint knownEndpoint)
     {
         Logger.printlnBlue("Name:");
-
         Logger.increaseIndent();
+
         Logger.printlnYellow(knownEndpoint.getName());
         Logger.decreaseIndent();
         Logger.lineBreak();
 
         Logger.printlnBlue("Class Name:");
-
         Logger.increaseIndent();
-        Logger.printlnYellow(knownEndpoint.getClassName());
+
+        for(String className : knownEndpoint.getClassName())
+            Logger.printlnMixedYellow("-", className);
+
         Logger.decreaseIndent();
         Logger.lineBreak();
 
         Logger.printlnBlue("Description:");
+        Logger.increaseIndent();
+
         String[] lines = knownEndpoint.getDescription().split("\n");
 
-        Logger.increaseIndent();
         for( String line : lines)
             Logger.printlnYellow(line);
+
         Logger.decreaseIndent();
         Logger.lineBreak();
 
@@ -176,6 +186,13 @@ public class Formatter {
         listVulnerabilities(knownEndpoint.getVulnerabilities());
     }
 
+    /**
+     * Print vulnerability information contained within a KnownEndpoint in a formatted way.
+     * This function is called by listKnownEndpoint to display vulnerabilities that are known
+     * for the corresponding endpoint.
+     *
+     * @param vulns List of vulnerabilities to display
+     */
     private void listVulnerabilities(List<Vulnerability> vulns)
     {
         if( vulns == null || vulns.size() == 0 )
@@ -191,18 +208,20 @@ public class Formatter {
             Logger.printlnBlue("-----------------------------------");
 
             Logger.printlnBlue("Name:");
-
             Logger.increaseIndent();
+
             Logger.printlnYellow(vuln.getName());
             Logger.decreaseIndent();
             Logger.lineBreak();
 
             Logger.printlnBlue("Description:");
+            Logger.increaseIndent();
+
             String[] lines = vuln.getDescription().split("\n");
 
-            Logger.increaseIndent();
             for( String line : lines)
                 Logger.printlnYellow(line);
+
             Logger.decreaseIndent();
             Logger.lineBreak();
 

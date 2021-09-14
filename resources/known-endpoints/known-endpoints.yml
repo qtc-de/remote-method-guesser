@@ -1,7 +1,9 @@
 knownEndpoints:
 
 - name: JMX Server
-  className: javax.management.remote.rmi.RMIServerImpl_Stub
+  className:
+    - javax.management.remote.rmi.RMIServerImpl_Stub
+    - javax.management.remote.rmi.RMIServer
 
   description: |
     Java Management Extensions (JMX) can be used to monitor and manage a running Java virtual machine.
@@ -38,7 +40,8 @@ knownEndpoints:
 
 
 - name: JMX Connection
-  className: javax.management.remote.rmi.RMIConnectionImpl_Stub
+  className:
+    - javax.management.remote.rmi.RMIConnectionImpl_Stub
 
   description: |
     Java Management Extensions (JMX) can be used to monitor and manage a running Java virtual machine.
@@ -96,7 +99,8 @@ knownEndpoints:
 
 
 - name: RMI Registry
-  className: sun.rmi.registry.RegistryImpl_Stub
+  className:
+    - sun.rmi.registry.RegistryImpl_Stub
 
   description: |
     The RMI registry is used as a naming service for RMI endpoints. It maps endpoint locations and their corresponding
@@ -141,7 +145,8 @@ knownEndpoints:
 
 
 - name: Distributed Garbage Collector
-  className: sun.rmi.transport.DGCImpl_Stub
+  className:
+    - sun.rmi.transport.DGCImpl_Stub
 
   description: |
     The Distributed Garbage Collector (DGC) tracks the number of active instances for remote objects
@@ -172,7 +177,8 @@ knownEndpoints:
 
 
 - name: RMI Activator
-  className: sun.rmi.server.Activation$ActivationSystemImpl_Stub
+  className:
+    - sun.rmi.server.Activation$ActivationSystemImpl_Stub
 
   description: |
     The activation system is a legacy component of Java RMI. It allows remote objects to become inactive
