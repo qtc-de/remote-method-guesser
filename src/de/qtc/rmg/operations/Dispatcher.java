@@ -405,6 +405,7 @@ public class Dispatcher {
     {
         RMGUtils.enableCodebase();
 
+        Formatter format = new Formatter();
         DGCClient dgc = new DGCClient(rmi);
         RegistryClient registryClient = new RegistryClient(rmi);
         EnumSet<ScanAction> actions = p.getScanActions();
@@ -416,7 +417,6 @@ public class Dispatcher {
 
             if( actions.contains(ScanAction.LIST) ) {
 
-                Formatter format = new Formatter();
                 obtainBoundNames();
 
                 if( !RMGOption.SSRFResponse.notNull() || RMGOption.BOUND_NAME.notNull() ) {
@@ -453,6 +453,9 @@ public class Dispatcher {
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectExceptionRegistryEnum();
             enumJEP290Bypass = false;
+
+            Logger.lineBreak();
+            format.listCodeases();
         }
 
         if( actions.contains(ScanAction.DGC) ) {
