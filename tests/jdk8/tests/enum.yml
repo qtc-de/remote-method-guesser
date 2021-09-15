@@ -15,7 +15,7 @@ tests:
           ignore_case: True
           values:
             - 'jmxrmi'
-            - 'javax.management.remote.rmi.RMIServerImpl_Stub (known class)'
+            - 'javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)'
 
       - regex:
           description: 'Check whether objID values are displayed'
@@ -34,7 +34,7 @@ tests:
           values:
             - |-
               [+] RMI server String unmarshalling enumeration:
-              [+] 
+              [+]
               [+] 	- Caught ClassNotFoundException during lookup call.
               [+] 	  --> The type java.lang.String is unmarshalled via readObject().
               [+] 	  Configuration Status: Outdated
@@ -45,7 +45,7 @@ tests:
           values:
             - |-
               [+] RMI server useCodebaseOnly enumeration:
-              [+] 
+              [+]
               [+] 	- Caught ClassCastException during lookup call.
               [+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
               [+] 	  Configuration Status: Current Default
@@ -56,7 +56,7 @@ tests:
           values:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-              [+] 
+              [+]
               [-] 	- Caught AccessException during unbindcall.
               [-] 	  --> The servers seems to use a SingleEntryRegistry (probably JMX based).
               [+] 	  Vulnerability Status: Undecided
@@ -67,7 +67,7 @@ tests:
           values:
             - |-
               [+] RMI DGC enumeration:
-              [+] 
+              [+]
               [+] 	- RMI server does not use a SecurityManager during DGC operations.
               [+] 	  --> Remote class loading attacks are not possible.
               [+] 	  Configuration Status: Outdated
@@ -78,7 +78,7 @@ tests:
           values:
             - |-
               [+] RMI server JEP290 enumeration:
-              [+] 
+              [+]
               [+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
               [+] 	  Vulnerability Status: Vulnerable
 
@@ -88,7 +88,7 @@ tests:
           values:
             - |-
               [+] RMI registry JEP290 bypass enmeration:
-              [+] 
+              [+]
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
               [+] 	  Vulnerability Status: Vulnerable
 
@@ -98,6 +98,6 @@ tests:
           values:
             - |-
               [+] RMI ActivationSystem enumeration:
-              [+] 
+              [+]
               [+] 	- Caught NoSuchObjectException during activate call (activator not present).
               [+] 	  Configuration Status: Current Default

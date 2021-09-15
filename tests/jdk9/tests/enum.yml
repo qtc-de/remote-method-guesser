@@ -38,7 +38,7 @@ tests:
           values:
             - |-
               [+] RMI ActivationSystem enumeration:
-              [+] 
+              [+]
               [+] 	- Caught NoSuchObjectException during activate call (activator not present).
               [+] 	  Configuration Status: Current Default
 
@@ -71,7 +71,7 @@ tests:
           values:
             - |-
               [+] RMI server String unmarshalling enumeration:
-              [+] 
+              [+]
               [+] 	- Caught ClassNotFoundException during lookup call.
               [+] 	  --> The type java.lang.String is unmarshalled via readObject().
               [+] 	  Configuration Status: Outdated
@@ -82,7 +82,7 @@ tests:
           values:
             - |-
               [+] RMI server useCodebaseOnly enumeration:
-              [+] 
+              [+]
               [+] 	- Caught MalformedURLException during lookup call.
               [+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
               [+] 	  Configuration Status: Non Default
@@ -93,7 +93,7 @@ tests:
           values:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-              [+] 
+              [+]
               [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
               [+] 	  Vulnerability Status: Vulnerable
 
@@ -103,7 +103,7 @@ tests:
           values:
             - |-
               [+] RMI DGC enumeration:
-              [+] 
+              [+]
               [+] 	- Security Manager rejected access to the class loader.
               [+] 	  --> The DGC uses most likely a separate security policy.
               [+] 	  Configuration Status: Current Default
@@ -114,7 +114,7 @@ tests:
           values:
             - |-
               [+] RMI server JEP290 enumeration:
-              [+] 
+              [+]
               [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
               [+] 	  Vulnerability Status: Non Vulnerable
 
@@ -124,7 +124,7 @@ tests:
           values:
             - |-
               [+] RMI registry JEP290 bypass enmeration:
-              [+] 
+              [+]
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
               [+] 	  Vulnerability Status: Vulnerable
 
@@ -134,7 +134,7 @@ tests:
           values:
             - |-
               [+] RMI ActivationSystem enumeration:
-              [+] 
+              [+]
               [+] 	- Caught IllegalArgumentException during activate call (activator is present).
               [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
               [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
