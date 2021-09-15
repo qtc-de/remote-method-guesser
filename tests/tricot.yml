@@ -6,7 +6,7 @@ tester:
     'Launches some end-to-end tests of remote-method-guesser.'
 
 variables:
-  rmg: rmg-3.3.0-jar-with-dependencies.jar
+  rmg: rmg-4.0.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
