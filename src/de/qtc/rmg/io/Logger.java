@@ -71,9 +71,7 @@ public class Logger {
 
     private static void log(String msg)
     {
-        if( Logger.enabled ) {
-            log(msg, true);
-        }
+        log(msg, true);
     }
 
     private static void log(String msg, boolean newline)
@@ -89,9 +87,7 @@ public class Logger {
 
     private static void elog(String msg)
     {
-        if( Logger.enabled ) {
-            elog(msg, true);
-        }
+        elog(msg, true);
     }
 
     private static void elog(String msg, boolean newline)
@@ -107,8 +103,11 @@ public class Logger {
 
     public static void lineBreak()
     {
-        if( printCount != 0 )
-            log(prefix(), true);
+        if( printCount != 0 ) {
+
+            Logger.printCount++;
+            log("[+]", true);
+        }
     }
 
     public static void print(String msg)
