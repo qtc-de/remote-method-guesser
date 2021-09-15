@@ -53,33 +53,33 @@
 * Remote Methods:
 
     ```java
-    public String getConnectionId() throws IOException;
-    public void close() throws IOException;
-    public ObjectInstance createMBean(String className, ObjectName name, Subject delegationSubject)
-    public ObjectInstance createMBean(String className, ObjectName name, ObjectName loaderName, Subject delegationSubject)
-    public ObjectInstance createMBean(String className, ObjectName name, MarshalledObject params, String signature[], Subject delegationSubject)
-    public ObjectInstance createMBean(String className, ObjectName name, ObjectName loaderName, MarshalledObject params, String signature[], Subject delegationSubject)
-    public void unregisterMBean(ObjectName name, Subject delegationSubject)
-    public ObjectInstance getObjectInstance(ObjectName name, Subject delegationSubject)
-    public Set<ObjectInstance> queryMBeans(ObjectName name, MarshalledObject query, Subject delegationSubject)
-    public Set<ObjectName> queryNames(ObjectName name, MarshalledObject query, Subject delegationSubject)
-    public boolean isRegistered(ObjectName name, Subject delegationSubject)
-    public Integer getMBeanCount(Subject delegationSubject)
-    public Object getAttribute(ObjectName name, String attribute, Subject delegationSubject)
-    public AttributeList getAttributes(ObjectName name, String[] attributes, Subject delegationSubject)
-    public void setAttribute(ObjectName name, MarshalledObject attribute, Subject delegationSubject)
-    public AttributeList setAttributes(ObjectName name, MarshalledObject attributes, Subject delegationSubject)
-    public Object invoke(ObjectName name, String operationName, MarshalledObject params, String signature[], Subject delegationSubject)
-    public String getDefaultDomain(Subject delegationSubject)
-    public String[] getDomains(Subject delegationSubject)
-    public MBeanInfo getMBeanInfo(ObjectName name, Subject delegationSubject)
-    public boolean isInstanceOf(ObjectName name, String className, Subject delegationSubject)
-    public void addNotificationListener(ObjectName name, ObjectName listener, MarshalledObject filter, MarshalledObject handback, Subject delegationSubject)
-    public void removeNotificationListener(ObjectName name, ObjectName listener, Subject delegationSubject)
-    public void removeNotificationListener(ObjectName name, ObjectName listener, MarshalledObject filter, MarshalledObject handback, Subject delegationSubject)
-    public Integer[] addNotificationListeners(ObjectName[] names, MarshalledObject[] filters, Subject[] delegationSubjects)
-    public void removeNotificationListeners(ObjectName name, Integer[] listenerIDs, Subject delegationSubject)
-    public NotificationResult fetchNotifications(long clientSequenceNumber, int maxNotifications, long timeout)
+    String getConnectionId() throws IOException;
+    void close() throws IOException;
+    ObjectInstance createMBean(String className, ObjectName name, Subject delegationSubject)
+    ObjectInstance createMBean(String className, ObjectName name, ObjectName loaderName, Subject delegationSubject)
+    ObjectInstance createMBean(String className, ObjectName name, MarshalledObject params, String signature[], Subject delegationSubject)
+    ObjectInstance createMBean(String className, ObjectName name, ObjectName loaderName, MarshalledObject params, String signature[], Subject delegationSubject)
+    void unregisterMBean(ObjectName name, Subject delegationSubject)
+    ObjectInstance getObjectInstance(ObjectName name, Subject delegationSubject)
+    Set<ObjectInstance> queryMBeans(ObjectName name, MarshalledObject query, Subject delegationSubject)
+    Set<ObjectName> queryNames(ObjectName name, MarshalledObject query, Subject delegationSubject)
+    boolean isRegistered(ObjectName name, Subject delegationSubject)
+    Integer getMBeanCount(Subject delegationSubject)
+    Object getAttribute(ObjectName name, String attribute, Subject delegationSubject)
+    AttributeList getAttributes(ObjectName name, String[] attributes, Subject delegationSubject)
+    void setAttribute(ObjectName name, MarshalledObject attribute, Subject delegationSubject)
+    AttributeList setAttributes(ObjectName name, MarshalledObject attributes, Subject delegationSubject)
+    Object invoke(ObjectName name, String operationName, MarshalledObject params, String signature[], Subject delegationSubject)
+    String getDefaultDomain(Subject delegationSubject)
+    String[] getDomains(Subject delegationSubject)
+    MBeanInfo getMBeanInfo(ObjectName name, Subject delegationSubject)
+    boolean isInstanceOf(ObjectName name, String className, Subject delegationSubject)
+    void addNotificationListener(ObjectName name, ObjectName listener, MarshalledObject filter, MarshalledObject handback, Subject delegationSubject)
+    void removeNotificationListener(ObjectName name, ObjectName listener, Subject delegationSubject)
+    void removeNotificationListener(ObjectName name, ObjectName listener, MarshalledObject filter, MarshalledObject handback, Subject delegationSubject)
+    Integer[] addNotificationListeners(ObjectName[] names, MarshalledObject[] filters, Subject[] delegationSubjects)
+    void removeNotificationListeners(ObjectName name, Integer[] listenerIDs, Subject delegationSubject)
+    NotificationResult fetchNotifications(long clientSequenceNumber, int maxNotifications, long timeout)
     ```
 * References:
     * [https://docs.oracle.com/javase/8/docs/technotes/guides/management/agent.html](https://docs.oracle.com/javase/8/docs/technotes/guides/management/agent.html)
@@ -200,11 +200,11 @@
 * Remote Methods:
 
     ```java
-    public Remote lookup(String name)
-    public void bind(String name, Remote obj)
-    public void unbind(String name)
-    public void rebind(String name, Remote obj)
-    public String[] list() throws RemoteException, AccessException;
+    Remote lookup(String name)
+    void bind(String name, Remote obj)
+    void unbind(String name)
+    void rebind(String name, Remote obj)
+    String[] list() throws RemoteException, AccessException;
     ```
 * References:
     * [https://docs.oracle.com/javase/7/docs/technotes/guides/rmi/hello/hello-world.html](https://docs.oracle.com/javase/7/docs/technotes/guides/rmi/hello/hello-world.html)
