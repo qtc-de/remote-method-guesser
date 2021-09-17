@@ -21,7 +21,7 @@ tests:
       - contains:
           values:
             - rejected deserialization
-            - JEP290 is installed
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: Gadget Call (SSL)
@@ -39,4 +39,4 @@ tests:
       - contains:
           values:
             - rejected deserialization
-            - JEP290 is installed
+            - The supplied gadget did not pass the deserialization filter

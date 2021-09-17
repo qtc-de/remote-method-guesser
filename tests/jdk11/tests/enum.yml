@@ -38,7 +38,7 @@ tests:
           values:
             - |-
               [+] RMI ActivationSystem enumeration:
-              [+] 
+              [+]
               [+] 	- Caught NoSuchObjectException during activate call (activator not present).
               [+] 	  Configuration Status: Current Default
 
@@ -71,7 +71,7 @@ tests:
           values:
             - |-
               [+] RMI server String unmarshalling enumeration:
-              [+] 
+              [+]
               [+] 	- Server complained that object cannot be casted to java.lang.String.
               [+] 	  --> The type java.lang.String is unmarshalled via readString().
               [+] 	  Configuration Status: Current Default
@@ -82,7 +82,7 @@ tests:
           values:
             - |-
               [+] RMI server useCodebaseOnly enumeration:
-              [+] 
+              [+]
               [-] 	- RMI registry uses readString() for unmarshalling java.lang.String.
               [-] 	  This prevents useCodebaseOnly enumeration from remote.
 
@@ -92,7 +92,7 @@ tests:
           values:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-              [+] 
+              [+]
               [-] 	- Registry rejected unbind call cause it was not send from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
@@ -102,7 +102,7 @@ tests:
           values:
             - |-
               [+] RMI DGC enumeration:
-              [+] 
+              [+]
               [+] 	- Security Manager rejected access to the class loader.
               [+] 	  --> The DGC uses most likely a separate security policy.
               [+] 	  Configuration Status: Current Default
@@ -113,7 +113,7 @@ tests:
           values:
             - |-
               [+] RMI server JEP290 enumeration:
-              [+] 
+              [+]
               [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
               [+] 	  Vulnerability Status: Non Vulnerable
 
@@ -123,7 +123,7 @@ tests:
           values:
             - |-
               [+] RMI registry JEP290 bypass enmeration:
-              [+] 
+              [+]
               [-] 	- RMI registry uses readString() for unmarshalling java.lang.String.
               [-] 	  This prevents JEP 290 bypass enumeration from remote.
 
@@ -133,7 +133,7 @@ tests:
           values:
             - |-
               [+] RMI ActivationSystem enumeration:
-              [+] 
+              [+]
               [+] 	- Caught IllegalArgumentException during activate call (activator is present).
               [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
               [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
