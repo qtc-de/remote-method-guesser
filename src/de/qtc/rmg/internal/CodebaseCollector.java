@@ -158,8 +158,8 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
         if( codebase == null )
             return;
 
-        if( className.startsWith(".java") || className.startsWith("[Ljava") )
-            codebases.put(codebase, new HashSet<String>());
+        if( className.startsWith("java.") || className.startsWith("[Ljava") )
+            codebases.putIfAbsent(codebase, new HashSet<String>());
 
         else if( codebases.containsKey(codebase) ) {
             Set<String> classNames = codebases.get(codebase);
