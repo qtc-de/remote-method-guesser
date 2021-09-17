@@ -382,9 +382,12 @@ public class ExceptionHandler {
 
     public static void bindException(Exception e)
     {
+        Throwable bindException = ExceptionHandler.getThrowable("BindException", e);
+
         Logger.lineBreak();
         Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
-        Logger.printlnMixedBlue("Exception message:", e.getMessage());
+        Logger.printlnMixedBlue("Exception message:", bindException.getMessage());
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -532,6 +535,9 @@ public class ExceptionHandler {
      */
     public static Throwable getThrowable(String name, Throwable e)
     {
+        if( e.getClass().getSimpleName().equals(name) )
+            return e;
+
         Throwable exception = e;
         Throwable cause = e.getCause();
 
