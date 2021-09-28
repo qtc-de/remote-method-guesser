@@ -80,7 +80,7 @@ public class DGCClient {
 
                 } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
                     Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
-                    Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=false.");
+                    Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=true.");
                     Logger.statusDefault();
                     ExceptionHandler.showStackTrace(e);
 
