@@ -660,8 +660,17 @@ public class ArgumentParser {
         } else {
 
             addPorts(argPort, rmiPorts);
-            for(int ctr = 3; ctr < getArgumentCount(); ctr++)
-                addPorts(getPositionalString(ctr), rmiPorts);
+
+            for(int ctr = 3; ctr < getArgumentCount(); ctr++) {
+
+                argPort = getPositionalString(ctr);
+
+                if( argPort.equals("-") )
+                    addPorts(portString, rmiPorts);
+
+                else
+                    addPorts(argPort, rmiPorts);
+            }
         }
 
         return rmiPorts.stream().mapToInt(i->i).toArray();
