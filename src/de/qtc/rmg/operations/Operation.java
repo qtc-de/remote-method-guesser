@@ -18,19 +18,17 @@ import de.qtc.rmg.internal.ExceptionHandler;
  * @author Tobias Neitzel (@qtc_de)
  */
 public enum Operation {
-    ACT("dispatchActivator", "<gadget> <command>", "Performs Activator based deserialization attacks"),
     BIND("dispatchBind", "[gadget] <command>", "Binds an object to the registry thats points to listener"),
     CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments"),
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks"),
-    DGC("dispatchDGC", "<gadget> <command>", "Perform DGC based deserialization attacks"),
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints"),
     GUESS("dispatchGuess", "", "Guess methods on bound names"),
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects"),
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
     METHOD("dispatchMethod", "<gadget> <command>", "Perform method based deserialization attacks"),
     REBIND("dispatchRebind", "[gadget] <command>", "Rebinds boundname as object that points to listener"),
-    REG("dispatchRegistry", "<gadget> <command>", "Perform registry based deserialization attacks"),
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports"),
+    SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components"),
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry");
 
     private Method method;

@@ -243,41 +243,39 @@ public class Dispatcher {
     }
 
     /**
-     * Performs the gadgetCall operation on an ActivatorClient object. Used for deserialization
-     * attacks on the activator.
+     * Performs deserialization attacks on default RMI components (RMI registry, DGC, Activator).
+     * The targeted component needs to be specified within the --signature option.
      */
-    @Parameters(count=4)
-    public void dispatchActivator()
+    @Parameters(count=4, requires= {RMGOption.SIGNATURE})
+    public void dispatchSerial()
     {
-        ActivationClient act = new ActivationClient(rmi);
-        act.gadgetCall(p.getGadget());
-    }
+        String signature = RMGOption.SIGNATURE.getString();
 
-    /**
-     * Performs the gadgetCall operation on a RegistryClient object. Used for deserialization
-     * attacks on the registry.
-     */
-    @Parameters(count=4)
-    public void dispatchRegistry()
-    {
-        String regMethod = p.getRegMethod();
-        boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
+        switch( signature ) {
 
-        RegistryClient reg = new RegistryClient(rmi);
-        reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
-    }
+            case "act":
+                ActivationClient act = new ActivationClient(rmi);
+                act.gadgetCall(p.getGadget());
+                break;
 
-    /**
-     * Performs the gadgetCall operation on a DGCClient object. Used for deserialization
-     * attacks on the DGC.
-     */
-    @Parameters(count=4)
-    public void dispatchDGC()
-    {
-        String dgcMethod = p.getDgcMethod();
+            case "reg":
+                String regMethod = p.getRegMethod();
+                boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
 
-        DGCClient dgc = new DGCClient(rmi);
-        dgc.gadgetCall(dgcMethod, p.getGadget());
+                RegistryClient reg = new RegistryClient(rmi);
+                reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
+                break;
+
+            case "dgc":
+                String dgcMethod = p.getDgcMethod();
+
+                DGCClient dgc = new DGCClient(rmi);
+                dgc.gadgetCall(dgcMethod, p.getGadget());
+                break;
+
+            default:
+                ExceptionHandler.internalError("dispatchSerial", "Unknown signature value " + signature + " was passed.");
+        }
     }
 
     /**
