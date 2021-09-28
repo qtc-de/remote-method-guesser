@@ -30,6 +30,7 @@ public enum Operation {
     METHOD("dispatchMethod", "<gadget> <command>", "Perform method based deserialization attacks"),
     REBIND("dispatchRebind", "[gadget] <command>", "Rebinds boundname as object that points to listener"),
     REG("dispatchRegistry", "<gadget> <command>", "Perform registry based deserialization attacks"),
+    SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports"),
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry");
 
     private Method method;

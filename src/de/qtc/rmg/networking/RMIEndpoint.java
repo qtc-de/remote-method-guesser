@@ -101,89 +101,16 @@ public class RMIEndpoint {
         genericCall(objID, callID, methodHash, callArguments, locationStream, callName, ref, null);
     }
 
-    /**
-     * Dispatches a raw RMI call. Having such a function available is important for some low level RMI operations like
-     * the localhost bypass or even just calling the registry with serialization gadgets. This method provides full
-     * access to almost all relevant parts of the actual RMI calls.
-     *
-     * The target remote objects can be either specified by their ObjID or by using an already existing RemoteRef. The
-     * first approach is suitable for communicating with well known RMI objects like the registry, the DGC or the Activator.
-     * The second approach can be useful, when you just looked up an object using regular RMI functions and now want to
-     * dispatch a raw RMI call to the already obtain RemoteObject.
-     *
-     * Within the current RMI protocol, you invoke methods by specifying an ObjID to identify the RemoteObject you want to
-     * talk with and a method hash to identify the method you want to invoke. In legacy RMI, methods were instead identified
-     * by using a callID. This callID is basically the position of the method within the class definition and is therefore a
-     * positive number for legacy RMI calls. Within modern RMI, this method should be always negative (except when attempting
-     * localhost bypasses :P). The currently used method hash is replaced by an interface hash in the legacy implementation.
-     * The internal RMI communication (DGC and Registry) still use the legacy calling convention today, as you can check by
-     * searching for the corresponding Skeleton classes within the Java RMI source code.
-     *
-     * By default, the genericCall function just ignores responses from the RMI server. Responses are only parsed if an
-     * expected return type was specified during the function call and a ResponseHandler was registered by using the plugin
-     * system.
-     *
-     * @param objID identifies the RemoteObject you want to communicate with. Registry = 0, Activator = 1, DGC = 2 or
-     *                 custom once...
-     * @param callID callID that is used for legacy calls. Basically specifies the position of the method to call in legacy
-     *                 rmi calls. For current calling convention, it should be negative
-     * @param methodHash hash value of the method to call or interface hash for legacy calls
-     * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
-     * @param locationStream if true, uses the MaliciousOutpuStream class to write custom annotation objects
-     * @param callName the name of the RMI call you want to dispatch (only used for logging)
-     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port
-     *                 of this class are used
-     * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler
-     *                 plugin (if registered to the plugin system)
-     * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
-     */
-    @SuppressWarnings({ "deprecation", "rawtypes" })
+   /*
+    * From remote-method-guesser v4.0.0 on we moved the logic of the genericCall function to the unmanagedCall
+    * function. This allows other parts of the code to perform RMI calls with their own exception handling. However,
+    * this is usually not desired, as connection related exceptions should normally be handled in a unified way. Calling
+    * genericCall is therefore the preferred solution to perform low level RMI calls.
+    */
     public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef remoteRef, CtClass rtype) throws Exception
     {
         try {
-
-            if(remoteRef == null) {
-                remoteRef = this.getRemoteRef(objID);
-            }
-
-            StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, methodHash);
-
-            try {
-                ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
-                if(locationStream)
-                    out = new MaliciousOutputStream(out);
-
-                for(Pair<Object,Class> p : callArguments) {
-                    marshalValue(p.right(), p.left(), out);
-                }
-
-            } catch(java.io.IOException e) {
-                throw new java.rmi.MarshalException("error marshalling arguments", e);
-            }
-
-            remoteRef.invoke(call);
-
-            if(rtype != null && rtype != CtPrimitiveType.voidType && PluginSystem.hasResponseHandler()) {
-
-                try {
-                    ObjectInputStream in = (ObjectInputStream)call.getInputStream();
-                    Object returnValue = unmarshalValue(rtype, in);
-                    PluginSystem.handleResponse(returnValue);
-
-                } catch( IOException | ClassNotFoundException e ) {
-                    ((StreamRemoteCall)call).discardPendingRefs();
-                    throw new java.rmi.UnmarshalException("error unmarshalling return", e);
-
-                } finally {
-                    try {
-                        remoteRef.done(call);
-                    } catch (IOException e) {
-                        ExceptionHandler.unexpectedException(e, "done", "operation", true);
-                    }
-                }
-            }
-
-            remoteRef.done(call);
+            unmanagedCall(objID, callID, methodHash, callArguments, locationStream, remoteRef, rtype);
 
         } catch(java.rmi.ConnectException e) {
             ExceptionHandler.connectException(e, callName);
@@ -249,6 +176,89 @@ public class RMIEndpoint {
             ExceptionHandler.connectIOException(e, callName);
         }
     }
+
+    /**
+     * Dispatches a raw RMI call. Having such a function available is important for some low level RMI operations like
+     * the localhost bypass or even just calling the registry with serialization gadgets. This method provides full
+     * access to most of the relevant parts of the RMI protocol.
+     *
+     * The target remote objects can be either specified by their ObjID or by using an already existing RemoteRef. The
+     * first approach is suitable for communicating with well known RMI objects like the registry, the DGC or the Activator.
+     * The second approach can be useful, when you just looked up an object using regular RMI functions and now want to
+     * dispatch a raw RMI call to the already obtain RemoteObject.
+     *
+     * Within the current RMI protocol, you invoke methods by specifying an ObjID to identify the RemoteObject you want to
+     * talk with and a method hash to identify the method you want to invoke. In legacy RMI, methods were instead identified
+     * by using a callID. This callID is basically the position of the method within the class definition and is therefore a
+     * positive number for legacy RMI calls. Within modern RMI, this index should be always negative (except when attempting
+     * localhost bypasses :P). The currently used method hash is replaced by an interface hash in the legacy implementation.
+     * The internal RMI communication (DGC and Registry) still use the legacy calling convention today, as you can check by
+     * searching for the corresponding Skeleton classes within the Java RMI source code.
+     *
+     * By default, the genericCall function just ignores responses from the RMI server. Responses are only parsed if an
+     * expected return type was specified during the function call and a ResponseHandler was registered by using the plugin
+     * system.
+     *
+     * @param objID identifies the RemoteObject you want to communicate with. Registry = 0, Activator = 1, DGC = 2 or
+     *                 custom one...
+     * @param callID callID that is used for legacy calls. Basically specifies the position of the method to call in legacy
+     *                 RMI calls. For current calling convention, it should be negative
+     * @param methodHash hash value of the method to call or interface hash for legacy calls
+     * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
+     * @param locationStream if true, uses the MaliciousOutpuStream class to write custom annotation objects
+     * @param callName the name of the RMI call you want to dispatch (only used for logging)
+     * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port
+     *                 of this class are used
+     * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler
+     *                 plugin (if registered to the plugin system)
+     * @throws Exception connection related exceptions are caught, but anything what can go wrong on the server side is thrown
+     */
+   @SuppressWarnings({ "deprecation", "rawtypes" })
+   public void unmanagedCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, RemoteRef remoteRef, CtClass rtype) throws Exception
+   {
+       if(remoteRef == null) {
+           remoteRef = this.getRemoteRef(objID);
+       }
+
+       StreamRemoteCall call = (StreamRemoteCall)remoteRef.newCall(null, null, callID, methodHash);
+
+       try {
+           ObjectOutputStream out = (ObjectOutputStream)call.getOutputStream();
+           if(locationStream)
+               out = new MaliciousOutputStream(out);
+
+           for(Pair<Object,Class> p : callArguments) {
+               marshalValue(p.right(), p.left(), out);
+           }
+
+       } catch(java.io.IOException e) {
+           throw new java.rmi.MarshalException("error marshalling arguments", e);
+       }
+
+       remoteRef.invoke(call);
+
+       if(rtype != null && rtype != CtPrimitiveType.voidType && PluginSystem.hasResponseHandler()) {
+
+           try {
+               ObjectInputStream in = (ObjectInputStream)call.getInputStream();
+               Object returnValue = unmarshalValue(rtype, in);
+               PluginSystem.handleResponse(returnValue);
+
+           } catch( IOException | ClassNotFoundException e ) {
+               ((StreamRemoteCall)call).discardPendingRefs();
+               throw new java.rmi.UnmarshalException("error unmarshalling return", e);
+
+           } finally {
+               try {
+                   remoteRef.done(call);
+               } catch (IOException e) {
+                   ExceptionHandler.unexpectedException(e, "done", "operation", true);
+               }
+           }
+       }
+
+       remoteRef.done(call);
+   }
 
     /**
      * Marshals the specified object value to the corresponding type and writes it to the specified

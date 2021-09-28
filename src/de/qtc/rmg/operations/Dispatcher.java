@@ -510,7 +510,7 @@ public class Dispatcher {
     }
 
     /**
-     * Is called when using remote-method-guesser's 'known' action. Actually required only a single
+     * Is called when using remote-method-guesser's 'known' action. Actually requires only a single
      * argument that is the class name to lookup within the database of KnownEndpoints. However, due
      * to the argument parsing logic of remote-method-guesser, you need to specify the host and port
      * arguments as well.
@@ -528,5 +528,30 @@ public class Dispatcher {
             Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
         else
             formatter.listKnownEndpoint(endpoint);
+    }
+
+    /**
+     * Performs a primitive portscan for RMI services. Targeted ports are usually obtained from the
+     * configuration file, but can also be supplied by the user.
+     */
+    public void dispatchPortScan()
+    {
+        String host = p.getPositionalString(0);
+        int[] rmiPorts = p.getRmiPots();
+
+        Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
+        Logger.printlnPlainMixedBlueFirst(host, "for RMI services.");
+        Logger.lineBreak();
+        Logger.increaseIndent();
+
+        PortScanner ps = new PortScanner(host, rmiPorts);
+        int hits = ps.portScan();
+
+        Logger.decreaseIndent();
+
+        if( hits != 0 )
+            Logger.lineBreak();
+
+        Logger.println("Portscan finished.");
     }
 }

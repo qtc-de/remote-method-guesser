@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,6 +21,7 @@ import org.apache.commons.cli.ParseException;
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.Operation;
+import de.qtc.rmg.operations.PortScanner;
 import de.qtc.rmg.operations.ScanAction;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.utils.RMGUtils;
@@ -440,12 +443,14 @@ public class ArgumentParser {
     public int getPositionalInt(int position)
     {
         try {
+
             if( this.argList != null ) {
                 return Integer.valueOf(this.argList.get(position));
             } else {
                 this.argList = cmdLine.getArgList();
                 return Integer.valueOf(this.argList.get(position));
             }
+
         } catch( Exception e ) {
             System.err.println("Error: Unable to parse " + this.argList.get(position) + " as integer.");
             printHelpAndExit(1);
@@ -494,6 +499,9 @@ public class ArgumentParser {
             Logger.eprintlnMixedYellow("Error: Specified operation", this.getPositionalString(2), "is not supported.");
             printHelpAndExit(1);
         }
+
+        if( action == Operation.SCAN )
+            setSocketTimeout();
 
         validateOperation(action);
         return action;
@@ -577,6 +585,9 @@ public class ArgumentParser {
      */
     public int getPort()
     {
+        if( action != null && action == Operation.SCAN)
+            return 0;
+
         return this.getPositionalInt(1);
     }
 
@@ -609,6 +620,13 @@ public class ArgumentParser {
         return PluginSystem.getArgumentArray(argumentString);
     }
 
+    /**
+     * Is used when the enum action was specified. The enum action allows users to limit enumeration to certain
+     * scan actions. This function parses the user supplied arguments and checks which scan actions were requested.
+     * The corresponding actions are returned as EnumSet.
+     *
+     * @return EnumSet of ScanAction which were requested by the user.
+     */
     public EnumSet<ScanAction> getScanActions()
     {
         int argumentCount = this.getArgumentCount();
@@ -617,5 +635,89 @@ public class ArgumentParser {
             return EnumSet.allOf(ScanAction.class);
 
         return ScanAction.parseScanActions(argList.subList(3, argumentCount));
+    }
+
+    /**
+     * Is used to parse the port specification for the scan operation. For the scan operation, the
+     * second port argument can be a range (e.g. 10-1000), a list (e.g. 1090-1099,9000,9010) a single
+     * port (e.g. 1090) or the keyword "-" (scans all rmi ports configured in the config file). This
+     * function parses the user specified value and returns the corresponding int array that needs to
+     * be scanned.
+     *
+     * @return array of int which contains all ports that should be scanned
+     */
+    public int[] getRmiPots()
+    {
+        Set<Integer> rmiPorts = new HashSet<Integer>();
+
+        String argPort = getPositionalString(1);
+        String portString = config.getProperty("rmi-ports");
+
+        if( argPort.equals("-") && portString != null ) {
+
+            addPorts(portString, rmiPorts);
+
+        } else {
+
+            addPorts(argPort, rmiPorts);
+            for(int ctr = 3; ctr < getArgumentCount(); ctr++)
+                addPorts(getPositionalString(ctr), rmiPorts);
+        }
+
+        return rmiPorts.stream().mapToInt(i->i).toArray();
+    }
+
+    /**
+     * Helper function that handles port lists.
+     *
+     * @param portString user specified port string
+     * @param portList Set of Integer where parsed ports are added
+     */
+    public void addPorts(String portString, Set<Integer> portList)
+    {
+        String[] ports = portString.split(",");
+
+        for(String port: ports) {
+            addRange(port, portList);
+        }
+    }
+
+    /**
+     * Helper function that handles port ranges.
+     *
+     * @param portString user specified port string
+     * @param portList Set of Integer where parsed ports are added
+     */
+    public void addRange(String portRange, Set<Integer> portList)
+    {
+        if(!portRange.contains("-")) {
+            portList.add(Integer.valueOf(portRange));
+            return;
+        }
+
+        String[] split = portRange.split("-");
+        int start = Integer.valueOf(split[0]);
+        int end = Integer.valueOf(split[1]);
+
+        for(int ctr = start; ctr <= end; ctr++)
+            portList.add(ctr);
+    }
+
+    /**
+     * Is called when the scan action was requested. Sets custom timeout values for RMI socket
+     * operations, as the default values are not well suited for portscanning.
+     *
+     * This function needs to be called early before the corresponding RMI classes are loaded.
+     */
+    public void setSocketTimeout()
+    {
+        String scanTimeoutConnect = config.getProperty("scan-timeout-connect");
+        String scanTimeoutRead = config.getProperty("scan-timeout-read");
+
+        System.setProperty("sun.rmi.transport.connectionTimeout", scanTimeoutConnect);
+        System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", scanTimeoutRead);
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", scanTimeoutRead);
+
+        PortScanner.setSocketTimeouts(scanTimeoutRead, scanTimeoutConnect);
     }
 }
