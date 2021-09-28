@@ -699,17 +699,25 @@ public class ArgumentParser {
      */
     public void addRange(String portRange, Set<Integer> portList)
     {
-        if(!portRange.contains("-")) {
-            portList.add(Integer.valueOf(portRange));
-            return;
+        try {
+
+            if(!portRange.contains("-")) {
+                portList.add(Integer.valueOf(portRange));
+                return;
+            }
+
+            String[] split = portRange.split("-");
+            int start = Integer.valueOf(split[0]);
+            int end = Integer.valueOf(split[1]);
+
+            for(int ctr = start; ctr <= end; ctr++)
+                portList.add(ctr);
+
+        } catch( java.lang.NumberFormatException | java.lang.ArrayIndexOutOfBoundsException e ) {
+            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getSimpleName(), "while parsing RMI ports.");
+            Logger.eprintlnMixedBlue("The specified value", portRange, "is invalid.");
+            RMGUtils.exit();
         }
-
-        String[] split = portRange.split("-");
-        int start = Integer.valueOf(split[0]);
-        int end = Integer.valueOf(split[1]);
-
-        for(int ctr = start; ctr <= end; ctr++)
-            portList.add(ctr);
     }
 
     /**
