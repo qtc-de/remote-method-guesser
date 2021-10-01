@@ -18,14 +18,14 @@ import de.qtc.rmg.internal.ExceptionHandler;
  * @author Tobias Neitzel (@qtc_de)
  */
 public enum Operation {
-    BIND("dispatchBind", "[gadget] <command>", "Binds an object to the registry thats points to listener"),
+    BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry thats points to listener"),
     CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments"),
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks"),
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints"),
     GUESS("dispatchGuess", "", "Guess methods on bound names"),
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects"),
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
-    REBIND("dispatchRebind", "[gadget] <command>", "Rebinds boundname as object that points to listener"),
+    REBIND("dispatchRebind", "[object] <listener>", "Rebinds boundname as object that points to listener"),
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports"),
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components"),
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry");
