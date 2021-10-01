@@ -399,20 +399,14 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
-    public static void missingSignature(boolean codebase)
+    public static void missingSignature()
     {
-        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the specified action.");
+        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the requested operation.");
         Logger.eprintlnMixedBlue("Specify a valid signature like", "--signature \"void login(String password)\"");
-
-        if( codebase ) {
-            Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
-            Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
-        }
-
         RMGUtils.exit();
     }
 
-    public static void missingBoundName(String action)
+    public static void missingTarget(String action)
     {
         Logger.eprintMixedYellow("Either", "--bound-name", "or ");
         Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");

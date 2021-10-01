@@ -172,7 +172,7 @@ public class RemoteObjectClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.rmi.UnmarshalException ) {
-                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this bound name.");
+                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.lang.ClassNotFoundException ) {
@@ -253,7 +253,7 @@ public class RemoteObjectClient {
             Throwable cause = ExceptionHandler.getCause(e);
 
             if( cause instanceof java.rmi.UnmarshalException ) {
-                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this bound name.");
+                Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( cause instanceof java.io.InvalidClassException ) {

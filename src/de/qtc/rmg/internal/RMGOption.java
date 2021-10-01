@@ -14,9 +14,9 @@ public enum RMGOption {
 
     ARGUMENT_POS("argument-position", "select argument position for deserialization attacks", true),
     BOUND_NAME("bound-name", "guess only on the specified bound name", true),
+    COMPONENT("component", "RMI component to attack (dgc|reg|act)", true),
     CONFIG("config", "path to a configuration file", true),
     CREATE_SAMPLES("create-samples", "create sample classes for identified methods", false),
-    DGC_METHOD("dgc-method", "method to use during dgc operations (clean|dirty)", true),
     FOLLOW("follow", "follow redirects to different servers", false),
     FORCE_GUESSING("force-guessing", "force guessing on known remote objects", false),
     GOPHER("gopher", "print SSRF content as gopher payload", false),
@@ -26,7 +26,6 @@ public enum RMGOption {
     NO_COLOR("no-color", "disable colored output", false),
     OBJID("objid", "use an ObjID instead of bound names", true),
     PLUGIN("plugin", "file system path to a rmg plugin", true),
-    REG_METHOD("reg-method", "method to use during registry operations (bind|lookup|unbind|rebind)", true),
     SAMPLE_FOLDER("sample-folder", "folder used for sample generation", true),
     SIGNATURE("signature", "function signature or one of (dgc|reg|act)", true),
     SSL("ssl", "use SSL for the rmi-registry connection", false),
@@ -42,7 +41,7 @@ public enum RMGOption {
     WORDLIST_FOLDER("wordlist-folder", "location of the wordlist folder", true),
     YSO("yso", "location of ysoserial.jar for deserialization attacks", true),
     ZERO_ARG("zero-arg", "allow guessing on void functions (dangerous)", false),
-    TARGET("bound-name or --objid", "Combined option for bound-name and objid. Only used during parameter validation.", false);
+    TARGET("bound-name, --objid or --component", "Combined option for RMI target. Only used during parameter validation.", false);
 
     public String name;
     public String description;

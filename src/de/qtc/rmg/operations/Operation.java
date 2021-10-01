@@ -25,7 +25,6 @@ public enum Operation {
     GUESS("dispatchGuess", "", "Guess methods on bound names"),
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects"),
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
-    METHOD("dispatchMethod", "<gadget> <command>", "Perform method based deserialization attacks"),
     REBIND("dispatchRebind", "[gadget] <command>", "Rebinds boundname as object that points to listener"),
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports"),
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components"),

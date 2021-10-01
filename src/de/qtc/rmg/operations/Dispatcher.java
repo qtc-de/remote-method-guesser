@@ -60,7 +60,7 @@ public class Dispatcher {
         this.p = p;
         rmi = new RMIEndpoint(p.getHost(), p.getPort());
 
-        if(p.containsMethodSignature())
+        if(p.parseMethodSignature())
             this.createMethodCandidate();
     }
 
@@ -140,8 +140,12 @@ public class Dispatcher {
             ObjID objID = RMGUtils.parseObjID(RMGOption.OBJID.getString());
             return new RemoteObjectClient(rmi, objID);
 
-        } else {
+        } else if( RMGOption.BOUND_NAME.notNull() ) {
             return new RemoteObjectClient(getRegistry(), RMGOption.BOUND_NAME.getString());
+
+        } else {
+            ExceptionHandler.missingTarget(p.getAction().name());
+            return null;
         }
     }
 
@@ -246,49 +250,46 @@ public class Dispatcher {
      * Performs deserialization attacks on default RMI components (RMI registry, DGC, Activator).
      * The targeted component needs to be specified within the --signature option.
      */
-    @Parameters(count=4, requires= {RMGOption.SIGNATURE})
+    @Parameters(count=4, requires= {RMGOption.TARGET})
     public void dispatchSerial()
     {
-        String signature = RMGOption.SIGNATURE.getString();
+        String component = p.getComponent();
 
-        switch( signature ) {
+        if( component == null ) {
 
-            case "act":
-                ActivationClient act = new ActivationClient(rmi);
-                act.gadgetCall(p.getGadget());
-                break;
+            if( candidate == null )
+                ExceptionHandler.missingSignature();
 
-            case "reg":
-                String regMethod = p.getRegMethod();
-                boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
+            int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
-                RegistryClient reg = new RegistryClient(rmi);
-                reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
-                break;
+            RemoteObjectClient client = getRemoteObjectClient();
+            client.gadgetCall(candidate, p.getGadget(), argumentPosition);
 
-            case "dgc":
-                String dgcMethod = p.getDgcMethod();
+        } else {
 
-                DGCClient dgc = new DGCClient(rmi);
-                dgc.gadgetCall(dgcMethod, p.getGadget());
-                break;
+            switch( component ) {
 
-            default:
-                ExceptionHandler.internalError("dispatchSerial", "Unknown signature value " + signature + " was passed.");
+                case "act":
+                    ActivationClient act = new ActivationClient(rmi);
+                    act.gadgetCall(p.getGadget());
+                    break;
+
+                case "reg":
+                    String regMethod = p.getRegMethod();
+                    boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
+
+                    RegistryClient reg = new RegistryClient(rmi);
+                    reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
+                    break;
+
+                case "dgc":
+                    String dgcMethod = p.getDgcMethod();
+
+                    DGCClient dgc = new DGCClient(rmi);
+                    dgc.gadgetCall(dgcMethod, p.getGadget());
+                    break;
+            }
         }
-    }
-
-    /**
-     * Performs the gadgetCall operation on a RemoteObjectClient object. Used for deserialization
-     * attacks on user registered RMI objects. Targets can be specified by bound name or ObjID.
-     */
-    @Parameters(count=3, requires= {RMGOption.TARGET, RMGOption.SIGNATURE})
-    public void dispatchMethod()
-    {
-        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
-
-        RemoteObjectClient client = getRemoteObjectClient();
-        client.gadgetCall(candidate, p.getGadget(), argumentPosition);
     }
 
     /**
@@ -310,16 +311,15 @@ public class Dispatcher {
      * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
      */
     @SuppressWarnings("deprecation")
-    @Parameters(count=5, requires= {RMGOption.SIGNATURE})
+    @Parameters(count=5, requires= {RMGOption.TARGET})
     public void dispatchCodebase()
     {
         String className = p.getPositionalString(3);
         RMGUtils.setCodebase(p.getPositionalString(4));
 
-        String signature = RMGOption.SIGNATURE.getString();
-        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
-
         Object payload = null;
+        String component = p.getComponent();
+        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
         try {
             payload = RMGUtils.makeSerializableClass(className);
@@ -329,30 +329,31 @@ public class Dispatcher {
             ExceptionHandler.unexpectedException(e, "payload", "creation", true);
         }
 
-        if( candidate != null ) {
+        if( component == null ) {
 
-            if( !RMGOption.BOUND_NAME.notNull() ) {
-                ExceptionHandler.missingBoundName("codebase");
-            }
+            if( candidate == null)
+                ExceptionHandler.missingSignature();
 
             RemoteObjectClient client = getRemoteObjectClient();
             client.codebaseCall(candidate, payload, argumentPosition);
 
-        } else if( signature.matches("dgc") ) {
+        } else if( component.matches("dgc") ) {
 
             DGCClient dgc = new DGCClient(rmi);
-            dgc.codebaseCall(RMGOption.DGC_METHOD.getString(), payload);
+            dgc.codebaseCall(p.getDgcMethod(), payload);
 
-        } else if( signature.matches("reg") ) {
+        } else if( component.matches("reg")  ) {
+
             RegistryClient reg = new RegistryClient(rmi);
-            reg.codebaseCall(payload, RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool());
+            reg.codebaseCall(payload, p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool());
 
-        } else if( signature.matches("act") ) {
+        } else if( component.matches("act")  ) {
+
             ActivationClient act = new ActivationClient(rmi);
             act.codebaseCall(payload);
 
         } else {
-            ExceptionHandler.internalError("dispatchCodebase", "Unknown signature value " + signature + " was passed.");
+            ExceptionHandler.internalError("dispatchCodebase", "No target was selected.");
         }
     }
 
@@ -440,7 +441,7 @@ public class Dispatcher {
 
             if( actions.contains(ScanAction.CODEBASE) ) {
                 Logger.lineBreak();
-                registryClient.enumCodebase(marshal, RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool());
+                registryClient.enumCodebase(marshal, p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool());
             }
 
             if( actions.contains(ScanAction.LOCALHOST_BYPASS) ) {
@@ -458,17 +459,17 @@ public class Dispatcher {
 
         if( actions.contains(ScanAction.DGC) ) {
             Logger.lineBreak();
-            dgc.enumDGC(RMGOption.DGC_METHOD.getString());
+            dgc.enumDGC(p.getDgcMethod());
         }
 
         if( actions.contains(ScanAction.JEP290) ) {
             Logger.lineBreak();
-            dgc.enumJEP290(RMGOption.DGC_METHOD.getString());
+            dgc.enumJEP290(p.getDgcMethod());
         }
 
         if(enumJEP290Bypass && actions.contains(ScanAction.FILTER_BYPASS) ) {
             Logger.lineBreak();
-            registryClient.enumJEP290Bypass(RMGOption.REG_METHOD.getString(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
+            registryClient.enumJEP290Bypass(p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
         }
 
         if( actions.contains(ScanAction.ACTIVATOR) ) {

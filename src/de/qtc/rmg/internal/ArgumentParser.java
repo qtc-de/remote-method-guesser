@@ -41,8 +41,6 @@ import de.qtc.rmg.utils.YsoIntegration;
  */
 public class ArgumentParser {
 
-    private Operation action = null;
-
     private Options options;
     private String helpString;
     private HelpFormatter formatter;
@@ -50,6 +48,11 @@ public class ArgumentParser {
     private CommandLine cmdLine;
     private List<String> argList;
     private Properties config;
+
+    private String regMethod = null;
+    private String dgcMethod = null;
+    private String component = null;
+    private Operation action = null;
 
     private  String defaultConfiguration = "/config.properties";
 
@@ -150,9 +153,8 @@ public class ArgumentParser {
         RMGOption.SIGNATURE.setValue(cmdLine);
         RMGOption.BOUND_NAME.setValue(cmdLine);
         RMGOption.SSRFResponse.setValue(cmdLine);
-        RMGOption.REG_METHOD.setValue(cmdLine, "lookup");
-        RMGOption.DGC_METHOD.setValue(cmdLine, "clean");
         RMGOption.OBJID.setValue(cmdLine, null);
+        RMGOption.COMPONENT.setValue(cmdLine);
 
         RMGOption.SSL.setBoolean(cmdLine);
         RMGOption.SSRF.setBoolean(cmdLine);
@@ -175,11 +177,35 @@ public class ArgumentParser {
             printHelpAndExit(1);
         }
 
-        if( RMGOption.OBJID.value != null )
+        setTarget();
+    }
+
+    /**
+     * The RMGOption Target is a helper option that is used for argument validation on actions
+     * that require a target. In these cases, users can specify either a bound name, an ObjID
+     * or a default Java RMI component. This function sets the RMGOption.Target's value accordingly.
+     */
+    private void setTarget()
+    {
+
+        boolean objID = RMGOption.OBJID.notNull();
+        boolean bound = RMGOption.BOUND_NAME.notNull();
+        boolean comp = RMGOption.COMPONENT.notNull();
+
+        if( objID ? (bound || comp) : (bound && comp) ) {
+            Logger.eprintMixedYellow("Only one of", "--objid, --bound-name", "or ");
+            Logger.printPlainMixedYellowFirst("--component", "can be specified.");
+            RMGUtils.exit();
+        }
+
+        if( objID )
             RMGOption.TARGET.setValue(RMGOption.OBJID.value);
 
-        else if( RMGOption.BOUND_NAME.value != null )
+        else if( bound )
             RMGOption.TARGET.setValue(RMGOption.BOUND_NAME.value);
+
+        else if( comp )
+            RMGOption.TARGET.setValue(RMGOption.COMPONENT.value);
     }
 
     /**
@@ -218,6 +244,11 @@ public class ArgumentParser {
         name.setRequired(false);
         options.addOption(name);
 
+        Option component = new Option(null, RMGOption.COMPONENT.name, RMGOption.COMPONENT.requiresValue, RMGOption.COMPONENT.description);
+        component.setArgName("component");
+        component.setRequired(false);
+        options.addOption(component);
+
         Option configOption = new Option(null, RMGOption.CONFIG.name, RMGOption.CONFIG.requiresValue, RMGOption.CONFIG.description);
         configOption.setArgName("file");
         configOption.setRequired(false);
@@ -226,11 +257,6 @@ public class ArgumentParser {
         Option samples = new Option(null, RMGOption.CREATE_SAMPLES.name, RMGOption.CREATE_SAMPLES.requiresValue, RMGOption.CREATE_SAMPLES.description);
         samples.setRequired(false);
         options.addOption(samples);
-
-        Option dgcMethod = new Option(null, RMGOption.DGC_METHOD.name, RMGOption.DGC_METHOD.requiresValue, RMGOption.DGC_METHOD.description);
-        dgcMethod.setArgName("method");
-        dgcMethod.setRequired(false);
-        options.addOption(dgcMethod);
 
         Option follow = new Option(null, RMGOption.FOLLOW.name, RMGOption.FOLLOW.requiresValue, RMGOption.FOLLOW.description);
         follow.setRequired(false);
@@ -269,11 +295,6 @@ public class ArgumentParser {
         plugin.setArgName("path");
         plugin.setRequired(false);
         options.addOption(plugin);
-
-        Option regMethod = new Option(null, RMGOption.REG_METHOD.name, RMGOption.REG_METHOD.requiresValue, RMGOption.REG_METHOD.description);
-        regMethod.setArgName("method");
-        regMethod.setRequired(false);
-        options.addOption(regMethod);
 
         Option outputs = new Option(null, RMGOption.SAMPLE_FOLDER.name, RMGOption.SAMPLE_FOLDER.requiresValue, RMGOption.SAMPLE_FOLDER.description);
         outputs.setArgName("folder");
@@ -509,63 +530,122 @@ public class ArgumentParser {
 
     /**
      * During registry related rmg operations, users can select the registry method
-     * that is used for the different RMI calls. This function validates whether
-     * the registry method is actually available. An invalid method specification
-     * causes an error and closes the program.
+     * that is used for the different RMI calls. This is done by using the --signature
+     * option. In contrast to custom remote objects, the method signature is not really
+     * parsed. It is only checked for specific keywords and the corresponding registry
+     * methods signature is chosen automatically.
      *
-     * @param regMethod requested by the user.
-     * @return regMethod if valid.
+     * @return method to use for registry operations - if valid.
      */
     public String getRegMethod()
     {
-        String regMethod = RMGOption.REG_METHOD.getString();
+        if( regMethod != null )
+            return regMethod;
 
-        if(!regMethod.matches("lookup|bind|unbind|rebind")) {
-            Logger.printlnPlainMixedYellow("Unsupported registry method:", regMethod);
-            printHelpAndExit(1);
+        String signature = RMGOption.SIGNATURE.getString();
+        String[] supported =  new String[]{"lookup", "unbind", "rebind", "bind"};
+
+        if( signature == null ) {
+            regMethod = "lookup";
+            return regMethod;
         }
 
-        return regMethod;
+        for(String methodName : supported ) {
+
+            if( signature.contains(methodName) ) {
+                regMethod = methodName;
+                return methodName;
+            }
+        }
+
+        Logger.eprintlnMixedYellow("Unsupported registry method:", signature);
+        Logger.eprintlnMixedBlue("Support values are", String.join(", ", supported));
+        RMGUtils.exit();
+
+        return null;
     }
 
     /**
      * During DGC related rmg operations, users can select the DGC method
-     * that is used for the different RMI calls. This function validates whether
-     * the DGC method is actually available. An invalid method specification
-     * causes an error and closes the program.
+     * that is used for the different RMI calls. This is done by using the --signature
+     * option. In contrast to custom remote objects, the method signature is not really
+     * parsed. It is only checked for specific keywords and the corresponding DGC
+     * methods signature is chosen automatically.
      *
-     * @param dgcMethod requested by the user.
-     * @return dgcMethod if valid.
+     * @return method to use for DGC operations - if valid.
      */
     public String getDgcMethod()
     {
-        String dgcMethod = RMGOption.DGC_METHOD.getString();
+        if( dgcMethod != null )
+            return dgcMethod;
 
-        if(!dgcMethod.matches("clean|dirty")) {
-            Logger.printlnPlainMixedYellow("Unsupported DGC method:", dgcMethod);
-            printHelpAndExit(1);
+        String signature = RMGOption.SIGNATURE.getString();
+
+        if( signature == null ) {
+            dgcMethod = "clean";
+            return dgcMethod;
         }
 
-        return dgcMethod;
+        for(String methodName : new String[]{"clean", "dirty"} ) {
+
+            if( signature.contains(methodName) ) {
+                dgcMethod = methodName;
+                return methodName;
+            }
+        }
+
+        Logger.eprintlnMixedYellow("Unsupported DGC method:", signature);
+        Logger.eprintMixedBlue("Support values are", "clean", "and ");
+        Logger.printlnPlainBlue("dirty");
+        RMGUtils.exit();
+
+        return null;
     }
 
     /**
+     * Parse the user specified --component value. This function verifies that the value
+     * matches one of the supported values: act, dgc or reg.
      *
-     * Determines whether the specified function signature is one of reg, dgc or act.
-     * These do not require the creation of a MethodCandidate and are therefore handeled
-     * in a special way.
-     *
-     * @param functionSignature the function signature specified on the command line
-     * @return true if the specified function signature is valid (not reg, dgc, act or empty)
+     * @return user specified component value - if valid.
      */
-    public boolean containsMethodSignature()
+    public String getComponent()
     {
-        String signature = RMGOption.SIGNATURE.getString();
+        if( component != null )
+            return component;
 
-        if(signature == null)
-            return false;
+        String targetComponent = RMGOption.COMPONENT.getString();
 
-        return !signature.matches("reg|dgc|act");
+        if( targetComponent == null )
+            return null;
+
+        switch( targetComponent ) {
+
+            case "reg":
+            case "dgc":
+            case "act":
+                break;
+
+            default:
+                Logger.eprintlnMixedYellow("Unsupported RMI component:", targetComponent);
+                Logger.eprintMixedBlue("Supported values are", "act, dgc", "and ");
+                Logger.printlnPlainBlue("reg");
+                RMGUtils.exit();
+        }
+
+        component = targetComponent;
+        return targetComponent;
+    }
+
+    /**
+     * Determines whether the user specified method signature needs to be parsed. This is the case
+     * if the user attacks either a bound name or an ObjID. In these cases the --signature option needs
+     * to contain a valid method signature.
+     *
+     * @return true if the value in --signature needs to be parsed
+     */
+    public boolean parseMethodSignature()
+    {
+        return RMGOption.SIGNATURE.notNull() && ( RMGOption.BOUND_NAME.notNull() || RMGOption.OBJID.notNull() );
     }
 
     /**
