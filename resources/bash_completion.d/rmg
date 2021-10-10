@@ -24,7 +24,7 @@ function _rmg() {
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
     operations="bind call codebase enum guess known listen rebind scan serial unbind"
-    enum_operations="list string_marshalling codebase localhost_bypass dgc jep290 filter_bypass activator"
+    enum_operations="list string_marshalling codebase localhost_bypass security_manager jep290 filter_bypass activator"
 
     # Current word is not an option and previous word is not a value_option
     if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then

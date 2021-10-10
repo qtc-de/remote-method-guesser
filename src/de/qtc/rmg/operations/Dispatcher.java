@@ -457,9 +457,9 @@ public class Dispatcher {
             format.listCodeases();
         }
 
-        if( actions.contains(ScanAction.DGC) ) {
+        if( actions.contains(ScanAction.SECURITY_MANAGER) ) {
             Logger.lineBreak();
-            dgc.enumDGC(p.getDgcMethod());
+            dgc.enumSecurityManager(p.getDgcMethod());
         }
 
         if( actions.contains(ScanAction.JEP290) ) {

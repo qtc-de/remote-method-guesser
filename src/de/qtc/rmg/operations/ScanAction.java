@@ -17,7 +17,7 @@ public enum ScanAction {
     STRING_MARSHALLING,
     CODEBASE,
     LOCALHOST_BYPASS,
-    DGC,
+    SECURITY_MANAGER,
     JEP290,
     FILTER_BYPASS,
     ACTIVATOR;
