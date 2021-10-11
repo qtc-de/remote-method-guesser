@@ -248,8 +248,8 @@ public class RegistryClient {
         Logger.increaseIndent();
 
         if(!marshal && regMethod == "lookup") {
-            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
-            Logger.eprintlnMixedBlue("  This prevents", "useCodebaseOnly", "enumeration from remote.");
+            Logger.printlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.printlnMixedBlue("  This prevents", "useCodebaseOnly", "enumeration from remote.");
             Logger.decreaseIndent();
             return;
         }
@@ -432,7 +432,7 @@ public class RegistryClient {
             Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
+                Logger.printlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
                 Logger.statusOk();
                 ExceptionHandler.showStackTrace(e);
 
@@ -479,8 +479,8 @@ public class RegistryClient {
         Object payloadObject = null;
 
         if(!marshal && regMethod == "lookup") {
-            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
-            Logger.eprintlnMixedBlue("  This prevents", "JEP 290 bypass", "enumeration from remote.");
+            Logger.printlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.printlnMixedBlue("  This prevents", "JEP 290 bypass", "enumeration from remote.");
             Logger.decreaseIndent();
             return;
         }
@@ -548,7 +548,7 @@ public class RegistryClient {
 
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
-        } catch( java.rmi.ServerException e ) {
+        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 

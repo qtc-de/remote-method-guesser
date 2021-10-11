@@ -250,7 +250,7 @@ public class DGCClient {
         try {
             dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
-        } catch( java.rmi.ServerException e ) {
+        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
