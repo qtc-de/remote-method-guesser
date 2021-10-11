@@ -10,7 +10,7 @@ tester:
 
 
 variables:
-  bound-name: jdk9-binding-test
+  bound-name: jdk8-binding-test
 
 
 tests:

@@ -11,7 +11,7 @@ tester:
 
 
 variables:
-  file: activator_rce_test.txt
+  file: jdk8-activator-rce-test.txt
 
 
 tests:

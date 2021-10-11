@@ -11,7 +11,7 @@ tester:
 
 
 variables:
-  file: dgc-rce-test.txt
+  file: jdk8-dgc-rce-test.txt
 
 
 tests:

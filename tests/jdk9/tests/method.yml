@@ -12,7 +12,7 @@ tester:
 
 
 variables:
-  file: method-rce-test.txt
+  file: jdk9-method-rce-test.txt
 
 
 plugins:

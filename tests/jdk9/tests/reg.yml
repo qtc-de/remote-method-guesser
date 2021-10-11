@@ -11,7 +11,7 @@ tester:
 
 
 variables:
-  file: reg-bypass.txt
+  file: jdk9-reg-bypass.txt
 
 
 plugins:
