@@ -1,8 +1,11 @@
 tester:
-  name: jdk9
-  title: JDK9 Tests
-  description: >
-    'Launches some end-to-end tests of remote-method-guesser against the jdk9 rmg-example-server.'
+  title: jdk9 Tests
+  description: |-
+    'Launches some tests for jdk9 based on the rmg-example-server.'
+
+  id: '002'
+  groups:
+    - jdk9
 
 variables:
   BASE-CMD:

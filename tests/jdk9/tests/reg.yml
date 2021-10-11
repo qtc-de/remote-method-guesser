@@ -1,8 +1,13 @@
 tester:
-  name: reg
   title: Registry Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'reg' action."
+  description: |-
+    'Perform tests for the serial action on an RMI registry endpoint.'
+
+  id: '002-010'
+  groups:
+    - reg
+    - serial
+  id_pattern: '002-010-{:03}'
 
 
 variables:
@@ -24,15 +29,17 @@ plugins:
 
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
     command: '${BASE-CMD}'
     arguments:
-      - reg
+      - serial
       - CommonsCollections6
       - ls
+      - --component
+      - reg
     validators:
       - error: False
       - contains:
@@ -42,15 +49,17 @@ tests:
 
 
   - title: Gadget Call (SSL)
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
     command: '${BASE-CMD-SSL}'
     arguments:
-      - reg
+      - serial
       - CommonsCollections6
       - ls
+      - --component
+      - reg
     validators:
       - error: False
       - contains:
@@ -60,15 +69,17 @@ tests:
 
 
   - title: JEP290 Bypass
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint,'
       'using the An Trinh bypass gadget.'
 
     command: '${BASE-CMD-SSL}'
     arguments:
-      - reg
+      - serial
       - AnTrinh
       - ${DOCKER-GW}:4444
+      - --component
+      - reg
     validators:
       - error: False
       - contains:

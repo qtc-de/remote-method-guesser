@@ -2,10 +2,19 @@ tester:
   name: method
   title: Method Tests
   description: >
-    "Performs tests on remote-methods-guessers 'method' action."
+    'Perform tests for the serial action on custom RMI endpoints.'
+
+  id: '002-009'
+  groups:
+    - method
+    - plugin
+    - payload-provider
+  id_pattern: '002-009-{:03}'
+
 
 variables:
   file: method-rce-test.txt
+
 
 plugins:
   - os_command:
@@ -16,15 +25,16 @@ plugins:
         - ../../utils/PluginTest.java
         - ../../utils/PluginTest.jar
 
+
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Performs a deserialization attack on the system function of the'
       'plain-server object.'
 
     command: '${BASE-CMD}'
     arguments:
-      - method
+      - serial
       - CommonsCollections6 
       - 'touch ${volume-d}/${file}'
       - --signature
@@ -47,13 +57,13 @@ tests:
 
 
   - title: Gadget Call (Legacy)
-    description: >
+    description: |-
       'Performs a deserialization attack on the releaseRecord function of the'
       'legacy-service object.'
 
     command: '${BASE-CMD}'
     arguments:
-      - method
+      - serial
       - CommonsCollections6 
       - 'touch ${volume-d}/${file}'
       - --signature
@@ -76,14 +86,14 @@ tests:
 
 
   - title: Plugin Call
-    description: >
+    description: |-
       'Uses a plugin as payload provider that returns the string that was specified'
       'as agument. This is used on the execute method of the plain-server bound name'
       'to verify code execution.'
 
     command: '${BASE-CMD}'
     arguments:
-      - method
+      - serial
       - custom 
       - 'touch ${volume-d}/${file}'
       - --signature

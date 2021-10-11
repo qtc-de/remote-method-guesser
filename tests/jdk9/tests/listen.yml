@@ -1,17 +1,24 @@
 tester:
-  name: listen
   title: Listener Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'listen' action."
+  description: |-
+    'Perform tests for the listen action.'
+
+  id: '002-008'
+  groups:
+    - listen
+    - gadget
+  id_pattern: '002-008-{:03}'
+
 
 plugins:
   - http_listener:
       port: 8000
       dir: ../../utils
 
+
 tests:
   - title: Start Listener
-    description: >
+    description: |-
       'Attempts to open up a JRMPListener at port 4444'
 
     command:
@@ -36,7 +43,7 @@ tests:
 
 
   - title: Non Available IP
-    description: >
+    description: |-
       'Attempts to open up a JRMPListener on a non available IP'
 
     command:
@@ -59,7 +66,7 @@ tests:
 
 
   - title: Invalid IP
-    description: >
+    description: |-
       'Attempts to open up a JRMPListener on an invalid IP'
 
     command:
@@ -81,7 +88,7 @@ tests:
 
 
   - title: Invalid Port
-    description: >
+    description: |-
       'Attempts to open up a JRMPListener on an invalid port'
 
     command:
@@ -103,7 +110,7 @@ tests:
 
 
   - title: Used Port
-    description: >
+    description: |-
       'Attempts to open up a JRMPListener on an already used port'
 
     command:

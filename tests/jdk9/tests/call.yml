@@ -1,11 +1,20 @@
 tester:
-  name: call
   title: Calling Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'call' action."
+  description: |-
+    'Performs tests for the call action.'
+
+  id: '002-003'
+  groups:
+    - call
+    - plugin
+    - response-handler
+    - argument-provider
+  id_pattern: '002-003-{:03}'
+
 
 variables:
   file: call-rce-test.txt
+
 
 plugins:
   - os_command:
@@ -16,9 +25,10 @@ plugins:
         - ../../utils/PluginTest.java
         - ../../utils/PluginTest.jar
 
+
 tests:
   - title: Execute Call
-    description: >
+    description: |-
       'Invokes the execute function on the plain-server object.'
 
     command: '${BASE-CMD}'
@@ -38,7 +48,7 @@ tests:
 
 
   - title: Execute Call (Response Handler Plugin)
-    description: >
+    description: |-
       'Invokes the execute function on the plain-server object.'
 
     command: '${BASE-CMD}'
@@ -61,7 +71,7 @@ tests:
 
 
   - title: Execute Call (Argument Provider Plugin)
-    description: >
+    description: |-
       'Invokes the login function on the legacy-service object using'
       'a custom argument provider that creates the required HashMap.'
 
@@ -83,7 +93,7 @@ tests:
 
 
   - title: Execute Call (Based on ObjID)
-    description: >
+    description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option.'
 
@@ -107,7 +117,7 @@ tests:
 
 
   - title: Execute Call (Based on complex ObjID)
-    description: >
+    description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option and the more complicated form of an ObjID.'
 
@@ -131,7 +141,7 @@ tests:
 
 
   - title: Invalid Bound Name
-    description: >
+    description: |-
       'Invokes a function on an invalid bound name and checks'
       'the corresponding error message.'
 
@@ -152,7 +162,7 @@ tests:
 
 
   - title: Invalid Argument
-    description: >
+    description: |-
       'Invokes a function using an invalid argument definition.'
 
     command: '${BASE-CMD}'
