@@ -1,8 +1,7 @@
 tester:
-  name: jdk11
-  title: JDK11 Tests
-  description: >
-    'Launches some end-to-end tests of remote-method-guesser against the jdk11 rmg-example-server.'
+  title: jdk11 Tests
+  description: |-
+    'Launches some tests for jdk11 based on the rmg-example-server.'
 
   id: '003'
   groups:

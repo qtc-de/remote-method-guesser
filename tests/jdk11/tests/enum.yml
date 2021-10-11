@@ -100,8 +100,8 @@ tests:
             - |-
               [+] RMI server useCodebaseOnly enumeration:
               [+]
-              [-] 	- RMI registry uses readString() for unmarshalling java.lang.String.
-              [-] 	  This prevents useCodebaseOnly enumeration from remote.
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents useCodebaseOnly enumeration from remote.
 
       - contains:
           description: |-
@@ -111,7 +111,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [-] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not send from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -145,8 +145,8 @@ tests:
             - |-
               [+] RMI registry JEP290 bypass enmeration:
               [+]
-              [-] 	- RMI registry uses readString() for unmarshalling java.lang.String.
-              [-] 	  This prevents JEP 290 bypass enumeration from remote.
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents JEP 290 bypass enumeration from remote.
 
       - contains:
           description: |-
