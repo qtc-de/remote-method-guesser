@@ -4,6 +4,10 @@ tester:
   description: >
     'Launches some end-to-end tests of remote-method-guesser against the jdk11 rmg-example-server.'
 
+  id: '003'
+  groups:
+    - jdk11
+
 variables:
   BASE-CMD:
     - rmg

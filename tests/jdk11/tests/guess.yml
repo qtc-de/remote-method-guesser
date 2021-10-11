@@ -1,13 +1,17 @@
 tester:
-  name: guess
   title: Guessing Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'guess' action."
+  description: |-
+    'Perform tests for the guess action.'
+
+  id: '003-007'
+  groups:
+    - guess
+  id_pattern: '003-007-{:03}'
 
 
 tests:
   - title: Plain Guess
-    description: >
+    description: |-
       'Performs method guessing on the plain RMI registry.'
 
     command: '${BASE-CMD}'
@@ -29,7 +33,7 @@ tests:
 
 
   - title: Plain Guess (--zero-arg & --create-samples)
-    description: >
+    description: |-
       'Performs method guessing on the plain RMI registry'
       'using the --zero-arg & --create-samples flag.'
 
@@ -55,7 +59,7 @@ tests:
 
 
   - title: Sample Creation
-    description: >
+    description: |-
       'Apply sample creation checks on the previous captured output.'
 
     command:
@@ -116,7 +120,7 @@ tests:
 
 
   - title: SSL Guess
-    description: >
+    description: |-
       'Performs method guessing on the ssl RMI registry.'
 
     command: '${BASE-CMD-SSL}'

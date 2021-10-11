@@ -1,23 +1,32 @@
 tester:
-  name: act
   title: Activator Tests
-  description: "Performs tests on remote-methods-guessers 'act' action."
+  description: |-
+    'Performs tests for the serial action on an RMI activator endpoint.'
+
+  id: '003-001'
+  groups:
+    - act
+    - serial
+    - gadget
+  id_pattern: '003-001-{:03}'
 
 variables:
   file: activator_rce_test.txt
 
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Performs a deserialization attack on the activator endpoint.'
       'The expected result is a file being created within the docker'
       'volume.'
 
     command: '${BASE-CMD}'
     arguments:
-      - act
+      - serial
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
+      - --component
+      - act
     validators:
       - error: False
       - regex:
@@ -30,15 +39,17 @@ tests:
 
 
   - title: Invalid Gadget
-    description: >
+    description: |-
       'Check whether an incorrect gadget specification is handeled'
       'correctly and a corresponding error message is displayed.'
 
     command: '${BASE-CMD}'
     arguments:
-      - act
+      - serial
       - CommonsCollections1337
       - invalid
+      - --component
+      - act
     validators:
       - error: True
       - contains:
@@ -49,15 +60,17 @@ tests:
 
 
   - title: No Activator
-    description: >
+    description: |-
       'Check whether a non present activator is handeled'
       'correctly and a corresponding error message is displayed.'
 
     command: '${BASE-CMD-SSL}'
     arguments:
-      - act
+      - serial
       - CommonsCollections6
       - ls
+      - --component
+      - act
     validators:
       - error: False
       - contains:

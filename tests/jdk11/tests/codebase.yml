@@ -1,7 +1,13 @@
 tester:
-  name: codebase
   title: Codebase Tests
-  description: "Performs tests on remote-methods-guessers 'codebase' action."
+  description: |-
+    'Performs tests for the codebase action.'
+
+  id: '003-004'
+  groups:
+    - codebase
+  id_pattern: '003-004-{:03}'
+
 
 plugins:
   - os_command:
@@ -20,9 +26,10 @@ plugins:
       port: 8000
       dir: ../../utils
 
+
 tests:
   - title: Activator Codebase Call
-    description: >
+    description: |-
       'Performs a codebase attack on the activator endpoint.'
       'The expected result is a file being created within the docker'
       'volume.'
@@ -32,7 +39,7 @@ tests:
       - codebase
       - '${codebase-class}1'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature
+      - --component
       - act
     validators:
       - error: False
@@ -46,7 +53,7 @@ tests:
 
 
   - title: Registry Codebase Call
-    description: >
+    description: |-
       'Performs a codebase attack on the registry endpoint.'
       'The expected result is a file being created within the docker'
       'volume.'
@@ -56,7 +63,7 @@ tests:
       - codebase
       - '${codebase-class}2'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature
+      - --component
       - reg
     validators:
       - error: False
@@ -70,7 +77,7 @@ tests:
 
 
   - title: DGC Codebase Call
-    description: >
+    description: |-
       'Performs a codebase attack on the DGC endpoint.'
       'The expected result is an AccessControlException'
 
@@ -79,7 +86,7 @@ tests:
       - codebase
       - '${codebase-class}'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature
+      - --component
       - dgc
     validators:
       - error: False
@@ -90,7 +97,7 @@ tests:
 
 
   - title: Method Codebase Call
-    description: >
+    description: |-
       'Performs a codebase attack on the plain-server remote object.'
       'The expected result is a file being created within the docker'
       'volume.'
@@ -117,7 +124,7 @@ tests:
 
 
   - title: Method Codebase Call (Legacy)
-    description: >
+    description: |-
       'Performs a codebase attack on the legacy-service remote object.'
       'The expected result is a file being created within the docker'
       'volume.'
@@ -144,7 +151,7 @@ tests:
 
 
   - title: Missing Signature
-    description: >
+    description: |-
       'Performs a codebase attack with missing --signature option and checks'
       'the corresponding error message.'
 
@@ -157,11 +164,12 @@ tests:
       - error: True
       - contains:
           values:
-            - '--signature option is required'
+            - 'The --bound-name, --objid or --component option is required'
+            - 'Cannot continue from here'
 
 
   - title: No Class Load
-    description: >
+    description: |-
       'Performs a codebase attack with a wrong specified listener port.'
 
     command: '${BASE-CMD}'
@@ -169,7 +177,7 @@ tests:
       - codebase
       - 'Test'
       - 'http://127.0.0.1:8002/'
-      - --signature
+      - --component
       - act
     validators:
       - error: False

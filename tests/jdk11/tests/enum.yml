@@ -1,17 +1,27 @@
 tester:
-  name: enum
   title: Enumeration Tests
-  description: "Performs tests on remote-methods-guessers 'enum' action."
+  description: |-
+    'Performs tests for the enum action.'
+
+  id: '003-006'
+  groups:
+    - enum
+  id_pattern: '003-006-{:03}'
 
 
 tests:
   - title: 'RMI Server Enumeration'
-    command: '${BASE-CMD-SSL}'
+    description: |-
+      'Check whether the bound name, codebase, objID and activator enumeration'
+      'is working as expected.'
 
+    command: '${BASE-CMD-SSL}'
     validators:
       - error: False
+
       - contains:
-          description: 'Check whether all registered bound names are detected.'
+          description: |-
+            'Check whether all registered bound names are detected.'
           ignore_case: True
           values:
             - 'ssl-server'
@@ -22,18 +32,21 @@ tests:
             - 'de.qtc.rmg.server.interfaces.ISecureServer (unknown class)'
 
       - regex:
-          description: 'Check whether objID values are displayed'
+          description: |-
+            'Check whether objID values are displayed'
           match:
             - 'Endpoint: iinsecure.dev:\d+ ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
-          description: 'Check whether all exposed codebase values are detected.'
+          description: |-
+            'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
             - http://iinsecure.dev/well-hidden-development-folder/
 
       - contains:
-          description: 'Check whether Activator enumeration is working.'
+          description: |-
+            'Check whether Activator enumeration is working.'
           ignore_case: True
           values:
             - |-
@@ -49,7 +62,8 @@ tests:
     validators:
       - error: False
       - contains:
-          description: 'Check whether all registered bound names are detected.'
+          description: |-
+            'Check whether all registered bound names are detected.'
           ignore_case: True
           values:
             - 'plain-server2'
@@ -60,13 +74,15 @@ tests:
             - 'de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
 
       - contains:
-          description: 'Check whether all exposed codebase values are detected.'
+          description: |-
+            'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
             - http://iinsecure.dev/well-hidden-development-folder/
 
       - contains:
-          description: 'Check whether string marshalling behavior is correctly detected.'
+          description: |-
+            'Check whether string marshalling behavior is correctly detected.'
           ignore_case: True
           values:
             - |-
@@ -77,7 +93,8 @@ tests:
               [+] 	  Configuration Status: Current Default
 
       - contains:
-          description: 'Check whether the useCodebaseOnly settings is correctly detected.'
+          description: |-
+            'Check whether the useCodebaseOnly settings is correctly detected.'
           ignore_case: True
           values:
             - |-
@@ -87,7 +104,8 @@ tests:
               [-] 	  This prevents useCodebaseOnly enumeration from remote.
 
       - contains:
-          description: 'Check whether localhost bypass vulnerability is detected.'
+          description: |-
+            'Check whether localhost bypass vulnerability is detected.'
           ignore_case: True
           values:
             - |-
@@ -97,18 +115,20 @@ tests:
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
-          description: 'Check whether DGC enumeration is working.'
+          description: |-
+            'Check whether DGC enumeration is working.'
           ignore_case: True
           values:
             - |-
-              [+] RMI DGC enumeration:
+              [+] RMI Security Manager enumeration:
               [+]
               [+] 	- Security Manager rejected access to the class loader.
-              [+] 	  --> The DGC uses most likely a separate security policy.
+              [+] 	  --> The server does use a Security Manager.
               [+] 	  Configuration Status: Current Default
 
       - contains:
-          description: 'Check whether JEP290 enumeration is working.'
+          description: |-
+            'Check whether JEP290 enumeration is working.'
           ignore_case: True
           values:
             - |-
@@ -118,7 +138,8 @@ tests:
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
-          description: 'Check whether JEP290 Bypass enumeration is working.'
+          description: |-
+            'Check whether JEP290 Bypass enumeration is working.'
           ignore_case: True
           values:
             - |-
@@ -128,7 +149,8 @@ tests:
               [-] 	  This prevents JEP 290 bypass enumeration from remote.
 
       - contains:
-          description: 'Check whether Activator enumeration is working.'
+          description: |-
+            'Check whether Activator enumeration is working.'
           ignore_case: True
           values:
             - |-
