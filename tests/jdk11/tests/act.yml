@@ -7,11 +7,12 @@ tester:
   groups:
     - act
     - serial
-    - gadget
   id_pattern: '003-001-{:03}'
+
 
 variables:
   file: activator_rce_test.txt
+
 
 tests:
   - title: Gadget Call
@@ -19,6 +20,9 @@ tests:
       'Performs a deserialization attack on the activator endpoint.'
       'The expected result is a file being created within the docker'
       'volume.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD}'
     arguments:
@@ -43,6 +47,9 @@ tests:
       'Check whether an incorrect gadget specification is handeled'
       'correctly and a corresponding error message is displayed.'
 
+    groups:
+      - ysoserial
+
     command: '${BASE-CMD}'
     arguments:
       - serial
@@ -63,6 +70,9 @@ tests:
     description: |-
       'Check whether a non present activator is handeled'
       'correctly and a corresponding error message is displayed.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD-SSL}'
     arguments:

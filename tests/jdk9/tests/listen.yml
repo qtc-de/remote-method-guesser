@@ -6,7 +6,6 @@ tester:
   id: '002-008'
   groups:
     - listen
-    - gadget
   id_pattern: '002-008-{:03}'
 
 
@@ -20,6 +19,9 @@ tests:
   - title: Start Listener
     description: |-
       'Attempts to open up a JRMPListener at port 4444'
+
+    groups:
+      - ysoserial
 
     command:
       - rmg
@@ -46,6 +48,9 @@ tests:
     description: |-
       'Attempts to open up a JRMPListener on a non available IP'
 
+    groups:
+      - ysoserial
+
     command:
       - rmg
       - 123.4.5.5
@@ -69,6 +74,9 @@ tests:
     description: |-
       'Attempts to open up a JRMPListener on an invalid IP'
 
+    groups:
+      - ysoserial
+
     command:
       - rmg
       - 999.4.5.5
@@ -91,6 +99,9 @@ tests:
     description: |-
       'Attempts to open up a JRMPListener on an invalid port'
 
+    groups:
+      - ysoserial
+
     command:
       - rmg
       - 0.0.0.0
@@ -112,6 +123,9 @@ tests:
   - title: Used Port
     description: |-
       'Attempts to open up a JRMPListener on an already used port'
+
+    groups:
+      - ysoserial
 
     command:
       - rmg

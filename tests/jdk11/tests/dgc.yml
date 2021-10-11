@@ -7,7 +7,6 @@ tester:
   groups:
     - dgc
     - serial
-    - gadget
   id_pattern: '003-005-{:03}'
 
 
@@ -16,6 +15,9 @@ tests:
     description: |-
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD}'
     arguments:
@@ -36,6 +38,9 @@ tests:
     description: |-
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD-SSL}'
     arguments:

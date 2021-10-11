@@ -7,8 +7,6 @@ tester:
   groups:
     - call
     - plugin
-    - response-handler
-    - argument-provider
   id_pattern: '002-003-{:03}'
 
 
@@ -51,6 +49,9 @@ tests:
     description: |-
       'Invokes the execute function on the plain-server object.'
 
+    groups:
+      - response-handler
+
     command: '${BASE-CMD}'
     arguments:
       - call
@@ -75,6 +76,9 @@ tests:
       'Invokes the login function on the legacy-service object using'
       'a custom argument provider that creates the required HashMap.'
 
+    groups:
+      - argument-provider
+
     command: '${BASE-CMD}'
     arguments:
       - call
@@ -96,6 +100,9 @@ tests:
     description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option.'
+
+    groups:
+      - response-handler
 
     command: '${BASE-CMD}'
     arguments:
@@ -120,6 +127,9 @@ tests:
     description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option and the more complicated form of an ObjID.'
+
+    groups:
+      - response-handler
 
     command: '${BASE-CMD}'
     arguments:

@@ -33,6 +33,9 @@ tests:
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
+    groups:
+      - ysoserial
+
     command: '${BASE-CMD}'
     arguments:
       - serial
@@ -53,6 +56,9 @@ tests:
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
+    groups:
+      - ysoserial
+
     command: '${BASE-CMD-SSL}'
     arguments:
       - serial
@@ -72,6 +78,9 @@ tests:
     description: |-
       'Attempts a deserialization attack on the registry endpoint,'
       'using the An Trinh bypass gadget.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD-SSL}'
     arguments:

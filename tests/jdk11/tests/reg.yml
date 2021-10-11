@@ -16,6 +16,9 @@ tests:
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server uses readString for unmarshalling.'
 
+    groups:
+      - ysoserial
+
     command: '${BASE-CMD}'
     arguments:
       - serial
@@ -35,6 +38,9 @@ tests:
     description: |-
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server uses readString for unmarshalling.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD-SSL}'
     arguments:
@@ -56,6 +62,9 @@ tests:
       'Attempts a deserialization attack on the registry endpoint,'
       'using the An Trinh bypass gadget. Should also fail because'
       'of jdk11.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD-SSL}'
     arguments:

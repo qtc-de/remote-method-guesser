@@ -1,14 +1,13 @@
 tester:
-  name: method
   title: Method Tests
-  description: >
+  description: |-
     'Perform tests for the serial action on custom RMI endpoints.'
 
   id: '002-009'
   groups:
     - method
     - plugin
-    - payload-provider
+    - serial
   id_pattern: '002-009-{:03}'
 
 
@@ -31,6 +30,9 @@ tests:
     description: |-
       'Performs a deserialization attack on the system function of the'
       'plain-server object.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD}'
     arguments:
@@ -61,6 +63,9 @@ tests:
       'Performs a deserialization attack on the releaseRecord function of the'
       'legacy-service object.'
 
+    groups:
+      - ysoserial
+
     command: '${BASE-CMD}'
     arguments:
       - serial
@@ -90,6 +95,9 @@ tests:
       'Uses a plugin as payload provider that returns the string that was specified'
       'as agument. This is used on the execute method of the plain-server bound name'
       'to verify code execution.'
+
+    groups:
+      - payload-provider
 
     command: '${BASE-CMD}'
     arguments:
