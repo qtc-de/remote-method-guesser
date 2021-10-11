@@ -1,21 +1,29 @@
 tester:
-  name: jdk8
-  title: JDK8 Tests
-  description: >
-    'Launches some end-to-end tests of remote-method-guesser against the jdk9  beanshooter example-server.'
-    'https://github.com/qtc-de/beanshooter'
+  title: jdk8 Tests
+  description: |-
+    'Launches some tests for jdk8 based on the rmg-example-server.'
+
+  id: '001'
+  groups:
+    - jdk8
 
 variables:
   BASE-CMD:
     - rmg
     - --no-color
-    - --ssl
     - ${DOCKER-IP}
     - 9010
 
+  BASE-CMD-SSL:
+    - rmg
+    - --no-color
+    - --ssl
+    - ${DOCKER-IP}
+    - 1090
+
 containers:
   - name: 'rmg-jdk8'
-    image: 'ghcr.io/qtc-de/beanshooter/tomcat8-jmxmp:1.1'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk8'
     volumes:
       - '${volume}:${volume-d}'
     aliases:

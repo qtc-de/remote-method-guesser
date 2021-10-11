@@ -1,14 +1,18 @@
 tester:
-  name: guess
   title: Guessing Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'guess' action."
+  description: |-
+    'Perform tests for the guess action.'
+
+  id: '001-007'
+  groups:
+    - guess
+  id_pattern: '001-007-{:03}'
 
 
 tests:
-  - title: Guessing Known Remote Object
-    description: >
-      'Performs method guessing on the JMX remote object.'
+  - title: Plain Guess
+    description: |-
+      'Performs method guessing on the plain RMI registry.'
 
     command: '${BASE-CMD}'
     arguments:
@@ -18,52 +22,121 @@ tests:
       - error: False
       - contains:
           values:
-            - known remote object class
-            - guessing is skipped
-            - --force-guessing
-            - java.lang.String getVersion()
-            - javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)
+            - Ignoring zero argument method
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - String login(java.util.HashMap dummy1)
+            - void logMessage(int dummy1, String dummy2)
+            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 
 
-  - title: Sample Creation
-    description: >
-      'Performs method guessing on the JMX remote object'
-      'using the --create-samples flag.'
+  - title: Plain Guess (--zero-arg & --create-samples)
+    description: |-
+      'Performs method guessing on the plain RMI registry'
+      'using the --zero-arg & --create-samples flag.'
 
     command: '${BASE-CMD}'
     arguments:
       - guess
+      - --zero-arg
       - --create-samples
       - --verbose
     validators:
       - error: False
       - contains:
+          invert:
+            - Ignoring zero argument method
           values:
-            - known remote object class
-            - guessing is skipped
-            - --force-guessing
-            - java.lang.String getVersion()
-            - javax.management.remote.rmi.RMIConnection newClient(java.lang.Object arg)
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - String login(java.util.HashMap dummy1)
+            - void logMessage(int dummy1, String dummy2)
+            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+
+
+  - title: Sample Creation
+    description: |-
+      'Performs sample creation checks on the previous captured output.'
+
+    command:
+      - '${prev}'
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Starting creation of sample files
             - Writing sample file 
-            - /rmg-samples/jmxrmi/getVersion/getVersion.java
-            - /rmg-samples/jmxrmi/newClient/newClient.java
+            - /rmg-samples/plain-server2/IPlainServer.java
+            - /rmg-samples/plain-server2/system/system.java
+            - /rmg-samples/plain-server2/execute/execute.java
+            - /rmg-samples/legacy-service/LegacyServiceImpl_Stub_Interface.java
+            - /rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
+            - /rmg-samples/legacy-service/login/login.java
+            - /rmg-samples/legacy-service/logMessage/logMessage.java
+            - /rmg-samples/legacy-service/releaseRecord/releaseRecord.java
 
       - file_contains:
-          - file: ./rmg-samples/jmxrmi/getVersion/getVersion.java
+          - file: ./rmg-samples/plain-server2/IPlainServer.java
             contains:
-              - 'private static String remoteHost = "${DOCKER-IP}"'
-              - RMIServerImpl_Stub stub = (RMIServerImpl_Stub) registry.lookup("jmxrmi")
-              - java.lang.String response = stub.getVersion()
+              - public interface IPlainServer extends Remote
+              - String system(String dummy, String[] dummy2) throws RemoteException
+              - String execute(String dummy) throws RemoteException
 
-          - file: ./rmg-samples/jmxrmi/newClient/newClient.java
+          - file: ./rmg-samples/plain-server2/system/system.java
             contains:
               - 'private static String remoteHost = "${DOCKER-IP}"'
-              - RMIServerImpl_Stub stub = (RMIServerImpl_Stub) registry.lookup("jmxrmi")
-              - java.lang.Object argument0 = TODO
-              - javax.management.remote.rmi.RMIConnection response = stub.newClient(argument0)
+              - java.lang.String argument0 = TODO
+              - java.lang.String[] argument1 = TODO
+              - java.lang.String response = stub.system(argument0, argument1)
+
+          - file: ./rmg-samples/legacy-service/LegacyServiceImpl_Stub_Interface.java
+            contains:
+              - public interface LegacyServiceImpl_Stub_Interface extends Remote
+              - String login(java.util.HashMap dummy1) throws RemoteException
+              - void logMessage(int dummy1, String dummy2) throws RemoteException
+              - void releaseRecord(int recordID, String tableName, Integer remoteHashCode) throws RemoteException
+
+          - file: ./rmg-samples/legacy-service/LegacyServiceImpl_Stub.java
+            contains:
+              - = intf.getMethod("login", java.util.HashMap.class)
+              - = intf.getMethod("logMessage", Integer.TYPE, java.lang.String.class)
+              - = intf.getMethod("releaseRecord", Integer.TYPE, java.lang.String.class, java.lang.Integer.class)
+
+          - file: ./rmg-samples/legacy-service/login/login.java
+            contains:
+              - 'private static String remoteHost = "${DOCKER-IP}"'
+              - java.util.HashMap argument0 = TODO;
+              - java.lang.String response = stub.login(argument0);
 
       - dir_exists:
           cleanup: True
           force: True
           dirs:
             - ./rmg-samples
+
+
+  - title: SSL Guess
+    description: |-
+      'Performs method guessing on the ssl RMI registry.'
+
+    command: '${BASE-CMD-SSL}'
+    arguments:
+      - guess
+      - --verbose
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Ignoring zero argument method
+            - String system(String[] dummy)
+            - int execute(String dummy)
+            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+            - String system(String dummy, String[] dummy2)
+            - String execute(String dummy)
+            - void updatePreferences(java.util.ArrayList dummy1)
+            - void logMessage(int dummy1, Object dummy2)
+            - String login(java.util.HashMap dummy1)
