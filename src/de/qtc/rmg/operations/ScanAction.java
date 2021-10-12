@@ -3,6 +3,9 @@ package de.qtc.rmg.operations;
 import java.util.EnumSet;
 import java.util.List;
 
+import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.RMGUtils;
+
 /**
  * The ScanAction Enum represents available enumeration techniques that are applied during rmg's
  * enum action. It is used to allow users to specify custom enum configurations where only subsets
@@ -34,12 +37,23 @@ public enum ScanAction {
     {
         EnumSet<ScanAction> actionSet = EnumSet.noneOf(ScanAction.class);
 
+        outer:
         for(String action : actions) {
+
+            String actionName = action.toLowerCase();
+
             for(ScanAction item : ScanAction.values() ) {
-                if(item.name().toLowerCase().startsWith(action.toLowerCase())) {
+
+                String itemName = item.name().toLowerCase();
+
+                if(itemName.startsWith(actionName) || itemName.replace('_', '-').startsWith(actionName)) {
                     actionSet.add(item);
+                    continue outer;
                 }
             }
+
+            Logger.eprintlnMixedYellow("Error: Unknown ScanAction", action, "was specified.");
+            RMGUtils.exit();
         }
 
         return actionSet;
