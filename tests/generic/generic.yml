@@ -4,10 +4,16 @@ tester:
   description: >
     'Launches some generic tests that do not require a server to test against'
 
+  id: '004'
+  groups:
+    - generic
+
+
 variables:
   BASE-CMD:
     - rmg
     - --no-color
+
 
 testers:
   - ./tests/*

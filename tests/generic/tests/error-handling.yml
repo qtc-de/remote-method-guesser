@@ -1,10 +1,14 @@
 tester:
-  name: error
   title: Error Handling
-  description: >
+  description: |-
     'Performs some tests on remote-method-guessers error handling.'
     'We are interested in generic errors here (port closed, wrong TLS use,'
-    'no RMI server and so on.'
+    'no RMI server and so on).'
+
+  id: '004-001'
+  groups:
+    - error
+  id_pattern: '004-001-{:03}'
 
 
 plugins:
@@ -42,7 +46,7 @@ plugins:
 tests:
 
   - title: Closed Port
-    description: >
+    description: |-
       'Attempts to use rmg on a closed port'
 
     command: '${BASE-CMD}'
@@ -60,7 +64,7 @@ tests:
 
 
   - title: Missing Route
-    description: >
+    description: |-
       'Attempts to use rmg on a host with missing route'
 
     command: '${BASE-CMD}'
@@ -77,7 +81,7 @@ tests:
 
 
   - title: Connection Reset
-    description: >
+    description: |-
       'Attempts to use rmg without --ssl on ncat ssl listener'
 
     command: '${BASE-CMD}'
@@ -90,11 +94,11 @@ tests:
       - contains:
           values:
             - 'Caught Connection Reset'
-            - 'not an RMI service or uses TLS'
+            - 'not an RMI service or you used a wrong TLS'
 
 
   - title: EOF
-    description: >
+    description: |-
       'Attempts to use rmg with --ssl on a plain TCP port'
 
     command: '${BASE-CMD}'
@@ -112,7 +116,7 @@ tests:
 
 
   - title: Non JRMP
-    description: >
+    description: |-
       'Attempts to use rmg on a non JRMP server'
 
     command: '${BASE-CMD}'

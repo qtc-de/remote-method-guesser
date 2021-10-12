@@ -1,12 +1,18 @@
 tester:
-  name: ssrf
   title: SSRF Tests
-  description: "Performs some tests on remote-method-guessers --ssrf option"
+  description: |-
+    'Perform tests on remote-method-guessers --ssrf option'
+
+
+  id: '004-003'
+  groups:
+    - ssrf
+  id_pattern: '004-003-{:03}'
 
 
 tests:
   - title: SSRF Enum
-    description: >
+    description: |-
       'Dispatches the default action (enum) with the --ssrf option.'
 
     command: '${BASE-CMD}'
@@ -23,7 +29,7 @@ tests:
 
 
   - title: SSRF Enum (gopher)
-    description: >
+    description: |-
       'Dispatches the default action (enum) with the --ssrf and --gopher option.'
 
     command: '${BASE-CMD}'
@@ -41,7 +47,7 @@ tests:
 
 
   - title: SSRF Enum Activator
-    description: >
+    description: |-
       'Dispatches the activator enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -60,7 +66,7 @@ tests:
 
 
   - title: SSRF Enum Codebase
-    description: >
+    description: |-
       'Dispatches the codease enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -78,16 +84,16 @@ tests:
             - '4a524d4900024b00093132372e302e312e310000000050aced00057722000000000000000000000000000000000000000000000000000244154dc9d4e63bdf737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c756574000a496e76616c696455524c787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b02000071007e0001787000000000'
 
 
-  - title: SSRF Enum dgc
-    description: >
-      'Dispatches the dgc enumeration with the --ssrf option'
+  - title: SSRF Enum Security Manager
+    description: |-
+      'Dispatches the security-manager enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
     arguments:
       - 0.0.0.0
       - 9010
       - enum
-      - dgc
+      - security-manager
       - --ssrf
 
     validators:
@@ -98,7 +104,7 @@ tests:
 
 
   - title: SSRF Enum JEP290
-    description: >
+    description: |-
       'Dispatches the JEP290 enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -117,7 +123,7 @@ tests:
 
 
   - title: SSRF Enum JEP290_BYPASS
-    description: >
+    description: |-
       'Dispatches the JEP290 Bypass enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -136,7 +142,7 @@ tests:
 
 
   - title: SSRF Enum List
-    description: >
+    description: |-
       'Dispatches the list enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -155,7 +161,7 @@ tests:
 
 
   - title: SSRF Enum Lookup
-    description: >
+    description: |-
       'Dispatches the lookup enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -176,7 +182,7 @@ tests:
 
 
   - title: SSRF Enum Localhost Bypass
-    description: >
+    description: |-
       'Dispatches the localhost bypass enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
@@ -195,7 +201,7 @@ tests:
 
 
   - title: SSRF Enum String Marshalling
-    description: >
+    description: |-
       'Dispatches the localhost bypass enumeration with the --ssrf option'
 
     command: '${BASE-CMD}'
