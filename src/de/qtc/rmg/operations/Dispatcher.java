@@ -553,4 +553,14 @@ public class Dispatcher {
 
         Logger.println("Portscan finished.");
     }
+
+    /**
+     * Prints detailed information on the user specified ObjID.
+     */
+    @Parameters(count=4)
+    public void dispatchObjID()
+    {
+        ObjID objID = RMGUtils.parseObjID(p.getPositionalString(3));
+        RMGUtils.printObjID(objID);
+    }
 }

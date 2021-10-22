@@ -11,7 +11,9 @@ import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
 import java.rmi.server.RemoteStub;
 import java.rmi.server.UID;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1011,5 +1013,62 @@ public class RMGUtils {
         }
 
         return remoteObject.getClass().getName();
+    }
+
+    /**
+     * Print information contained in an ObjID to stdout.
+     *
+     * @param objID ObjID value to print information from
+     */
+    public static void printObjID(ObjID objID)
+    {
+        try {
+            Field objNumField = objID.getClass().getDeclaredField("objNum");
+            Field spaceField = objID.getClass().getDeclaredField("space");
+
+            objNumField.setAccessible(true);
+            spaceField.setAccessible(true);
+
+            long objNum = objNumField.getLong(objID);
+            UID uid = (UID)spaceField.get(objID);
+
+            Field uniqueField = uid.getClass().getDeclaredField("unique");
+            Field timeField = uid.getClass().getDeclaredField("time");
+            Field countField = uid.getClass().getDeclaredField("count");
+
+            uniqueField.setAccessible(true);
+            timeField.setAccessible(true);
+            countField.setAccessible(true);
+
+            int unique = uniqueField.getInt(uid);
+            long time = timeField.getLong(uid);
+            short count = countField.getShort(uid);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat(" (MMM dd,yyyy HH:mm)");
+            Date date = new Date(time);
+
+            Logger.printlnMixedBlue("Details for ObjID", objID.toString());
+
+            Logger.lineBreak();
+            Logger.printMixedBlueFirst("ObjNum:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(objNum));
+
+            Logger.printlnBlue("UID:");
+            Logger.increaseIndent();
+
+            Logger.printMixedBlueFirst("Unique:", "\t");
+            Logger.printlnPlainYellow(String.valueOf(unique));
+
+            Logger.printMixedBlueFirst("Time:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(time) + dateFormat.format(date));
+
+            Logger.printMixedBlueFirst("Count:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(count));
+
+            Logger.decreaseIndent();
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "parsing", "ObjID", true);
+        }
     }
 }
