@@ -405,7 +405,7 @@ public class ArgumentParser {
      */
     private String getHelpString()
     {
-        String helpString = "rmg [options] <ip> <port> <action>\n\n"
+        String helpString = "rmg [options] <ip> <port> [<action>]\n\n"
                 +"rmg v" + ArgumentParser.class.getPackage().getImplementationVersion()
                 +" - Java RMI Vulnerability Scanner\n\n"
                 +"Positional Arguments:\n"
