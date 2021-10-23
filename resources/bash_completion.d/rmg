@@ -23,7 +23,7 @@ function _rmg() {
     gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
-    operations="bind call codebase enum guess known listen rebind scan serial unbind"
+    operations="bind call codebase enum guess known listen objid rebind scan serial unbind"
     enum_operations="list string-marshalling codebase localhost-bypass security-manager jep290 filter-bypass activator"
 
     # Current word is not an option and previous word is not a value_option
@@ -62,7 +62,7 @@ function _rmg() {
                 return 0
 
             # If action expects something non guessable, complete nothing
-            elif _comp_contains "codebase unbind" $arg; then
+            elif _comp_contains "call codebase known objid" $arg; then
                 return 0
             fi
 
