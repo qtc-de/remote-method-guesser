@@ -229,6 +229,17 @@ public class ActivationClient {
                 ExceptionHandler.unexpectedException(e, "activate", "call", false);
             }
 
+        } catch( java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.lang.ClassFormatError) {
+                ExceptionHandler.codebaseClassFormat(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+            }
+
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgumentCodebase(e);
 

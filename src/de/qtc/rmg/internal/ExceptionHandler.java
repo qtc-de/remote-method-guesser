@@ -152,6 +152,14 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
+    public static void codebaseClassFormat(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", "ClassFormatError", "during codebase attack.");
+        Logger.eprintlnMixedBlue("The loaded file", "is not", "a valid Java class.");
+
+        showStackTrace(e);
+    }
+
     public static void connectionRefused(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + during1 + " " + during2 + ".");

@@ -229,6 +229,17 @@ public class DGCClient {
                 ExceptionHandler.unexpectedException(e, callName, "call", false);
             }
 
+        } catch( java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.lang.ClassFormatError) {
+                ExceptionHandler.codebaseClassFormat(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+            }
+
         } catch( java.lang.ClassCastException e ) {
             ExceptionHandler.codebaseClassCast(e, false);
 
