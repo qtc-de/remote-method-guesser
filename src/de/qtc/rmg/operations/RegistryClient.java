@@ -6,6 +6,7 @@ import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIEndpoint;
@@ -548,36 +549,18 @@ public class RegistryClient {
 
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
-        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
+        } catch( Exception e ) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.jep290(e);
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, regMethod);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
-
-            } else if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
+            if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
                 Logger.printlnMixedYellow("Caught", "RemoteException", "during deserialization attack.");
                 Logger.printMixedBlue("This is expected when", "An Trinh bypass", "was used and the server ");
                 Logger.printlnPlainYellow("is patched.");
 
             } else {
-                ExceptionHandler.unknownDeserializationException(e);
+                ExceptionHandler.handleGadgetCallException(e, RMIComponent.REGISTRY, regMethod);
             }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
         }
     }
 
@@ -597,53 +580,8 @@ public class RegistryClient {
         try {
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), true, localhostBypass);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Registry", false);
-                Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject.");
-                ExceptionHandler.showStackTrace(e);
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, regMethod);
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, regMethod, "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, regMethod, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
-            }
-
-        } catch( java.rmi.ServerError e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.lang.ClassFormatError) {
-                ExceptionHandler.codebaseClassFormat(e);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.REGISTRY, regMethod);
         }
     }
 

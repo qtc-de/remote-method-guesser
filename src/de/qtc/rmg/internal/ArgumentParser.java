@@ -51,8 +51,8 @@ public class ArgumentParser {
 
     private String regMethod = null;
     private String dgcMethod = null;
-    private String component = null;
     private Operation action = null;
+    private RMIComponent component = null;
 
     private  String defaultConfiguration = "/config.properties";
 
@@ -156,6 +156,7 @@ public class ArgumentParser {
         RMGOption.OBJID.setValue(cmdLine, null);
         RMGOption.COMPONENT.setValue(cmdLine);
 
+        RMGOption.NO_CANARY.setBoolean(cmdLine);
         RMGOption.SSL.setBoolean(cmdLine);
         RMGOption.SSRF.setBoolean(cmdLine);
         RMGOption.FOLLOW.setBoolean(cmdLine);
@@ -243,6 +244,10 @@ public class ArgumentParser {
         name.setArgName("name");
         name.setRequired(false);
         options.addOption(name);
+
+        Option canary = new Option(null, RMGOption.NO_CANARY.name, RMGOption.NO_CANARY.requiresValue, RMGOption.NO_CANARY.description);
+        canary.setRequired(false);
+        options.addOption(canary);
 
         Option component = new Option(null, RMGOption.COMPONENT.name, RMGOption.COMPONENT.requiresValue, RMGOption.COMPONENT.description);
         component.setArgName("component");
@@ -608,31 +613,32 @@ public class ArgumentParser {
      *
      * @return user specified component value - if valid.
      */
-    public String getComponent()
+    public RMIComponent getComponent()
     {
         if( component != null )
             return component;
 
-        String targetComponent = RMGOption.COMPONENT.getString();
+        RMIComponent targetComponent = RMIComponent.getByShortName(RMGOption.COMPONENT.getString());
 
         if( targetComponent == null )
             return null;
 
         switch( targetComponent ) {
 
-            case "reg":
-            case "dgc":
-            case "act":
+            case REGISTRY:
+            case DGC:
+            case ACTIVATOR:
                 break;
 
             default:
-                Logger.eprintlnMixedYellow("Unsupported RMI component:", targetComponent);
-                Logger.eprintMixedBlue("Supported values are", "act, dgc", "and ");
-                Logger.printlnPlainBlue("reg");
+                Logger.eprintlnMixedYellow("Unsupported RMI component:", RMGOption.COMPONENT.getString());
+                Logger.eprintMixedBlue("Supported values are", RMIComponent.ACTIVATOR.shortName + ", " + RMIComponent.DGC.shortName, "and ");
+                Logger.printlnPlainBlue(RMIComponent.REGISTRY.shortName);
                 RMGUtils.exit();
         }
 
         component = targetComponent;
+
         return targetComponent;
     }
 

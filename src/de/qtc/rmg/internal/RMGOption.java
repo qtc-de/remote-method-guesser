@@ -14,6 +14,7 @@ public enum RMGOption {
 
     ARGUMENT_POS("argument-position", "select argument position for deserialization attacks", true),
     BOUND_NAME("bound-name", "guess only on the specified bound name", true),
+    NO_CANARY("no-canary", "do not use a canary during RMI attacks", false),
     COMPONENT("component", "RMI component to attack (dgc|reg|act)", true),
     CONFIG("config", "path to a configuration file", true),
     CREATE_SAMPLES("create-samples", "create sample classes for identified methods", false),

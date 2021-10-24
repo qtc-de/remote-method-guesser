@@ -11,6 +11,8 @@ import java.util.List;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMGOption;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.RMIRegistryEndpoint;
@@ -167,58 +169,17 @@ public class RemoteObjectClient {
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
 
-        } catch (java.rmi.ServerException e) {
+        } catch (Exception e) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException ) {
+            if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash")) {
                 Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
 
-            } else if( cause instanceof java.lang.ClassNotFoundException ) {
-
-                if( e.getMessage().contains(randomClassName) ) {
-                    ExceptionHandler.deserializeClassNotFoundRandom(e, "deserialization", "attack", randomClassName);
-
-                } else {
-                    ExceptionHandler.deserializeClassNotFound(e);
-                }
-
-            } else if( cause instanceof java.security.AccessControlException ) {
-                ExceptionHandler.accessControl(e, "deserialization", "attack");
-
-            } else if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "RMI endpoint");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, "method");
-
             } else {
-                ExceptionHandler.unexpectedException(e, "deserialization", "attack", false);
+                ExceptionHandler.handleGadgetCallException(e, RMIComponent.CUSTOM, "method", randomClassName);
             }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, true);
-
-        } catch( java.security.AccessControlException e ) {
-            ExceptionHandler.accessControl(e, "deserialization", "attack");
-
-        } catch( java.rmi.UnmarshalException e ) {
-
-            Throwable t = ExceptionHandler.getCause(e);
-            if( t instanceof java.lang.ClassNotFoundException ) {
-                Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
-                Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
-                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
-                ExceptionHandler.showStackTrace(e);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "deserialization", "attack", false);
-            }
-
-        } catch( Exception e ) {
-                ExceptionHandler.unknownDeserializationException(e);
-
         }
     }
 
@@ -248,68 +209,17 @@ public class RemoteObjectClient {
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
 
-        } catch (java.rmi.ServerException e) {
+        } catch (Exception e) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException ) {
+            if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash")) {
                 Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
 
-            } else if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "RMI endpoint");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, "method");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException ) {
-
-                String exceptionMessage = e.getMessage();
-
-                if( exceptionMessage.contains("RMI class loader disabled") ) {
-                    ExceptionHandler.codebaseSecurityManager(e);
-                }
-
-                else if( exceptionMessage.contains(gadget.getClass().getName()) ) {
-                    ExceptionHandler.codebaseClassNotFound(e, gadget.getClass().getName());
-                }
-
-                else if( exceptionMessage.contains(randomClassName) ) {
-                    ExceptionHandler.codebaseClassNotFoundRandom(e, randomClassName, gadget.getClass().getName());
-
-                } else {
-                    ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
-                }
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, "codebase", "attack");
-
-            } else if( cause instanceof java.security.AccessControlException ) {
-                ExceptionHandler.accessControl(e, "codebase", "attack");
-
             } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+                ExceptionHandler.handleCodebaseException(e, gadget.getClass().getName(), RMIComponent.CUSTOM, "method", randomClassName);
             }
-
-        } catch( java.rmi.ServerError e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.lang.ClassFormatError) {
-                ExceptionHandler.codebaseClassFormat(e);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, true);
-
-        } catch( java.security.AccessControlException e ) {
-            ExceptionHandler.accessControl(e, "codebase", "attack");
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
         }
     }
 
@@ -502,26 +412,34 @@ public class RemoteObjectClient {
             ExceptionHandler.unexpectedException(e, "argument array", "construction", true);
         }
 
-        Object[] payloadArray = new Object[2];
-        Object randomInstance = null;
+        if( RMGOption.NO_CANARY.getBool() )
+            methodArguments[attackArgument] = gadget;
 
-        try {
-            Class<?> randomClass = RMGUtils.makeRandomClass();
-            randomInstance = randomClass.newInstance();
+        else {
 
-        } catch (Exception e) {
-            randomInstance = new DefinitelyNonExistingClass();
+            Object[] payloadArray = new Object[2];
+            Object randomInstance = null;
+
+            try {
+                Class<?> randomClass = RMGUtils.makeRandomClass();
+                randomInstance = randomClass.newInstance();
+
+            } catch (Exception e) {
+                randomInstance = new DefinitelyNonExistingClass();
+            }
+
+            this.randomClassName = randomInstance.getClass().getName();
+
+            payloadArray[0] = gadget;
+            payloadArray[1] = randomInstance;
+            methodArguments[attackArgument] = payloadArray;
         }
 
-        this.randomClassName = randomInstance.getClass().getName();
-
-        payloadArray[0] = gadget;
-        payloadArray[1] = randomInstance;
-        methodArguments[attackArgument] = payloadArray;
-
         MethodArguments callArguments = null;
+
         try {
             callArguments = RMGUtils.applyParameterTypes(targetMethod.getMethod(), methodArguments);
+
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "parameter types", "mapping", true);
         }

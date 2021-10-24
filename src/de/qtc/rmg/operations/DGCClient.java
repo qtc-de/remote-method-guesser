@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIEndpoint;
@@ -200,51 +201,8 @@ public class DGCClient {
         try {
             dgcCall(callName, packArgsByName(callName, payloadObject), true);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, callName);
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, callName, "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", false);
-            }
-
-        } catch( java.rmi.ServerError e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.lang.ClassFormatError) {
-                ExceptionHandler.codebaseClassFormat(e);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, callName, "call", false);
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.DGC, callName);
         }
     }
 
@@ -261,38 +219,15 @@ public class DGCClient {
         try {
             dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
-        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, callName);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
-
-            } else {
-                ExceptionHandler.unknownDeserializationException(e);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, callName, "call", false);
+            ExceptionHandler.handleGadgetCallException(e, RMIComponent.DGC, callName);
         }
     }
 
     /**
      * DGC calls are implemented by using the genericCall function of the RMIEndpoint class. This allows to dispatch raw RMI
      * calls with fine granular control of the call parameters. The DGC interface on the server side is implemented
-     * by using a skeleton, that still uses the old RMI calling convetion. Therefore, we have to use an interfaceHash
+     * by using a skeleton, that still uses the old RMI calling convention. Therefore, we have to use an interfaceHash
      * instead of method hashes and need to specify the call number as callID. The callID can be looked up
      * by name using the helper function defined below.
      *

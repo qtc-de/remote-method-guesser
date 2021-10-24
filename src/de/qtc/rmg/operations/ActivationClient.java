@@ -4,6 +4,7 @@ import java.rmi.server.ObjID;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIEndpoint;
@@ -152,37 +153,8 @@ public class ActivationClient {
         try {
             activateCall(prepareCallArguments(payloadObject), false);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, "activate");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
-
-            } else {
-                ExceptionHandler.unknownDeserializationException(e);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
-
-        } catch( java.lang.IllegalArgumentException e ) {
-            ExceptionHandler.illegalArgument(e);
-
-        } catch( java.rmi.NoSuchObjectException e ) {
-            ExceptionHandler.noSuchObjectException(e, "activator", false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "activate", "call", false);
+            ExceptionHandler.handleGadgetCallException(e, RMIComponent.ACTIVATOR, "activate");
         }
     }
 
@@ -200,60 +172,8 @@ public class ActivationClient {
         try {
             activateCall(prepareCallArguments(payloadObject), true);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, "activate");
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, "activate", "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, "activate", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "activate", "call", false);
-            }
-
-        } catch( java.rmi.ServerError e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.lang.ClassFormatError) {
-                ExceptionHandler.codebaseClassFormat(e);
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
-            }
-
-        } catch( java.lang.IllegalArgumentException e ) {
-            ExceptionHandler.illegalArgumentCodebase(e);
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
-
-        } catch( java.security.AccessControlException e ) {
-            ExceptionHandler.accessControl(e, "activate", "call");
-
-        } catch( java.rmi.NoSuchObjectException e ) {
-            ExceptionHandler.noSuchObjectException(e, "activator", false);
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "activate", "call", false);
+        } catch( Exception e) {
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.ACTIVATOR, "activate");
         }
     }
 

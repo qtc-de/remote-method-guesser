@@ -16,6 +16,7 @@ import de.qtc.rmg.internal.ArgumentParser;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Formatter;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.SampleWriter;
@@ -253,7 +254,7 @@ public class Dispatcher {
     @Parameters(count=4, requires= {RMGOption.TARGET})
     public void dispatchSerial()
     {
-        String component = p.getComponent();
+        RMIComponent component = p.getComponent();
 
         if( component == null ) {
 
@@ -269,12 +270,12 @@ public class Dispatcher {
 
             switch( component ) {
 
-                case "act":
+                case ACTIVATOR:
                     ActivationClient act = new ActivationClient(rmi);
                     act.gadgetCall(p.getGadget());
                     break;
 
-                case "reg":
+                case REGISTRY:
                     String regMethod = p.getRegMethod();
                     boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
 
@@ -282,11 +283,14 @@ public class Dispatcher {
                     reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
                     break;
 
-                case "dgc":
+                case DGC:
                     String dgcMethod = p.getDgcMethod();
 
                     DGCClient dgc = new DGCClient(rmi);
                     dgc.gadgetCall(dgcMethod, p.getGadget());
+                    break;
+
+                default:
                     break;
             }
         }
@@ -318,7 +322,7 @@ public class Dispatcher {
         RMGUtils.setCodebase(p.getPositionalString(4));
 
         Object payload = null;
-        String component = p.getComponent();
+        RMIComponent component = p.getComponent();
         int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
         try {
@@ -337,17 +341,17 @@ public class Dispatcher {
             RemoteObjectClient client = getRemoteObjectClient();
             client.codebaseCall(candidate, payload, argumentPosition);
 
-        } else if( component.matches("dgc") ) {
+        } else if( component == RMIComponent.DGC ) {
 
             DGCClient dgc = new DGCClient(rmi);
             dgc.codebaseCall(p.getDgcMethod(), payload);
 
-        } else if( component.matches("reg")  ) {
+        } else if( component == RMIComponent.REGISTRY ) {
 
             RegistryClient reg = new RegistryClient(rmi);
             reg.codebaseCall(payload, p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool());
 
-        } else if( component.matches("act")  ) {
+        } else if( component == RMIComponent.ACTIVATOR ) {
 
             ActivationClient act = new ActivationClient(rmi);
             act.codebaseCall(payload);

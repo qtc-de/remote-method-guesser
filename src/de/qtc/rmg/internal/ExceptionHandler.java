@@ -341,9 +341,8 @@ public class ExceptionHandler {
 
     public static void unsupportedClassVersion(Exception e, String during1, String during2)
     {
-        Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedYellow("Caught", "UnsupportedClassVersionError", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("You probably used an", "incompatible compiler version", "for class generation.");
-        Logger.eprintln("Exception Message: " + e.getMessage());
         showStackTrace(e);
     }
 
@@ -609,5 +608,211 @@ public class ExceptionHandler {
         }
 
         return result;
+    }
+
+    /**
+     * Handle an Exception that is thrown during codebase attacks. The exception reasons are similar for most RMI components
+     * and it makes sense to use a unified function here.
+     *
+     * @param exception Exception that was raised during the codebase attack
+     * @param className ClassName that was used during the codebase attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     */
+    public static void handleCodebaseException(Exception exception, String className, RMIComponent component, String method)
+    {
+        ExceptionHandler.handleCodebaseException(exception, className, component, method, null);
+    }
+
+    /**
+     * Handle an Exception that is thrown during codebase attacks. The exception reasons are similar for most RMI components
+     * and it makes sense to use a unified function here. This method uses an additional randomClassName parameter. This can
+     * be used to indicate that a canary was used during the attack.
+     *
+     * @param exception Exception that was raised during the codebase attack
+     * @param className ClassName that was used during the codebase attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     * @param randomClassName Class name of the canary that was used during the attack
+     */
+    public static void handleCodebaseException(Exception exception, String className, RMIComponent component, String method, String randomClassName)
+    {
+        try {
+            throw exception;
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+
+                if( component != RMIComponent.REGISTRY )
+                    ExceptionHandler.invalidClass(e, component.name);
+
+                else {
+                    ExceptionHandler.invalidClass(e, component.name, false);
+                    Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject.");
+                    ExceptionHandler.showStackTrace(e);
+                }
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, method);
+
+            } else if( cause instanceof java.lang.ClassFormatError ) {
+
+                if( cause.getClass() == java.lang.UnsupportedClassVersionError.class )
+                    ExceptionHandler.unsupportedClassVersion(e, "codebase", "attack");
+
+                else
+                    ExceptionHandler.codebaseClassFormat(e);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException ) {
+
+                String exceptionMessage = e.getMessage();
+
+                if( exceptionMessage.contains("RMI class loader disabled") ) {
+                    ExceptionHandler.codebaseSecurityManager(e);
+                }
+
+                else if( exceptionMessage.contains(className) ) {
+                    ExceptionHandler.codebaseClassNotFound(e, className);
+                }
+
+                else if( randomClassName != null && exceptionMessage.contains(randomClassName) ) {
+                    ExceptionHandler.codebaseClassNotFoundRandom(e, randomClassName, className);
+
+                } else {
+                    ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+                }
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                ExceptionHandler.codebaseClassCast(e, false);
+
+            } else if( cause instanceof java.security.AccessControlException) {
+                ExceptionHandler.accessControl(e, method, "call");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, method, "call", false);
+            }
+
+        } catch( java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.lang.ClassFormatError) {
+
+                if( cause.getClass() == java.lang.UnsupportedClassVersionError.class )
+                    ExceptionHandler.unsupportedClassVersion(e, "codebase", "attack");
+
+                else
+                    ExceptionHandler.codebaseClassFormat(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+            }
+
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgumentCodebase(e);
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.codebaseClassCast(e, false);
+
+        } catch( java.security.AccessControlException e ) {
+            ExceptionHandler.accessControl(e, method, "call");
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, component.name, false);
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, method, "call", false);
+        }
+    }
+
+    /**
+     * Handle an Exception that is thrown during gadget call attacks. The exception reasons are similar for most RMI
+     * components and it makes sense to use a unified function here.
+     *
+     * @param exception Exception that was raised during the gadget call attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     */
+    public static void handleGadgetCallException(Exception exception, RMIComponent component, String method)
+    {
+        ExceptionHandler.handleGadgetCallException(exception, component, method, null);
+    }
+
+    /**
+     * Handle an Exception that is thrown during gadget call attacks. The exception reasons are similar for most RMI
+     * components and it makes sense to use a unified function here. This method uses an additional randomClassName
+     * parameter. This can be used to indicate that a canary was used during the attack.
+     *
+     * @param exception Exception that was raised during the gadget call attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     * @param randomClassName Class name of the canary that was used during the attack
+     */
+    public static void handleGadgetCallException(Exception exception, RMIComponent component, String method, String randomClassName)
+    {
+        try {
+            throw exception;
+
+        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, component.name);
+
+            } else if( cause instanceof java.security.AccessControlException ) {
+                ExceptionHandler.accessControl(e, "deserialization", "attack");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, method);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException ) {
+
+                if( randomClassName != null && e.getMessage().contains(randomClassName) ) {
+                    ExceptionHandler.deserializeClassNotFoundRandom(e, "deserialization", "attack", randomClassName);
+
+                } else {
+                    ExceptionHandler.deserializeClassNotFound(e);
+                }
+
+            } else if( cause instanceof java.lang.ClassCastException) {
+                ExceptionHandler.deserlializeClassCast(e, false);
+
+            } else {
+                ExceptionHandler.unknownDeserializationException(e);
+            }
+
+        } catch( java.lang.ClassCastException e ) {
+            ExceptionHandler.deserlializeClassCast(e, false);
+
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgument(e);
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, component.name, false);
+
+        } catch( java.rmi.UnmarshalException e ) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.lang.ClassNotFoundException ) {
+                Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
+                Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
+                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                ExceptionHandler.showStackTrace(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "deserialization", "attack", false);
+            }
+
+        } catch( java.security.AccessControlException e ) {
+            ExceptionHandler.accessControl(e, "deserialization", "attack");
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, method, "call", false);
+        }
     }
 }
