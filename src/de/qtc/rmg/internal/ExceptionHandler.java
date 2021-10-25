@@ -651,7 +651,7 @@ public class ExceptionHandler {
 
                 else {
                     ExceptionHandler.invalidClass(e, component.name, false);
-                    Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject.");
+                    Logger.eprintlnMixedBlue("Make sure your payload class", "implements Remote.");
                     ExceptionHandler.showStackTrace(e);
                 }
 
