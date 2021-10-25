@@ -195,7 +195,7 @@ public class ArgumentParser {
 
         if( objID ? (bound || comp) : (bound && comp) ) {
             Logger.eprintMixedYellow("Only one of", "--objid, --bound-name", "or ");
-            Logger.printPlainMixedYellowFirst("--component", "can be specified.");
+            Logger.printlnPlainMixedYellowFirst("--component", "can be specified.");
             RMGUtils.exit();
         }
 
