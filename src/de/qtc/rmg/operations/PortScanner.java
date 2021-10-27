@@ -283,7 +283,7 @@ public class PortScanner {
             }
 
             String prefix = Logger.blue("[HIT] ");
-            String suffix = Logger.blue(sb.toString());
+            String suffix = "\t" + Logger.blue(sb.toString());
 
             Logger.printlnMixedYellow(prefix + "Found RMI service(s) on", host + ":" + String.valueOf(port), suffix);
         }
