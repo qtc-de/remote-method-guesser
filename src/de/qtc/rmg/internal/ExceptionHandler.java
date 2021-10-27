@@ -57,6 +57,16 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    public static void unknownCodebaseException(Throwable e, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during codebase attack.");
+        Logger.eprintlnMixedBlue("This Exception was probably thrown by the", "ReadObject method", "of the uploaded class.");
+        stackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
     public static void alreadyBoundException(Exception e, String boundName)
     {
         Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
@@ -592,6 +602,17 @@ public class ExceptionHandler {
     }
 
     /**
+     * Helper function that prints a stacktrace with a prefixed Logger item.
+     *
+     * @param e Exception that was caught.
+     */
+    public static void stackTrace(Throwable e)
+    {
+        Logger.eprintln("StackTrace:");
+        e.printStackTrace();
+    }
+
+    /**
      * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
      * Returns the actual cause of an exception.
      *
@@ -682,7 +703,7 @@ public class ExceptionHandler {
                     ExceptionHandler.codebaseClassNotFoundRandom(e, randomClassName, className);
 
                 } else {
-                    ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+                    ExceptionHandler.unexpectedException(e, method, "call", false);
                 }
 
             } else if( cause instanceof java.lang.ClassCastException) {
@@ -692,7 +713,14 @@ public class ExceptionHandler {
                 ExceptionHandler.accessControl(e, method, "call");
 
             } else {
-                ExceptionHandler.unexpectedException(e, method, "call", false);
+
+                Throwable unmarshalException = ExceptionHandler.getThrowable("UnmarshalException", e);
+
+                if( unmarshalException != null)
+                    ExceptionHandler.unknownCodebaseException(unmarshalException.getCause(), false);
+
+                else
+                    ExceptionHandler.unexpectedException(e, method, "call", false);
             }
 
         } catch( java.rmi.ServerError e ) {
@@ -708,7 +736,7 @@ public class ExceptionHandler {
                     ExceptionHandler.codebaseClassFormat(e);
 
             } else {
-                ExceptionHandler.unexpectedException(e, "codebase", "attack", false);
+                ExceptionHandler.unexpectedException(e, method, "call", false);
             }
 
         } catch( java.lang.IllegalArgumentException e ) {
