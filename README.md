@@ -43,7 +43,7 @@ Both servers are available as containers within the *GitHub Container Registry*:
 
 - [Installation](#installation)
 - [Supported Operations](#supported-operations)
-  + [default operation](#default-action)
+  + [default action](#default-action)
   + [bind, rebind and unbind](#bind-rebind-and-unbind)
   + [call](#call)
   + [codebase](#codebase)
