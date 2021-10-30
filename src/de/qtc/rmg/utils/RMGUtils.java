@@ -37,6 +37,8 @@ import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.tools.reflect.Reflection;
+import sun.rmi.server.UnicastRef;
+import sun.rmi.transport.LiveRef;
 
 /**
  * The RMGUtils class defines static helper functions that do not really fit into other categories.
@@ -46,7 +48,7 @@ import javassist.tools.reflect.Reflection;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-@SuppressWarnings({ "rawtypes", "deprecation" })
+@SuppressWarnings({ "rawtypes", "deprecation", "restriction" })
 public class RMGUtils {
 
     private static ClassPool pool;
@@ -531,7 +533,6 @@ public class RMGUtils {
      *
      * https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
      */
-    @SuppressWarnings("restriction")
     public static void disableWarning()
     {
         try {
@@ -934,6 +935,42 @@ public class RMGUtils {
             remoteRef = (RemoteRef)remoteField.get(instance);
 
         return remoteRef;
+    }
+
+    /**
+     * Extracts the ObjID value from a UnicastRef.
+     *
+     * @param uref UnicastRef to extract the ObjID from
+     * @return ObjID extracted from specified UnicastRef
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static ObjID extractObjID(UnicastRef uref) throws IllegalArgumentException, IllegalAccessException
+    {
+        Field liveRefField = null;
+
+        try {
+            liveRefField = UnicastRef.class.getDeclaredField("ref");
+            liveRefField.setAccessible(true);
+
+        } catch(NoSuchFieldException | SecurityException e) {
+            ExceptionHandler.unexpectedException(e, "reflective access in", "extractObjID", true);
+        }
+
+        LiveRef ref = (LiveRef)liveRefField.get(uref);
+        return ref.getObjID();
+    }
+
+    /**
+     * Extracts the ObjID value from an instance of Remote.
+     *
+     * @param remote Instance of Remote that contains an ref with assigned ObjID
+     * @return ObjID extracted from specified instance of Remote
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static ObjID extractObjID(Remote remote) throws IllegalArgumentException, IllegalAccessException
+    {
+        RemoteRef remoteRef = extractRef(remote);
+        return extractObjID((UnicastRef)remoteRef);
     }
 
     /**

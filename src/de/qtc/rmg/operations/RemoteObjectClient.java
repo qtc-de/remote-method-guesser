@@ -95,6 +95,32 @@ public class RemoteObjectClient {
     }
 
     /**
+     * When a RemoteObjectClient was obtained using an ObjID, it has no assigned RemoteObjectWrapper.
+     * remote-method-guesser only creates a RemoteRef using the endpoint information and the ObjID,
+     * which is sufficient for RMI calls. Constructing a RemoteObject from a RemoteRef is easily
+     * possible, but it is only useful when also the implemented remote interface is known.
+     *
+     * This functions lets you create a RemoteObjectWrapper (RemoteObject) that is based on the already
+     * constructed RemoteRef and implements the specified interface.
+     *
+     * @param intf Interface implemented by the RemoteObject
+     */
+    public RemoteObjectWrapper assignInterface(Class<?> intf)
+    {
+        RemoteObjectWrapper remoteObject = null;
+
+        try {
+            remoteObject = RemoteObjectWrapper.fromRef(remoteRef, intf);
+            this.remoteObject = remoteObject;
+
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            ExceptionHandler.internalError("RemoteObjectClient.assignInterface", "Caught unexpected exception: " + e.getClass().getName());
+        }
+
+        return remoteObject;
+    }
+
+    /**
      * Adds a successfully guessed MethodCandidate to the client's method list.
      *
      * @param candidate Successfully guessed method candidate
@@ -349,6 +375,8 @@ public class RemoteObjectClient {
             Remote instance = rmiReg.lookup(boundName);
             remoteRef = RMGUtils.extractRef(instance);
 
+            this.remoteObject = new RemoteObjectWrapper(instance, boundName);
+
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
         }
@@ -466,5 +494,15 @@ public class RemoteObjectClient {
         }
 
         return methodName;
+    }
+
+    public String toString()
+    {
+        String identifier = this.objID == null ? this.boundName : this.objID.toString();
+
+        if( identifier == null )
+            identifier = "";
+
+        return String.format("%s:%d:%s", rmi.host, rmi.port, identifier);
     }
 }

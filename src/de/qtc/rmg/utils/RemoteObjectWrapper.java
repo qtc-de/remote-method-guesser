@@ -1,15 +1,19 @@
 package de.qtc.rmg.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
 import java.rmi.Remote;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
+import java.rmi.server.RemoteObjectInvocationHandler;
+import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 import java.util.List;
 
 import de.qtc.rmg.endpoints.KnownEndpoint;
 import de.qtc.rmg.endpoints.KnownEndpointHolder;
+import de.qtc.rmg.internal.ExceptionHandler;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;
@@ -89,6 +93,31 @@ public class RemoteObjectWrapper {
         this.knownEndpoint = KnownEndpointHolder.getHolder().lookup(className);
     }
 
+    /**
+     * Create a new RemoteObjectWrapper from a RemoteRef. This function creates a Proxy that implements
+     * the specified interface and uses a RemoteObjectInvocationHandler to forward method invocations to
+     * the specified RemoteRef.
+     *
+     * @param remoteRef RemoteRef to the targeted RemoteObject
+     * @param intf Interface that is implemented by the RemoteObject
+     * @throws many Exceptions...
+     */
+    public static RemoteObjectWrapper fromRef(RemoteRef remoteRef, Class<?> intf) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    {
+        if( !Remote.class.isAssignableFrom(intf) )
+            ExceptionHandler.internalError("RemoteObjectWrapper.fromRef", "Specified interface is not valid");
+
+        RemoteObjectInvocationHandler remoteObjectInvocationHandler = new RemoteObjectInvocationHandler(remoteRef);
+        Remote remoteObject = (Remote)Proxy.newProxyInstance(intf.getClassLoader(), new Class[] { intf }, remoteObjectInvocationHandler);
+
+        return new RemoteObjectWrapper(remoteObject);
+    }
+
+    /**
+     * Check whether the endpoint is a known endpoint.
+     *
+     * @return True of the endpoint is known.
+     */
     public boolean isKnown()
     {
         if( knownEndpoint == null )

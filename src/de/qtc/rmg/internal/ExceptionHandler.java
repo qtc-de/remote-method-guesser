@@ -332,6 +332,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void invalidHostFormat(String format)
+    {
+        Logger.eprintlnMixedYellow("The specified host format", format, "is invalid.");
+        Logger.eprintlnMixedBlue("Host must be specified in", "host:port", "format.");
+        RMGUtils.exit();
+    }
+
     public static void invalidSignature(String signature)
     {
         Logger.eprintlnMixedYellow("Encountered invalid function signature:", signature);

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.remote.rmi.RMIServer;
+
 import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.endpoints.KnownEndpoint;
 import de.qtc.rmg.endpoints.KnownEndpointHolder;
@@ -25,6 +27,7 @@ import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.RogueJMX;
 import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
@@ -566,5 +569,43 @@ public class Dispatcher {
     {
         ObjID objID = RMGUtils.parseObjID(p.getPositionalString(3));
         RMGUtils.printObjID(objID);
+    }
+
+    /**
+     * Creates a rogue JMX server. The target specification which normally identifies the
+     * remote endpoint is used to identify where the rogue JMX server should listen. An
+     * additional endpoint specification can be made using host:port syntax to forward jmx
+     * connections to.
+     */
+    public void dispatchRogueJMX()
+    {
+        String host = p.getPositionalString(0);
+        int port = p.getPositionalInt(1);
+
+        RogueJMX rogueJMX = new RogueJMX(host, port);
+
+        if( p.getArgumentCount() > 3 ) {
+            String jmxServer = p.getPositionalString(3);
+            String[] split = jmxServer.split(":");
+
+            if(split.length != 2 || !split[1].matches("\\d+")) {
+                ExceptionHandler.invalidHostFormat(jmxServer);
+            }
+
+            this.rmi = new RMIEndpoint(split[0], Integer.valueOf(split[1]));
+            RemoteObjectClient client = getRemoteObjectClient();
+            client.assignInterface(RMIServer.class);
+
+            rogueJMX.forwardTo(client);
+
+        }
+
+        try {
+            rogueJMX.export();
+            Logger.lineBreak();
+
+        } catch( java.rmi.RemoteException e ) {
+            ExceptionHandler.unexpectedException(e, "exporting", "rogue JMX server", true);
+        }
     }
 }

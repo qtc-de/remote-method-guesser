@@ -27,6 +27,7 @@ public enum Operation {
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener"),
     OBJID("dispatchObjID", "<objid>", "Print information contained within an ObjID"),
     REBIND("dispatchRebind", "[object] <listener>", "Rebinds boundname as object that points to listener"),
+    ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)"),
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports"),
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components"),
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry");

@@ -178,6 +178,7 @@ public class ArgumentParser {
             printHelpAndExit(1);
         }
 
+        getAction();
         setTarget();
     }
 
@@ -194,9 +195,12 @@ public class ArgumentParser {
         boolean comp = RMGOption.COMPONENT.notNull();
 
         if( objID ? (bound || comp) : (bound && comp) ) {
-            Logger.eprintMixedYellow("Only one of", "--objid, --bound-name", "or ");
-            Logger.printlnPlainMixedYellowFirst("--component", "can be specified.");
-            RMGUtils.exit();
+
+            if( action != Operation.BIND && action != Operation.REBIND ) {
+                Logger.eprintMixedYellow("Only one of", "--objid, --bound-name", "or ");
+                Logger.printlnPlainMixedYellowFirst("--component", "can be specified.");
+                RMGUtils.exit();
+            }
         }
 
         if( objID )
@@ -214,10 +218,11 @@ public class ArgumentParser {
      *
      * @return number of positional arguments.
      */
-    private int getArgumentCount()
+    public int getArgumentCount()
     {
         if( this.argList != null ) {
             return this.argList.size();
+
         } else {
             this.argList = cmdLine.getArgList();
             return this.argList.size();

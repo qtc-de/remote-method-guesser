@@ -6,10 +6,12 @@ import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIEndpoint;
+import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.YsoIntegration;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
@@ -707,8 +709,10 @@ public class RegistryClient {
      */
     public static Object prepareRMIServerImpl(String host, int port)
     {
+        ObjID objid = RMGOption.OBJID.notNull() ? RMGUtils.parseObjID(RMGOption.OBJID.getString()) : new ObjID();
+
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
-        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(), endpoint, false));
+        UnicastRef refObject = new UnicastRef(new LiveRef(objid, endpoint, false));
         return new RMIServerImpl_Stub(refObject);
     }
 }
