@@ -111,6 +111,12 @@ public class DGCClient {
                 Logger.statusNonDefault();
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( t instanceof java.io.InvalidClassException ) {
+                Logger.printlnMixedYellow("- Caught", "InvalidClassException", "during " + callName + " call.");
+                Logger.printlnMixedBlue("  --> This is an", "unusual behavior", "for DGC endpoints.");
+                Logger.statusNonDefault();
+                ExceptionHandler.showStackTrace(e);
+
             } else if( t instanceof java.lang.UnsupportedOperationException) {
                 ExceptionHandler.unsupportedOperationExceptionEnum(e, callName);
 
