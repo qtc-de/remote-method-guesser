@@ -180,6 +180,7 @@ public class ArgumentParser {
 
         getAction();
         setTarget();
+        validateOperation(action);
     }
 
     /**
@@ -534,7 +535,6 @@ public class ArgumentParser {
         if( action == Operation.SCAN )
             setSocketTimeout();
 
-        validateOperation(action);
         return action;
     }
 
