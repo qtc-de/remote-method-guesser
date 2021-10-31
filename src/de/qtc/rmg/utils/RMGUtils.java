@@ -2,6 +2,7 @@ package de.qtc.rmg.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.rmi.Remote;
@@ -39,6 +40,8 @@ import javassist.NotFoundException;
 import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
+import sun.rmi.server.UnicastServerRef;
+
 
 /**
  * The RMGUtils class defines static helper functions that do not really fit into other categories.
@@ -1107,5 +1110,52 @@ public class RMGUtils {
         } catch( Exception e ) {
             ExceptionHandler.unexpectedException(e, "parsing", "ObjID", true);
         }
+    }
+
+    /**
+     * Provides a Java8+ compatible way to create an ObjectInputFilter using reflection. Using
+     * ordinary class access does not work for projects that should be compatible with Java8 and
+     * Java9+, since the ObjectInputFIlter class is located in different packages.
+     *
+     * @param pattern Serial filter pattern as usually used for ObjectInputFilter
+     * @return Either sun.misc.ObjectInputFilter or java.io.ObjectInputFilter depending on the Java environment
+     * @throws Exceptions - related to reflective access
+     */
+    public static Object createObjectInputFilter(String pattern) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+    {
+        Class<?> objectInputFilter = null;
+
+        try {
+            objectInputFilter = Class.forName("java.io.ObjectInputFilter$Config");
+
+        } catch( ClassNotFoundException e ) {
+
+            try {
+                objectInputFilter = Class.forName("sun.misc.ObjectInputFilter$Config");
+
+            } catch( ClassNotFoundException e2 ) {
+                ExceptionHandler.internalError("createObjectInputFilter", "Unable to find ObjectInputFilter class.");
+            }
+        }
+
+        Method createObjectInputFilter = objectInputFilter.getDeclaredMethod("createFilter", new Class<?>[] { String.class });
+        return createObjectInputFilter.invoke(null, pattern);
+    }
+
+    /**
+     * Inject an ObjectInputFilter into a UnicastServerRef. This is required for a Java8+ compatible
+     * way of creating serial filters for RMI connections. See the createObjectInputFilter function for
+     * more details.
+     *
+     * @param uref UnicastServerRef to inject the ObjectInputFilter on
+     * @param filter ObjectInputFilter to inject
+     * @throws Exceptions - related to reflective access
+     */
+    public static void injectObjectInputFilter(UnicastServerRef uref, Object filter) throws SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException
+    {
+        Field filterField = UnicastServerRef.class.getDeclaredField("filter");
+
+        filterField.setAccessible(true);
+        filterField.set(uref, filter);
     }
 }

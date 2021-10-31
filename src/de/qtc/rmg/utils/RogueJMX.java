@@ -1,14 +1,13 @@
 package de.qtc.rmg.utils;
 
 import java.io.IOException;
-import java.io.ObjectInputFilter;
+import java.lang.reflect.InvocationTargetException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.RMISocketFactory;
-import java.rmi.server.UnicastRemoteObject;
 
 import javax.management.remote.rmi.RMIConnection;
 import javax.management.remote.rmi.RMIServer;
@@ -17,6 +16,8 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.LimitedSocketFactory;
 import de.qtc.rmg.operations.RemoteObjectClient;
+import sun.rmi.server.UnicastServerRef;
+import sun.rmi.transport.LiveRef;
 
 /**
  * The RogueJMX class implements a rogue JMX server that displays used credentials from incoming
@@ -25,6 +26,7 @@ import de.qtc.rmg.operations.RemoteObjectClient;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
+@SuppressWarnings("restriction")
 public class RogueJMX implements RMIServer {
 
     private int port;
@@ -54,6 +56,12 @@ public class RogueJMX implements RMIServer {
      * and incoming credentials are expected to be an array of String (String[]). When using the server for
      * other JMX implementations, you may need to modify the filter.
      *
+     * It is important to notice that serialization filters were backported to Java8 and earlier in an incompatible
+     * way compared to Java9+ projects. Whereas in Java9+ the ObjectInputFilter class is located within the java.io
+     * package, Java8 and earlier contains it within the sun.misc package. This makes it basically impossible to
+     * write cross compatible code without using reflection. Therefore, the RMGUtils class is used for creating and
+     * injecting the serialization filter.
+     *
      * @return Remote bound RogueJMX server
      * @throws RemoteException
      */
@@ -64,12 +72,22 @@ public class RogueJMX implements RMIServer {
         RMIClientSocketFactory csf = RMISocketFactory.getDefaultSocketFactory();
         RMIServerSocketFactory ssf = new LimitedSocketFactory(address);
 
-        ObjectInputFilter inputFilter = ObjectInputFilter.Config.createFilter(serialFilter);
-
         Remote boundObject = null;
 
         try {
-            boundObject = UnicastRemoteObject.exportObject(this, port, csf, ssf, inputFilter);
+            LiveRef liveRef = new LiveRef(new ObjID(), port, csf, ssf);
+            UnicastServerRef unicastServerRef = new UnicastServerRef(liveRef);
+
+            try {
+                Object inputFilter = RMGUtils.createObjectInputFilter(serialFilter);
+                RMGUtils.injectObjectInputFilter(unicastServerRef, inputFilter);
+
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchFieldException e1) {
+                ExceptionHandler.internalError("RogueJMX.export", "Some reflective access failed.");
+            }
+
+            boundObject = unicastServerRef.exportObject(this, null, false);
 
         } catch( java.rmi.server.ExportException e ) {
 

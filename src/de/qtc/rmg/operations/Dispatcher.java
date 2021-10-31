@@ -597,7 +597,6 @@ public class Dispatcher {
             client.assignInterface(RMIServer.class);
 
             rogueJMX.forwardTo(client);
-
         }
 
         try {
