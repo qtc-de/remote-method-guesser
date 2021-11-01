@@ -551,12 +551,10 @@ public class Dispatcher {
         Logger.increaseIndent();
 
         PortScanner ps = new PortScanner(host, rmiPorts);
-        int hits = ps.portScan();
+        ps.portScan();
 
         Logger.decreaseIndent();
-
-        if( hits != 0 )
-            Logger.lineBreak();
+        Logger.lineBreak();
 
         Logger.println("Portscan finished.");
     }

@@ -12,6 +12,7 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.TimeoutSocketFactory;
 import de.qtc.rmg.networking.TrustAllSocketFactory;
+import de.qtc.rmg.utils.ProgressBar;
 
 
 /**
@@ -46,6 +47,7 @@ public class PortScanner {
     private final ObjID OAct = new ObjID(1);
     private final ObjID ODgc = new ObjID(2);
 
+    private ProgressBar bar;
     private ForkJoinPool pool;
     private MethodArguments scanArgs;
     private TrustAllSocketFactory sslFactory;
@@ -67,6 +69,7 @@ public class PortScanner {
         this.host = host;
         this.rmiPorts = rmiPorts;
 
+        bar = new ProgressBar(rmiPorts.length, 29);
         scanArgs = new MethodArguments(0);
         sslFactory = new TrustAllSocketFactory(readTimeout, connectTimeout);
         sockFactory = new TimeoutSocketFactory(readTimeout, connectTimeout);
@@ -95,6 +98,8 @@ public class PortScanner {
 
         pool.awaitQuiescence(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         pool.shutdown();
+
+        Logger.lineBreak();
 
         return hits;
     }
@@ -185,14 +190,21 @@ public class PortScanner {
 
                 } else {
 
-                    if( !ssl )
+                    if( !ssl ) {
+                        bar.addWork();
                         pool.execute(new PortScanWorker(port, true));
+                    }
                 }
 
             } catch (Exception e) {
 
-                if( !ssl )
+                if( !ssl ) {
+                    bar.addWork();
                     pool.execute(new PortScanWorker(port, true));
+                }
+
+            } finally {
+                bar.taskDone();
             }
         }
 
@@ -283,7 +295,7 @@ public class PortScanner {
             }
 
             String prefix = Logger.blue("[HIT] ");
-            String suffix = "\t" + Logger.blue(sb.toString());
+            String suffix = new String(new char[(5 - String.valueOf(port).length())]).replace("\0", " ") + Logger.blue(sb.toString());
 
             Logger.printlnMixedYellow(prefix + "Found RMI service(s) on", host + ":" + String.valueOf(port), suffix);
         }

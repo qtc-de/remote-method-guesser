@@ -13,6 +13,7 @@ import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.utils.ProgressBar;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
 
@@ -39,6 +40,7 @@ import de.qtc.rmg.utils.RemoteObjectWrapper;
 public class MethodGuesser {
 
     private int padding = 0;
+    private final ProgressBar progressBar;
 
     private Set<MethodCandidate> candidates;
     private List<RemoteObjectClient> clientList;
@@ -65,6 +67,7 @@ public class MethodGuesser {
             remoteObjects = handleKnownMethods(remoteObjects);
 
         this.clientList = initClientList(remoteObjects);
+        this.progressBar = new ProgressBar(candidates.size() * clientList.size(), 37);
     }
 
     /**
@@ -263,6 +266,7 @@ public class MethodGuesser {
         }
 
         Logger.decreaseIndent();
+        Logger.lineBreak();
         Logger.printlnYellow("done.");
         Logger.lineBreak();
 
@@ -354,6 +358,9 @@ public class MethodGuesser {
                                  +writer.toString();
 
                     Logger.println(info);
+
+                } finally {
+                    progressBar.taskDone();
                 }
             }
         }

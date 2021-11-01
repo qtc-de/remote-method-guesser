@@ -156,6 +156,7 @@ public class ArgumentParser {
         RMGOption.OBJID.setValue(cmdLine, null);
         RMGOption.COMPONENT.setValue(cmdLine);
 
+        RMGOption.NO_PROGRESS.setBoolean(cmdLine);
         RMGOption.NO_CANARY.setBoolean(cmdLine);
         RMGOption.SSL.setBoolean(cmdLine);
         RMGOption.SSRF.setBoolean(cmdLine);
@@ -296,6 +297,10 @@ public class ArgumentParser {
         Option noColor = new Option(null, RMGOption.NO_COLOR.name, RMGOption.NO_COLOR.requiresValue, RMGOption.NO_COLOR.description);
         noColor.setRequired(false);
         options.addOption(noColor);
+
+        Option noProgress = new Option(null, RMGOption.NO_PROGRESS.name, RMGOption.NO_PROGRESS.requiresValue, RMGOption.NO_PROGRESS.description);
+        noProgress.setRequired(false);
+        options.addOption(noProgress);
 
         Option objID = new Option(null, RMGOption.OBJID.name, RMGOption.OBJID.requiresValue, RMGOption.OBJID.description);
         objID.setRequired(false);
