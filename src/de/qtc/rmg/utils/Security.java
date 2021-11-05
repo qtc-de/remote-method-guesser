@@ -4,6 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
+import de.qtc.rmg.internal.RMGOption;
 
 /**
  * During sample creation, remote-method-guesser creates sample files with filenames and contents controlled by
@@ -20,8 +21,6 @@ import de.qtc.rmg.exceptions.UnexpectedCharacterException;
  */
 public abstract class Security {
 
-    private static boolean trusted = false;
-
     private static Pattern boundName = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9])+\\.jar");
@@ -31,7 +30,7 @@ public abstract class Security {
 
     public static void checkBoundName(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool()  )
             return;
 
         Matcher m = boundName.matcher(input);
@@ -41,7 +40,7 @@ public abstract class Security {
 
     public static void checkAlphaNumeric(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool() )
             return;
 
         Matcher m = alphaNumeric.matcher(input);
@@ -51,7 +50,7 @@ public abstract class Security {
 
     public static void checkPackageName(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool() )
             return;
 
         Matcher m = packageName.matcher(input);
@@ -61,7 +60,7 @@ public abstract class Security {
 
     public static void checkJavaFile(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool() )
             return;
 
         Matcher m = javaFile.matcher(input);
@@ -71,7 +70,7 @@ public abstract class Security {
 
     public static void checkJarFile(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool() )
             return;
 
         Matcher m = jarFile.matcher(input);
@@ -81,17 +80,12 @@ public abstract class Security {
 
     public static void checkShellInjection(String input) throws UnexpectedCharacterException
     {
-        if( trusted )
+        if( RMGOption.GUESS_TRUSTED.getBool() )
             return;
 
         Matcher m = shellInjection.matcher(input);
         if( m.matches() )
             throw new UnexpectedCharacterException("Input '" + input + "' contains shell injection characters.");
-    }
-
-    public static void trusted()
-    {
-        trusted = true;
     }
 }
 

@@ -709,7 +709,7 @@ public class RegistryClient {
      */
     public static Object prepareRMIServerImpl(String host, int port)
     {
-        ObjID objid = RMGOption.OBJID.notNull() ? RMGUtils.parseObjID(RMGOption.OBJID.getString()) : new ObjID();
+        ObjID objid = RMGOption.BIND_OBJID.notNull() ? RMGUtils.parseObjID(RMGOption.BIND_OBJID.getString()) : new ObjID();
 
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
         UnicastRef refObject = new UnicastRef(new LiveRef(objid, endpoint, false));

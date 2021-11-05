@@ -63,7 +63,7 @@ public class MethodGuesser {
         this.knownClientList = new ArrayList<RemoteObjectClient>();
         this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getInt());
 
-        if( !RMGOption.FORCE_GUESSING.getBool() )
+        if( !RMGOption.GUESS_FORCE_GUESSING.getBool() )
             remoteObjects = handleKnownMethods(remoteObjects);
 
         this.clientList = initClientList(remoteObjects);

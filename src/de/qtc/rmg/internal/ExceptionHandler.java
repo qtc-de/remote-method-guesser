@@ -19,11 +19,9 @@ import de.qtc.rmg.utils.RMGUtils;
  */
 public class ExceptionHandler {
 
-    private static boolean alwaysShowExceptions = false;
-
     private static void sslOption()
     {
-        if(RMGOption.SSL.getBool())
+        if(RMGOption.CONN_SSL.getBool())
             Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
         else
             Logger.eprintlnMixedYellow("You can retry the operation using the", "--ssl", "option.");
@@ -572,16 +570,6 @@ public class ExceptionHandler {
     }
 
     /**
-     * Sets the value of the alwaysShowExceptions option.
-     *
-     * @param b show stack traces?
-     */
-    public static void showStackTrace(boolean b)
-    {
-        alwaysShowExceptions = b;
-    }
-
-    /**
      * By using the --stack-trace option, uses can always display stack traces if they
      * want to. This is handled by this function. It checks whether --stack-trace was used
      * (in this case alwaysShowExceptions is true) and prints the stacktrace if desired.
@@ -591,7 +579,7 @@ public class ExceptionHandler {
      */
     public static void showStackTrace(Exception e)
     {
-        if(alwaysShowExceptions) {
+        if( RMGOption.GLOBAL_STACK_TRACE.getBool() ) {
             Logger.eprintln("");
             stackTrace(e);
         }

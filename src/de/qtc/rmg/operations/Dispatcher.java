@@ -10,11 +10,10 @@ import java.util.Set;
 
 import javax.management.remote.rmi.RMIServer;
 
-import de.qtc.rmg.annotations.Parameters;
 import de.qtc.rmg.endpoints.KnownEndpoint;
 import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
-import de.qtc.rmg.internal.ArgumentParser;
+import de.qtc.rmg.internal.ArgumentHandler;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
@@ -46,8 +45,7 @@ import javassist.NotFoundException;
  */
 public class Dispatcher {
 
-    private RMIEndpoint rmi;
-    private ArgumentParser p;
+    private ArgumentHandler p;
 
     private String[] boundNames = null;
     private MethodCandidate candidate = null;
@@ -59,13 +57,9 @@ public class Dispatcher {
      *
      * @param p ArgumentParser object that contains the current command line specifications
      */
-    public Dispatcher(ArgumentParser p)
+    public Dispatcher(ArgumentHandler p)
     {
         this.p = p;
-        rmi = new RMIEndpoint(p.getHost(), p.getPort());
-
-        if(p.parseMethodSignature())
-            this.createMethodCandidate();
     }
 
     /**
@@ -106,7 +100,10 @@ public class Dispatcher {
      */
     private void createMethodCandidate()
     {
-        String signature = RMGOption.SIGNATURE.getString();
+        if( !RMGOption.TARGET_SIGNATURE.notNull() )
+            return;
+
+        String signature = RMGOption.TARGET_SIGNATURE.getString();
 
         try {
             candidate = new MethodCandidate(signature);
@@ -114,6 +111,15 @@ public class Dispatcher {
         } catch (CannotCompileException | NotFoundException e) {
             ExceptionHandler.invalidSignature(signature);
         }
+    }
+
+    public RMIEndpoint getRMIEndpoint()
+    {
+        int port = RMGOption.requireInt(RMGOption.TARGET_PORT);
+        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
+
+        this.createMethodCandidate();
+        return new RMIEndpoint(host, port);
     }
 
     /**
@@ -124,10 +130,20 @@ public class Dispatcher {
      */
     private RMIRegistryEndpoint getRegistry()
     {
+        int port = RMGOption.requireInt(RMGOption.TARGET_PORT);
+        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
+
         if(rmiReg == null)
-            rmiReg = new RMIRegistryEndpoint(rmi.host, rmi.port);
+            rmiReg = new RMIRegistryEndpoint(host, port);
 
         return rmiReg;
+    }
+
+    private RemoteObjectClient getRemoteObjectClient(RMIEndpoint rmi)
+    {
+        RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME);
+
+        return getRemoteObjectClient(RMGOption.TARGET_OBJID.getString(), RMGOption.TARGET_BOUND_NAME.getString(), rmi);
     }
 
     /**
@@ -138,14 +154,14 @@ public class Dispatcher {
      *
      * @return RemoteObjectClient that can be used to communicate to the specified RMI object
      */
-    private RemoteObjectClient getRemoteObjectClient()
+    private RemoteObjectClient getRemoteObjectClient(String objIDString, String boundName, RMIEndpoint rmi)
     {
-        if( RMGOption.OBJID.notNull() ) {
-            ObjID objID = RMGUtils.parseObjID(RMGOption.OBJID.getString());
+        if( objIDString != null ) {
+            ObjID objID = RMGUtils.parseObjID(objIDString);
             return new RemoteObjectClient(rmi, objID);
 
-        } else if( RMGOption.BOUND_NAME.notNull() ) {
-            return new RemoteObjectClient(getRegistry(), RMGOption.BOUND_NAME.getString());
+        } else if( RMGOption.TARGET_BOUND_NAME.notNull() ) {
+            return new RemoteObjectClient(getRegistry(), boundName);
 
         } else {
             ExceptionHandler.missingTarget(p.getAction().name());
@@ -165,10 +181,10 @@ public class Dispatcher {
         if( results.size() == 0 )
             return;
 
-        String templateFolder = RMGOption.TEMPLATE_FOLDER.getString();
-        String sampleFolder = RMGOption.SAMPLE_FOLDER.getString();
-        boolean sslValue = RMGOption.SSL.getBool();
-        boolean followRedirect = RMGOption.FOLLOW.getBool();
+        String templateFolder = RMGOption.GUESS_TEMPLATE_FOLDER.getString();
+        String sampleFolder = RMGOption.GUESS_SAMPLE_FOLDER.getString();
+        boolean sslValue = RMGOption.CONN_SSL.getBool();
+        boolean followRedirect = RMGOption.CONN_FOLLOW.getBool();
 
         Logger.lineBreak();
         Logger.println("Starting creation of sample files:");
@@ -190,7 +206,7 @@ public class Dispatcher {
                     if(!remoteObject.isKnown())
                         writer.createInterface(boundName, remoteObject.className, client.remoteMethods);
 
-                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown(), client.remoteMethods, rmi);
+                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown(), client.remoteMethods, getRMIEndpoint());
 
                     Logger.decreaseIndent();
                 }
@@ -218,10 +234,10 @@ public class Dispatcher {
     {
         Set<MethodCandidate> candidates = new HashSet<MethodCandidate>();
 
-        String wordlistFile = RMGOption.WORDLIST_FILE.getString();
-        String wordlistFolder = RMGOption.WORDLIST_FOLDER.getString();
-        boolean zeroArg = RMGOption.ZERO_ARG.getBool();
-        boolean updateWordlist = RMGOption.UPDATE.getBool();
+        String wordlistFile = RMGOption.GUESS_WORDLIST_FILE.getString();
+        String wordlistFolder = RMGOption.GUESS_WORDLIST_FOLDER.getString();
+        boolean zeroArg = RMGOption.GUESS_ZERO_ARG.getBool();
+        boolean updateWordlist = RMGOption.GUESS_UPDATE.getBool();
 
         if( candidate != null ) {
             candidates.add(candidate);
@@ -244,19 +260,21 @@ public class Dispatcher {
     /**
      * Dispatches the listen action. Basically just a handover to ysoserial.
      */
-    @Parameters(count=4)
     public void dispatchListen()
     {
-        YsoIntegration.createJRMPListener(p.getHost(), p.getPort(), p.getGadget());
+        String listenerIP = (String) RMGOption.require(RMGOption.LISTEN_IP);
+        int listenerPort = RMGOption.requireInt(RMGOption.LISTEN_PORT);
+
+        YsoIntegration.createJRMPListener(listenerIP, listenerPort, p.getGadget());
     }
 
     /**
      * Performs deserialization attacks on default RMI components (RMI registry, DGC, Activator).
      * The targeted component needs to be specified within the --signature option.
      */
-    @Parameters(count=4, requires= {RMGOption.TARGET})
     public void dispatchSerial()
     {
+        RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
 
         if( component == null ) {
@@ -266,7 +284,7 @@ public class Dispatcher {
 
             int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
-            RemoteObjectClient client = getRemoteObjectClient();
+            RemoteObjectClient client = getRemoteObjectClient(rmi);
             client.gadgetCall(candidate, p.getGadget(), argumentPosition);
 
         } else {
@@ -280,7 +298,7 @@ public class Dispatcher {
 
                 case REGISTRY:
                     String regMethod = p.getRegMethod();
-                    boolean localhostBypass = RMGOption.LOCALHOST_BYPASS.getBool();
+                    boolean localhostBypass = RMGOption.BIND_BYPASS.getBool();
 
                     RegistryClient reg = new RegistryClient(rmi);
                     reg.gadgetCall(p.getGadget(), regMethod, localhostBypass);
@@ -303,12 +321,12 @@ public class Dispatcher {
      * Performs the genericCall operation on a RemoteObjectClient object. Used for legitimate
      * RMI calls on user registered RMI objects. Targets can be specified by bound name or ObjID.
      */
-    @Parameters(count=3, requires= {RMGOption.TARGET, RMGOption.SIGNATURE})
     public void dispatchCall()
     {
+        RMIEndpoint rmi = getRMIEndpoint();
         Object[] argumentArray = p.getCallArguments();
 
-        RemoteObjectClient client = getRemoteObjectClient();
+        RemoteObjectClient client = getRemoteObjectClient(rmi);
         client.genericCall(candidate, argumentArray);
     }
 
@@ -318,13 +336,14 @@ public class Dispatcher {
      * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
      */
     @SuppressWarnings("deprecation")
-    @Parameters(count=5, requires= {RMGOption.TARGET})
     public void dispatchCodebase()
     {
-        String className = p.getPositionalString(3);
-        RMGUtils.setCodebase(p.getPositionalString(4));
+        String codebase = (String) RMGOption.require(RMGOption.CODEBASE_URL);
+        String className = (String) RMGOption.require(RMGOption.CODEBASS_CLASS);
+        RMGUtils.setCodebase(codebase);
 
         Object payload = null;
+        RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
         int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
 
@@ -341,7 +360,7 @@ public class Dispatcher {
             if( candidate == null)
                 ExceptionHandler.missingSignature();
 
-            RemoteObjectClient client = getRemoteObjectClient();
+            RemoteObjectClient client = getRemoteObjectClient(rmi);
             client.codebaseCall(candidate, payload, argumentPosition);
 
         } else if( component == RMIComponent.DGC ) {
@@ -352,7 +371,7 @@ public class Dispatcher {
         } else if( component == RMIComponent.REGISTRY ) {
 
             RegistryClient reg = new RegistryClient(rmi);
-            reg.codebaseCall(payload, p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool());
+            reg.codebaseCall(payload, p.getRegMethod(), RMGOption.BIND_BYPASS.getBool());
 
         } else if( component == RMIComponent.ACTIVATOR ) {
 
@@ -368,39 +387,39 @@ public class Dispatcher {
      * Performs the bind operation on the RegistryClient object. Binds the user specified gadget to
      * the targeted registry.
      */
-    @Parameters(count=4, requires= {RMGOption.BOUND_NAME})
     public void dispatchBind()
     {
-        String boundName = RMGOption.BOUND_NAME.getString();
+        RMIEndpoint rmi = getRMIEndpoint();
+        String boundName = RMGOption.BIND_BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.bindObject(boundName, p.getGadget(), RMGOption.LOCALHOST_BYPASS.getBool());
+        reg.bindObject(boundName, p.getGadget(), RMGOption.BIND_BYPASS.getBool());
     }
 
     /**
      * Performs the rebind operation on the RegistryClient object. Binds the user specified gadget to
      * the targeted registry.
      */
-    @Parameters(count=4, requires= {RMGOption.BOUND_NAME})
     public void dispatchRebind()
     {
-        String boundName = RMGOption.BOUND_NAME.getString();
+        RMIEndpoint rmi = getRMIEndpoint();
+        String boundName = RMGOption.BIND_BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.rebindObject(boundName, p.getGadget(), RMGOption.LOCALHOST_BYPASS.getBool());
+        reg.rebindObject(boundName, p.getGadget(), RMGOption.BIND_BYPASS.getBool());
     }
 
     /**
      * Performs the unbind operation on the RegistryClient object. Removes a bound name from the
      * targeted registry endpoint.
      */
-    @Parameters(requires= {RMGOption.BOUND_NAME})
     public void dispatchUnbind()
     {
-        String boundName = RMGOption.BOUND_NAME.getString();
+        RMIEndpoint rmi = getRMIEndpoint();
+        String boundName = RMGOption.BIND_BOUND_NAME.getString();
 
         RegistryClient reg = new RegistryClient(rmi);
-        reg.unbindObject(boundName, RMGOption.LOCALHOST_BYPASS.getBool());
+        reg.unbindObject(boundName, RMGOption.BIND_BYPASS.getBool());
     }
 
     /**
@@ -410,6 +429,7 @@ public class Dispatcher {
     public void dispatchEnum()
     {
         RMGUtils.enableCodebase();
+        RMIEndpoint rmi = getRMIEndpoint();
 
         Formatter format = new Formatter();
         DGCClient dgc = new DGCClient(rmi);
@@ -425,7 +445,7 @@ public class Dispatcher {
 
                 obtainBoundNames();
 
-                if( !RMGOption.SSRFResponse.notNull() || RMGOption.BOUND_NAME.notNull() ) {
+                if( !RMGOption.SSRFRESPONSE.notNull() || RMGOption.TARGET_BOUND_NAME.notNull() ) {
                     obtainBoundObjects();
                     format.listBoundNames(remoteObjects);
 
@@ -437,7 +457,7 @@ public class Dispatcher {
                     format.listBoundNames(remoteObjects);
                 }
 
-                if( RMGOption.SSRFResponse.notNull() )
+                if( RMGOption.SSRFRESPONSE.notNull() )
                     return;
             }
 
@@ -448,7 +468,7 @@ public class Dispatcher {
 
             if( actions.contains(ScanAction.CODEBASE) ) {
                 Logger.lineBreak();
-                registryClient.enumCodebase(marshal, p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool());
+                registryClient.enumCodebase(marshal, p.getRegMethod(), RMGOption.ENUM_BYPASS.getBool());
             }
 
             if( actions.contains(ScanAction.LOCALHOST_BYPASS) ) {
@@ -476,7 +496,7 @@ public class Dispatcher {
 
         if(enumJEP290Bypass && actions.contains(ScanAction.FILTER_BYPASS) ) {
             Logger.lineBreak();
-            registryClient.enumJEP290Bypass(p.getRegMethod(), RMGOption.LOCALHOST_BYPASS.getBool(), marshal);
+            registryClient.enumJEP290Bypass(p.getRegMethod(), RMGOption.ENUM_BYPASS.getBool(), marshal);
         }
 
         if( actions.contains(ScanAction.ACTIVATOR) ) {
@@ -511,7 +531,7 @@ public class Dispatcher {
         Logger.decreaseIndent();
         format.listGuessedMethods(results);
 
-        if(results.size() > 0 && RMGOption.CREATE_SAMPLES.getBool())
+        if(results.size() > 0 && RMGOption.GUESS_CREATE_SAMPLES.getBool())
             this.writeSamples(results);
     }
 
@@ -521,10 +541,9 @@ public class Dispatcher {
      * to the argument parsing logic of remote-method-guesser, you need to specify the host and port
      * arguments as well.
      */
-    @Parameters(count=4)
     public void dispatchKnown()
     {
-        String className = p.getPositionalString(3);
+        String className = (String) RMGOption.require(RMGOption.KNOWN_CLASS);
         Formatter formatter = new Formatter();
 
         KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
@@ -542,7 +561,7 @@ public class Dispatcher {
      */
     public void dispatchPortScan()
     {
-        String host = p.getPositionalString(0);
+        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
         int[] rmiPorts = p.getRmiPots();
 
         Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
@@ -562,10 +581,11 @@ public class Dispatcher {
     /**
      * Prints detailed information on the user specified ObjID.
      */
-    @Parameters(count=4)
     public void dispatchObjID()
     {
-        ObjID objID = RMGUtils.parseObjID(p.getPositionalString(3));
+        String objIDString = (String) RMGOption.require(RMGOption.OBJID_OBJID);
+
+        ObjID objID = RMGUtils.parseObjID(objIDString);
         RMGUtils.printObjID(objID);
     }
 
@@ -577,21 +597,21 @@ public class Dispatcher {
      */
     public void dispatchRogueJMX()
     {
-        String host = p.getPositionalString(0);
-        int port = p.getPositionalInt(1);
+        int listenerPort = RMGOption.requireInt(RMGOption.LISTEN_PORT);
+        String listenerHost = (String) RMGOption.require(RMGOption.LISTEN_IP);
 
-        RogueJMX rogueJMX = new RogueJMX(host, port);
+        RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getString());
 
-        if( p.getArgumentCount() > 3 ) {
-            String jmxServer = p.getPositionalString(3);
-            String[] split = jmxServer.split(":");
+        if( RMGOption.ROGUEJMX_FORWARD_HOST.notNull() ) {
 
-            if(split.length != 2 || !split[1].matches("\\d+")) {
-                ExceptionHandler.invalidHostFormat(jmxServer);
-            }
+            String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getString();
+            int forwardPort = RMGOption.requireInt(RMGOption.ROGUEJMX_FORWARD_PORT);
 
-            this.rmi = new RMIEndpoint(split[0], Integer.valueOf(split[1]));
-            RemoteObjectClient client = getRemoteObjectClient();
+            String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getString();
+            String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getString();
+
+            RMIEndpoint rmi = new RMIEndpoint(forwardHost, forwardPort);
+            RemoteObjectClient client = getRemoteObjectClient(boundName, objid, rmi);
             client.assignInterface(RMIServer.class);
 
             rogueJMX.forwardTo(client);

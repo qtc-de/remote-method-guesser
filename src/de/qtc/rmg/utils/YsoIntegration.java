@@ -23,6 +23,7 @@ import java.util.Arrays;
 import javax.net.ServerSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.DummySocketFactory;
 import sun.rmi.server.UnicastRef;
@@ -48,7 +49,6 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class YsoIntegration {
 
-    private static String ysoPath;
     private static String[] bypassGadgets = new String[]{"JRMPClient2", "AnTrinh"};
 
     /**
@@ -86,10 +86,10 @@ public class YsoIntegration {
      */
     private static URLClassLoader getClassLoader() throws MalformedURLException
     {
-        File ysoJar = new File(ysoPath);
+        File ysoJar = new File(RMGOption.YSO.getString());
 
         if( !ysoJar.exists() ) {
-            ExceptionHandler.ysoNotPresent(ysoPath);
+            ExceptionHandler.ysoNotPresent(RMGOption.YSO.getString());
         }
 
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
@@ -271,15 +271,5 @@ public class YsoIntegration {
 
         ssfField.set(payloadObject, proxySSF);
         return payloadObject;
-    }
-
-    /**
-     * Sets the ysoserial path to the specified value.
-     *
-     * @param path file system path of ysoserial
-     */
-    public static void setYsoPath(String path)
-    {
-        ysoPath = path;
     }
 }

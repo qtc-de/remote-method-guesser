@@ -97,12 +97,12 @@ public class SSRFSocket extends Socket {
         byte[] content = bos.toByteArray();
         String hexContent = RMGUtils.bytesToHex(content);
 
-        if( RMGOption.GOPHER.getBool()) {
+        if( RMGOption.SSRF_GOPHER.getBool()) {
 
             StringBuilder builder = new StringBuilder();
             builder.append("gopher");
 
-            if( RMGOption.SSL.getBool() )
+            if( RMGOption.CONN_SSL.getBool() )
                 builder.append("s");
 
             builder.append("://" + host + ":" + port +"/_");
