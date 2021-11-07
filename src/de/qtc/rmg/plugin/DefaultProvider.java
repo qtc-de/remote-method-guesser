@@ -136,7 +136,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
             return new SSRFSocketFactory();
 
         } else if( RMGOption.SSRFRESPONSE.notNull() ) {
-            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFRESPONSE.getString());
+            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFRESPONSE.getValue());
             return new SSRFResponseSocketFactory(content);
 
         } else if( RMGOption.CONN_SSL.getBool() ) {

@@ -109,7 +109,7 @@ public class ArgumentHandler {
         if( RMGOption.GLOBAL_NO_COLOR.getBool() )
             Logger.disableColor();
 
-        PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getString());
+        PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
 
     /**
@@ -141,7 +141,7 @@ public class ArgumentHandler {
         if( regMethod != null )
             return regMethod;
 
-        String signature = RMGOption.REG_METHOD.getString();
+        String signature = RMGOption.REG_METHOD.getValue();
         String[] supported =  new String[]{"lookup", "unbind", "rebind", "bind"};
 
         if( signature == null ) {
@@ -178,7 +178,7 @@ public class ArgumentHandler {
         if( dgcMethod != null )
             return dgcMethod;
 
-        String signature = RMGOption.DGC_METHOD.getString();
+        String signature = RMGOption.DGC_METHOD.getValue();
 
         if( signature == null ) {
             dgcMethod = "clean";
@@ -212,7 +212,7 @@ public class ArgumentHandler {
         if( component != null )
             return component;
 
-        RMIComponent targetComponent = RMIComponent.getByShortName(RMGOption.TARGET_COMPONENT.getString());
+        RMIComponent targetComponent = RMIComponent.getByShortName(RMGOption.TARGET_COMPONENT.getValue());
 
         if( targetComponent == null )
             return null;
@@ -225,7 +225,7 @@ public class ArgumentHandler {
                 break;
 
             default:
-                Logger.eprintlnMixedYellow("Unsupported RMI component:", RMGOption.TARGET_COMPONENT.getString());
+                Logger.eprintlnMixedYellow("Unsupported RMI component:", RMGOption.TARGET_COMPONENT.getValue());
                 Logger.eprintMixedBlue("Supported values are", RMIComponent.ACTIVATOR.shortName + ", " + RMIComponent.DGC.shortName, "and ");
                 Logger.printlnPlainBlue(RMIComponent.REGISTRY.shortName);
                 RMGUtils.exit();
@@ -359,8 +359,8 @@ public class ArgumentHandler {
      */
     public void setSocketTimeout()
     {
-        String scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getString();
-        String scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getString();
+        String scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getValue();
+        String scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getValue();
 
         System.setProperty("sun.rmi.transport.connectionTimeout", scanTimeoutConnect);
         System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", scanTimeoutRead);

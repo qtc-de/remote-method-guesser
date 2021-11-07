@@ -86,10 +86,10 @@ public class YsoIntegration {
      */
     private static URLClassLoader getClassLoader() throws MalformedURLException
     {
-        File ysoJar = new File(RMGOption.YSO.getString());
+        File ysoJar = new File((String)RMGOption.YSO.getValue());
 
         if( !ysoJar.exists() ) {
-            ExceptionHandler.ysoNotPresent(RMGOption.YSO.getString());
+            ExceptionHandler.ysoNotPresent(RMGOption.YSO.getValue());
         }
 
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});

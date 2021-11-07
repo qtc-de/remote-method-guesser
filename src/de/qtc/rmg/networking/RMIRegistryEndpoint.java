@@ -81,7 +81,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
         if( RMGOption.TARGET_BOUND_NAME.notNull() )
-            return new String[] { RMGOption.TARGET_BOUND_NAME.getString() };
+            return new String[] { RMGOption.TARGET_BOUND_NAME.getValue() };
 
         String[] boundNames = null;
 

@@ -188,23 +188,21 @@ public enum RMGOption {
     }
 
     /**
-     * Returns the option value as String.
+     * Returns the value stored within the option.
      *
-     * @return option value as String
+     * @return value stored within the option
      */
-    public String getString()
+    @SuppressWarnings("unchecked")
+    public <T> T getValue()
     {
-        return (String)this.value;
-    }
+        try {
+            return (T)value;
 
-    /**
-     * Returns the option value as int.
-     *
-     * @return option value as int
-     */
-    public int getInt()
-    {
-        return (int)this.value;
+        } catch( ClassCastException e ) {
+            ExceptionHandler.internalError("RMGOption.getValue", "ClassCastException was caught.");
+        }
+
+        return null;
     }
 
     /**
@@ -260,11 +258,25 @@ public enum RMGOption {
 
             Object defaultValue = config.getProperty(option.name().toLowerCase());
 
-            if( defaultValue != null && intOptions.contains(option) )
-                defaultValue = Integer.valueOf((String)defaultValue);
+            try {
 
-            else if( defaultValue != null && booleanOptions.contains(option) )
-                defaultValue = Boolean.valueOf((String)defaultValue);
+                if( defaultValue != null && !((String) defaultValue).isEmpty() ) {
+
+                    if( intOptions.contains(option) )
+                        defaultValue = Integer.valueOf((String) defaultValue);
+
+                    else if( booleanOptions.contains(option) )
+                        defaultValue = Boolean.valueOf((String) defaultValue);
+
+                } else if( defaultValue != null && ((String) defaultValue).isEmpty() ) {
+                    defaultValue = null;
+                }
+
+            } catch( Exception e ) {
+                Logger.eprintlnMixedYellow("RMGOption", option.name, "obtained an invalid argument.");
+                ExceptionHandler.stackTrace(e);
+                RMGUtils.exit();
+            }
 
             option.setValue(args, defaultValue);
         }

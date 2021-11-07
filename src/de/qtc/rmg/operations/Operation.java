@@ -137,6 +137,8 @@ public enum Operation {
             RMGOption.GLOBAL_PLUGIN,
             RMGOption.LISTEN_IP,
             RMGOption.LISTEN_PORT,
+            RMGOption.GADGET_NAME,
+            RMGOption.GADGET_CMD,
     }),
 
     OBJID("dispatchObjID", "<objid>", "Print information contained within an ObjID", new RMGOption[] {

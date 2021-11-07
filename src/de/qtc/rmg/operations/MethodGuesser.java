@@ -61,7 +61,7 @@ public class MethodGuesser {
         this.candidates = candidates;
 
         this.knownClientList = new ArrayList<RemoteObjectClient>();
-        this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getInt());
+        this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getValue());
 
         if( !RMGOption.GUESS_FORCE_GUESSING.getBool() )
             remoteObjects = handleKnownMethods(remoteObjects);
@@ -248,7 +248,7 @@ public class MethodGuesser {
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
 
-        ExecutorService pool = Executors.newFixedThreadPool(RMGOption.THREADS.getInt());
+        ExecutorService pool = Executors.newFixedThreadPool(RMGOption.THREADS.getValue());
 
         for( RemoteObjectClient client : clientList ) {
             for( Set<MethodCandidate> candidates : candidateSets ) {

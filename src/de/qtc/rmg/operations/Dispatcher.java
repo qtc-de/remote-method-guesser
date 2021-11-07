@@ -103,7 +103,7 @@ public class Dispatcher {
         if( !RMGOption.TARGET_SIGNATURE.notNull() )
             return;
 
-        String signature = RMGOption.TARGET_SIGNATURE.getString();
+        String signature = RMGOption.TARGET_SIGNATURE.getValue();
 
         try {
             candidate = new MethodCandidate(signature);
@@ -143,7 +143,7 @@ public class Dispatcher {
     {
         RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME);
 
-        return getRemoteObjectClient(RMGOption.TARGET_OBJID.getString(), RMGOption.TARGET_BOUND_NAME.getString(), rmi);
+        return getRemoteObjectClient(RMGOption.TARGET_OBJID.getValue(), RMGOption.TARGET_BOUND_NAME.getValue(), rmi);
     }
 
     /**
@@ -181,8 +181,8 @@ public class Dispatcher {
         if( results.size() == 0 )
             return;
 
-        String templateFolder = RMGOption.GUESS_TEMPLATE_FOLDER.getString();
-        String sampleFolder = RMGOption.GUESS_SAMPLE_FOLDER.getString();
+        String templateFolder = RMGOption.GUESS_TEMPLATE_FOLDER.getValue();
+        String sampleFolder = RMGOption.GUESS_SAMPLE_FOLDER.getValue();
         boolean sslValue = RMGOption.CONN_SSL.getBool();
         boolean followRedirect = RMGOption.CONN_FOLLOW.getBool();
 
@@ -234,8 +234,8 @@ public class Dispatcher {
     {
         Set<MethodCandidate> candidates = new HashSet<MethodCandidate>();
 
-        String wordlistFile = RMGOption.GUESS_WORDLIST_FILE.getString();
-        String wordlistFolder = RMGOption.GUESS_WORDLIST_FOLDER.getString();
+        String wordlistFile = RMGOption.GUESS_WORDLIST_FILE.getValue();
+        String wordlistFolder = RMGOption.GUESS_WORDLIST_FOLDER.getValue();
         boolean zeroArg = RMGOption.GUESS_ZERO_ARG.getBool();
         boolean updateWordlist = RMGOption.GUESS_UPDATE.getBool();
 
@@ -282,7 +282,7 @@ public class Dispatcher {
             if( candidate == null )
                 ExceptionHandler.missingSignature();
 
-            int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
+            int argumentPosition = RMGOption.ARGUMENT_POS.getValue();
 
             RemoteObjectClient client = getRemoteObjectClient(rmi);
             client.gadgetCall(candidate, p.getGadget(), argumentPosition);
@@ -345,7 +345,7 @@ public class Dispatcher {
         Object payload = null;
         RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
-        int argumentPosition = RMGOption.ARGUMENT_POS.getInt();
+        int argumentPosition = RMGOption.ARGUMENT_POS.getValue();
 
         try {
             payload = RMGUtils.makeSerializableClass(className);
@@ -390,7 +390,7 @@ public class Dispatcher {
     public void dispatchBind()
     {
         RMIEndpoint rmi = getRMIEndpoint();
-        String boundName = RMGOption.BIND_BOUND_NAME.getString();
+        String boundName = RMGOption.BIND_BOUND_NAME.getValue();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.bindObject(boundName, p.getGadget(), RMGOption.BIND_BYPASS.getBool());
@@ -403,7 +403,7 @@ public class Dispatcher {
     public void dispatchRebind()
     {
         RMIEndpoint rmi = getRMIEndpoint();
-        String boundName = RMGOption.BIND_BOUND_NAME.getString();
+        String boundName = RMGOption.BIND_BOUND_NAME.getValue();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.rebindObject(boundName, p.getGadget(), RMGOption.BIND_BYPASS.getBool());
@@ -416,7 +416,7 @@ public class Dispatcher {
     public void dispatchUnbind()
     {
         RMIEndpoint rmi = getRMIEndpoint();
-        String boundName = RMGOption.BIND_BOUND_NAME.getString();
+        String boundName = RMGOption.BIND_BOUND_NAME.getValue();
 
         RegistryClient reg = new RegistryClient(rmi);
         reg.unbindObject(boundName, RMGOption.BIND_BYPASS.getBool());
@@ -600,15 +600,15 @@ public class Dispatcher {
         int listenerPort = RMGOption.requireInt(RMGOption.LISTEN_PORT);
         String listenerHost = (String) RMGOption.require(RMGOption.LISTEN_IP);
 
-        RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getString());
+        RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getValue());
 
         if( RMGOption.ROGUEJMX_FORWARD_HOST.notNull() ) {
 
-            String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getString();
+            String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getValue();
             int forwardPort = RMGOption.requireInt(RMGOption.ROGUEJMX_FORWARD_PORT);
 
-            String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getString();
-            String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getString();
+            String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getValue();
+            String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getValue();
 
             RMIEndpoint rmi = new RMIEndpoint(forwardHost, forwardPort);
             RemoteObjectClient client = getRemoteObjectClient(boundName, objid, rmi);
