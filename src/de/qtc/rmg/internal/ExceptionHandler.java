@@ -446,8 +446,8 @@ public class ExceptionHandler {
 
     public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
-        Logger.printlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
-        Logger.printlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
+        Logger.eprintlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
+        Logger.eprintlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -497,6 +497,13 @@ public class ExceptionHandler {
         ExceptionHandler.sslOption();
         ExceptionHandler.showStackTrace(e);
         RMGUtils.exit();
+    }
+
+    public static void genericCall(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", e.getClass().getName(), "during generic call action.");
+        Logger.printlnMixedBlue("The call was", "probably successful,", "but caused an exception on the server side.");
+        ExceptionHandler.stackTrace(e);
     }
 
     public static void connectException(Exception e, String callName)
@@ -572,12 +579,12 @@ public class ExceptionHandler {
     /**
      * By using the --stack-trace option, uses can always display stack traces if they
      * want to. This is handled by this function. It checks whether --stack-trace was used
-     * (in this case alwaysShowExceptions is true) and prints the stacktrace if desired.
-     * This function should be used in most of the error handling code of rmg.
+     * and prints the stacktrace if desired. This function should be used in most of the error
+     * handling code of remote-method-guesser.
      *
      * @param e Exception that was caught.
      */
-    public static void showStackTrace(Exception e)
+    public static <T extends Throwable> void showStackTrace(T e)
     {
         if( RMGOption.GLOBAL_STACK_TRACE.getBool() ) {
             Logger.eprintln("");
@@ -590,18 +597,7 @@ public class ExceptionHandler {
      *
      * @param e Exception that was caught.
      */
-    public static void stackTrace(Exception e)
-    {
-        Logger.eprintln("StackTrace:");
-        e.printStackTrace();
-    }
-
-    /**
-     * Helper function that prints a stacktrace with a prefixed Logger item.
-     *
-     * @param e Exception that was caught.
-     */
-    public static void stackTrace(Throwable e)
+    public static <T extends Throwable> void stackTrace(T e)
     {
         Logger.eprintln("StackTrace:");
         e.printStackTrace();

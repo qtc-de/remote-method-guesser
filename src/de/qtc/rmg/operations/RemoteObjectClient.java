@@ -286,13 +286,16 @@ public class RemoteObjectClient {
 
             } else if( cause instanceof java.lang.UnsupportedOperationException ) {
                 ExceptionHandler.unsupportedOperationException(e, "method");
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
             }
 
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, this.objID, true);
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
+            ExceptionHandler.genericCall(e);
         }
     }
 

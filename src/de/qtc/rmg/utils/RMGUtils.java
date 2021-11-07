@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import javassist.CannotCompileException;
@@ -1157,5 +1158,36 @@ public class RMGUtils {
 
         filterField.setAccessible(true);
         filterField.set(uref, filter);
+    }
+
+    /**
+     * Returns the ObjID for the user specified RMI component,
+     *
+     * @return ObjID for the user specified RMI component.
+     */
+    public static ObjID getObjIDByComponent(RMIComponent component)
+    {
+        if( component == null )
+            ExceptionHandler.internalError("RMGUtils.getObjIDByComponent", "Was called with null component.");
+
+        ObjID returnValue = null;
+
+        switch( component ) {
+
+            case REGISTRY:
+                returnValue = new ObjID(ObjID.REGISTRY_ID);
+                break;
+            case ACTIVATOR:
+                returnValue = new ObjID(ObjID.ACTIVATOR_ID);
+                break;
+            case DGC:
+                returnValue = new ObjID(ObjID.DGC_ID);
+                break;
+
+            default:
+                ExceptionHandler.internalError("RMGUtils.getObjIDByComponent", "The specified component was invalid.");
+        }
+
+        return returnValue;
     }
 }

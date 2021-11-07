@@ -238,7 +238,7 @@ public enum RMGOption {
      */
     public void setValue(Namespace args, Object def)
     {
-        this.value = args.get(this.name.replace("-", ""));
+        this.value = args.get(this.name.replaceFirst("--", "").replace("-", "_"));
         this.setValue(value, def);
     }
 

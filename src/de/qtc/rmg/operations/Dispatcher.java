@@ -141,7 +141,12 @@ public class Dispatcher {
 
     private RemoteObjectClient getRemoteObjectClient(RMIEndpoint rmi)
     {
-        RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME);
+        RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME, RMGOption.TARGET_COMPONENT);
+
+        if(RMGOption.TARGET_BOUND_NAME.isNull() && RMGOption.TARGET_OBJID.isNull()) {
+            RMIComponent component = p.getComponent();
+            RMGOption.TARGET_OBJID.setValue( RMGUtils.getObjIDByComponent(component).toString() );
+        }
 
         return getRemoteObjectClient(RMGOption.TARGET_OBJID.getValue(), RMGOption.TARGET_BOUND_NAME.getValue(), rmi);
     }
@@ -276,6 +281,7 @@ public class Dispatcher {
     {
         RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
+        RMGOption.requireOneOf(RMGOption.TARGET_SIGNATURE, RMGOption.TARGET_COMPONENT);
 
         if( component == null ) {
 

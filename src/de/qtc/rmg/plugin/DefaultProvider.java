@@ -117,6 +117,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
             Logger.eprintlnMixedBlue("Argument string has to be a valid Java expression like:", "'\"id\", new Integer(4)'.");
             Logger.eprintMixedYellow("Make sure that each argument is an", "Object", "not a ");
             Logger.printlnPlainYellow("Primitive.");
+            ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
 
         } catch (Exception e) {
