@@ -115,8 +115,8 @@ public class Dispatcher {
 
     public RMIEndpoint getRMIEndpoint()
     {
-        int port = RMGOption.requireInt(RMGOption.TARGET_PORT);
-        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
+        int port = RMGOption.require(RMGOption.TARGET_PORT);
+        String host = RMGOption.require(RMGOption.TARGET_HOST);
 
         this.createMethodCandidate();
         return new RMIEndpoint(host, port);
@@ -130,8 +130,8 @@ public class Dispatcher {
      */
     private RMIRegistryEndpoint getRegistry()
     {
-        int port = RMGOption.requireInt(RMGOption.TARGET_PORT);
-        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
+        int port = RMGOption.require(RMGOption.TARGET_PORT);
+        String host = RMGOption.require(RMGOption.TARGET_HOST);
 
         if(rmiReg == null)
             rmiReg = new RMIRegistryEndpoint(host, port);
@@ -267,8 +267,8 @@ public class Dispatcher {
      */
     public void dispatchListen()
     {
-        String listenerIP = (String) RMGOption.require(RMGOption.LISTEN_IP);
-        int listenerPort = RMGOption.requireInt(RMGOption.LISTEN_PORT);
+        String listenerIP = RMGOption.require(RMGOption.LISTEN_IP);
+        int listenerPort = RMGOption.require(RMGOption.LISTEN_PORT);
 
         YsoIntegration.createJRMPListener(listenerIP, listenerPort, p.getGadget());
     }
@@ -344,8 +344,8 @@ public class Dispatcher {
     @SuppressWarnings("deprecation")
     public void dispatchCodebase()
     {
-        String codebase = (String) RMGOption.require(RMGOption.CODEBASE_URL);
-        String className = (String) RMGOption.require(RMGOption.CODEBASS_CLASS);
+        String codebase = RMGOption.require(RMGOption.CODEBASE_URL);
+        String className = RMGOption.require(RMGOption.CODEBASS_CLASS);
         RMGUtils.setCodebase(codebase);
 
         Object payload = null;
@@ -549,7 +549,7 @@ public class Dispatcher {
      */
     public void dispatchKnown()
     {
-        String className = (String) RMGOption.require(RMGOption.KNOWN_CLASS);
+        String className = RMGOption.require(RMGOption.KNOWN_CLASS);
         Formatter formatter = new Formatter();
 
         KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
@@ -567,7 +567,7 @@ public class Dispatcher {
      */
     public void dispatchPortScan()
     {
-        String host = (String) RMGOption.require(RMGOption.TARGET_HOST);
+        String host = RMGOption.require(RMGOption.TARGET_HOST);
         int[] rmiPorts = p.getRmiPots();
 
         Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
@@ -589,7 +589,7 @@ public class Dispatcher {
      */
     public void dispatchObjID()
     {
-        String objIDString = (String) RMGOption.require(RMGOption.OBJID_OBJID);
+        String objIDString = RMGOption.require(RMGOption.OBJID_OBJID);
 
         ObjID objID = RMGUtils.parseObjID(objIDString);
         RMGUtils.printObjID(objID);
@@ -603,15 +603,15 @@ public class Dispatcher {
      */
     public void dispatchRogueJMX()
     {
-        int listenerPort = RMGOption.requireInt(RMGOption.LISTEN_PORT);
-        String listenerHost = (String) RMGOption.require(RMGOption.LISTEN_IP);
+        int listenerPort = RMGOption.require(RMGOption.LISTEN_PORT);
+        String listenerHost = RMGOption.require(RMGOption.LISTEN_IP);
 
         RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getValue());
 
         if( RMGOption.ROGUEJMX_FORWARD_HOST.notNull() ) {
 
             String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getValue();
-            int forwardPort = RMGOption.requireInt(RMGOption.ROGUEJMX_FORWARD_PORT);
+            int forwardPort = RMGOption.require(RMGOption.ROGUEJMX_FORWARD_PORT);
 
             String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getValue();
             String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getValue();

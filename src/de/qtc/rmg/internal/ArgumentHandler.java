@@ -245,7 +245,16 @@ public class ArgumentHandler {
     public Object getGadget()
     {
         String gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
-        String command = (String) RMGOption.require(RMGOption.GADGET_CMD);
+        RMGOption.requireOneOf(RMGOption.GADGET_NAME, RMGOption.BIND_ADDRESS);
+
+        String command = "";
+
+        if( this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND )
+            command = RMGOption.require(RMGOption.BIND_ADDRESS);
+
+        else
+            command = RMGOption.require(RMGOption.GADGET_CMD);
+
 
         return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
     }

@@ -49,7 +49,8 @@ public enum RMGOption {
     SSRFRESPONSE("--ssrf-response", "evaluate ssrf response from the server", Arguments.store(), RMGOptionGroup.ACTION, "response"),
 
     BIND_OBJID("--bind-objid", "ObjID of the bound object.", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
-    BIND_BOUND_NAME("--bind-bound-name", "Bound name to use for (un)bind action", Arguments.store(), RMGOptionGroup.ACTION, "name"),
+    BIND_ADDRESS("bind-host", "host specifications the bound remote object should point to", Arguments.store(), RMGOptionGroup.ACTION, "host:port"),
+    BIND_BOUND_NAME("bound-name", "Bound name to use for (un)bind action", Arguments.store(), RMGOptionGroup.ACTION, "name"),
     BIND_BYPASS("--localhost-bypass", "attempt localhost bypass (CVE-2019-2684)", Arguments.storeTrue(), RMGOptionGroup.ACTION),
 
     CODEBASS_CLASS("classname", "classname to load during codebase attack", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
@@ -359,28 +360,23 @@ public enum RMGOption {
      * @param option RMGOption that is required
      * @return the currently set option value
      */
-    public static Object require(RMGOption option)
+    @SuppressWarnings("unchecked")
+    public static <T> T require(RMGOption option)
     {
-        if( option.notNull() )
-            return option.value;
+        if( option.notNull() ) {
+
+            try {
+                return (T)option.value;
+
+            } catch( ClassCastException e ) {
+                ExceptionHandler.internalError("RMGOption.require", "Caught class cast exception.");
+            }
+        }
 
         Logger.eprintlnMixedYellow("Error: The specified aciton requires the", option.name, "option.");
         RMGUtils.exit();
 
         return null;
-    }
-
-    /**
-     * The require function allows other parts of the source code to require an option value.
-     * If the corresponding option was not set, an error message is printed and the current execution
-     * ends. This should be called first by functions that require an specific argument.
-     *
-     * @param option RMGOption that is required
-     * @return the currently set option value
-     */
-    public static int requireInt(RMGOption option)
-    {
-        return (int)require(option);
     }
 
     /**

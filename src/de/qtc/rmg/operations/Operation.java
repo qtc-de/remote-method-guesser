@@ -37,6 +37,7 @@ public enum Operation {
             RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
+            RMGOption.BIND_ADDRESS,
     }),
 
     CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments", new RMGOption[] {
@@ -105,6 +106,7 @@ public enum Operation {
             RMGOption.TARGET_SIGNATURE,
             RMGOption.TARGET_BOUND_NAME,
             RMGOption.TARGET_OBJID,
+            RMGOption.TARGET_COMPONENT,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
@@ -165,6 +167,7 @@ public enum Operation {
             RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
+            RMGOption.BIND_ADDRESS,
     }),
 
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
