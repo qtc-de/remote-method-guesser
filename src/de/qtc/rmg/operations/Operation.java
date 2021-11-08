@@ -84,7 +84,6 @@ public enum Operation {
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
-            RMGOption.TARGET_SIGNATURE,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
@@ -173,7 +172,6 @@ public enum Operation {
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
-            RMGOption.GLOBAL_PLUGIN,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.GLOBAL_VERBOSE,
             RMGOption.CONN_SSL,
@@ -183,6 +181,8 @@ public enum Operation {
             RMGOption.ROGUEJMX_FORWARD_PORT,
             RMGOption.ROGUEJMX_FORWARD_BOUND_NAME,
             RMGOption.ROGUEJMX_FORWARD_OBJID,
+            RMGOption.LISTEN_IP,
+            RMGOption.LISTEN_PORT
     }),
 
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports", new RMGOption[] {
@@ -224,7 +224,6 @@ public enum Operation {
             RMGOption.TARGET_PORT,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
-            RMGOption.GLOBAL_PLUGIN,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.GLOBAL_VERBOSE,
             RMGOption.CONN_SSL,
