@@ -244,17 +244,17 @@ public class ArgumentHandler {
      */
     public Object getGadget()
     {
-        String gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
-        RMGOption.requireOneOf(RMGOption.GADGET_NAME, RMGOption.BIND_ADDRESS);
+        String gadget = null;
+        String command = null;
 
-        String command = "";
-
-        if( this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND )
+        if( this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND ) {
+            gadget = "jmx";
             command = RMGOption.require(RMGOption.BIND_ADDRESS);
 
-        else
+        } else {
+            gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
             command = RMGOption.require(RMGOption.GADGET_CMD);
-
+        }
 
         return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
     }
