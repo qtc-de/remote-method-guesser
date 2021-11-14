@@ -8,18 +8,17 @@ tester:
     - jdk9
 
 variables:
-  BASE-CMD:
-    - rmg
-    - --no-color
+  TARGET:
     - ${DOCKER-IP}
     - 9010
 
-  BASE-CMD-SSL:
-    - rmg
-    - --no-color
-    - --ssl
+  TARGET-SSL:
     - ${DOCKER-IP}
     - 1090
+    - --ssl
+
+  OPTIONS:
+    - --no-color
 
 containers:
   - name: 'rmg-jdk9'

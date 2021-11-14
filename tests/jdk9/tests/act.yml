@@ -24,13 +24,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
       - --component
       - act
+      - ${OPTIONS}
+
     validators:
       - error: False
       - regex:
@@ -50,13 +53,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections1337
       - invalid
       - --component
       - act
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:
@@ -74,13 +80,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - ls
       - --component
       - act
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
