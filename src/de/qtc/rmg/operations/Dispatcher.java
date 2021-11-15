@@ -279,9 +279,10 @@ public class Dispatcher {
      */
     public void dispatchSerial()
     {
+        RMGOption.requireTarget();
+
         RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
-        RMGOption.requireOneOf(RMGOption.TARGET_SIGNATURE, RMGOption.TARGET_COMPONENT);
 
         if( component == null ) {
 
@@ -344,6 +345,8 @@ public class Dispatcher {
     @SuppressWarnings("deprecation")
     public void dispatchCodebase()
     {
+        RMGOption.requireTarget();
+
         String codebase = RMGOption.require(RMGOption.CODEBASE_URL);
         String className = RMGOption.require(RMGOption.CODEBASS_CLASS);
         RMGUtils.setCodebase(codebase);

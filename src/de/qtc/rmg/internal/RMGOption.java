@@ -425,4 +425,13 @@ public enum RMGOption {
             }
         }
     }
+
+    /**
+     * Helper function that calls requireOneOf with target related options. This is used by functions that require
+     * a target that could either be an RMI component, a bound name or an ObjID.
+     */
+    public static void requireTarget()
+    {
+        RMGOption.requireOneOf(RMGOption.TARGET_COMPONENT, RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME);
+    }
 }

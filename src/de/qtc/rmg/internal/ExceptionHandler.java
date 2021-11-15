@@ -697,8 +697,13 @@ public class ExceptionHandler {
                     ExceptionHandler.unexpectedException(e, method, "call", false);
                 }
 
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( cause.getMessage().contains("Cannot cast an object to java.lang.String") )
+                    ExceptionHandler.codebaseClassCast(e, true);
+
+                else
+                    ExceptionHandler.codebaseClassCast(e, false);
 
             } else if( cause instanceof java.security.AccessControlException) {
                 ExceptionHandler.accessControl(e, method, "call");
@@ -797,8 +802,13 @@ public class ExceptionHandler {
                     ExceptionHandler.deserializeClassNotFound(e);
                 }
 
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( cause.getMessage().contains("Cannot cast an object to java.lang.String") )
+                    ExceptionHandler.codebaseClassCast(e, true);
+
+                else
+                    ExceptionHandler.codebaseClassCast(e, false);
 
             } else {
                 ExceptionHandler.unknownDeserializationException(e);
