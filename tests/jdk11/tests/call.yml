@@ -28,14 +28,17 @@ tests:
     description: |-
       'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"touch ${volume-d}/${file}"'
       - --bound-name 
       - plain-server
       - --signature
       - 'String execute(String dummy)'
+      - ${OPTIONS}
+
     validators:
       - error: False
       - file_exists:
@@ -51,9 +54,10 @@ tests:
     groups:
       - response-handler
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"id"'
       - --bound-name 
       - plain-server
@@ -61,6 +65,8 @@ tests:
       - 'String execute(String dummy)'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -78,9 +84,10 @@ tests:
     groups:
       - argument-provider
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - login
       - --bound-name 
       - legacy-service
@@ -88,6 +95,8 @@ tests:
       - 'String login(java.util.HashMap dummy1)'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -103,9 +112,10 @@ tests:
     groups:
       - response-handler
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - ''
       - --objid
       - 0
@@ -113,6 +123,8 @@ tests:
       - 'String[] list()'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -130,9 +142,10 @@ tests:
     groups:
       - response-handler
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - ''
       - --objid
       - '[0:0:0, 0]'
@@ -140,6 +153,8 @@ tests:
       - 'String[] list()'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -154,14 +169,17 @@ tests:
       'Invokes a function on an invalid bound name and checks'
       'the corresponding error message.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"id"'
       - --bound-name 
       - legacy-server
       - --signature
       - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:
@@ -174,14 +192,17 @@ tests:
     description: |-
       'Invokes a function using an invalid argument definition.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '5'
       - --bound-name 
       - legacy-service
       - --signature
       - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:

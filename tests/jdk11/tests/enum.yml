@@ -15,7 +15,12 @@ tests:
       'Check whether the bound name, codebase, objID and activator enumeration'
       'is working as expected.'
 
-    command: '${BASE-CMD-SSL}'
+    command:
+      - rmg
+      - enum
+      - ${TARGET-SSL}
+      - ${OPTIONS}
+
     validators:
       - error: False
 
@@ -57,7 +62,11 @@ tests:
 
 
   - title: 'Legacy Server Enumeration'
-    command: '${BASE-CMD}'
+    command:
+      - rmg
+      - enum
+      - ${TARGET}
+      - ${OPTIONS}
 
     validators:
       - error: False
