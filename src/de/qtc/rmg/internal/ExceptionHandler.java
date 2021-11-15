@@ -699,7 +699,7 @@ public class ExceptionHandler {
 
             } else if( cause instanceof java.lang.ClassCastException ) {
 
-                if ( cause.getMessage().contains("Cannot cast an object to java.lang.String") )
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
                     ExceptionHandler.codebaseClassCast(e, true);
 
                 else
@@ -739,7 +739,12 @@ public class ExceptionHandler {
             ExceptionHandler.illegalArgumentCodebase(e);
 
         } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.codebaseClassCast(e, true);
+
+            else
+                ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( java.security.AccessControlException e ) {
             ExceptionHandler.accessControl(e, method, "call");
@@ -804,18 +809,23 @@ public class ExceptionHandler {
 
             } else if( cause instanceof java.lang.ClassCastException ) {
 
-                if ( cause.getMessage().contains("Cannot cast an object to java.lang.String") )
-                    ExceptionHandler.codebaseClassCast(e, true);
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
+                    ExceptionHandler.deserlializeClassCast(e, true);
 
                 else
-                    ExceptionHandler.codebaseClassCast(e, false);
+                    ExceptionHandler.deserlializeClassCast(e, false);
 
             } else {
                 ExceptionHandler.unknownDeserializationException(e);
             }
 
         } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.deserlializeClassCast(e, true);
+
+            else
+                ExceptionHandler.deserlializeClassCast(e, false);
 
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);

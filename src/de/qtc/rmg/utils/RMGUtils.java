@@ -1190,4 +1190,24 @@ public class RMGUtils {
 
         return returnValue;
     }
+
+    /**
+     * Determines whether a ClassCastException was created by readString because of an non-String type being passed
+     * to a call that expected String.
+     *
+     * @param msg Message of the ClassCastException
+     * @return true if created by readString
+     */
+    public static boolean createdByReadString(String msg)
+    {
+        if( msg.equals("Cannot cast a class to java.lang.String") ||
+            msg.equals("Cannot cast an array to java.lang.String") ||
+            msg.equals("Cannot cast an enum to java.lang.String") ||
+            msg.equals("Cannot cast an object to java.lang.String") ||
+            msg.equals("Cannot cast an exception to java.lang.String")
+        )
+            return true;
+
+        return false;
+    }
 }
