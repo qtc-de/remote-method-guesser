@@ -7,18 +7,6 @@ tester:
   groups:
     - jdk9
 
-variables:
-  TARGET:
-    - ${DOCKER-IP}
-    - 9010
-
-  TARGET-SSL:
-    - ${DOCKER-IP}
-    - 1090
-    - --ssl
-
-  OPTIONS:
-    - --no-color
 
 containers:
   - name: 'rmg-jdk9'
@@ -28,6 +16,7 @@ containers:
     aliases:
       DOCKER-rmg-jdk9-IP: DOCKER-IP
       DOCKER-rmg-jdk9-GATEWAY: DOCKER-GW
+
 
 testers:
   - ./tests/*

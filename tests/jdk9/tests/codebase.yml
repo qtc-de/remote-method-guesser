@@ -182,7 +182,7 @@ tests:
       - error: True
       - contains:
           values:
-            - 'The --signature option is required for the requested operation'
+            - 'The specified aciton requires one of the --component, --objid, --bound-name options'
 
 
   - title: No Class Load
