@@ -1,0 +1,59 @@
+tester:
+  title: Rogue JMX Tests
+  description: |-
+    "Perform tests on remote-method-guesser's roguejmx action"
+
+
+  id: '004-004'
+  groups:
+    - jmx
+  id_pattern: '004-004-{:03}'
+
+
+containers:
+  - name: 'rmg-ssrf'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-ssrf-server:1.0'
+    network_mode: host
+
+
+variables:
+  ROGUE_OBJID: '[6633018:17cb5d1bb57:-7ff8, -8114172517417646722]'
+  JMX_LOG_1: /tmp/rmg-rogue-jmx-test-1.log
+  JMX_LOG_2: /tmp/rmg-rogue-jmx-test-2.log
+
+
+
+tests:
+  - title: Preparation (extract)
+    description: |-
+      'Extract ObjID value of original JMX instance'
+
+    command:
+      - rmg
+      - enum
+      - 127.0.0.1
+      - 1090
+      - --scan-action
+      - list
+      - --bound-name
+      - jmxrmi
+      - --no-color
+
+    validators:
+      - contains:
+          values:
+            - 'ObjID'
+
+    extractors:
+      - regex:
+          pattern: 'ObjID: (\[.+\])'
+          variable: 'FORWARD_OBJID'
+          on_miss: 'break'
+      - regex:
+          pattern: ' Endpoint: localhost:(\d+)'
+          variable: 'FORWARD_PORT'
+          on_miss: 'break'
+
+
+testers:
+  - ./rogue-jmx-child.yml
