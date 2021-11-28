@@ -149,7 +149,7 @@ function _rmg() {
             _filedir
             return 0
 
-        elif _comp_contains "--ssrf-response" $prev; then
+        elif _comp_contains "--ssrf-response --bound-name" $prev; then
             return 0
 
         elif _comp_contains "--scan-action" $prev; then
@@ -163,6 +163,7 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
             opts="--help"
+            opts="$opts --bound-name"
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
