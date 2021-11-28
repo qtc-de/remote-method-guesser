@@ -107,7 +107,7 @@ public enum RMGOption {
     public Object value = null;
 
     private final static EnumSet<RMGOption> intOptions = EnumSet.of(RMGOption.THREADS, RMGOption.ARGUMENT_POS, RMGOption.SCAN_TIMEOUT_CONNECT,
-            RMGOption.SCAN_TIMEOUT_READ, RMGOption.LISTEN_PORT, RMGOption.TARGET_PORT);
+            RMGOption.SCAN_TIMEOUT_READ, RMGOption.LISTEN_PORT, RMGOption.TARGET_PORT, RMGOption.ROGUEJMX_FORWARD_PORT);
     private final static EnumSet<RMGOption> booleanOptions = EnumSet.of(RMGOption.GLOBAL_VERBOSE, RMGOption.GLOBAL_NO_COLOR, RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.CONN_FOLLOW, RMGOption.CONN_SSL, RMGOption.SSRF_GOPHER, RMGOption.SSRF, RMGOption.BIND_BYPASS, RMGOption.GUESS_CREATE_SAMPLES,
             RMGOption.GUESS_TRUSTED, RMGOption.GUESS_FORCE_GUESSING, RMGOption.GUESS_DUPLICATES, RMGOption.GUESS_UPDATE, RMGOption.GUESS_ZERO_ARG,
