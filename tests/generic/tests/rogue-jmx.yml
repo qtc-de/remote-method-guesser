@@ -56,4 +56,4 @@ tests:
 
 
 testers:
-  - ./rogue-jmx-child.yml
+  - ./rogue-jmx/rogue-jmx-child.yml
