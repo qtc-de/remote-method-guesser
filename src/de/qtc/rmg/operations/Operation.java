@@ -84,6 +84,7 @@ public enum Operation {
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.TARGET_BOUND_NAME,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
