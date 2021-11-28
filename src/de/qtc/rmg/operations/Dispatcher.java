@@ -620,7 +620,7 @@ public class Dispatcher {
             String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getValue();
 
             RMIEndpoint rmi = new RMIEndpoint(forwardHost, forwardPort);
-            RemoteObjectClient client = getRemoteObjectClient(boundName, objid, rmi);
+            RemoteObjectClient client = getRemoteObjectClient(objid, boundName, rmi);
             client.assignInterface(RMIServer.class);
 
             rogueJMX.forwardTo(client);
