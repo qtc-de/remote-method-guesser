@@ -15,11 +15,13 @@ tests:
     description: |-
       'Dispatches the default action (enum) with the --ssrf option.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -32,12 +34,14 @@ tests:
     description: |-
       'Dispatches the default action (enum) with the --ssrf and --gopher option.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
       - --ssrf
       - --gopher
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -50,13 +54,15 @@ tests:
     description: |-
       'Dispatches the activator enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - activator
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -69,13 +75,15 @@ tests:
     description: |-
       'Dispatches the codease enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - codebase
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -88,13 +96,15 @@ tests:
     description: |-
       'Dispatches the security-manager enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - security-manager
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -107,13 +117,15 @@ tests:
     description: |-
       'Dispatches the JEP290 enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - jep290
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -126,13 +138,15 @@ tests:
     description: |-
       'Dispatches the JEP290 Bypass enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
-      - filter_bypass
+      - --scan-action
+      - filter-bypass
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -145,13 +159,15 @@ tests:
     description: |-
       'Dispatches the list enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - list
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -164,15 +180,17 @@ tests:
     description: |-
       'Dispatches the lookup enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
+      - --scan-action
       - list
       - --bound-name
       - test
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -185,13 +203,15 @@ tests:
     description: |-
       'Dispatches the localhost bypass enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
-      - localhost_bypass
+      - --scan-action
+      - localhost-bypass
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
@@ -204,13 +224,15 @@ tests:
     description: |-
       'Dispatches the localhost bypass enumeration with the --ssrf option'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 0.0.0.0
       - 9010
-      - enum
-      - string_marshalling
+      - --scan-action
+      - string-marshalling
       - --ssrf
+      - ${OPTIONS}
 
     validators:
       - error: False
