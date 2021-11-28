@@ -3,9 +3,9 @@ package de.qtc.rmg.internal;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -278,14 +278,15 @@ public class ArgumentHandler {
      *
      * @return EnumSet of ScanAction which were requested by the user.
      */
+    @SuppressWarnings("unchecked")
     public EnumSet<ScanAction> getScanActions()
     {
-        String[] scanActions = (String[]) RMGOption.ENUM_ACTION.value;
+        List<String> scanActions = (List<String>) RMGOption.ENUM_ACTION.value;
 
         if( scanActions == null )
             return EnumSet.allOf(ScanAction.class);
 
-        return ScanAction.parseScanActions(Arrays.asList(scanActions));
+        return ScanAction.parseScanActions(scanActions);
     }
 
     /**
