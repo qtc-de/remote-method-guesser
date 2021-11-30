@@ -45,11 +45,6 @@ function _rmg() {
         elif _comp_contains "--ssrf-response --bind-objid" $prev; then
             return 0
 
-        elif [[ $cword -eq 4 ]]; then
-            _ip_addresses
-            compopt -o nospace
-            return 0
-
         elif [[ $cur == -* ]] || [[ $args -ge 8 ]]; then
             opts="--help"
             opts="$opts --gopher"
@@ -64,6 +59,11 @@ function _rmg() {
             opts="$opts --no-color"
             opts="$opts --stack-trace"
             opts="$opts --ssl"
+
+        elif [[ $cword -eq 4 ]]; then
+            _ip_addresses
+            compopt -o nospace
+            return 0
 
         else
             return 0
@@ -116,11 +116,6 @@ function _rmg() {
         elif _comp_contains "--ssrf-response --position --objid --signature --bound-name" $prev; then
             return 0
 
-        elif [[ $cword -eq 5 ]]; then
-            _ip_addresses
-            compopt -o nospace
-            return 0
-
         elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
             opts="--help"
             opts="$opts --gopher"
@@ -137,6 +132,11 @@ function _rmg() {
             opts="$opts --signature"
             opts="$opts --follow"
             opts="$opts --ssl"
+
+        elif [[ $cword -eq 5 ]]; then
+            _ip_addresses
+            compopt -o nospace
+            return 0
 
         else
             return 0
@@ -243,10 +243,6 @@ function _rmg() {
             _filedir
             return 0
 
-        elif [[ $cword -eq 2 ]]; then
-            _ip_addresses
-            return 0
-
         elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
             opts="--help"
             opts="$opts --config"
@@ -254,6 +250,10 @@ function _rmg() {
             opts="$opts --plugin"
             opts="$opts --no-color"
             opts="$opts --stack-trace"
+
+        elif [[ $cword -eq 2 ]]; then
+            _ip_addresses
+            return 0
 
         else
             return 0
@@ -284,10 +284,6 @@ function _rmg() {
             _filedir
             return 0
 
-        elif [[ $cword -eq 2 ]]; then
-            _ip_addresses
-            return 0
-
         elif _comp_contains "--objid --forward-host --forward-port --forward-bound-name --forward-objid" $prev; then
             return 0
 
@@ -304,6 +300,10 @@ function _rmg() {
             opts="$opts --stack-trace"
             opts="$opts --follow"
             opts="$opts --ssl"
+
+        elif [[ $cword -eq 2 ]]; then
+            _ip_addresses
+            return 0
 
         else
             return 0
@@ -347,9 +347,6 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif [[ $cword -eq 4 ]]; then
-            opts="$gadgets"
-
         elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
             opts="--help"
             opts="$opts --gopher"
@@ -367,6 +364,9 @@ function _rmg() {
             opts="$opts --signature"
             opts="$opts --follow"
             opts="$opts --ssl"
+
+        elif [[ $cword -eq 4 ]]; then
+            opts="$gadgets"
 
         else
             return 0
