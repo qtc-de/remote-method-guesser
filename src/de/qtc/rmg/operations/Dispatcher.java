@@ -123,6 +123,23 @@ public class Dispatcher {
     }
 
     /**
+     * Create an RMIRegistryEndpoint from an existing RMIEndpoint.
+     *
+     * @param rmi RMIEndpoint pointing to the target registry
+     * @return RMIRegistryEndpoint
+     */
+    private RMIRegistryEndpoint getRegistry(RMIEndpoint rmi)
+    {
+        int port = rmi.port;
+        String host = rmi.host;
+
+        if(rmiReg == null)
+            rmiReg = new RMIRegistryEndpoint(host, port);
+
+        return rmiReg;
+    }
+
+    /**
      * By default, the dispatcher class treats remote endpoints as generic RMI endpoints. When an RMIRegistryEndpoint
      * is required, this function should be used to obtain one.
      *
@@ -139,6 +156,12 @@ public class Dispatcher {
         return rmiReg;
     }
 
+    /**
+     * Create an RemoteObjectClient from an existing RMIEndpoint.
+     *
+     * @param rmi RMIEndpoint pointing to the RMI service
+     * @return RemoteObjectClient
+     */
     private RemoteObjectClient getRemoteObjectClient(RMIEndpoint rmi)
     {
         RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME, RMGOption.TARGET_COMPONENT);
@@ -165,8 +188,8 @@ public class Dispatcher {
             ObjID objID = RMGUtils.parseObjID(objIDString);
             return new RemoteObjectClient(rmi, objID);
 
-        } else if( RMGOption.TARGET_BOUND_NAME.notNull() ) {
-            return new RemoteObjectClient(getRegistry(), boundName);
+        } else if( boundName != null ) {
+            return new RemoteObjectClient(getRegistry(rmi), boundName);
 
         } else {
             ExceptionHandler.missingTarget(p.getAction().name());

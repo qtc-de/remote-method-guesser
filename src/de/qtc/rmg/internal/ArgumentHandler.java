@@ -3,6 +3,7 @@ package de.qtc.rmg.internal;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -298,12 +299,18 @@ public class ArgumentHandler {
      *
      * @return array of int which contains all ports that should be scanned
      */
+    @SuppressWarnings("unchecked")
     public int[] getRmiPots()
     {
         Set<Integer> rmiPorts = new HashSet<Integer>();
 
         String defaultPorts = config.getProperty("rmi_ports");
-        String[] portStrings = (String[]) RMGOption.SCAN_PORTS.value;
+        List<String> portStrings = (List<String>)RMGOption.SCAN_PORTS.value;
+
+        if( portStrings == null ) {
+            portStrings = new ArrayList<String>();
+            portStrings.add("-");
+        }
 
         for(String portString : portStrings) {
 
