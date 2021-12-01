@@ -127,7 +127,7 @@ tests:
       - error: False
       - contains:
           values:
-            - 'load dummy class'
+            - 'load canary class'
             - 'attack probably worked'
       - file_exists:
           cleanup: True
@@ -157,7 +157,7 @@ tests:
       - error: False
       - contains:
           values:
-            - 'load dummy class'
+            - 'load canary class'
             - 'attack probably worked'
       - file_exists:
           cleanup: True

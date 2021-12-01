@@ -104,7 +104,7 @@ public class ExceptionHandler {
     public static void deserializeClassNotFoundRandom(Exception e, String during1, String during2, String className)
     {
         Logger.printlnMixedYellow("Caught", "ClassNotFoundException", "during " + during1 + " " + during2 + ".");
-        Logger.printlnMixedBlue("Server attempted to deserialize dummy class", className + ".");
+        Logger.printlnMixedBlue("Server attempted to deserialize canary class", className + ".");
         Logger.printlnMixedYellow("Deserialization attack", "probably worked :)");
         showStackTrace(e);
     }
@@ -139,7 +139,7 @@ public class ExceptionHandler {
 
     public static void codebaseClassNotFoundRandom(Exception e, String className, String payloadName)
     {
-        Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", className);
+        Logger.printlnMixedBlue("Remote class loader attempted to load canary class", className);
         Logger.printlnMixedYellow("Codebase attack", "probably worked :)");
 
         Logger.lineBreak();
