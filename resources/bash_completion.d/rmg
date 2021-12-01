@@ -255,6 +255,9 @@ function _rmg() {
             _ip_addresses
             return 0
 
+        elif [[ $cword -eq 4 ]]; then
+            opts="$gadgets"
+
         else
             return 0
         fi
