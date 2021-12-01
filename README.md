@@ -51,11 +51,9 @@ Both servers are available as containers within the *GitHub Container Registry*:
   + [known](#known)
   + [listen](#listen)
   + [objid](#objid)
-  + [rebind](#rebind)
   + [roguejmx](#roguejmx)
   + [scan](#scan)
   + [serial](#serial)
-  + [unbind](#unbind)
 - [More Features](#more-features)
 - [Acknowledgements](#acknowledgements)
 
