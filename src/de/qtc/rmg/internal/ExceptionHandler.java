@@ -510,8 +510,15 @@ public class ExceptionHandler {
     {
         Throwable t = ExceptionHandler.getCause(e);
 
-        if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-            ExceptionHandler.connectionRefused(e, callName, "call");
+        if( t instanceof java.net.ConnectException ) {
+
+            String message = t.getMessage();
+
+            if( message.contains("Connection refused") )
+                ExceptionHandler.connectionRefused(e, callName, "call");
+
+            if( message.contains("Network is unreachable") )
+                ExceptionHandler.networkUnreachable(e, callName, "call");
 
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
