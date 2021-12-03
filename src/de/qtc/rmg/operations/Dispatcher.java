@@ -113,6 +113,12 @@ public class Dispatcher {
         }
     }
 
+    /**
+     * Creates an RMIEndpoint object from the target host and port specified on the command line.
+     * Additionally initializes the method candidate attribute if a method signature was specified.
+     *
+     * @return RMIEndpoint to the host:port configuration specified on the command line
+     */
     public RMIEndpoint getRMIEndpoint()
     {
         int port = RMGOption.require(RMGOption.TARGET_PORT);
@@ -123,23 +129,6 @@ public class Dispatcher {
     }
 
     /**
-     * Create an RMIRegistryEndpoint from an existing RMIEndpoint.
-     *
-     * @param rmi RMIEndpoint pointing to the target registry
-     * @return RMIRegistryEndpoint
-     */
-    private RMIRegistryEndpoint getRegistry(RMIEndpoint rmi)
-    {
-        int port = rmi.port;
-        String host = rmi.host;
-
-        if(rmiReg == null)
-            rmiReg = new RMIRegistryEndpoint(host, port);
-
-        return rmiReg;
-    }
-
-    /**
      * By default, the dispatcher class treats remote endpoints as generic RMI endpoints. When an RMIRegistryEndpoint
      * is required, this function should be used to obtain one.
      *
@@ -147,11 +136,19 @@ public class Dispatcher {
      */
     private RMIRegistryEndpoint getRegistry()
     {
-        int port = RMGOption.require(RMGOption.TARGET_PORT);
-        String host = RMGOption.require(RMGOption.TARGET_HOST);
+        return getRegistry(getRMIEndpoint());
+    }
 
+    /**
+     * Create an RMIRegistryEndpoint from an existing RMIEndpoint.
+     *
+     * @param rmi RMIEndpoint pointing to the target registry
+     * @return RMIRegistryEndpoint
+     */
+    private RMIRegistryEndpoint getRegistry(RMIEndpoint rmi)
+    {
         if(rmiReg == null)
-            rmiReg = new RMIRegistryEndpoint(host, port);
+            rmiReg = new RMIRegistryEndpoint(rmi);
 
         return rmiReg;
     }
@@ -546,7 +543,6 @@ public class Dispatcher {
     public void dispatchGuess()
     {
         Formatter format = new Formatter();
-        Set<MethodCandidate> candidates = getCandidates();
 
         try {
             obtainBoundObjects();
@@ -555,7 +551,7 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        MethodGuesser guesser = new MethodGuesser(remoteObjects, candidates);
+        MethodGuesser guesser = new MethodGuesser(remoteObjects, getCandidates());
         guesser.printGuessingIntro();
 
         List<RemoteObjectClient> results = guesser.guessMethods();
