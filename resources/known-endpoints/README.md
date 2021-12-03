@@ -13,7 +13,7 @@ using the ``known`` action and specifying the known class name on the command li
 still to be specified, but are not used for this action:
 
 ```console
-[qtc@kali ~]$ rmg 0.0.0.0 0 known javax.management.remote.rmi.RMIServerImpl_Stub
+[qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
 [+] Name:
 [+] 	JMX Server
 [+]

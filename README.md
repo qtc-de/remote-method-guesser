@@ -588,7 +588,7 @@ users connecting to your server:
 [+] 	Encountered no Exception during bind call.
 [+] 	Bind operation was probably successful.
 
-[qtc@kali ~]$ jconsole # Connect to 172.17.0.2:9010 with credentials
+[qtc@devbox ~]$ jconsole # Connect to 172.17.0.2:9010 with credentials
 ```
 
 Incoming connections are logged by the listener:
