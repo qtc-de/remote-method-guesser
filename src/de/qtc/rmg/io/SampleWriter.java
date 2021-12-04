@@ -78,7 +78,7 @@ public class SampleWriter {
      */
     public String loadTemplate(String templateName) throws IOException
     {
-        if(this.templateFolder != null && this.templateFolder.isEmpty())
+        if(this.templateFolder == null || this.templateFolder.isEmpty())
             return loadTemplateStream(templateName);
 
         else

@@ -25,12 +25,13 @@ tests:
 
     command:
       - rmg
+      - listen
       - 0.0.0.0
       - 4444
-      - listen
       - CommonsCollections6
       - ls
-      - --no-color
+      - ${OPTIONS}
+
     timeout: 2
     validators:
       - status: 99
@@ -53,12 +54,13 @@ tests:
 
     command:
       - rmg
+      - listen
       - 123.4.5.5
       - 4444
-      - listen
       - CommonsCollections6
       - ls
-      - --no-color
+      - ${OPTIONS}
+
     timeout: 2
     validators:
       - error: True
@@ -79,12 +81,13 @@ tests:
 
     command:
       - rmg
+      - listen
       - 999.4.5.5
       - 4444
-      - listen
       - CommonsCollections6
       - ls
-      - --no-color
+      - ${OPTIONS}
+
     timeout: 2
     validators:
       - error: True
@@ -104,12 +107,13 @@ tests:
 
     command:
       - rmg
+      - listen
       - 0.0.0.0
       - 44444444
-      - listen
       - CommonsCollections6
       - ls
-      - --no-color
+      - ${OPTIONS}
+
     timeout: 2
     validators:
       - error: True
@@ -129,12 +133,13 @@ tests:
 
     command:
       - rmg
+      - listen
       - 0.0.0.0
       - 8000
-      - listen
       - CommonsCollections6
       - ls
-      - --no-color
+      - ${OPTIONS}
+
     timeout: 2
     validators:
       - error: True

@@ -19,11 +19,9 @@ import de.qtc.rmg.utils.RMGUtils;
  */
 public class ExceptionHandler {
 
-    private static boolean alwaysShowExceptions = false;
-
     private static void sslOption()
     {
-        if(RMGOption.SSL.getBool())
+        if(RMGOption.CONN_SSL.getBool())
             Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
         else
             Logger.eprintlnMixedYellow("You can retry the operation using the", "--ssl", "option.");
@@ -106,7 +104,7 @@ public class ExceptionHandler {
     public static void deserializeClassNotFoundRandom(Exception e, String during1, String during2, String className)
     {
         Logger.printlnMixedYellow("Caught", "ClassNotFoundException", "during " + during1 + " " + during2 + ".");
-        Logger.printlnMixedBlue("Server attempted to deserialize dummy class", className + ".");
+        Logger.printlnMixedBlue("Server attempted to deserialize canary class", className + ".");
         Logger.printlnMixedYellow("Deserialization attack", "probably worked :)");
         showStackTrace(e);
     }
@@ -141,7 +139,7 @@ public class ExceptionHandler {
 
     public static void codebaseClassNotFoundRandom(Exception e, String className, String payloadName)
     {
-        Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", className);
+        Logger.printlnMixedBlue("Remote class loader attempted to load canary class", className);
         Logger.printlnMixedYellow("Codebase attack", "probably worked :)");
 
         Logger.lineBreak();
@@ -448,8 +446,8 @@ public class ExceptionHandler {
 
     public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
-        Logger.printlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
-        Logger.printlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
+        Logger.eprintlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
+        Logger.eprintlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -501,12 +499,26 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void genericCall(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", e.getClass().getName(), "during generic call action.");
+        Logger.printlnMixedBlue("The call was", "probably successful,", "but caused an exception on the server side.");
+        ExceptionHandler.stackTrace(e);
+    }
+
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);
 
-        if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-            ExceptionHandler.connectionRefused(e, callName, "call");
+        if( t instanceof java.net.ConnectException ) {
+
+            String message = t.getMessage();
+
+            if( message.contains("Connection refused") )
+                ExceptionHandler.connectionRefused(e, callName, "call");
+
+            if( message.contains("Network is unreachable") )
+                ExceptionHandler.networkUnreachable(e, callName, "call");
 
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
@@ -572,26 +584,16 @@ public class ExceptionHandler {
     }
 
     /**
-     * Sets the value of the alwaysShowExceptions option.
-     *
-     * @param b show stack traces?
-     */
-    public static void showStackTrace(boolean b)
-    {
-        alwaysShowExceptions = b;
-    }
-
-    /**
      * By using the --stack-trace option, uses can always display stack traces if they
      * want to. This is handled by this function. It checks whether --stack-trace was used
-     * (in this case alwaysShowExceptions is true) and prints the stacktrace if desired.
-     * This function should be used in most of the error handling code of rmg.
+     * and prints the stacktrace if desired. This function should be used in most of the error
+     * handling code of remote-method-guesser.
      *
      * @param e Exception that was caught.
      */
-    public static void showStackTrace(Exception e)
+    public static <T extends Throwable> void showStackTrace(T e)
     {
-        if(alwaysShowExceptions) {
+        if( RMGOption.GLOBAL_STACK_TRACE.getBool() ) {
             Logger.eprintln("");
             stackTrace(e);
         }
@@ -602,18 +604,7 @@ public class ExceptionHandler {
      *
      * @param e Exception that was caught.
      */
-    public static void stackTrace(Exception e)
-    {
-        Logger.eprintln("StackTrace:");
-        e.printStackTrace();
-    }
-
-    /**
-     * Helper function that prints a stacktrace with a prefixed Logger item.
-     *
-     * @param e Exception that was caught.
-     */
-    public static void stackTrace(Throwable e)
+    public static <T extends Throwable> void stackTrace(T e)
     {
         Logger.eprintln("StackTrace:");
         e.printStackTrace();
@@ -713,8 +704,13 @@ public class ExceptionHandler {
                     ExceptionHandler.unexpectedException(e, method, "call", false);
                 }
 
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
+                    ExceptionHandler.codebaseClassCast(e, true);
+
+                else
+                    ExceptionHandler.codebaseClassCast(e, false);
 
             } else if( cause instanceof java.security.AccessControlException) {
                 ExceptionHandler.accessControl(e, method, "call");
@@ -750,7 +746,12 @@ public class ExceptionHandler {
             ExceptionHandler.illegalArgumentCodebase(e);
 
         } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.codebaseClassCast(e, true);
+
+            else
+                ExceptionHandler.codebaseClassCast(e, false);
 
         } catch( java.security.AccessControlException e ) {
             ExceptionHandler.accessControl(e, method, "call");
@@ -813,15 +814,25 @@ public class ExceptionHandler {
                     ExceptionHandler.deserializeClassNotFound(e);
                 }
 
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
+                    ExceptionHandler.deserlializeClassCast(e, true);
+
+                else
+                    ExceptionHandler.deserlializeClassCast(e, false);
 
             } else {
                 ExceptionHandler.unknownDeserializationException(e);
             }
 
         } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.deserlializeClassCast(e, true);
+
+            else
+                ExceptionHandler.deserlializeClassCast(e, false);
 
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);

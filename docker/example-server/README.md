@@ -29,61 +29,63 @@ When launched in its default configuration, the container starts two *Java rmire
 The registry on port ``1090`` is *SSL* protected and contains three available bound names:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.17.0.2 1090
+[qtc@devbox ~]$ rmg enum --ssl 172.17.0.2 1090
 [+] RMI registry bound names:
 [+]
-[+]     - ssl-server
-[+]         --> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
-[+]     - plain-server
-[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+]     - secure-server
-[+]         --> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:39745 ObjID: [32d2a880:17d74a926a9:-7fff, -35871153036852369]
+[+] 	- ssl-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:43813 ObjID: [32d2a880:17d74a926a9:-7ffe, 6244338894849023886]
+[+] 	- secure-server
+[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:39745 ObjID: [32d2a880:17d74a926a9:-7ffd, -5872963829887623237]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+]     - http://iinsecure.dev/well-hidden-development-folder/
-[+]         --> de.qtc.rmg.server.interfaces.ISslServer
-[+]         --> de.qtc.rmg.server.interfaces.IPlainServer
-[+]         --> javax.rmi.ssl.SslRMIClientSocketFactory
-[+]         --> de.qtc.rmg.server.interfaces.ISecureServer
+[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 		--> de.qtc.rmg.server.interfaces.ISslServer
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
+[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
 [+]
 [+] RMI server String unmarshalling enumeration:
 [+]
-[+]     - Caught ClassNotFoundException during lookup call.
-[+]       --> The type java.lang.String is unmarshalled via readObject().
-[+]       Configuration Status: Outdated
+[+] 	- Caught ClassNotFoundException during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
 [+]
 [+] RMI server useCodebaseOnly enumeration:
 [+]
-[+]     - Caught MalformedURLException during lookup call.
-[+]       --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
-[+]       Configuration Status: Non Default
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 	  Configuration Status: Non Default
 [+]
 [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
 [+]
-[+]     - Caught NotBoundException during unbind call (unbind was accepeted).
-[+]       Vulnerability Status: Vulnerable
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
 [+]
-[+] RMI DGC enumeration:
+[+] RMI Security Manager enumeration:
 [+]
-[+]     - Security Manager rejected access to the class loader.
-[+]       --> The DGC uses most likely a separate security policy.
-[+]       Configuration Status: Current Default
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The server does use a Security Manager.
+[+] 	  Configuration Status: Current Default
 [+]
 [+] RMI server JEP290 enumeration:
 [+]
-[+]     - DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
-[+]       Vulnerability Status: Non Vulnerable
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
 [+]
 [+] RMI registry JEP290 bypass enmeration:
 [+]
-[+]     - Caught IllegalArgumentException after sending An Trinh gadget.
-[+]       Vulnerability Status: Vulnerable
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 [+]
 [+] RMI ActivationSystem enumeration:
 [+]
-[+]     - Caught NoSuchObjectException during activate call (activator not present).
-[+]       Configuration Status: Current Default
+[+] 	- Caught NoSuchObjectException during activate call (activator not present).
+[+] 	  Configuration Status: Current Default
 ```
 
 The registry on port ``9010`` can be contacted without *SSL* and exposes also three bound names. In contrast to the previous setup, two of
@@ -93,29 +95,63 @@ registry port binds an RMI Activator instance.
 
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010
 [+] RMI registry bound names:
 [+]
-[+]     - plain-server2
-[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+]     - plain-server
-[+]         --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+]     - legacy-service
-[+]         --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
+[+] 	- plain-server2
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:39745 ObjID: [32d2a880:17d74a926a9:-7ff7, -4320341974808185127]
+[+] 	- legacy-service
+[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
+[+] 		    Endpoint: iinsecure.dev:39745 ObjID: [32d2a880:17d74a926a9:-7ffc, 7423522285359236174]
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:39745 ObjID: [32d2a880:17d74a926a9:-7ff8, -1649467184009238448]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+]     - http://iinsecure.dev/well-hidden-development-folder/
-[+]         --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
-[+]         --> de.qtc.rmg.server.interfaces.IPlainServer
+[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+]
-[...]
+[+] RMI server String unmarshalling enumeration:
+[+]
+[+] 	- Caught ClassNotFoundException during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+[+]
+[+] RMI server useCodebaseOnly enumeration:
+[+]
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 	  Configuration Status: Non Default
+[+]
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+]
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+[+]
+[+] RMI Security Manager enumeration:
+[+]
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The server does use a Security Manager.
+[+] 	  Configuration Status: Current Default
+[+]
+[+] RMI server JEP290 enumeration:
+[+]
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+[+]
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 [+]
 [+] RMI ActivationSystem enumeration:
 [+]
-[+]     - Caught IllegalArgumentException during activate call (activator is present).
-[+]       --> Deserialization allowed     - Vulnerability Status: Vulnerable
-[+]       --> Client codebase enabled     - Configuration Status: Non Default
+[+] 	- Caught IllegalArgumentException during activate call (activator is present).
+[+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+[+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
 ```
 
 The corresponding remote objects get assigned a random port during the server startup. By default, the
@@ -133,7 +169,7 @@ Each successful method call is logged on the server side. The following listing 
 was started. Additionally, one successful method call on the ``login`` method was logged:
 
 ```console
-[qtc@kali ~]$ docker run docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
+[qtc@devbox ~]$ docker run docker.pkg.github.com/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk9
 [+] IP address of the container: 172.17.0.2
 [+] Adding gateway address to /etc/hosts file...
 [+] Adding RMI hostname to /etc/hosts file...
@@ -265,69 +301,70 @@ The following listing shows an example run of *remote-method-guessers* ``guess``
 #### 1090 Registry
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.17.0.2 1090 guess --zero-arg
+[qtc@devbox ~]$ rmg guess --ssl 172.17.0.2 1090
 [+] Reading method candidates from internal wordlist rmg.txt
-[+]   757 methods were successfully parsed.
+[+] 	752 methods were successfully parsed.
 [+] Reading method candidates from internal wordlist rmiscout.txt
-[+]   2550 methods were successfully parsed.
+[+] 	2550 methods were successfully parsed.
 [+]
-[+] Starting Method Guessing on 3299 method signature(s).
+[+] Starting Method Guessing on 3281 method signature(s).
 [+]
-[+]   MethodGuesser is running:
-[+]     --------------------------------
-[+]     [ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
-[+]     [ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
-[+]     [ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+]     [ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]     [ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
-[+]     [ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
-[+]     [ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
-[+]     [ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+]   done.
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
+[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
+[+] 		[ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 		[9843 / 9843] [#####################################] 100%
+[+] 	done.
 [+]
 [+] Listing successfully guessed methods:
-[+]   - plain-server
-[+]     --> String system(String dummy, String[] dummy2)
-[+]     --> String execute(String dummy)
-[+]   - secure-server
-[+]     --> void logMessage(int dummy1, Object dummy2)
-[+]     --> void updatePreferences(java.util.ArrayList dummy1)
-[+]     --> String login(java.util.HashMap dummy1)
-[+]   - ssl-server
-[+]     --> String system(String[] dummy)
-[+]     --> int execute(String dummy)
-[+]     --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+]
+[+] 	- plain-server
+[+] 		--> String execute(String dummy)
+[+] 		--> String system(String dummy, String[] dummy2)
+[+] 	- ssl-server
+[+] 		--> String system(String[] dummy)
+[+] 		--> int execute(String dummy)
+[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+] 	- secure-server
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String login(java.util.HashMap dummy1)
+[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
 ```
 
 #### 9010 Registry
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 guess --zero-arg
+[qtc@devbox ~]$ rmg guess 172.17.0.2 9010
 [+] Reading method candidates from internal wordlist rmg.txt
-[+]     757 methods were successfully parsed.
+[+] 	752 methods were successfully parsed.
 [+] Reading method candidates from internal wordlist rmiscout.txt
-[+]     2550 methods were successfully parsed.
+[+] 	2550 methods were successfully parsed.
 [+]
-[+] Starting Method Guessing on 3299 method signature(s).
+[+] Starting Method Guessing on 3281 method signature(s).
 [+]
-[+]     MethodGuesser is running:
-[+]         --------------------------------
-[+]         [ legacy-service ] HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
-[+]         [ legacy-service ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+]         [ legacy-service ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
-[+]         [ plain-server2  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
-[+]         [ plain-server2  ] HIT! Method with signature String execute(String dummy) exists!
-[+]     done.
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server2  ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[ plain-server2  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
+[+] 		[ legacy-service ] HIT! Method with signature void logMessage(int dummy1, String dummy2) exists!
+[+] 		[ legacy-service ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
+[+] 		[ legacy-service ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		[6562 / 6562] [#####################################] 100%
+[+] 	done.
 [+]
 [+] Listing successfully guessed methods:
-[+]     - legacy-service
-[+]         --> void logMessage(int dummy1, String dummy2)
-[+]         --> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
-[+]         --> String login(java.util.HashMap dummy1)
-[+]     - plain-server (== plain-server2)
-[+]         --> String system(String dummy, String[] dummy2)
-[+]         --> String execute(String dummy)
-[+]     - plain-server2
-[+]         --> String system(String dummy, String[] dummy2)
-[+]         --> String execute(String dummy)
+[+]
+[+] 	- plain-server2 == plain-server
+[+] 		--> String execute(String dummy)
+[+] 		--> String system(String dummy, String[] dummy2)
+[+] 	- legacy-service
+[+] 		--> void logMessage(int dummy1, String dummy2)
+[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+] 		--> String login(java.util.HashMap dummy1)
 ```

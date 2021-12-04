@@ -29,8 +29,9 @@ import sun.rmi.transport.LiveRef;
 @SuppressWarnings("restriction")
 public class RogueJMX implements RMIServer {
 
-    private int port;
-    private String address;
+    private final int port;
+    private final ObjID objID;
+    private final String address;
 
     private String forwardTarget;
     private RMIServer forward = null;
@@ -43,10 +44,16 @@ public class RogueJMX implements RMIServer {
      * @param address Address where the rogue JMX should be bound
      * @param port Port where the rogue JMX should listen
      */
-    public RogueJMX(String address, int port)
+    public RogueJMX(String address, int port, String objIDString)
     {
-        this.address = address;
         this.port = port;
+        this.address = address;
+
+        if( objIDString != null )
+            objID = RMGUtils.parseObjID(objIDString);
+
+        else
+            objID = null;
     }
 
     /**
@@ -73,9 +80,10 @@ public class RogueJMX implements RMIServer {
         RMIServerSocketFactory ssf = new LimitedSocketFactory(address);
 
         Remote boundObject = null;
+        ObjID objID = this.objID != null ? this.objID : new ObjID();
 
         try {
-            LiveRef liveRef = new LiveRef(new ObjID(), port, csf, ssf);
+            LiveRef liveRef = new LiveRef(objID, port, csf, ssf);
             UnicastServerRef unicastServerRef = new UnicastServerRef(liveRef);
 
             try {

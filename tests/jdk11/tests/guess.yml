@@ -14,10 +14,13 @@ tests:
     description: |-
       'Performs method guessing on the plain RMI registry.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - guess
+      - ${TARGET}
       - --verbose
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -37,12 +40,15 @@ tests:
       'Performs method guessing on the plain RMI registry'
       'using the --zero-arg & --create-samples flag.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - guess
+      - ${TARGET}
       - --zero-arg
       - --create-samples
       - --verbose
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -123,10 +129,13 @@ tests:
     description: |-
       'Performs method guessing on the ssl RMI registry.'
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - guess
+      - ${TARGET-SSL}
       - --verbose
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

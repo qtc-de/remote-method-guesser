@@ -1,5 +1,7 @@
 package de.qtc.rmg.io;
 
+import de.qtc.rmg.internal.RMGOption;
+
 /**
  * The Logger class exposes static methods that can be used to create colored output.
  * Additionally, most of the methods add a '[+]' or '[-]' prefix. The Logger class
@@ -20,11 +22,10 @@ public class Logger {
 
     public static int indent = 0;
     public static int printCount = 0;
-    public static boolean verbose = false;
     public static boolean enabled = true;
 
     public static void disableIfNotVerbose() {
-        if( !Logger.verbose )
+        if( !RMGOption.GLOBAL_VERBOSE.getBool() )
             Logger.enabled = false;
     }
 

@@ -72,6 +72,16 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
     }
 
     /**
+     * Alternative constructor that creates the RMIRegistryEndpoint from an already existing RMIEndpoint.
+     *
+     * @param rmi RMIEndpoint
+     */
+    public RMIRegistryEndpoint(RMIEndpoint rmi)
+    {
+        this(rmi.host, rmi.port);
+    }
+
+    /**
      * If a bound name was specified on the command line, return this bound name immediately. Otherwise,
      * obtain a list of bound names from the RMI registry. This is basically a wrapper around the list
      * function of the RMI registry, but has error handling implemented.
@@ -80,8 +90,8 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
      */
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
-        if( RMGOption.BOUND_NAME.notNull() )
-            return new String[] { RMGOption.BOUND_NAME.getString() };
+        if( RMGOption.TARGET_BOUND_NAME.notNull() )
+            return new String[] { RMGOption.TARGET_BOUND_NAME.getValue() };
 
         String[] boundNames = null;
 

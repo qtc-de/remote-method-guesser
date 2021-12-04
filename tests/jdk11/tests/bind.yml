@@ -18,12 +18,14 @@ tests:
     description: |-
       'Performs a bind operation.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -36,13 +38,15 @@ tests:
     description: |-
       'Performs a bind operation with --localhost-bypass.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -54,12 +58,14 @@ tests:
     description: |-
       'Performs a rebind operation.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - rebind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -73,13 +79,15 @@ tests:
     description: |-
       'Performs a rebind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - rebind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -92,11 +100,13 @@ tests:
     description: |-
       'Performs an unbind operation.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -110,12 +120,14 @@ tests:
     description: |-
       'Performs an unbind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

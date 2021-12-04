@@ -19,13 +19,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET}
       - CommonsCollections6
       - ls
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -42,13 +45,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - ls
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -66,13 +72,16 @@ tests:
     groups:
       - ysoserial
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - serial
+      - ${TARGET-SSL}
       - AnTrinh
       - ${DOCKER-GW}:4444
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

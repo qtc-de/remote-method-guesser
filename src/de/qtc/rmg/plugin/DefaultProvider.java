@@ -117,6 +117,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
             Logger.eprintlnMixedBlue("Argument string has to be a valid Java expression like:", "'\"id\", new Integer(4)'.");
             Logger.eprintMixedYellow("Make sure that each argument is an", "Object", "not a ");
             Logger.printlnPlainYellow("Primitive.");
+            ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
 
         } catch (Exception e) {
@@ -135,11 +136,11 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
         if( RMGOption.SSRF.getBool() ) {
             return new SSRFSocketFactory();
 
-        } else if( RMGOption.SSRFResponse.notNull() ) {
-            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFResponse.getString());
+        } else if( RMGOption.SSRFRESPONSE.notNull() ) {
+            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFRESPONSE.getValue());
             return new SSRFResponseSocketFactory(content);
 
-        } else if( RMGOption.SSL.getBool() ) {
+        } else if( RMGOption.CONN_SSL.getBool() ) {
             return new TrustAllSocketFactory();
 
         } else {
@@ -171,11 +172,11 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public RMISocketFactory getDefaultSocketFactory(String host, int port)
     {
-        if( RMGOption.SSRFResponse.notNull() )
+        if( RMGOption.SSRFRESPONSE.notNull() )
             return new DGCClientSocketFactory();
 
         RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-        return new LoopbackSocketFactory(host, fac, RMGOption.FOLLOW.getBool());
+        return new LoopbackSocketFactory(host, fac, RMGOption.CONN_FOLLOW.getBool());
     }
 
     /**
@@ -192,14 +193,14 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public String getDefaultSSLSocketFactory(String host, int port)
     {
-        if( RMGOption.SSRFResponse.notNull() )
+        if( RMGOption.SSRFRESPONSE.notNull() )
             return "de.qtc.rmg.networking.DGCClientSslSocketFactory";
 
         TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
 
         LoopbackSslSocketFactory.host = host;
         LoopbackSslSocketFactory.fac = trustAllFax.getSSLSocketFactory();
-        LoopbackSslSocketFactory.followRedirect = RMGOption.FOLLOW.getBool();
+        LoopbackSslSocketFactory.followRedirect = RMGOption.CONN_FOLLOW.getBool();
 
         return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
     }

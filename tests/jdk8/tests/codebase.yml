@@ -34,13 +34,16 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - '${codebase-class}1'
       - 'http://${DOCKER-GW}:8000/'
       - --component
       - act
+      - ${OPTIONS}
+
     validators:
       - error: False
       - regex:
@@ -58,13 +61,16 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - '${codebase-class}2'
       - 'http://${DOCKER-GW}:8000/'
       - --component
       - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - regex:
@@ -81,13 +87,16 @@ tests:
       'Performs a codebase attack on the DGC endpoint.'
       'The expected result is an AccessControlException'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - '${codebase-class}'
       - 'http://${DOCKER-GW}:8000/'
       - --component
       - dgc
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -102,20 +111,23 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET-SSL}
       - '${codebase-class}3'
       - 'http://${DOCKER-GW}:8000/'
       - --signature
       - 'String system(String dummy, String[] dummy2)'
       - --bound-name
       - plain-server
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - 'load dummy class'
+            - 'load canary class'
             - 'attack probably worked'
       - file_exists:
           cleanup: True
@@ -129,20 +141,23 @@ tests:
       'The expected result is a file being created within the docker'
       'volume.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - '${codebase-class}4'
       - 'http://${DOCKER-GW}:8000/'
       - --signature
       - 'String login(java.util.HashMap dummy1)'
       - --bound-name
       - legacy-service
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - 'load dummy class'
+            - 'load canary class'
             - 'attack probably worked'
       - file_exists:
           cleanup: True
@@ -155,30 +170,35 @@ tests:
       'Performs a codebase attack with missing --signature option and checks'
       'the corresponding error message.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - '${codebase-class}4'
       - 'http://${DOCKER-GW}:8000/'
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:
           values:
-            - 'The --bound-name, --objid or --component option is required'
-            - 'Cannot continue from here.'
+            - 'The specified aciton requires one of the --component, --objid, --bound-name options'
 
 
   - title: No Class Load
     description: |-
       'Performs a codebase attack with a wrong specified listener port.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - codebase
+      - ${TARGET}
       - 'Test'
       - 'http://127.0.0.1:8002/'
       - --component
       - act
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

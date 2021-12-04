@@ -1,0 +1,81 @@
+tester:
+  title: ObjID Tests
+  description: |-
+    'Perform tests on remote-method-guessers objid action'
+
+
+  id: '004-005'
+  groups:
+    - objid
+  id_pattern: '004-005-{:03}'
+
+
+tests:
+  - title: ObjID 1
+    description: |-
+      'Test parsing of ObjID values'
+
+    command:
+      - rmg
+      - objid
+      - '[-32db17cf:17d67f6966e:-7ff8, -6070901814984245882]'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - |-
+              [+] Details for ObjID [-32db17cf:17d67f6966e:-7ff8, -6070901814984245882]
+              [+]
+              [+] ObjNum: 		-6070901814984245882
+              [+] UID:
+              [+] 	Unique: 	-853219279
+              [+] 	Time: 		1638126753390 (Nov 28,2021 20:12)
+              [+] 	Count: 		-32760
+
+  - title: ObjID 2
+    description: |-
+      'Test parsing of ObjID values'
+
+    command:
+      - rmg
+      - objid
+      - '[6633018:17cb5d1bb57:-7ff8, -8114172517417646722]'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - |-
+              [+] Details for ObjID [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+              [+]
+              [+] ObjNum: 		-8114172517417646722
+              [+] UID:
+              [+] 	Unique: 	107163672
+              [+] 	Time: 		1635137993559 (Oct 25,2021 06:59)
+              [+] 	Count: 		-32760
+
+  - title: ObjID 3
+    description: |-
+      'Test parsing of ObjID values'
+
+    command:
+      - rmg
+      - objid
+      - 1
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - |-
+              [+] Details for ObjID [0:0:0, 1]
+              [+]
+              [+] ObjNum: 		1
+              [+] UID:
+              [+] 	Unique: 	0
+              [+] 	Time: 		0 (Jan 01,1970 01:00)
+              [+] 	Count: 		0

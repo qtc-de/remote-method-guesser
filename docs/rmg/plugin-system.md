@@ -285,10 +285,7 @@ that should work for most situations. The following listing shows an example on 
 and use the [GenericPrint](/plugins/GenericPrint.java) plugin:
 
 ```console
-[qtc@kali remote-method-guesser]$ bash plugins/build.sh target/rmg-3.2.0-jar-with-dependencies.jar plugins/GenericPrint.java Plugin.jar
-[qtc@kali remote-method-guesser]$ rmg 172.17.0.2 9010 call '"id"' --signature "String execute(String arg)" --bound-name plain-server --plugin ./Plugin.jar
-[+] RMI object tries to connect to different remote host: iinsecure.dev.
-[+] 	Redirecting the connection back to 172.17.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-uid=0(root) gid=0(root) groups=0(root)
+[qtc@devbox remote-method-guesser]$ bash plugins/build.sh target/rmg-4.0.0-jar-with-dependencies.jar plugins/GenericPrint.java GenericPrint.jar
+[qtc@devbox remote-method-guesser]$ rmg call 172.17.0.2 9010 '"id"' --signature "String execute(String arg)" --bound-name plain-server --plugin GenericPrint.jar
+[+] uid=0(root) gid=0(root) groups=0(root)
 ```

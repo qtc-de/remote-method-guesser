@@ -89,7 +89,7 @@ public class PortScanner {
      */
     public int portScan()
     {
-        pool = new ForkJoinPool(RMGOption.THREADS.getInt());
+        pool = new ForkJoinPool(RMGOption.THREADS.getValue());
 
         for( int port : rmiPorts ) {
             Runnable r = new PortScanWorker(port, false);

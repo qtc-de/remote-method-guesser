@@ -2,17 +2,12 @@ tester:
   name: generic
   title: Generic Tests
   description: >
-    'Launches some generic tests that do not require a server to test against'
+    'Launches some generic tests'
+
 
   id: '004'
   groups:
     - generic
-
-
-variables:
-  BASE-CMD:
-    - rmg
-    - --no-color
 
 
 testers:
