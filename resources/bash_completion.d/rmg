@@ -50,6 +50,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --bind-objid"
             opts="$opts --bind-bound-name"
             opts="$opts --localhost-bypass"
@@ -87,6 +89,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --config"
             opts="$opts --verbose"
             opts="$opts --plugin"
@@ -121,6 +125,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --position"
             opts="$opts --config"
             opts="$opts --verbose"
@@ -167,6 +173,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --localhost-bypass"
             opts="$opts --scan-action"
             opts="$opts --dgc-method"
@@ -193,7 +201,7 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif _comp_contains "--ssrf-response --bound-name --objid --signature --threads" $prev; then
+        elif _comp_contains "--bound-name --objid --signature --threads" $prev; then
             return 0
 
         elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
@@ -355,6 +363,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --position"
             opts="$opts --config"
             opts="$opts --verbose"
@@ -390,6 +400,8 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
             opts="$opts --localhost-bypass"
             opts="$opts --config"
             opts="$opts --verbose"
