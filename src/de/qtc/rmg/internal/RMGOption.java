@@ -44,9 +44,11 @@ public enum RMGOption {
     SCAN_TIMEOUT_READ("--timeout-read", "scan timeout for read operation", Arguments.store(), RMGOptionGroup.CONNECTION, "timout"),
     SCAN_TIMEOUT_CONNECT("--timeout-connect", "scan timeout for connect operation", Arguments.store(), RMGOptionGroup.CONNECTION, "timout"),
 
-    SSRF_GOPHER("--gopher", "print SSRF content as gopher payload", Arguments.storeTrue(), RMGOptionGroup.ACTION),
-    SSRF("--ssrf", "print SSRF payload instead of contacting a server", Arguments.storeTrue(), RMGOptionGroup.ACTION),
-    SSRFRESPONSE("--ssrf-response", "evaluate ssrf response from the server", Arguments.store(), RMGOptionGroup.ACTION, "response"),
+    SSRF_GOPHER("--gopher", "print SSRF content as gopher payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    SSRF("--ssrf", "print SSRF payload instead of contacting a server", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    SSRFRESPONSE("--ssrf-response", "evaluate ssrf response from the server", Arguments.store(), RMGOptionGroup.SSRF, "hex"),
+    SSRF_ENCODE("--encode", "double URL encode the SSRF payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    SSRF_RAW("--raw", "print payload without color and without additional text", Arguments.storeTrue(), RMGOptionGroup.SSRF),
 
     BIND_OBJID("--bind-objid", "ObjID of the bound object.", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
     BIND_ADDRESS("bind-host", "host specifications the bound remote object should point to", Arguments.store(), RMGOptionGroup.ACTION, "host:port"),

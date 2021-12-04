@@ -17,6 +17,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
  */
 public enum RMGOptionGroup {
 
+    SSRF("ssrf arguments"),
     TARGET("target arguments"),
     CONNECTION("connection arguments"),
     GENERAL("general arguments"),

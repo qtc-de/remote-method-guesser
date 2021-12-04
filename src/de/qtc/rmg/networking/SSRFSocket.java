@@ -6,10 +6,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.rmi.server.UID;
 
 import de.qtc.rmg.exceptions.SSRFException;
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -118,7 +122,23 @@ public class SSRFSocket extends Socket {
             hexContent = builder.toString();
         }
 
-        Logger.printlnMixedYellow("SSRF Payload:", hexContent);
+        if( RMGOption.SSRF_ENCODE.getBool() ) {
+
+            try {
+                hexContent = URLEncoder.encode(hexContent, StandardCharsets.UTF_8.toString());
+
+            } catch (UnsupportedEncodingException e) {
+                ExceptionHandler.internalError("SSRFSocket.printContent", "Invalid encoding selected.");
+            }
+
+        }
+
+        if( RMGOption.SSRF_RAW.getBool() )
+            System.out.println(hexContent);
+
+        else
+            Logger.printlnMixedYellow("SSRF Payload:", hexContent);
+
         System.exit(0);
     }
 }
