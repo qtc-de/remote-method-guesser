@@ -7,6 +7,7 @@ In this document you can find additional information for some of *remote-method-
 * [codebase](#codebase-action)
 * [enum](#enum-action)
 * [guess](#guess-action)
+* [SSRF Support](#ssrf-support)
 
 
 ### Codebase Action
