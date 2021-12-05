@@ -135,10 +135,15 @@ public class MethodGuesser {
 
         for( RemoteObjectWrapper remoteObject : remoteObjects ) {
 
+            String[] duplicates = remoteObject.getDuplicateBoundNames();
+
+            if( duplicates.length == 0 )
+                continue;
+
             Logger.printlnMixedBlue("-", remoteObject.boundName);
             Logger.increaseIndent();
 
-            for(String dup : remoteObject.getDuplicateBoundNames() ) {
+            for(String dup : duplicates ) {
                 Logger.printlnMixedYellow("-->", dup);
             }
 
