@@ -7,10 +7,10 @@ type _comp_get_parameter &> /dev/null || return
 
 function _rmg() {
 
-    local cur prev words opts arg args gadgets value_options
+    local cur prev words cword opts arg args gadgets value_options operations enum_operations components
     _init_completion || return
 
-    value_options="--argument-position --bound-name --config --dgc-method --objid --plugin --reg-method --sample-folder"
+    value_options="--argument-position --bound-name --component --config --objid --plugin --sample-folder"
     value_options="$value_options --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
 
     _count_args "" "@(${value_options// /|})"
@@ -23,104 +23,397 @@ function _rmg() {
     gadgets="$gadgets JRMPClient JRMPListener JSON1 JavassistWeld1 Jdk7u21 Jython1 MozillaRhino1 MozillaRhino2"
     gadgets="$gadgets Myfaces1 Myfaces2 ROME Spring1 Spring2 URLDNS Vaadin1 Wicket1 JRMPClient2 AnTrinh"
 
-    # Current word is not an option and previous word is not a value_option
-    if ! _comp_contains "$value_options" $prev && [[ "$cur" != -* ]]; then
+    components="act dgc reg"
+    operations="bind call codebase enum guess known listen objid rebind roguejmx scan serial unbind"
+    enum_operations="list string-marshalling codebase localhost-bypass security-manager jep290 filter-bypass activator"
 
-        # If only host was specified so far - complete nothing
-        if [[ $args -eq 2 ]]; then
+
+    if [[ $cword -eq 1 ]]; then
+
+        if [[ $cur == -* ]]; then
+            opts="--help"
+        else
+            opts="$operations"
+        fi
+
+    elif [[ ${words[1]} == "bind" || ${words[1]} == "rebind" ]]; then
+
+        if _comp_contains "--config --plugin" $prev; then
+            _filedir
             return 0
 
-        # If host and port are specified - complete actions
-        elif [[ $args -eq 3 ]]; then
-            opts="act bind call codebase dgc enum guess listen method rebind reg unbind"
-            mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
+        elif _comp_contains "--ssrf-response --bind-objid" $prev; then
             return 0
 
-        # If host, port and action are specified - complete depending on action (stored in ${arg} by _comp_get_parameter 3)
-        elif [[ $args -eq 4 ]]; then
+        elif [[ $cur == -* ]] || [[ $args -ge 8 ]]; then
+            opts="--help"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --bind-objid"
+            opts="$opts --bind-bound-name"
+            opts="$opts --localhost-bypass"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --plugin"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --ssl"
 
-            # If action expects an gadget, complete gadgets
-            if _comp_contains "act dgc listen method reg" $arg; then
-                opts=$gadgets
-                mapfile -t COMPREPLY < <(compgen -W "${opts}" -- "${cur}") 
-                return 0
+        elif [[ $cword -eq 4 ]]; then
+            _ip_addresses
+            compopt -o nospace
+            return 0
 
-            # If action expects something non guessable, complete nothing
-            elif _comp_contains "bind codebase rebind unbind" $arg; then
-                return 0
-            fi
+        else
+            return 0
+        fi
 
-        # If host, port, action and another argument was specified...
-        elif [[ $args -eq 5 ]]; then
 
-            # ... and action expects a listener as second arg, complete local addresses
-            if _comp_contains "bind codebase rebind" $arg; then
-                _ip_addresses
-                compopt -o nospace
-                return 0
+    elif [[ ${words[1]} == "call" ]]; then
 
-            # ... and the next argument cannot be guessed, complete nothing
-            elif _comp_contains "act dgc listen method reg" $arg; then
-                return 0
-            fi
+        if _comp_contains "--config --plugin" $prev; then
+            _filedir
+            return 0
 
-            # otherwise, just complete options again
+        elif _comp_contains "--component" $prev; then
+            opts="$components"
+
+        elif _comp_contains "--ssrf-response --objid --signature --bound-name" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
+            opts="--help"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --plugin"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --component"
+            opts="$opts --bound-name"
+            opts="$opts --objid"
+            opts="$opts --signature"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "codebase" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--component" $prev; then
+            opts="$components"
+
+        elif _comp_contains "--ssrf-response --position --objid --signature --bound-name" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
+            opts="--help"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --position"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --component"
+            opts="$opts --bound-name"
+            opts="$opts --objid"
+            opts="$opts --signature"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        elif [[ $cword -eq 5 ]]; then
+            _ip_addresses
+            compopt -o nospace
+            return 0
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "enum" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--ssrf-response --bound-name" $prev; then
+            return 0
+
+        elif _comp_contains "--scan-action" $prev; then
+            opts="$enum_operations"
+
+        elif _comp_contains "--dgc-method" $prev; then
+            opts="clean dirty"
+
+        elif _comp_contains "--registry-method" $prev; then
+            opts="bind lookup rebind unbind"
+
+        elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
+            opts="--help"
+            opts="$opts --bound-name"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --localhost-bypass"
+            opts="$opts --scan-action"
+            opts="$opts --dgc-method"
+            opts="$opts --registry-method"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --signature"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "guess" ]]; then
+
+        if _comp_contains "--config --wordlist-file --wordlist-folder --sample-folder --template-folder" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--component" $prev; then
+            opts="$components"
+
+        elif _comp_contains "--bound-name --objid --signature --threads" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
+            opts="--help"
+            opts="$opts --wordlist-file"
+            opts="$opts --wordlist-folder"
+            opts="$opts --create-samples"
+            opts="$opts --sample-folder"
+            opts="$opts --template-folder"
+            opts="$opts --trusted"
+            opts="$opts --force-guessing"
+            opts="$opts --guess-duplicates"
+            opts="$opts --update"
+            opts="$opts --zero-arg"
+            opts="$opts --threads"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --component"
+            opts="$opts --bound-name"
+            opts="$opts --objid"
+            opts="$opts --signature"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "known" ]]; then
+
+        if [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
+            opts="--help"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "listen" ]]; then
+
+        if _comp_contains "--config --plugin" $prev; then
+            _filedir
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
+            opts="--help"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --plugin"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+
+        elif [[ $cword -eq 2 ]]; then
+            _ip_addresses
+            return 0
+
+        elif [[ $cword -eq 4 ]]; then
+            opts="$gadgets"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "objid" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
+            opts="--help"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "roguejmx" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--objid --forward-host --forward-port --forward-bound-name --forward-objid" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
+            opts="--help"
+            opts="$opts --objid"
+            opts="$opts --forward-host"
+            opts="$opts --forward-port"
+            opts="$opts --forward-bound-name"
+            opts="$opts --forward-objid"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        elif [[ $cword -eq 2 ]]; then
+            _ip_addresses
+            return 0
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "scan" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--ports --threads --timeout-read --timeout-connect" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
+            opts="--help"
+            opts="$opts --ports"
+            opts="$opts --threads"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --timeout-read"
+            opts="$opts --timeout-connect"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "serial" ]]; then
+
+        if _comp_contains "--config --plugin" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--ssrf-response --position --bound-name --objid --signature" $prev; then
+            return 0
+
+        elif _comp_contains "--component" $prev; then
+            opts="$components"
+
+        elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
+            opts="--help"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --position"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --plugin"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --component"
+            opts="$opts --bound-name"
+            opts="$opts --objid"
+            opts="$opts --signature"
+            opts="$opts --follow"
+            opts="$opts --ssl"
+
+        elif [[ $cword -eq 4 ]]; then
+            opts="$gadgets"
+
+        else
+            return 0
+        fi
+
+
+    elif [[ ${words[1]} == "unbind" ]]; then
+
+        if _comp_contains "--config" $prev; then
+            _filedir
+            return 0
+
+        elif _comp_contains "--ssrf-response" $prev; then
+            return 0
+
+        elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
+            opts="--help"
+            opts="$opts --gopher"
+            opts="$opts --ssrf"
+            opts="$opts --ssrf-response"
+            opts="$opts --encode"
+            opts="$opts --raw"
+            opts="$opts --localhost-bypass"
+            opts="$opts --config"
+            opts="$opts --verbose"
+            opts="$opts --plugin"
+            opts="$opts --no-color"
+            opts="$opts --stack-trace"
+            opts="$opts --ssl"
+
+        else
+            return 0
         fi
     fi
-
-	# filename completions
-	if _comp_contains "--config --plugin --sample-folder --template-folder --wordlist-file --wordlist-folder --yso" $prev; then
-        _filedir
-		return 0
-
-	# signature completions
-	elif _comp_contains "--signature" $prev; then
-        opts="act reg dgc"
-
-	# registry method completions
-	elif _comp_contains "--reg-method" $prev; then
-        opts="bind lookup rebind unbind"
-
-	# dgc method completions
-	elif _comp_contains "--dgc-method" $prev; then
-        opts="clean dirty"
-
-	# No completions
-	elif _comp_contains "--argument-position --bound-name --objid --signature --threads" $prev; then
-		return 0
-
-	# otherwise, just complete options
-	else 
-		opts="--argument-position"
-		opts="$opts --bound-name"
-		opts="$opts --config"
-		opts="$opts --create-samples"
-		opts="$opts --dgc-method"
-		opts="$opts --follow"
-		opts="$opts --force-guessing"
-		opts="$opts --force-legacy"
-		opts="$opts --guess-duplicates"
-		opts="$opts --help"
-		opts="$opts --localhost-bypass"
-		opts="$opts --no-color"
-		opts="$opts --no-legacy"
-		opts="$opts --objid"
-		opts="$opts --plugin"
-		opts="$opts --reg-method"
-		opts="$opts --sample-folder"
-		opts="$opts --signature"
-		opts="$opts --ssl"
-		opts="$opts --stack-trace"
-		opts="$opts --template-folder"
-		opts="$opts --threads"
-		opts="$opts --trusted"
-		opts="$opts --update"
-		opts="$opts --verbose"
-		opts="$opts --wordlist-file"
-		opts="$opts --wordlist-folder"
-		opts="$opts --yso"
-		opts="$opts --zero-arg"
-	fi
 
     _comp_filter "opts"
     _comp_filter_shorts "opts"

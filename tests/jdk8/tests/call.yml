@@ -1,8 +1,18 @@
 tester:
-  name: call
   title: Calling Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'call' action."
+  description: |-
+    'Performs tests for the call action.'
+
+  id: '001-003'
+  groups:
+    - call
+    - plugin
+  id_pattern: '001-003-{:03}'
+
+
+variables:
+  file: jdk8-call-rce-test.txt
+
 
 plugins:
   - os_command:
@@ -13,36 +23,100 @@ plugins:
         - ../../utils/PluginTest.java
         - ../../utils/PluginTest.jar
 
+
 tests:
   - title: Execute Call
-    description: >
-      'Invokes the getVersion function on the JMX remote object.'
+    description: |-
+      'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
-      - ''
-      - --bound-name
-      - jmxrmi
+      - ${TARGET}
+      - '"touch ${volume-d}/${file}"'
+      - --bound-name 
+      - plain-server
       - --signature
-      - 'String getVersion()'
+      - 'String execute(String dummy)'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Execute Call (Response Handler Plugin)
+    description: |-
+      'Invokes the execute function on the plain-server object.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - '"id"'
+      - --bound-name 
+      - plain-server
+      - --signature
+      - 'String execute(String dummy)'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - '1.0 java_runtime_1.8.0_40-internal-b22'
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
+
+
+  - title: Execute Call (Argument Provider Plugin)
+    description: |-
+      'Invokes the login function on the legacy-service object using'
+      'a custom argument provider that creates the required HashMap.'
+
+    groups:
+      - argument-provider
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - login
+      - --bound-name 
+      - legacy-service
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Session-ID-123
 
 
   - title: Execute Call (Based on ObjID)
-    description: >
+    description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    groups:
+      - response-handler
+
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - ''
       - --objid
       - 0
@@ -50,10 +124,89 @@ tests:
       - 'String[] list()'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - jmxrmi
+            - plain-server2
+            - legacy-service
+            - plain-server
 
 
+  - title: Execute Call (Based on complex ObjID)
+    description: |-
+      'Invokes the list function on the rmi registry by using the'
+      '--objid option and the more complicated form of an ObjID.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - ''
+      - --objid
+      - '[0:0:0, 0]'
+      - --signature
+      - 'String[] list()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - plain-server2
+            - legacy-service
+            - plain-server
+
+
+  - title: Invalid Bound Name
+    description: |-
+      'Invokes a function on an invalid bound name and checks'
+      'the corresponding error message.'
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - '"id"'
+      - --bound-name 
+      - legacy-server
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - NotBoundException
+            - Cannot continue from here
+
+
+  - title: Invalid Argument
+    description: |-
+      'Invokes a function using an invalid argument definition.'
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - '5'
+      - --bound-name 
+      - legacy-service
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 5 is invalid
+            - Cannot continue from here

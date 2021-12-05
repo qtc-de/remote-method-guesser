@@ -109,7 +109,7 @@ public class WordlistHandler {
             Logger.printlnMixedBlue("Reading method candidates from internal wordlist", wordlist);
             Logger.increaseIndent();
 
-            InputStream stream = WordlistHandler.class.getResourceAsStream("/wordlists/" + wordlist);
+            InputStream stream = WordlistHandler.class.getResourceAsStream("/resources/wordlists/" + wordlist);
             String content = new String(IOUtils.toByteArray(stream));
             stream.close();
 
@@ -231,10 +231,12 @@ public class WordlistHandler {
     public static void updateWordlist(File file, HashSet<MethodCandidate> methods) throws IOException
     {
         List<String> signatures = new ArrayList<String>();
+
         for(MethodCandidate method : methods) {
             signatures.add(method.convertToString());
         }
 
+        signatures.sort( (i1, i2) -> i1.compareTo(i2) );
         FileUtils.writeLines(file, signatures);
     }
 }

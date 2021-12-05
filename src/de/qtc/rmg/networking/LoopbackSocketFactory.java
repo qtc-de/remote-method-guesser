@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.rmi.server.RMISocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -68,26 +69,26 @@ public class LoopbackSocketFactory extends RMISocketFactory {
 
         if(!this.host.equals(host)) {
 
-            if( printInfo && Logger.verbose ) {
+            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                 Logger.printInfoBox();
                 Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", host);
             }
 
             if( this.followRedirect ) {
-                if( printInfo && Logger.verbose )
+                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() )
                     Logger.println("Following redirect to new target...");
 
             } else {
 
                 host = this.host;
 
-                if( printInfo && Logger.verbose ) {
+                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                     Logger.printlnMixedBlue("Redirecting the connection back to", host);
                     Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
                 }
             }
 
-            if( printInfo && Logger.verbose ) {
+            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                 Logger.decreaseIndent();
             }
 

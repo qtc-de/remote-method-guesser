@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import javax.net.ssl.SSLSocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 
 /**
@@ -51,26 +52,26 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
 
         if(!host.equals(target)) {
 
-            if( printInfo && Logger.verbose ) {
+            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                 Logger.printInfoBox();
                 Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", target);
             }
 
             if( followRedirect ) {
-                if( printInfo && Logger.verbose )
+                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() )
                     Logger.println("Following SSL redirect to new target...");
 
             } else {
 
                 target = host;
 
-                if( printInfo && Logger.verbose ) {
+                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                     Logger.printlnMixedBlue("Redirecting the SSL connection back to", host);
                     Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
                 }
             }
 
-            if( printInfo && Logger.verbose ) {
+            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
                 Logger.decreaseIndent();
             }
 

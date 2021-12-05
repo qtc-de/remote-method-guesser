@@ -1,23 +1,20 @@
 package de.qtc.rmg.io;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
+import de.qtc.rmg.endpoints.KnownEndpoint;
+import de.qtc.rmg.endpoints.Vulnerability;
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.operations.RemoteObjectClient;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
 
 /**
- * The Formatter class is basically a legacy class. In previous versions, rmg supported JSON
- * output and the formatter was used to print results either as plain text or as JSON. In
- * current versions, JSON support was removed, which make the class basically no longer required.
- * It will be probably removed in future.
+ * The formatter class is used to print formatted output for the enum and guess operations.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -26,45 +23,41 @@ public class Formatter {
     /**
      * Creates a formatted list of available bound names and their corresponding classes. Classes
      * are divided in known classes (classes that are available on the current class path) and
-     * unknown classes (not available on the current class path).
+     * unknown classes (not available on the current class path). Furthermore, some other meta
+     * information for each bound name is printed (TCP endpoint + ObjID).
      *
-     * @param classes array of maps containing boundname-classes pairs
+     * @param remoteObjects Array of RemoteObjectWrappers obtained from the RMI registry
      */
-    public void listBoundNames(HashMap<String,String>[] classes)
+    public void listBoundNames(RemoteObjectWrapper[] remoteObjects)
     {
-        HashMap<String,String> knownClasses = classes[0];
-        HashMap<String,String>  unknownClasses = classes[1];
-
         Logger.printlnBlue("RMI registry bound names:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
-        Set<String> boundNames = new HashSet<String>();
-        boundNames.addAll(knownClasses.keySet());
-        boundNames.addAll(unknownClasses.keySet());
-
-        if( boundNames.size() == 0 ) {
+        if( remoteObjects == null || remoteObjects.length == 0 ) {
             Logger.println("- No objects are bound to the registry.");
+            return;
         }
 
-        for( String name : boundNames ) {
+        for(RemoteObjectWrapper remoteObject : remoteObjects) {
 
-            Logger.printlnMixedYellow("-", name);
+            Logger.printlnMixedYellow("-", remoteObject.boundName);
 
-            if( knownClasses == null || unknownClasses == null ) {
+            if( remoteObject.remoteObject == null)
                 continue;
-            }
 
             Logger.increaseIndent();
 
-            if( knownClasses.containsKey(name) ) {
-                Logger.printlnMixedBlue("-->", knownClasses.get(name), "(known class)");
+            if( remoteObject.isKnown() ) {
+                Logger.printMixedBlue("-->", remoteObject.className, "");
+                remoteObject.knownEndpoint.printEnum();
+
+            } else {
+                Logger.printMixedBlue("-->", remoteObject.className);
+                Logger.printlnPlainMixedPurple("", "(unknown class)");
             }
 
-            if( unknownClasses.containsKey(name) ) {
-                Logger.printlnMixedBlue("-->", unknownClasses.get(name), "(unknown class)");
-            }
-
+            printLiveRef(remoteObject);
             Logger.decreaseIndent();
         }
 
@@ -74,30 +67,25 @@ public class Formatter {
     /**
      * Prints a formatted list of successfully guessed remote methods.
      *
-     * @param results HashMap that contains the guessed MethodCandidates for each bound name
+     * @param results Array of RemoteObjectClients containing the successfully guessed methods
      */
-    public void listGuessedMethods(Map<String, ArrayList<MethodCandidate>> results)
+    public void listGuessedMethods(List<RemoteObjectClient> results)
     {
-        if( results.size() == 0 ) {
+        if( results.isEmpty() ) {
             Logger.printlnBlue("No remote methods identified :(");
             return;
         }
 
         Logger.println("Listing successfully guessed methods:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
-        SortedSet<String> boundNames = new TreeSet<String>(results.keySet());
+        for(RemoteObjectClient client : results ) {
 
-        for(String boundName : boundNames ) {
+            List<MethodCandidate> methods = client.remoteMethods;
 
-            ArrayList<MethodCandidate> methods = results.get(boundName);
-
-            Logger.printlnMixedBlue("-", boundName);
+            Logger.printlnMixedBlue("-", String.join(" == ", client.getBoundNames()));
             Logger.increaseIndent();
-
-            if(methods.size() == 0)
-                Logger.printlnMixedYellow("-->", "0 remote methods have been identified.");
 
             for( MethodCandidate m : methods ) {
                 Logger.printlnMixedYellow("-->", m.getSignature());
@@ -112,12 +100,13 @@ public class Formatter {
     /**
      * Lists enumerated codebases exposed by the RMI server. The corresponding information is fetched
      * from a static method on the CodebaseCollector class. It returns a HashMap that maps codebases
-     * to classes that their annotated with the corresponding codebase during RMI communication.
+     * to classes that their annotated with it. This function prints this HashMap in a human readable
+     * format.
      */
     public void listCodeases()
     {
         Logger.printlnBlue("RMI server codebase enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
@@ -141,5 +130,124 @@ public class Formatter {
         }
 
         Logger.decreaseIndent();
+    }
+
+    /**
+     * Prints the meta information contained in a KnownEndpoint in formatted way. This function
+     * generates the output that is displayed when using remote-method-guesser's 'known' action.
+     *
+     * @param knownEndpoint The KnownEndpoint to print
+     */
+    public void listKnownEndpoint(KnownEndpoint knownEndpoint)
+    {
+        Logger.printlnBlue("Name:");
+        Logger.increaseIndent();
+
+        Logger.printlnYellow(knownEndpoint.getName());
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Class Name:");
+        Logger.increaseIndent();
+
+        for(String className : knownEndpoint.getClassName())
+            Logger.printlnMixedYellow("-", className);
+
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Description:");
+        Logger.increaseIndent();
+
+        String[] lines = knownEndpoint.getDescription().split("\n");
+
+        for( String line : lines)
+            Logger.printlnYellow(line);
+
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("Remote Methods:");
+        Logger.increaseIndent();
+
+        for(String remoteMethod : knownEndpoint.getRemoteMethods())
+            Logger.printlnMixedYellow("-", remoteMethod);
+
+        Logger.decreaseIndent();
+        Logger.lineBreak();
+
+        Logger.printlnBlue("References:");
+        Logger.increaseIndent();
+
+        for(String reference : knownEndpoint.getReferences())
+            Logger.printlnMixedYellow("-", reference);
+
+        Logger.decreaseIndent();
+        listVulnerabilities(knownEndpoint.getVulnerabilities());
+    }
+
+    /**
+     * Print vulnerability information contained within a KnownEndpoint in a formatted way.
+     * This function is called by listKnownEndpoint to display vulnerabilities that are known
+     * for the corresponding endpoint.
+     *
+     * @param vulns List of vulnerabilities to display
+     */
+    private void listVulnerabilities(List<Vulnerability> vulns)
+    {
+        if( vulns == null || vulns.size() == 0 )
+            return;
+
+        Logger.lineBreak();
+        Logger.printlnBlue("Vulnerabilities:");
+        Logger.increaseIndent();
+
+        for( Vulnerability vuln : vulns ) {
+
+            Logger.lineBreak();
+            Logger.printlnBlue("-----------------------------------");
+
+            Logger.printlnBlue("Name:");
+            Logger.increaseIndent();
+
+            Logger.printlnYellow(vuln.getName());
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+
+            Logger.printlnBlue("Description:");
+            Logger.increaseIndent();
+
+            String[] lines = vuln.getDescription().split("\n");
+
+            for( String line : lines)
+                Logger.printlnYellow(line);
+
+            Logger.decreaseIndent();
+            Logger.lineBreak();
+
+            Logger.printlnBlue("References:");
+            Logger.increaseIndent();
+
+            for(String reference : vuln.getReferences())
+                Logger.printlnMixedYellow("-", reference);
+
+            Logger.decreaseIndent();
+        }
+    }
+
+    /**
+     * Print formatted output to display a LiveRef. To make fields more accessible, the ref needs to
+     * be wrapped into an RemoteObjectWrapper first.
+     *
+     * @param ref RemoteObjectWrapper wrapper around a LiveRef
+     */
+    private void printLiveRef(RemoteObjectWrapper ref)
+    {
+        if(ref == null || ref.remoteObject == null)
+            return;
+
+        Logger.print("    ");
+        Logger.printPlainMixedBlue("Endpoint:", ref.getTarget());
+        Logger.printlnPlainMixedBlue(" ObjID:", ref.objID.toString());
     }
 }

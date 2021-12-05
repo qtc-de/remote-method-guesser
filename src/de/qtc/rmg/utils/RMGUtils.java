@@ -1,20 +1,32 @@
 package de.qtc.rmg.utils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.rmi.Remote;
+import java.rmi.server.ObjID;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.RemoteObjectInvocationHandler;
+import java.rmi.server.RemoteRef;
 import java.rmi.server.RemoteStub;
+import java.rmi.server.UID;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import javassist.CannotCompileException;
@@ -26,6 +38,11 @@ import javassist.CtNewMethod;
 import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
+import javassist.tools.reflect.Reflection;
+import sun.rmi.server.UnicastRef;
+import sun.rmi.transport.LiveRef;
+import sun.rmi.server.UnicastServerRef;
+
 
 /**
  * The RMGUtils class defines static helper functions that do not really fit into other categories.
@@ -35,7 +52,7 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-@SuppressWarnings({ "rawtypes", "deprecation" })
+@SuppressWarnings({ "rawtypes", "deprecation", "restriction" })
 public class RMGUtils {
 
     private static ClassPool pool;
@@ -43,6 +60,7 @@ public class RMGUtils {
     private static CtClass remoteClass;
     private static CtClass serializable;
     private static CtClass remoteStubClass;
+    private static Set<String> createdClasses;
 
     /**
      * The init function has to be called before the javassist library can be utilized via RMGUtils.
@@ -63,6 +81,7 @@ public class RMGUtils {
         }
 
         dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
+        createdClasses = new HashSet<String>();
     }
 
     /**
@@ -84,57 +103,7 @@ public class RMGUtils {
         } catch (ClassNotFoundException e) {}
 
         CtClass intf = pool.makeInterface(className, remoteClass);
-        CtMethod dummyMethod = CtNewMethod.make("public void rmgInvokeObject(String str) throws java.rmi.RemoteException;", intf);
-
-        intf.addMethod(dummyMethod);
-        dummyMethod = CtNewMethod.make("public void rmgInvokePrimitive(int i) throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
-
-        return intf.toClass();
-    }
-
-    /**
-     * This function is basically equivalent to the previous makeInterface function, apart that it creates the interface
-     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
-     * remote interfaces that contain a user specified method signature.
-     *
-     * The function first checks whether the specified class does already exist and contains the requested method. If
-     * this is the case, the corresponding Class object is simply returned. If the class exists, but the method is not
-     * available, the class needs to be defrosted to allow modifications to it.
-     *
-     * For non existing and defrosted classes, the requested MethodCandidate is then added to the interface and the corresponding
-     * interface class Object is returned by the function.
-     *
-     * @param className full qualified name of the class to create
-     * @param candidate MethodCandidate to include within the created interface
-     * @return Class object of the dynamically created class
-     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
-     */
-    public static Class makeInterface(String className, MethodCandidate candidate) throws CannotCompileException
-    {
-        CtClass intf = null;
-
-        try {
-            intf = pool.getCtClass(className);
-
-            for(CtMethod method : intf.getDeclaredMethods()) {
-
-                if(method.getSignature().equals(candidate.getMethod().getSignature()))
-                    return Class.forName(className);
-            }
-
-            intf.defrost();
-
-        } catch (ClassNotFoundException | NotFoundException e) {
-            /*
-             * className is not known and was not created before. This is usually expected.
-             * In this case, we just create the class :)
-             */
-            intf = pool.makeInterface(className, remoteClass);
-        }
-
-        CtMethod dummyMethod = CtNewMethod.make("public " + candidate.getSignature() + " throws java.rmi.RemoteException;", intf);
-        intf.addMethod(dummyMethod);
+        createdClasses.add(className);
 
         return intf.toClass();
     }
@@ -161,48 +130,15 @@ public class RMGUtils {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {}
 
-        Class intfClass = RMGUtils.makeInterface(className + "Interface");
+        RMGUtils.makeInterface(className + "Interface");
         CtClass intf = pool.getCtClass(className + "Interface");
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
         addSerialVersionUID(ctClass);
 
-        ctClass.toClass();
-        return intfClass;
-    }
-
-    /**
-     * Basically the same function as the previously defined makeLegacyStub function, apart that it creates the interface
-     * with a user specified MethodCandidate. This is required for the MethodAttacker class, which need to compile dynamic
-     * remote interfaces that contain a user specified method signature.
-     *
-     * As the remote interface is created using the makeInterface method, we may do not need to care about defrosting. I'm
-     * not totally sure how Java behaves when a class already exists and you change the interface that it implements.
-     * However, at the current state of the remote-method-guesser, this should not happen anyway, as this method is only
-     * used by MethodAttacker, which only accepts a single function signature.
-     *
-     * @param className full qualified name of the stub class to create
-     * @param candidate MethodCandidate to include within the created interface
-     * @return Class object of the dynamically created stub class
-     * @throws CannotCompileException may be thrown when an invalid class name or method signature was identified
-     * @throws NotFoundException should never be thrown in practice
-     */
-    public static Class makeLegacyStub(String className, MethodCandidate candidate) throws CannotCompileException, NotFoundException
-    {
-        try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {}
-
-        Class intfClass = RMGUtils.makeInterface(className + "Interface", candidate);
-        CtClass intf = pool.getCtClass(className + "Interface");
-
-        CtClass ctClass = pool.makeClass(className, remoteStubClass);
-        ctClass.setInterfaces(new CtClass[] { intf });
-        addSerialVersionUID(ctClass);
-
-        ctClass.toClass();
-        return intfClass;
+        createdClasses.add(className);
+        return ctClass.toClass();
     }
 
     /**
@@ -587,11 +523,20 @@ public class RMGUtils {
     }
 
     /**
+     * Since version 3.4.0 of remote-method-guesser, the CodebaseCollectorClass has the additional purpose of creating
+     * unknown remote classes at runtime. This behavior needs to be always enabled, independently of the useCodebaseOnly
+     * property.
+     */
+    public static void enableCodebaseCollector()
+    {
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
+    }
+
+    /**
      * This code was copied from the following link and is just used to disable the annoying reflection warnings:
      *
      * https://stackoverflow.com/questions/46454995/how-to-hide-warning-illegal-reflective-access-in-java-9-without-jvm-argument
      */
-    @SuppressWarnings("restriction")
     public static void disableWarning()
     {
         try {
@@ -603,36 +548,6 @@ public class RMGUtils {
             Field logger = cls.getDeclaredField("logger");
             u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
         } catch (Exception e) {}
-    }
-
-    /**
-     * Determines the legacy mode setting. Legacy mode decides whether to detect usage of legacy RMI objects automatically
-     * (legacyMode = 0), to enforce usage of legacy objects (legacyMode = 1) or to treat all classes as non legacy classes
-     * (legacyMode = 2).
-     *
-     * When automatic detection is used, the function checks for the "_Stub" suffix, which is usually present for legacy
-     * stub objects. Otherwise, it just returns true or false depending on the value of legacyMode.
-     *
-     * Whenever legacyMode is enabled, a warning is printed to the user, as it might not be intended.
-     *
-     * @param className the class name to determine the legacy status from
-     * @param legacyMode the user defined setting of legacyMode (0 is the default)
-     * @param verbose whether or not to print the warning message
-     * @return true if legacy mode should be used, false otherwise
-     */
-    public static boolean isLegacy(String className, int legacyMode, boolean verbose)
-    {
-        if( (className.endsWith("_Stub") && legacyMode == 0) || legacyMode == 1) {
-            if( Logger.verbose && verbose) {
-                Logger.printInfoBox();
-                Logger.printlnMixedBlue("Class", className, "is treated as legacy stub.");
-                Logger.printlnMixedYellow("You can use", "--no-legacy", "to prevent this.");
-                Logger.decreaseIndent();
-            }
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -659,25 +574,29 @@ public class RMGUtils {
      * @param className name of the class implemented by the bound name
      * @param guessedMethods list of successfully guessed methods (bound name -> list)
      */
-    public static void addKnownMethods(String boundName, String className, Map<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static List<MethodCandidate> getKnownMethods(String className)
     {
+        List<MethodCandidate> knownMethods = new ArrayList<MethodCandidate>();
+
         try {
             CtClass knownClass = pool.getCtClass(className);
 
             if( knownClass.isInterface() )
-                addKnownMethods(knownClass, boundName, guessedMethods);
+                addKnownMethods(knownClass, knownMethods);
 
             for(CtClass intf : knownClass.getInterfaces()) {
 
                 if(! isAssignableFrom(intf, "java.rmi.Remote"))
                     continue;
 
-                addKnownMethods(intf, boundName, guessedMethods);
+                addKnownMethods(intf, knownMethods);
             }
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
         }
+
+        return knownMethods;
     }
 
     /**
@@ -688,16 +607,13 @@ public class RMGUtils {
      * @param boundName bound name that is using the known class
      * @param guessedMethods list of successfully guessed methods (bound name -> list)
      */
-    public static void addKnownMethods(CtClass intf, String boundName, Map<String,ArrayList<MethodCandidate>> guessedMethods)
+    public static void addKnownMethods(CtClass intf, List<MethodCandidate> knownMethodCandidates)
     {
         try {
             CtMethod[] knownMethods = intf.getDeclaredMethods();
-            ArrayList<MethodCandidate> knownMethodCandidates = new ArrayList<MethodCandidate>();
 
             for(CtMethod knownMethod: knownMethods)
                 knownMethodCandidates.add(new MethodCandidate(knownMethod));
-
-            guessedMethods.computeIfAbsent(boundName, k -> new ArrayList<MethodCandidate>()).addAll(knownMethodCandidates);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
@@ -937,5 +853,361 @@ public class RMGUtils {
         }
 
         return -1;
+    }
+
+    /**
+     * Converts a byte array into a hex string. Copied from:
+     * https://stackoverflow.com/questions/15429257/how-to-convert-byte-array-to-hexstring-in-java
+     *
+     * @param in byte array to convert
+     * @return hex string representing the byte array
+     */
+    public static String bytesToHex(byte[] in)
+    {
+        final StringBuilder builder = new StringBuilder();
+
+        for (byte b : in) {
+            builder.append(String.format("%02x", b));
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Converts a hex string into a byte array. Copied from:
+     * https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+     *
+     * @param s Hex string to convert from
+     * @return byte array representation of the hex data
+     */
+    public static byte[] hexToBytes(String s)
+    {
+        s = s.replace("0x", "").replace("\\x", "").replace("%", "");
+
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+
+        for(int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte)((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+
+        return data;
+    }
+
+    /**
+     * Checks whether the specified class name was generated dynamically by RMGUtils.
+     *
+     * @param className class to check for
+     * @return true if it was generated dynamically
+     */
+    public static boolean dynamicallyCreated(String className)
+    {
+        if( createdClasses.contains(className) )
+            return true;
+
+        return false;
+    }
+
+    /**
+     * Extracts the underlying RemoteRef within an instance of Remote. The RemoteRef contains
+     * information regarding the actual TCP endpoint and the ObjID that is used within the call.
+     *
+     * @param instance An Instance of Remote - Usually obtained by the RMI lookup method
+     * @return underlying RemoteRef that is used by the Remote instance
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static RemoteRef extractRef(Remote instance) throws IllegalArgumentException, IllegalAccessException
+    {
+        Field proxyField = null;
+        Field remoteField= null;
+        RemoteRef remoteRef = null;
+
+        try {
+            proxyField = Proxy.class.getDeclaredField("h");
+            remoteField = RemoteObject.class.getDeclaredField("ref");
+            proxyField.setAccessible(true);
+            remoteField.setAccessible(true);
+
+        } catch(NoSuchFieldException | SecurityException e) {
+            ExceptionHandler.unexpectedException(e, "reflective access in", "extractRef", true);
+        }
+
+        if( Proxy.isProxyClass(instance.getClass()) )
+            remoteRef = ((RemoteObjectInvocationHandler)proxyField.get(instance)).getRef();
+
+        else
+            remoteRef = (RemoteRef)remoteField.get(instance);
+
+        return remoteRef;
+    }
+
+    /**
+     * Extracts the ObjID value from a UnicastRef.
+     *
+     * @param uref UnicastRef to extract the ObjID from
+     * @return ObjID extracted from specified UnicastRef
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static ObjID extractObjID(UnicastRef uref) throws IllegalArgumentException, IllegalAccessException
+    {
+        Field liveRefField = null;
+
+        try {
+            liveRefField = UnicastRef.class.getDeclaredField("ref");
+            liveRefField.setAccessible(true);
+
+        } catch(NoSuchFieldException | SecurityException e) {
+            ExceptionHandler.unexpectedException(e, "reflective access in", "extractObjID", true);
+        }
+
+        LiveRef ref = (LiveRef)liveRefField.get(uref);
+        return ref.getObjID();
+    }
+
+    /**
+     * Extracts the ObjID value from an instance of Remote.
+     *
+     * @param remote Instance of Remote that contains an ref with assigned ObjID
+     * @return ObjID extracted from specified instance of Remote
+     * @throws Reflection Exceptions - If some reflective access fails
+     */
+    public static ObjID extractObjID(Remote remote) throws IllegalArgumentException, IllegalAccessException
+    {
+        RemoteRef remoteRef = extractRef(remote);
+        return extractObjID((UnicastRef)remoteRef);
+    }
+
+    /**
+     * Parses an ObjID from a String. In previous versions of rmg, only well known ObjID's were supported,
+     * as it was only possible to specify the ObjNum property of an ObjID. For non well known RemoteObjects,
+     * an UID is required too. This function accepts now both inputs. You can just specify a number like
+     * 1, 2 or 3 to target one of the well known RMI components or a full ObjID string to target a different
+     * RemoteObject. Full ObjID strings can be obtained by rmg's enum action and look usually like this:
+     * [196e60b8:17ac2551248:-7ffc, -7934078052539650836]
+     *
+     * @param objIdString Either a plain number or an ObjID value formatted as String
+     * @return ObjID object constructed from the specified input string
+     */
+    public static ObjID parseObjID(String objIdString)
+    {
+        ObjID returnValue = null;
+
+        if( !objIdString.contains(":") ) {
+
+            try {
+                long objNum = Long.parseLong(objIdString);
+                return new ObjID((int)objNum);
+
+            } catch( java.lang.NumberFormatException e ) {
+                ExceptionHandler.invalidObjectId(objIdString);
+            }
+        }
+
+        Pattern pattern = Pattern.compile("\\[([0-9a-f-]+):([0-9a-f-]+):([0-9a-f-]+), ([0-9-]+)\\]");
+        Matcher matcher = pattern.matcher(objIdString);
+
+        if( !matcher.find() )
+            ExceptionHandler.invalidObjectId(objIdString);
+
+        try {
+            Constructor<UID> conUID = UID.class.getDeclaredConstructor(int.class, long.class, short.class);
+            Constructor<ObjID> conObjID = ObjID.class.getDeclaredConstructor(long.class, UID.class);
+
+            int unique = Integer.parseInt(matcher.group(1), 16);
+            long time = Long.parseLong(matcher.group(2), 16);
+            short count = (short)Integer.parseInt(matcher.group(3), 16);
+            long objNum = Long.parseLong(matcher.group(4));
+
+            conUID.setAccessible(true);
+            UID uid = conUID.newInstance(unique, time, count);
+
+            conObjID.setAccessible(true);
+            returnValue = conObjID.newInstance(objNum, uid);
+
+        } catch (Exception e) {
+            ExceptionHandler.invalidObjectId(objIdString);
+        }
+
+        return returnValue;
+    }
+
+    /**
+     * Determines the className of an object that implements Remote. If the specified object is a Proxy,
+     * the function returns the first implemented interface name that is not java.rmi.Remote.
+     *
+     * @param remoteObject Object to obtain the class from
+     * @return Class name of the implementor or one of it's interfaces in case of a Proxy
+     */
+    public static String getClassName(Remote remoteObject)
+    {
+        if( Proxy.isProxyClass(remoteObject.getClass()) ) {
+
+            Class<?>[] interfaces = remoteObject.getClass().getInterfaces();
+
+            for(Class<?> intf : interfaces) {
+
+                String intfName = intf.getName();
+
+                if(!intfName.equals("java.rmi.Remote"))
+                    return intfName;
+            }
+        }
+
+        return remoteObject.getClass().getName();
+    }
+
+    /**
+     * Print information contained in an ObjID to stdout.
+     *
+     * @param objID ObjID value to print information from
+     */
+    public static void printObjID(ObjID objID)
+    {
+        try {
+            Field objNumField = objID.getClass().getDeclaredField("objNum");
+            Field spaceField = objID.getClass().getDeclaredField("space");
+
+            objNumField.setAccessible(true);
+            spaceField.setAccessible(true);
+
+            long objNum = objNumField.getLong(objID);
+            UID uid = (UID)spaceField.get(objID);
+
+            Field uniqueField = uid.getClass().getDeclaredField("unique");
+            Field timeField = uid.getClass().getDeclaredField("time");
+            Field countField = uid.getClass().getDeclaredField("count");
+
+            uniqueField.setAccessible(true);
+            timeField.setAccessible(true);
+            countField.setAccessible(true);
+
+            int unique = uniqueField.getInt(uid);
+            long time = timeField.getLong(uid);
+            short count = countField.getShort(uid);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat(" (MMM dd,yyyy HH:mm)");
+            Date date = new Date(time);
+
+            Logger.printlnMixedBlue("Details for ObjID", objID.toString());
+
+            Logger.lineBreak();
+            Logger.printMixedBlueFirst("ObjNum:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(objNum));
+
+            Logger.printlnBlue("UID:");
+            Logger.increaseIndent();
+
+            Logger.printMixedBlueFirst("Unique:", "\t");
+            Logger.printlnPlainYellow(String.valueOf(unique));
+
+            Logger.printMixedBlueFirst("Time:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(time) + dateFormat.format(date));
+
+            Logger.printMixedBlueFirst("Count:", "\t\t");
+            Logger.printlnPlainYellow(String.valueOf(count));
+
+            Logger.decreaseIndent();
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, "parsing", "ObjID", true);
+        }
+    }
+
+    /**
+     * Provides a Java8+ compatible way to create an ObjectInputFilter using reflection. Using
+     * ordinary class access does not work for projects that should be compatible with Java8 and
+     * Java9+, since the ObjectInputFIlter class is located in different packages.
+     *
+     * @param pattern Serial filter pattern as usually used for ObjectInputFilter
+     * @return Either sun.misc.ObjectInputFilter or java.io.ObjectInputFilter depending on the Java environment
+     * @throws Exceptions - related to reflective access
+     */
+    public static Object createObjectInputFilter(String pattern) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+    {
+        Class<?> objectInputFilter = null;
+
+        try {
+            objectInputFilter = Class.forName("java.io.ObjectInputFilter$Config");
+
+        } catch( ClassNotFoundException e ) {
+
+            try {
+                objectInputFilter = Class.forName("sun.misc.ObjectInputFilter$Config");
+
+            } catch( ClassNotFoundException e2 ) {
+                ExceptionHandler.internalError("createObjectInputFilter", "Unable to find ObjectInputFilter class.");
+            }
+        }
+
+        Method createObjectInputFilter = objectInputFilter.getDeclaredMethod("createFilter", new Class<?>[] { String.class });
+        return createObjectInputFilter.invoke(null, pattern);
+    }
+
+    /**
+     * Inject an ObjectInputFilter into a UnicastServerRef. This is required for a Java8+ compatible
+     * way of creating serial filters for RMI connections. See the createObjectInputFilter function for
+     * more details.
+     *
+     * @param uref UnicastServerRef to inject the ObjectInputFilter on
+     * @param filter ObjectInputFilter to inject
+     * @throws Exceptions - related to reflective access
+     */
+    public static void injectObjectInputFilter(UnicastServerRef uref, Object filter) throws SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException
+    {
+        Field filterField = UnicastServerRef.class.getDeclaredField("filter");
+
+        filterField.setAccessible(true);
+        filterField.set(uref, filter);
+    }
+
+    /**
+     * Returns the ObjID for the user specified RMI component,
+     *
+     * @return ObjID for the user specified RMI component.
+     */
+    public static ObjID getObjIDByComponent(RMIComponent component)
+    {
+        if( component == null )
+            ExceptionHandler.internalError("RMGUtils.getObjIDByComponent", "Was called with null component.");
+
+        ObjID returnValue = null;
+
+        switch( component ) {
+
+            case REGISTRY:
+                returnValue = new ObjID(ObjID.REGISTRY_ID);
+                break;
+            case ACTIVATOR:
+                returnValue = new ObjID(ObjID.ACTIVATOR_ID);
+                break;
+            case DGC:
+                returnValue = new ObjID(ObjID.DGC_ID);
+                break;
+
+            default:
+                ExceptionHandler.internalError("RMGUtils.getObjIDByComponent", "The specified component was invalid.");
+        }
+
+        return returnValue;
+    }
+
+    /**
+     * Determines whether a ClassCastException was created by readString because of an non-String type being passed
+     * to a call that expected String.
+     *
+     * @param msg Message of the ClassCastException
+     * @return true if created by readString
+     */
+    public static boolean createdByReadString(String msg)
+    {
+        if( msg.equals("Cannot cast a class to java.lang.String") ||
+            msg.equals("Cannot cast an array to java.lang.String") ||
+            msg.equals("Cannot cast an enum to java.lang.String") ||
+            msg.equals("Cannot cast an object to java.lang.String") ||
+            msg.equals("Cannot cast an exception to java.lang.String")
+        )
+            return true;
+
+        return false;
     }
 }

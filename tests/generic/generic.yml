@@ -1,0 +1,14 @@
+tester:
+  name: generic
+  title: Generic Tests
+  description: >
+    'Launches some generic tests'
+
+
+  id: '004'
+  groups:
+    - generic
+
+
+testers:
+  - ./tests/*

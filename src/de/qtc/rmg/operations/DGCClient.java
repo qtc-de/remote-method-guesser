@@ -5,9 +5,10 @@ import java.util.HashMap;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 
 /**
@@ -17,43 +18,58 @@ import de.qtc.rmg.utils.DefinitelyNonExistingClass;
  *
  * Today, the DGC is probably one of the most locked down RMI interfaces. It implements a very strict
  * deserialization filter for incoming and outgoing calls, enables useCodebaseOnly internally, which overwrites
- * the user settings and uses an separate SecurityManager that denies basically everything apart from accepting
+ * the user settings and uses a separate AccessControlContext that denies basically everything apart from accepting
  * connections.
  *
- * Nonetheless, pentesters may to test DGC protections during security assessments to identify vulnerabilities
+ * Nonetheless, it is may desired to test DGC protections during security assessments to identify vulnerabilities
  * on outdated RMI endpoints or custom implementations. Therefore, DGC support was also implemented for rmg.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
 public class DGCClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long interfaceHash = -669196253586618813L;
     private static final ObjID objID = new ObjID(ObjID.DGC_ID);
 
-    public DGCClient(RMIWhisperer rmiEndpoint)
+    public DGCClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }
 
     /**
-     * The enumDGC function performs basically a codebase enumeration. The function was not named enumCodebase or anything like that,
-     * because this could be misleading. On modern RMI endpoints, the DGC cannot be used to enumerate the codebase properly. First of
-     * all, the DGC setting of useCodebaseOnly is always true, independent of the user defined settings. And even if this is not the
-     * case, the separate SecurityManager would deny class loading.
+     * The enumSecurityManager uses the DGC endpoint to check for an Security Manager. It does so by sending a class
+     * unknown to the remote server within a DGC call. If the server runs without a Security Manager, it will reject
+     * class loading and inform the caller about the missing Security Manager within the raised exception.
      *
-     * This function just makes a codebase call with an invalid URL as class annotation. When the DGC just ignores the codebase or
-     * gives an 'access denied' status in the ClassNotFoundException, the DGC is flagged as up to date. Otherwise, it is flagged
-     * as outdated, as the behavior is not normal for current RMI endpoints.
+     * If a Security Manager is in use, the DGC should raise an UnmarshalException that contains the ClassNotFoundException
+     * as it's cause. During the RMI call, the enumSecurityManager function sets an invalid URL as client side codebase.
+     * However, modern DGC implementations set useCodebaseOnly to false internally and do not respect user defined
+     * settings for this property. Remote class loading is therefore always disabled on modern DGC endpoints. Getting
+     * an UnmarshalException containing a plain ClassNotFoundException is therefore the most common behavior when a Security
+     * Manager is in use.
      *
-     * @param callName
+     * If the remote server specifies a codebase value on it's own, we may also encounter a ClassNotFoundException that
+     * contains 'access to class loader denied' within the Exception text. This is caused by the separate AccessControlContext
+     * that is used by the DGC. Since the codebase is defined by the server itself, useCodebaseOnly=true does not matter here
+     * and the DGC attempts to load the unknown class from the server specified codebase. However, due to the separate and
+     * more restrictive AccessControlContext, the Security Manager prevents the DGC from accessing the locally defined
+     * codebase. Therefore, this behavior is expected for RMI servers that use a Security Manager and set an RMI codebase
+     * locally.
+     *
+     * On really old RMI servers you may also obtain a MalformedURLException. This indicates that the server uses a
+     * Security Manager and that useCodebaseOnly is set to false. Since useCodebaseOnly is set to false automatically
+     * for modern DGC implementations, this always indicates that server is outdated. Furthermore, it may be possible
+     * to perform remote class loading attacks on it.
+     *
+     * @param callName DGC call to use for the enumeration
      */
-    public void enumDGC(String callName)
+    public void enumSecurityManager(String callName)
     {
         try {
-            Logger.printlnBlue("RMI DGC enumeration:");
-            Logger.println("");
+            Logger.printlnBlue("RMI Security Manager enumeration:");
+            Logger.lineBreak();
             Logger.increaseIndent();
 
             MaliciousOutputStream.setDefaultLocation("InvalidURL");
@@ -67,40 +83,49 @@ public class DGCClient {
             if( c != null ) {
 
                 if( c.getMessage().contains("no security manager: RMI class loader disabled") ) {
-                    Logger.printlnMixedYellow("- RMI server", "does not", "use a SecurityManager during DGC operations.");
-                    Logger.printlnMixedYellow("  --> Remote class loading attacks", "are not", "possible.");
-                    Logger.statusOutdated();
+                    Logger.printlnMixedYellow("- Caught Exception containing", "'no security manager'", "during RMI call.");
+                    Logger.printlnMixedYellow("  --> The server", "does not", "use a Security Manager.");
+                    Logger.statusDefault();
                     ExceptionHandler.showStackTrace(e);
 
                 } else if( c.getMessage().contains("access to class loader denied") ) {
                     Logger.printlnMixedYellow("- Security Manager", "rejected access", "to the class loader.");
-                    Logger.printlnMixedBlue("  --> The DGC uses most likely a", "separate security policy.");
+                    Logger.printlnMixedBlue("  --> The server", "does use", "a Security Manager.");
                     Logger.statusDefault();
                     ExceptionHandler.showStackTrace(e);
 
                 } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
                     Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
-                    Logger.printlnMixedBlue("  --> DGC is most likely configured with", "useCodebaseOnly=false.");
+                    Logger.printlnMixedBlue("  --> The server", "does use", "a Security Manager.");
                     Logger.statusDefault();
                     ExceptionHandler.showStackTrace(e);
 
                 } else {
-                    ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
+                    ExceptionHandler.unexpectedException(e, "Security Manager", "enumeration", false);
                 }
 
             } else if( t instanceof java.net.MalformedURLException) {
                 Logger.printlnMixedYellow("- Caught", "MalformedURLException", "during " + callName + " call.");
-                Logger.printMixedBlue("  --> The DGC", "attempted to parse", "the provided codebase ");
-                Logger.printlnPlainYellow("(useCodebaseOnly=false).");
+                Logger.printMixedBlue("  --> Security Manager is", "enabled", "and ");
+                Logger.printlnPlainYellow("useCodebaseOnly=false.");
                 Logger.statusNonDefault();
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( t instanceof java.io.InvalidClassException ) {
+                Logger.printlnMixedYellow("- Caught", "InvalidClassException", "during " + callName + " call.");
+                Logger.printlnMixedBlue("  --> This is an", "unusual behavior", "for DGC endpoints.");
+                Logger.statusNonDefault();
+                ExceptionHandler.showStackTrace(e);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, callName);
+
             } else {
-                ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
+                ExceptionHandler.unexpectedException(e, "Security Manager", "enumeration", false);
             }
 
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "DGC", "enumeration", false);
+            ExceptionHandler.unexpectedException(e, "Security Manager", "enumeration", false);
 
         } finally {
             Logger.decreaseIndent();
@@ -118,7 +143,7 @@ public class DGCClient {
     {
         try {
             Logger.printlnBlue("RMI server JEP290 enumeration:");
-            Logger.println("");
+            Logger.lineBreak();
             Logger.increaseIndent();
 
             dgcCall(callName, packArgsByName(callName, new HashMap<String,String>()), false);
@@ -139,6 +164,12 @@ public class DGCClient {
                 Logger.printPlainBlue(" java.util.HashMap");
                 Logger.printlnPlainYellow(" (JEP290 is not installed).");
                 Logger.statusVulnerable();
+                ExceptionHandler.showStackTrace(e);
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException) {
+                Logger.printMixedYellow("- DGC", "rejected", "deserialization with an");
+                Logger.printlnPlainBlue("UnsupportedOperationException (NotSoSerial?)");
+                Logger.statusOk();
                 ExceptionHandler.showStackTrace(e);
 
             } else {
@@ -176,38 +207,8 @@ public class DGCClient {
         try {
             dgcCall(callName, packArgsByName(callName, payloadObject), true);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC", className);
-                ExceptionHandler.showStackTrace(e);
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, callName, "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, callName, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, callName, "call", false);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, callName, "call", false);
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.DGC, callName);
         }
     }
 
@@ -224,35 +225,15 @@ public class DGCClient {
         try {
             dgcCall(callName, packArgsByName(callName, payloadObject), false);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "DGC", "gadget-class");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
-
-            } else {
-                ExceptionHandler.unknownDeserializationException(e);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, callName, "call", false);
+            ExceptionHandler.handleGadgetCallException(e, RMIComponent.DGC, callName);
         }
     }
 
     /**
-     * DGC calls are implemented by using the genericCall function of RMIWhisperer. This allows to dispatch raw RMI
+     * DGC calls are implemented by using the genericCall function of the RMIEndpoint class. This allows to dispatch raw RMI
      * calls with fine granular control of the call parameters. The DGC interface on the server side is implemented
-     * by using a skeleton, that still uses the old RMI calling convetion. Therefore, we have to use an interfaceHash
+     * by using a skeleton, that still uses the old RMI calling convention. Therefore, we have to use an interfaceHash
      * instead of method hashes and need to specify the call number as callID. The callID can be looked up
      * by name using the helper function defined below.
      *
@@ -265,6 +246,7 @@ public class DGCClient {
     {
         try {
             rmi.genericCall(objID, getCallByName(callName), interfaceHash, callArguments, maliciousStream, callName);
+
         } catch( java.rmi.NoSuchObjectException e ) {
             ExceptionHandler.noSuchObjectException(e, "DGC", false);
         }

@@ -1,0 +1,69 @@
+tester:
+  title: Known Tests
+  description: |-
+    "Perform tests on remote-method-guesser's known action"
+
+
+  id: '004-006'
+  groups:
+    - known
+  id_pattern: '004-006-{:03}'
+
+
+tests:
+  - title: JMX
+    description: |-
+      'Test known action for JMX'
+
+    command:
+      - rmg
+      - known
+      - javax.management.remote.rmi.RMIServerImpl_Stub
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - JMX Server
+            - javax.management.remote.rmi.RMIServerImpl_Stub
+            - Java Management Extensions (JMX) can be used to monitor and manage a running Java virtual machine
+            - String getVersion()
+            - MLet
+            - Deserialization
+
+  - title: Activator
+    description: |-
+      'Test known action for the RMI activator'
+
+    command:
+      - rmg
+      - known
+      - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - RMI Activator
+            - sun.rmi.server.Activation$ActivationSystemImpl_Stub
+            - The activation system is a legacy component of Java RMI. It allows remote objects to become inactive
+            - java.rmi.MarshalledObject activate(java.rmi.Activation.ActivationID id, boolean force)
+            - Deserialization
+
+  - title: Unknown
+    description: |-
+      'Test known action for unknown class'
+
+    command:
+      - rmg
+      - known
+      - unknown
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - The specified class name unknown isn't a known class

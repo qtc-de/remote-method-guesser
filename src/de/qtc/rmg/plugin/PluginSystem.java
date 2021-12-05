@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMISocketFactory;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -31,6 +33,7 @@ public class PluginSystem {
     private static IPayloadProvider payloadProvider = null;
     private static IResponseHandler responseHandler = null;
     private static IArgumentProvider argumentProvider = null;
+    private static ISocketFactoryProvider socketFactoryProvider = null;
 
     /**
      * Initializes the plugin system. By default, the payloadProvider and argumentProvider get a DefaultProvider
@@ -44,6 +47,7 @@ public class PluginSystem {
         DefaultProvider provider = new DefaultProvider();
         payloadProvider = provider;
         argumentProvider = provider;
+        socketFactoryProvider = provider;
 
         if(pluginPath != null)
             loadPlugin(pluginPath);
@@ -101,22 +105,26 @@ public class PluginSystem {
         }
 
         if(pluginInstance instanceof IPayloadProvider) {
-            payloadProvider = (IPayloadProvider) pluginInstance;
+            payloadProvider = (IPayloadProvider)pluginInstance;
             inUse = true;
 
         } if(pluginInstance instanceof IResponseHandler) {
-            responseHandler = (IResponseHandler) pluginInstance;
+            responseHandler = (IResponseHandler)pluginInstance;
             inUse = true;
 
         } if(pluginInstance instanceof IArgumentProvider) {
-            argumentProvider = (IArgumentProvider) pluginInstance;
+            argumentProvider = (IArgumentProvider)pluginInstance;
+            inUse = true;
+
+        } if(pluginInstance instanceof ISocketFactoryProvider) {
+            socketFactoryProvider = (ISocketFactoryProvider)pluginInstance;
             inUse = true;
         }
 
         if(!inUse) {
             Logger.eprintMixedBlue("Plugin", pluginPath, "was successfully loaded, but is ");
             Logger.eprintlnPlainYellow("not in use.");
-            Logger.eprintlnMixedYellow("Plugins should extend at least one of the", "IPayloadProvider, IResponseHandler, IArgumentProvider", "interfaces.");
+            Logger.eprintlnMixedYellow("Plugins should implement at least one of the", "IPayloadProvider, IResponseHandler, IArgumentProvider or ISocketFactoryProvider", "interfaces.");
         }
     }
 
@@ -154,6 +162,45 @@ public class PluginSystem {
     public static Object[] getArgumentArray(String argumentString)
     {
         return argumentProvider.getArgumentArray(argumentString);
+    }
+
+    /**
+     * Returns the RMIClientSocketFactory that is used for RMI connections. The factory returned by this function
+     * is used for all direct RMI calls. So e.g. if you call the registry or another RMI endpoint directly. If you
+     * first lookup a bound name and use the obtained reference to make calls on the object, another factory is used
+     * (check the getDefaultClientSocketFactory function for more details).
+     *
+     * @return RMIClientSocketFactory that is used for direct RMI calls
+     */
+    public static RMIClientSocketFactory getClientSocketFactory(String host, int port)
+    {
+        return socketFactoryProvider.getClientSocketFactory(host, port);
+    }
+
+    /**
+     * Returns the RMISocketFactory that is used for all RMI connections that use the default RMISocketFactory. The
+     * factory returned by this function is used when you perform RMI actions on a remote object reference that was
+     * obtained from the RMI registry and the RMI server did not assign a custom socket factory to the object.
+     *
+     * @return RMISocketFactory that is used for "after lookup" RMI calls
+     */
+    public static RMISocketFactory getDefaultSocketFactory(String host, int port)
+    {
+        return socketFactoryProvider.getDefaultSocketFactory(host, port);
+    }
+
+    /**
+     * Java RMI also contains a default implementation for SSL protected RMI communication. If the server uses the
+     * corresponding SocketFactory on the server side, the RMI client does too and the only way to overwrite the default
+     * SSLSocketFactory is by setting a Java property. Therefore, this function should return the name of a class that
+     * you want to use as your default SSLSocketFactory. Notice that the factory needs to be available on the class path
+     * and it is not sufficient to define it within the plugin.
+     *
+     * @return String that indicates the desired SSLSocketFactories class name
+     */
+    public static String getDefaultSSLSocketFactory(String host, int port)
+    {
+        return socketFactoryProvider.getDefaultSSLSocketFactory(host, port);
     }
 
     /**

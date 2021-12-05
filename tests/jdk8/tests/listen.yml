@@ -1,0 +1,150 @@
+tester:
+  title: Listener Tests
+  description: |-
+    'Perform tests for the listen action.'
+
+  id: '001-008'
+  groups:
+    - listen
+  id_pattern: '001-008-{:03}'
+
+
+plugins:
+  - http_listener:
+      port: 8000
+      dir: ../../utils
+
+
+tests:
+  - title: Start Listener
+    description: |-
+      'Attempts to open up a JRMPListener at port 4444'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - listen
+      - 0.0.0.0
+      - 4444
+      - CommonsCollections6
+      - ls
+      - ${OPTIONS}
+
+    timeout: 2
+    validators:
+      - status: 99
+      - contains:
+          ignore_case: true
+          values:
+            - JRMPListener
+            - 0.0.0.0:4444
+            - Handing off to ysoserial
+          invert:
+            - Exception
+
+
+  - title: Non Available IP
+    description: |-
+      'Attempts to open up a JRMPListener on a non available IP'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - listen
+      - 123.4.5.5
+      - 4444
+      - CommonsCollections6
+      - ls
+      - ${OPTIONS}
+
+    timeout: 2
+    validators:
+      - error: True
+      - contains:
+          values:
+            - Cannot assign requested address
+            - Caught BindException
+            - 123.4.5.5:4444
+            - Cannot continue from here
+
+
+  - title: Invalid IP
+    description: |-
+      'Attempts to open up a JRMPListener on an invalid IP'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - listen
+      - 999.4.5.5
+      - 4444
+      - CommonsCollections6
+      - ls
+      - ${OPTIONS}
+
+    timeout: 2
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 999.4.5.5 seems not to be available
+            - expected to be bound locally
+            - Cannot continue from here
+
+
+  - title: Invalid Port
+    description: |-
+      'Attempts to open up a JRMPListener on an invalid port'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - listen
+      - 0.0.0.0
+      - 44444444
+      - CommonsCollections6
+      - ls
+      - ${OPTIONS}
+
+    timeout: 2
+    validators:
+      - error: True
+      - contains:
+          values:
+            - Caught IllegalArgumentException
+            - 'Port value out of range: 4444444'
+            - Cannot continue from here
+
+
+  - title: Used Port
+    description: |-
+      'Attempts to open up a JRMPListener on an already used port'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - listen
+      - 0.0.0.0
+      - 8000
+      - CommonsCollections6
+      - ls
+      - ${OPTIONS}
+
+    timeout: 2
+    validators:
+      - error: True
+      - contains:
+          values:
+            - Caught BindException
+            - Address already in use (Bind failed)
+            - Cannot continue from here

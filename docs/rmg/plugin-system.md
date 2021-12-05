@@ -2,21 +2,21 @@
 
 ----
 
-This document contains information on *rmg's* plugin system, a simple way to extend
-the functionality of *rmg* and to allow custom deserialization payloads or method arguments.
+This document contains information on *remote-method-guesser's* plugin system, a simple way to extend
+the functionality of *remote-method-guesser* and to allow custom deserialization payloads or method arguments.
 
 
 ### When you need a Plugin System
 
 ----
 
-The base functionality of *rmg* is usually sufficient to enumerate and identify all relevant
+The base functionality of *remote-method-guesser* is usually sufficient to enumerate and identify
 security vulnerabilities on a *Java RMI* endpoint. However, in some situations you may need
-more control on the *Payloads* and *Objects* that are send by *rmg* and the plugin system
+more control on the payloads and objects that are send by *remote-method-guesser* and the plugin system
 can be used to achieve this.
 
-*rmg's* plugin system consist out of three different interfaces that can be implemented by the
-user to overwrite *rmg's* default behavior.
+*remote-method-guesser's* plugin system consist out of four different interfaces that can be implemented by the
+user to overwrite *remote-method-guesser's* default behavior.
 
 * ``IPayloadProvider`` - This interface is always used when *rmg* creates payload objects. In
   it's default implementation, it falls back to ``ysoserial`` and creates the user specified
@@ -39,7 +39,7 @@ user to overwrite *rmg's* default behavior.
   create your own handler that accepts the user specified argument string as input and returns
   the corresponding *Object array*.
 
-* ``IResponseHandler`` - This is the only plugin interface that does not have a default implementation.
+* ``IResponseHandler`` - This is the only plugin interface that does not has a default implementation.
   ``IResponseHandler`` is used during *rmg's* ``call`` action to handle the servers response to the
   method call. When not implemented, *rmg* simply ignores the servers response without parsing it at all.
   from the ``ObjectInputStream``. On the other hand, when implemented, *rmg* reads the response object
@@ -48,6 +48,11 @@ user to overwrite *rmg's* default behavior.
   arbitrary *Java* objects and how to handle them strongly depends on the particular situation.
   By overwriting ``IResponseHandler``, you can implement your own method that accepts the return object
   as input and performs the desired action.
+
+* ``ISocketFactoryProvider`` - *RMI* communication usually uses the default socket implementations,
+  but *RMI* developers are free to choose a different *SocketFactory* to create *RMI* sockets. In these
+  situations, you may need to change the default *SocketFactory* that is used by *remote-method-guesser*.
+  The ``ISocketFactoryProvider`` interface allows you to do this by using the plugin system.
   
 
 ### Interface Classes
@@ -60,10 +65,6 @@ In this section you find a more detailed description of the interface classes.
 #### IPayloadProvider
 
 ```java
-package de.qtc.rmg.plugin;
-
-import de.qtc.rmg.operations.Operation;
-
 public interface IPayloadProvider {
     Object getPayloadObject(Operation action, String name, String args);
 }
@@ -89,8 +90,6 @@ a single method ``getPayloadObject``, that expects three arguments:
 #### IArgumentProvider
 
 ```java
-package de.qtc.rmg.plugin;
-
 public interface IArgumentProvider {
     Object[] getArgumentArray(String argumentString);
 }
@@ -107,8 +106,6 @@ although the argument string parameter has still to be specified on the command 
 #### IResponseHandler
 
 ```java
-package de.qtc.rmg.plugin;
-
 public interface IResponseHandler {
 	void handleResponse(Object responseObject);
 }
@@ -120,19 +117,65 @@ the ``handleResponse`` method, that is called after the method invocation with t
 as argument.
 
 
+#### IResponseHandler
+
+```java
+public interface ISocketFactoryProvider {
+	public RMIClientSocketFactory getClientSocketFactory(String host, int port);
+	public RMISocketFactory getDefaultSocketFactory(String host, int port);
+	public String getDefaultSSLSocketFactory(String host, int port);
+}
+```
+
+The ``ISocketFactoryProvider`` interface can be used to overwrite *SocketFactory* implementations that are used during
+RMI communication. This is usually not required, but when the RMI server uses a customized *SocketFactory* for *RMI*
+communications, you may want to use it.
+
+The ``getClientSocketFactory`` function can be used to overwrite the ``RMIClientSocketFactory`` that is used for direct
+connections (e.g. connecting to the *RMI registry* or an *RMI* endpoint directly).
+
+The ``getDefaultSocketFactory`` function can be used to overwrite the ``RMISocketFactory`` that is used on *RMI* operations
+that are invoked on remote objects obtained from an *RMI* registry.
+
+The ``getDefaultSSLSocketFactory`` function can be used to overwrite the ``RMISocketFactory`` that is used on RMI operations
+that are invoked on remote objects obtained from an *RMI registry*, that use the default ``SSLSocketFactory`` implementation.
+
+When an RMI server implements a custom ``RMISocketFactory`` on the *RMI registry* and for it's remote objects, you usually
+need to do the following:
+
+1. Add an compiled version of the server's ``RMISocketFactory`` class to your class path
+2. Use the PluginSystem and the getClientSocketFactory function to make it the SocketFactory used for direct calls
+
+This should already be sufficient. If only remote objects use the custom ``RMISocketFactory``, but the RMI registry is not,
+you only need the first step. The *PluginSystem* is not even required in this case.
+
+The ``getDefaultSocketFactory`` and ``getDefaultSSLSocketFactory`` functions are only required to modify the connection behavior
+on default *RMI* connections. *remote-method-guesser* for example uses these functions to prevent the automatic redirection
+that is applied by RMI when the RMI server location was set to *localhost*.
+
+
 ### Default Implementation
 
 ----
 
-The following listing contains the default implementation that is used by *rmg* internally:
+The following listing contains the default implementation that is used by *remote-method-guesser* internally:
 
 ```java
 package de.qtc.rmg.plugin;
 
 import java.lang.reflect.Method;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMISocketFactory;
 
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.networking.DGCClientSocketFactory;
+import de.qtc.rmg.networking.LoopbackSocketFactory;
+import de.qtc.rmg.networking.LoopbackSslSocketFactory;
+import de.qtc.rmg.networking.SSRFResponseSocketFactory;
+import de.qtc.rmg.networking.SSRFSocketFactory;
+import de.qtc.rmg.networking.TrustAllSocketFactory;
 import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.operations.RegistryClient;
 import de.qtc.rmg.utils.RMGUtils;
@@ -143,8 +186,32 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 
-public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
+/**
+ * The DefaultProvider is a default implementation of an rmg plugin. It implements the IArgumentProvider,
+ * IPayloadProvider and ISocketFactoryProvider interfaces and is always loaded when no user specified
+ * plugin overwrites one of these interfaces.
+ *
+ * Within it's IPayloadProvider override, it returns either a RMIServerImpl object as used by JMX (for bind, rebind
+ * and unbin actions) or a ysoserial gadget (for basically all other actions). The IArgumentProvider override attempts
+ * to evaluate the user specified argument string as Java code and attempts to create an Object array out of it that
+ * is used for method calls. The ISocketFactoryProvider implementation returns remote-method-guesser's loopback
+ * factories that prevent redirections from the server side.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
+public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider {
 
+    /**
+     * Return an RMIServerImpl object as used by JMX endpoints when invoked from the bind, rebind or unbind
+     * actions. In this case, name is expected to be 'jmx' or args is expected to be null. When the name is
+     * 'jmx', the args parameter is expected to contain the address definition for the remote object (host:port).
+     * Otherwise, if args is null and the name is not 'jmx', name is expected to contain the listener definition.
+     * This allows to perform the bind like 'rmg 127.0.0.1 9010 bind jmx 127.0.0.1:4444' or like
+     * 'rmg 127.0.0.1 9010 bind 127.0.0.1:4444'.
+     *
+     * Otherwise, pass the user specified gadget name and gadget arguments to ysoserial and return the
+     * corresponding gadget.
+     */
     @Override
     public Object getPayloadObject(Operation action, String name, String args)
     {
@@ -182,6 +249,13 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
         return null;
     }
 
+    /**
+     * This function performs basically an eval operation on the user specified argumentString. The argument string is
+     * inserted into the following expression: return new Object[] { " + argumentString + "};
+     * This expression is evaluated and the resulting Object array is returned by this function. For this to work it is
+     * important that all arguments within the argumentString are valid Java Object definitions. E.g. one has to use
+     * new Integer(5) instead of a plain 5.
+     */
     @Override
     public Object[] getArgumentArray(String argumentString)
     {
@@ -206,6 +280,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
             Logger.eprintlnMixedBlue("Argument string has to be a valid Java expression like:", "'\"id\", new Integer(4)'.");
             Logger.eprintMixedYellow("Make sure that each argument is an", "Object", "not a ");
             Logger.printlnPlainYellow("Primitive.");
+            ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
 
         } catch (Exception e) {
@@ -213,6 +288,84 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
         }
 
         return result;
+    }
+
+    /**
+     * Returns an RMIClientSocketFactory according to the specified options on the command line.
+     */
+    @Override
+    public RMIClientSocketFactory getClientSocketFactory(String host, int port)
+    {
+        if( RMGOption.SSRF.getBool() ) {
+            return new SSRFSocketFactory();
+
+        } else if( RMGOption.SSRFRESPONSE.notNull() ) {
+            byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFRESPONSE.getValue());
+            return new SSRFResponseSocketFactory(content);
+
+        } else if( RMGOption.CONN_SSL.getBool() ) {
+            return new TrustAllSocketFactory();
+
+        } else {
+            return RMISocketFactory.getDefaultSocketFactory();
+        }
+    }
+
+    /**
+     * The default RMISocketFactory used by remote-method-guesser is the LoopbackSocketFactory, which
+     * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     *
+     * This function is only used for 'managed' RMI calls that rely on an RMI registry. Remote objects that
+     * are looked up from the RMI registry use the RMISocketFactory.getDefaultSocketFactory function to
+     * obtain a SocketFactory. This factory is then used for explicit calls (method invocations) and for
+     * implicit calls (DGC actions like clean or dirty). When contacting an RMI endpoint directly (by
+     * using the RMIEndpoint class) we do not need to call this function as we specify a socket factory
+     * already during the call. When using the RMI registry (RMIRegistryEndpoint class), it is required.
+     * In this case, this function should be called and the result should be used within the
+     * RMISocketFactory.setSocketFactory function.
+     *
+     * When the --ssrf-response option is used, we do neither perform any explicit calls nor we want
+     * DGC actions to take place. For this purpose, we use a custom socket factory that ignores writes
+     * of outgoing DGC requests and simulates incoming DGC responses.
+     *
+     * Notice, that the --ssrf option does not affect this function. This is because sockets created
+     * by this function are only used for 'managed' RMI calls. SSRF calls in remote-method-guesser are
+     * always unmanaged.
+     */
+    @Override
+    public RMISocketFactory getDefaultSocketFactory(String host, int port)
+    {
+        if( RMGOption.SSRFRESPONSE.notNull() )
+            return new DGCClientSocketFactory();
+
+        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
+        return new LoopbackSocketFactory(host, fac, RMGOption.CONN_FOLLOW.getBool());
+    }
+
+    /**
+     * The default SSLRMISocketFactory used by remote-method-guesser is the LoopbackSslSocketFactory, which
+     * redirects all connection to the original target and thus prevents unwanted RMI redirections.
+     *
+     * As in the case of plain TCP connections, we use different socket factory if --ssrf-response
+     * was specified on the command line. Check the getDefaultSocketFactory function for more details.
+     *
+     * Notice, that the --ssrf option does not affect this function. This is because sockets created
+     * by this function are only used for 'managed' RMI calls. SSRF calls in remote-method-guesser are
+     * always unmanaged.
+     */
+    @Override
+    public String getDefaultSSLSocketFactory(String host, int port)
+    {
+        if( RMGOption.SSRFRESPONSE.notNull() )
+            return "de.qtc.rmg.networking.DGCClientSslSocketFactory";
+
+        TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
+
+        LoopbackSslSocketFactory.host = host;
+        LoopbackSslSocketFactory.fac = trustAllFax.getSSLSocketFactory();
+        LoopbackSslSocketFactory.followRedirect = RMGOption.CONN_FOLLOW.getBool();
+
+        return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
     }
 }
 ```
@@ -222,73 +375,30 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider {
 
 ----
 
-*rmg* does currently ship one example plugin within of it's [plugin folder](/plugins). This plugin
+*remote-method-guesser* currently ships one example plugin within of it's [plugin folder](/plugins). This plugin
 implements the ``IResponseHandler`` interface and attempts to perform a *generic print* on the servers
-return object. When interested in the servers response object, you often want to print it in some way.
-The [GenericPrint Plugin](./plugins/GenericPrint.java) attempts exactly this for different sorts of
-response objects.
-
-```java
-import java.util.Map;
-import java.util.Collection;
-
-import de.qtc.rmg.plugin.IResponseHandler;
-
-public class GenericPrint implements IResponseHandler {
-
-	public void handleResponse(Object responseObject)
-    {
-        if(responseObject instanceof Collection<?>) {
-        
-            for(Object o: (Collection<?>)responseObject) {
-                System.out.println(o.toString());
-            }
-
-        } else if(responseObject instanceof Map<?,?>) {
-
-            Map<?,?> map = (Map<?,?>)responseObject;
-
-            for(Object o: map.keySet()) {
-                System.out.print(o.toString());
-                System.out.println(" --> " + map.get(o).toString());
-            }
-
-        } else if(responseObject.getClass().isArray()) {
-
-            for(Object o: (Object[])responseObject) {
-                System.out.println(o.toString());
-            }
-
-        } else {
-            System.out.println(responseObject.toString());
-        }
-    }
-}
-```
+return object. It can be used as a basis for your own plugin development.
 
 
 ### Building Plugins
 
 ----
 
-An *rmg* plugin can be specified on the command line using the ``--plugin <PATH>`` option.
-The plugin needs to be in *JAR* format and *rmg* requires it to contain the name of the
-actual plugin class as attribute within of it's *JAR manifest*. E.g. for the ``GenericPrint``
-plugin, this attribute looks like this:
+An *remote-method-guesser* plugin can be specified on the command line using the ``--plugin <PATH>`` option.
+The plugin needs to be in *JAR* format and *remote-method-guesser* requires it to contain the name of the
+actual plugin class as attribute within of it's *JAR manifest*. E.g. for the ``GenericPrint`` plugin, this attribute
+looks like this:
 
 ```yaml
 RmgPluginClass: GenericPrint
 ```
 
-To make building of plugin classes more simple, *rmg* includes a [build script](/plugins/build.sh)
-that should work for most situations. The following listing shows an example on how to build
-and use the [GenericPrint](/plugins/GenericPrint.java) plugin:
+To make building of plugin classes more simple, *remote-method-guesser* includes a [build script](/plugins/build.sh)
+that should work for most situations. The following listing shows an example on how to build and use the
+[GenericPrint](/plugins/GenericPrint.java) plugin:
 
 ```console
-[qtc@kali remote-method-guesser]$ bash plugins/build.sh target/rmg-3.2.0-jar-with-dependencies.jar plugins/GenericPrint.java Plugin.jar
-[qtc@kali remote-method-guesser]$ rmg 172.17.0.2 9010 call '"id"' --signature "String execute(String arg)" --bound-name plain-server --plugin ./Plugin.jar
-[+] RMI object tries to connect to different remote host: iinsecure.dev.
-[+] 	Redirecting the connection back to 172.17.0.2... 
-[+] 	This is done for all further requests. This message is not shown again. 
-uid=0(root) gid=0(root) groups=0(root)
+[qtc@devbox remote-method-guesser]$ bash plugins/build.sh target/rmg-4.0.0-jar-with-dependencies.jar plugins/GenericPrint.java GenericPrint.jar
+[qtc@devbox remote-method-guesser]$ rmg call 172.17.0.2 9010 '"id"' --signature "String execute(String arg)" --bound-name plain-server --plugin GenericPrint.jar
+[+] uid=0(root) gid=0(root) groups=0(root)
 ```

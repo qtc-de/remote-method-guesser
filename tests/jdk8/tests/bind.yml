@@ -1,68 +1,139 @@
 tester:
-  name: bind
   title: Binding Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'bind', 'rebind'"
-    "and 'unbind' action."
+  description: |-
+    'Performs tests for the bind, rebind and unbind operations.'
+
+  id: '001-002'
+  groups:
+    - bind
+  id_pattern: '001-002-{:03}'
+
 
 variables:
   bound-name: jdk8-binding-test
 
+
 tests:
   - title: Bind Call
-    description: >
-      'Performs a bind operation. Should be rejected, as the container'
-      'runs a SingleEntryRegistry.'
+    description: |-
+      'Performs a bind operation.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
-            - AccessException
-            - SingleEntryRegistry
-            - JMX
+            - rejected bind call
+            - --localhost-bypass
+
+
+  - title: Bind Call (localhost bypass)
+    description: |-
+      'Performs a bind operation with --localhost-bypass.'
+
+    command:
+      - rmg
+      - bind
+      - ${TARGET}
+      - '127.0.0.1:8000'
+      - ${bound-name}
+      - --localhost-bypass
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Registry rejected bind call
+            - Localhost bypass was used but failed
 
 
   - title: Rebind Call
-    description: >
-      'Performs a rebind operation. Should be rejected, as the container'
-      'runs a SingleEntryRegistry.'
-
-    command: '${BASE-CMD}'
-    arguments:
+    description: |-
+      'Performs a rebind operation.'
+    
+    command:
+      - rmg
       - rebind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
+          ignore_case: True
           values:
-            - AccessException
-            - SingleEntryRegistry
-            - JMX
+            - rejected rebind call
+            - --localhost-bypass
+
+
+  - title: Rebind Call (localhost bypass)
+    description: |-
+      'Performs a rebind operation with --localhost-bypass.'
+    
+    command:
+      - rmg
+      - rebind
+      - ${TARGET}
+      - '127.0.0.1:8000'
+      - ${bound-name}
+      - --localhost-bypass
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - Registry rejected rebind call
+            - Localhost bypass was used but failed
 
 
   - title: Unbind Call
-    description: >
-      'Performs an unbind operation. Should be rejected, as the container'
-      'runs a SingleEntryRegistry.'
-
-    command: '${BASE-CMD}'
-    arguments:
+    description: |-
+      'Performs an unbind operation.'
+    
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
+          ignore_case: True
           values:
-            - AccessException
-            - SingleEntryRegistry
-            - JMX
+            - rejected unbind call
+            - --localhost-bypass
+
+
+  - title: Unbind Call (localhost bypass)
+    description: |-
+      'Performs an unbind operation with --localhost-bypass.'
+    
+    command:
+      - rmg
+      - unbind
+      - ${TARGET}
+      - ${bound-name}
+      - --localhost-bypass
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          ignore_case: True
+          values:
+            - Registry rejected unbind call
+            - Localhost bypass was used but failed

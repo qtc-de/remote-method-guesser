@@ -1,42 +1,63 @@
 tester:
-  name: dgc
   title: DGC Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'dgc' action."
+  description: |-
+    'Performs tests for the serial action on an RMI DGC endpoint.'
+
+  id: '002-005'
+  groups:
+    - dgc
+    - serial
+  id_pattern: '002-005-{:03}'
 
 
 tests:
   - title: Gadget Call
-    description: >
+    description: |-
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD}'
-    arguments:
-      - dgc
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
       - CommonsCollections6
       - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
             - rejected deserialization
-            - JEP290 is installed
+            - The supplied gadget did not pass the deserialization filter
 
 
   - title: Gadget Call (SSL)
-    description: >
+    description: |-
       'Attempts a deserialization attack on the DGC endpoint.'
       'This should fail, as the server has JEP290 installed.'
 
-    command: '${BASE-CMD-SSL}'
-    arguments:
-      - dgc
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-SSL}
       - CommonsCollections6
       - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
           values:
             - rejected deserialization
-            - JEP290 is installed
+            - The supplied gadget did not pass the deserialization filter

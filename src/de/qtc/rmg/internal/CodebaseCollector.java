@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.qtc.rmg.utils.RMGUtils;
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
+
 /**
  * The CodebaseCollector class is used to detect server specified codebases and to report
  * them to the user. Such a functionality sounds easy to implement, but it was surprisingly
@@ -15,20 +19,28 @@ import java.util.Set;
  *
  * The trick is to override the default class loader by using the java.rmi.server.RMIClassLoaderSpi
  * property. This property is used to determine the class that is actually used to perform the
- * class loading and its functions are called with the servers specified codebase (if available).
+ * class loading and it's functions are called with the servers specified codebase (if available).
  * When a server side codebase is available, the codebase parameter for methods within RMIClassLoaderSpi
- * is a String that contains the corresponding codebase specification. If no codebase was specified,
- * the codebase parameter is set to null.
+ * is a String that contains the corresponding codebase URL. If no codebase was specified, the codebase
+ * parameter is set to null. However, this is only true if the client is running with useCodebaseOnly=false,
+ * since otherwise the codebase is always set to null. Therefore, you need to enable remote class loading
+ * within the client to obtain the codebase. To prevent security vulnerabilities related to remote class
+ * loading, this implementation sets the codebase always to null after extracting the codebase URL.
  *
- * This class is basically just a proxy to the default implementation of RMIClassLoaderSpi. Before handing
- * off the method calls to the default instance, the codebase is inspected and added to a HashMap for
- * latter output formatting. Additionally, the codebase is always set to null afterwards. This is a security
- * mechanism that is important if a client runs rmg with a SecurityManager. RMIClassLoaderSpi will only be used,
- * if the java.rmi.useCodebaseOnly property is set to false. This enables remote class loading on the client
- * side and could lead to dangerous situations when the client also uses a SecurityManager (required for
- * the actual class loading). However, by setting the codebase manually to null after inspecting it, all classes
- * are treated as no codebase was specified. This should effectively disable remote class loading, despite it
- * beeing enabled.
+ * This class is basically just a proxy to the default implementation of RMIClassLoaderSpi. That being said,
+ * since remote-method-guesser version 3.4.0, we also implement dynamic class creating right over here. The
+ * RMIClassLoaderSpi is always used on MarshalInputStream to resolve classes. Each object that is read from this
+ * stream is therefore passing this function. This allows us to catch unknown RMI stub and interface classes
+ * and create them dynamically using Javassist. Handling the dynamic class creating in this function has many
+ * advantages. The probably biggest one is that you have no longer to distinguish between modern proxy-like
+ * remote objects and legacy stubs manually, as they are loaded using different calls (loadClass vs loadProxyClass).
+ *
+ * Summarized:
+ *
+ *  1. Extract server specified codebases and store them within a HashMap for later use
+ *  2. Set the codebase to null to prevent remote class loading even with useCodebaseOnly=false
+ *  3. Check if the requested class is known by the client and dynamically create it if this is not the case.
+ *  4. Load the class using the regular class loader and return it.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
@@ -44,11 +56,23 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     public Class<?> loadClass(String codebase, String name, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
-        if( codebase != null )
-            addCodebase(codebase, name);
+        Class<?> resolvedClass = null;
 
+        addCodebase(codebase, name);
         codebase = null;
-        return originalLoader.loadClass(codebase, name, defaultLoader);
+
+        try {
+
+            if( name.endsWith("_Stub") )
+                RMGUtils.makeLegacyStub(name);
+
+            resolvedClass = originalLoader.loadClass(codebase, name, defaultLoader);
+
+        } catch (CannotCompileException | NotFoundException e) {
+            ExceptionHandler.internalError("loadClass", "Unable to compile unknown stub class.");
+        }
+
+        return resolvedClass;
     }
 
     /**
@@ -58,11 +82,23 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     public Class<?> loadProxyClass(String codebase, String[] interfaces, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
-        if( codebase != null )
-            addCodebase(codebase, interfaces[0]);
+        Class<?> resolvedClass = null;
 
-        codebase = null;
-        return originalLoader.loadProxyClass(codebase, interfaces, defaultLoader);
+        try {
+
+            for(String intf : interfaces) {
+                RMGUtils.makeInterface(intf);
+                addCodebase(codebase, intf);
+            }
+
+            codebase = null;
+            resolvedClass = originalLoader.loadProxyClass(codebase, interfaces, defaultLoader);
+
+        } catch (CannotCompileException e) {
+            ExceptionHandler.internalError("loadProxyClass", "Unable to compile unknown interface class.");
+        }
+
+        return resolvedClass;
     }
 
     /**
@@ -119,10 +155,13 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      */
     private void addCodebase(String codebase, String className)
     {
-        if( className.startsWith("java.") || className.contains("java.lang.") )
+        if( codebase == null )
             return;
 
-        if( codebases.containsKey(codebase) ) {
+        if( className.startsWith("java.") || className.startsWith("[Ljava") || className.startsWith("javax.") )
+            codebases.putIfAbsent(codebase, new HashSet<String>());
+
+        else if( codebases.containsKey(codebase) ) {
             Set<String> classNames = codebases.get(codebase);
             classNames.add(className);
 

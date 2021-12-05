@@ -12,7 +12,7 @@ import org.apache.commons.io.IOUtils;
 
 import de.qtc.rmg.exceptions.UnexpectedCharacterException;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.Security;
 import javassist.CannotCompileException;
@@ -29,8 +29,6 @@ import javassist.NotFoundException;
  * @author Tobias Neitzel (@qtc_de)
  */
 public class SampleWriter {
-
-    private int legacyMode;
 
     private String ssl;
     private String followRedirects;
@@ -51,13 +49,10 @@ public class SampleWriter {
      * @param sampleFolder folder where created samples should be created
      * @param ssl whether the targeted RMI endpoint uses ssl on the registry
      * @param followRedirects whether redirects of remote objects should be followed
-     * @param legacyMode whether to use legacy stubs or proxy objects for invocation
      * @throws IOException may be thrown when one of the required folders is not present
      */
-    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects, int legacyMode) throws IOException
+    public SampleWriter(String templateFolder, String sampleFolder, boolean ssl, boolean followRedirects) throws IOException
     {
-        this.legacyMode = legacyMode;
-
         this.ssl = ssl ? "true" : "false";
         this.followRedirects = followRedirects ? "true" : "false";
 
@@ -67,7 +62,7 @@ public class SampleWriter {
         if( !this.sampleFolder.exists() ) {
             Logger.printlnMixedBlue("Sample folder", this.sampleFolder.getCanonicalPath(), "does not exist.");
             Logger.println("Creating sample folder.");
-            Logger.println("");
+            Logger.lineBreak();
             this.sampleFolder.mkdirs();
         }
     }
@@ -83,7 +78,7 @@ public class SampleWriter {
      */
     public String loadTemplate(String templateName) throws IOException
     {
-        if(this.templateFolder != null && this.templateFolder.isEmpty())
+        if(this.templateFolder == null || this.templateFolder.isEmpty())
             return loadTemplateStream(templateName);
 
         else
@@ -101,7 +96,7 @@ public class SampleWriter {
      */
     public String loadTemplateStream(String templateName) throws IOException
     {
-        InputStream stream = this.getClass().getResourceAsStream("/templates/" + templateName);
+        InputStream stream = this.getClass().getResourceAsStream("/resources/templates/" + templateName);
         byte[] content = IOUtils.toByteArray(stream);
         stream.close();
         return new String(content);
@@ -176,13 +171,13 @@ public class SampleWriter {
      * @param boundName bound name to create the sample for
      * @param className underlying class name of the corresponding bound name (usually an interface)
      * @param methods available remote methods represented by MethodCandidates
-     * @param rmi RMIWhisperer to the currently targeted RMI endpoint.
+     * @param rmi RMIEndpoint to the currently targeted RMI endpoint
      * @throws UnexpectedCharacterException is thrown if class or bound names violate the security policies
      * @throws NotFoundException should not occur
      * @throws IOException if an IO operation fails
      * @throws CannotCompileException should not occur
      */
-    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIWhisperer rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
+    public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIEndpoint rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
         for(MethodCandidate method : methods) {
             createSample(className, unknownClass, boundName, method, rmi.host, rmi.port);
@@ -205,8 +200,7 @@ public class SampleWriter {
      */
     public void createSample(String className, boolean unknownClass, String boundName, MethodCandidate method, String remoteHost, int remotePort) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-        if(isLegacy && unknownClass)
+        if(className.endsWith("_Stub") && unknownClass)
             className += "_Interface";
 
         Security.checkBoundName(boundName);
@@ -277,9 +271,7 @@ public class SampleWriter {
      */
     public void createInterface(String boundName, String className, List<MethodCandidate> methods) throws UnexpectedCharacterException, IOException, CannotCompileException, NotFoundException
     {
-        boolean isLegacy = RMGUtils.isLegacy(className, legacyMode, false);
-
-        if(isLegacy) {
+        if(className.endsWith("_Stub")) {
             createInterfaceSample(boundName, className + "_Interface", methods);
             createLegacyStub(boundName, className, methods);
         } else {

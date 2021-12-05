@@ -1,11 +1,18 @@
 tester:
-  name: call
   title: Calling Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'call' action."
+  description: |-
+    'Performs tests for the call action.'
+
+  id: '003-003'
+  groups:
+    - call
+    - plugin
+  id_pattern: '003-003-{:03}'
+
 
 variables:
-  file: call-rce-test.txt
+  file: jdk11-call-rce-test.txt
+
 
 plugins:
   - os_command:
@@ -18,17 +25,20 @@ plugins:
 
 tests:
   - title: Execute Call
-    description: >
+    description: |-
       'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"touch ${volume-d}/${file}"'
       - --bound-name 
       - plain-server
       - --signature
       - 'String execute(String dummy)'
+      - ${OPTIONS}
+
     validators:
       - error: False
       - file_exists:
@@ -38,12 +48,16 @@ tests:
 
 
   - title: Execute Call (Response Handler Plugin)
-    description: >
+    description: |-
       'Invokes the execute function on the plain-server object.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    groups:
+      - response-handler
+
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"id"'
       - --bound-name 
       - plain-server
@@ -51,6 +65,8 @@ tests:
       - 'String execute(String dummy)'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -61,13 +77,17 @@ tests:
 
 
   - title: Execute Call (Argument Provider Plugin)
-    description: >
+    description: |-
       'Invokes the login function on the legacy-service object using'
       'a custom argument provider that creates the required HashMap.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    groups:
+      - argument-provider
+
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - login
       - --bound-name 
       - legacy-service
@@ -75,6 +95,8 @@ tests:
       - 'String login(java.util.HashMap dummy1)'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -83,13 +105,17 @@ tests:
 
 
   - title: Execute Call (Based on ObjID)
-    description: >
+    description: |-
       'Invokes the list function on the rmi registry by using the'
       '--objid option.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    groups:
+      - response-handler
+
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - ''
       - --objid
       - 0
@@ -97,6 +123,38 @@ tests:
       - 'String[] list()'
       - --plugin
       - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - plain-server2
+            - legacy-service
+            - plain-server
+
+
+  - title: Execute Call (Based on complex ObjID)
+    description: |-
+      'Invokes the list function on the rmi registry by using the'
+      '--objid option and the complex form of an ObjID.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - ''
+      - --objid
+      - '[0:0:0, 0]'
+      - --signature
+      - 'String[] list()'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -107,18 +165,21 @@ tests:
 
 
   - title: Invalid Bound Name
-    description: >
+    description: |-
       'Invokes a function on an invalid bound name and checks'
       'the corresponding error message.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '"id"'
       - --bound-name 
       - legacy-server
       - --signature
       - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:
@@ -128,17 +189,20 @@ tests:
 
 
   - title: Invalid Argument
-    description: >
+    description: |-
       'Invokes a function using an invalid argument definition.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - call
+      - ${TARGET}
       - '5'
       - --bound-name 
       - legacy-service
       - --signature
       - 'String login(java.util.HashMap dummy1)'
+      - ${OPTIONS}
+
     validators:
       - error: True
       - contains:

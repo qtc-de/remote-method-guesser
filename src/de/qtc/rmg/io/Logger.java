@@ -1,5 +1,7 @@
 package de.qtc.rmg.io;
 
+import de.qtc.rmg.internal.RMGOption;
+
 /**
  * The Logger class exposes static methods that can be used to create colored output.
  * Additionally, most of the methods add a '[+]' or '[-]' prefix. The Logger class
@@ -20,12 +22,15 @@ public class Logger {
 
     public static int indent = 0;
     public static int printCount = 0;
-    public static boolean verbose = false;
     public static boolean enabled = true;
 
+    public static void disable() {
+        Logger.enabled = false;
+    }
+
     public static void disableIfNotVerbose() {
-        if( !Logger.verbose )
-            Logger.enabled = false;
+        if( !RMGOption.GLOBAL_VERBOSE.getBool() )
+            disable();
     }
 
     public static void enable() {
@@ -71,9 +76,7 @@ public class Logger {
 
     private static void log(String msg)
     {
-        if( Logger.enabled ) {
-            log(msg, true);
-        }
+        log(msg, true);
     }
 
     private static void log(String msg, boolean newline)
@@ -89,9 +92,7 @@ public class Logger {
 
     private static void elog(String msg)
     {
-        if( Logger.enabled ) {
-            elog(msg, true);
-        }
+        elog(msg, true);
     }
 
     private static void elog(String msg, boolean newline)
@@ -102,6 +103,15 @@ public class Logger {
                 System.out.println(msg);
             else
                 System.out.print(msg);
+        }
+    }
+
+    public static void lineBreak()
+    {
+        if( printCount != 0 ) {
+
+            Logger.printCount++;
+            log("[+]", true);
         }
     }
 
@@ -168,6 +178,16 @@ public class Logger {
     public static void printPlainBlue(String msg)
     {
         log(blue(msg), false);
+    }
+
+    public static void printPlainGreen(String msg)
+    {
+        log(green(msg), false);
+    }
+
+    public static void printlnPlainGreen(String msg)
+    {
+        log(green(msg), true);
     }
 
     public static void eprintlnPlainBlue(String msg)
@@ -272,6 +292,11 @@ public class Logger {
     public static void printlnPlainMixedBlue(String first, String second, String third)
     {
         log(first + " " + blue(second) + " " + third);
+    }
+
+    public static void printPlainMixedBlue(String first, String second)
+    {
+        log(first + " " + blue(second), false);
     }
 
     public static void printPlainMixedBlueFirst(String first, String second, String third)
@@ -431,7 +456,7 @@ public class Logger {
 
     public static void printInfoBox()
     {
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnBlue("Info:");
         Logger.increaseIndent();
         Logger.printlnBlue("--------------------------------");
@@ -501,15 +526,15 @@ public class Logger {
         Logger.print("Using class ");
         Logger.printPlainMixedBlueFirst(className, "with codebase", MaliciousOutputStream.getDefaultLocation());
         Logger.printlnPlainMixedYellow(" during", callName, "call.");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
     }
 
     public static void printGadgetCallIntro(String endpointName)
     {
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnBlue("Attempting deserialization attack on " + endpointName + " endpoint...");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
     }
 

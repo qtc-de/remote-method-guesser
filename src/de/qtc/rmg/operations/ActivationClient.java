@@ -4,9 +4,10 @@ import java.rmi.server.ObjID;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
 
 /**
  * In the old days, it was pretty common for RMI endpoints to use an Activator. An Activator
@@ -31,13 +32,13 @@ import de.qtc.rmg.networking.RMIWhisperer;
  */
 public class ActivationClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long methodHash = -8767355154875805558L;
     private static final ObjID objID = new ObjID(ObjID.ACTIVATOR_ID);
 
 
-    public ActivationClient(RMIWhisperer rmiEndpoint)
+    public ActivationClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }
@@ -59,7 +60,7 @@ public class ActivationClient {
     public void enumActivator()
     {
         Logger.printlnBlue("RMI ActivationSystem enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         try {
@@ -81,8 +82,8 @@ public class ActivationClient {
                 Logger.printlnPlainMixedRed("\t - Vulnerability Status:", "Vulnerable");
                 this.enumCodebase();
 
-            } else if( t instanceof java.io.InvalidClassException ) {
-                Logger.printMixedYellow("- Caught", "InvalidClassException", "during activate call ");
+            } else if( t instanceof java.io.InvalidClassException || t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedYellow("- Caught", t.getClass().getName(), "during activate call ");
                 Logger.printlnPlainYellow("(activator is present).");
                 Logger.printMixedBlue("  --> Deserialization", "filtered");
                 Logger.printlnPlainMixedPurple("\t - Vulnerability Status:", "Undecided");
@@ -118,6 +119,10 @@ public class ActivationClient {
                 Logger.printlnPlainMixedRed("\t - Configuration Status:", "Non Default");
                 ExceptionHandler.showStackTrace(e);
 
+            } else if( t instanceof java.io.InvalidClassException || t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedBlue("  --> Client codebase", "filtered");
+                Logger.printlnPlainMixedPurple("\t - Configuration Status:", "Undecided");
+
             } else {
                 ExceptionHandler.unexpectedException(e, "codebase", "enumeration", false);
             }
@@ -148,34 +153,8 @@ public class ActivationClient {
         try {
             activateCall(prepareCallArguments(payloadObject), false);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator", "gadget-class");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, false);
-
-            } else {
-                ExceptionHandler.unknownDeserializationException(e);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, false);
-
-        } catch( java.lang.IllegalArgumentException e ) {
-            ExceptionHandler.illegalArgument(e);
-
-        } catch( java.rmi.NoSuchObjectException e ) {
-            ExceptionHandler.noSuchObjectException(e, "activator", false);
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "activate", "call", false);
+            ExceptionHandler.handleGadgetCallException(e, RMIComponent.ACTIVATOR, "activate");
         }
     }
 
@@ -193,47 +172,8 @@ public class ActivationClient {
         try {
             activateCall(prepareCallArguments(payloadObject), true);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Activator", className);
-                ExceptionHandler.showStackTrace(e);
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, "activate", "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, false);
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, "activate", "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "activate", "call", false);
-            }
-
-        } catch( java.lang.IllegalArgumentException e ) {
-            ExceptionHandler.illegalArgumentCodebase(e);
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, false);
-
-        } catch( java.security.AccessControlException e ) {
-            ExceptionHandler.accessControl(e, "activate", "call");
-
-        } catch( java.rmi.NoSuchObjectException e ) {
-            ExceptionHandler.noSuchObjectException(e, "activator", false);
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "activate", "call", false);
+        } catch( Exception e) {
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.ACTIVATOR, "activate");
         }
     }
 
@@ -253,7 +193,7 @@ public class ActivationClient {
     }
 
     /**
-     * Implementation of the activate call. Just uses the genericCall function of the RMIWhisperer, which allows to perform
+     * Implementation of the activate call. Just uses the genericCall function of the RMIEndpoint class, which allows to perform
      * raw RMI calls. The activator is not implemented as a skeleton and already uses the new calling convention. As it only
      * supports a single method, we can hardcode the methodHash into the class.
      *

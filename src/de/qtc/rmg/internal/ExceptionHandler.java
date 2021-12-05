@@ -1,5 +1,7 @@
 package de.qtc.rmg.internal;
 
+import java.rmi.server.ObjID;
+
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
 
@@ -17,7 +19,13 @@ import de.qtc.rmg.utils.RMGUtils;
  */
 public class ExceptionHandler {
 
-    private static boolean alwaysShowExceptions = false;
+    private static void sslOption()
+    {
+        if(RMGOption.CONN_SSL.getBool())
+            Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+        else
+            Logger.eprintlnMixedYellow("You can retry the operation using the", "--ssl", "option.");
+    }
 
     public static void internalError(String functionName, String message)
     {
@@ -47,11 +55,22 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    public static void unknownCodebaseException(Throwable e, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during codebase attack.");
+        Logger.eprintlnMixedBlue("This Exception was probably thrown by the", "ReadObject method", "of the uploaded class.");
+        stackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
     public static void alreadyBoundException(Exception e, String boundName)
     {
         Logger.eprintlnMixedYellow("Bind operation", "was accepted", "by the server.");
         Logger.eprintlnMixedBlue("But the boundname", boundName, "is already bound.");
         Logger.eprintlnMixedYellow("Use the", "rebind", "action instead.");
+        showStackTrace(e);
     }
 
     public static void nonLocalhost(Exception e, String callName, boolean bypass)
@@ -68,8 +87,8 @@ public class ExceptionHandler {
 
     public static void jep290(Exception e)
     {
-        Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget");
-        Logger.printlnPlainYellow(" (JEP290 is installed).");
+        Logger.eprintlnMixedYellow("RMI registry", "rejected", "deserialization of the supplied gadget.");
+        Logger.eprintlnMixedBlue("The specified gadget", "did not", "pass the deserialization filter.");
         showStackTrace(e);
     }
 
@@ -85,7 +104,7 @@ public class ExceptionHandler {
     public static void deserializeClassNotFoundRandom(Exception e, String during1, String during2, String className)
     {
         Logger.printlnMixedYellow("Caught", "ClassNotFoundException", "during " + during1 + " " + during2 + ".");
-        Logger.printlnMixedBlue("Server attempted to deserialize dummy class", className + ".");
+        Logger.printlnMixedBlue("Server attempted to deserialize canary class", className + ".");
         Logger.printlnMixedYellow("Deserialization attack", "probably worked :)");
         showStackTrace(e);
     }
@@ -120,10 +139,10 @@ public class ExceptionHandler {
 
     public static void codebaseClassNotFoundRandom(Exception e, String className, String payloadName)
     {
-        Logger.printlnMixedBlue("Remote class loader attempted to load dummy class", className);
+        Logger.printlnMixedBlue("Remote class loader attempted to load canary class", className);
         Logger.printlnMixedYellow("Codebase attack", "probably worked :)");
 
-        Logger.println("");
+        Logger.lineBreak();
         Logger.printlnMixedYellow("If where was no callback, the server did not load the attack class", payloadName + ".class.");
         Logger.println("The class is probably known by the server or it was already loaded before.");
         Logger.printlnMixedBlue("In this case, you should try a", "different classname.");
@@ -138,6 +157,14 @@ public class ExceptionHandler {
             Logger.printlnMixedBlue("The server uses either", "readString()", "to unmarshal String parameters, or");
 
         Logger.printlnMixedYellowFirst("Codebase attack", "most likely", "worked :)");
+        showStackTrace(e);
+    }
+
+    public static void codebaseClassFormat(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", "ClassFormatError", "during codebase attack.");
+        Logger.eprintlnMixedBlue("The loaded file", "is not", "a valid Java class.");
+
         showStackTrace(e);
     }
 
@@ -163,7 +190,9 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + during1 + " " + during2 + ".");
         Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
         Logger.printlnPlainBlue(" SSL socket.");
-        Logger.eprintlnMixedYellow("Retry the operation using the", "--ssl", "option.");
+
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -171,16 +200,63 @@ public class ExceptionHandler {
     public static void sslError(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "SSLException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
 
-    public static void invalidClass(Exception e, String endpoint, String className)
+    public static void invalidClass(Exception e, String endpoint)
     {
-        Logger.eprintMixedYellow(endpoint, "rejected", "deserialization of class ");
-        Logger.printPlainBlue(className);
-        Logger.printlnPlainYellow(" (JEP290 is installed).");
+        invalidClass(e, endpoint, true);
+    }
+
+    public static void invalidClass(Exception e, String endpoint, boolean trace)
+    {
+        Logger.eprintlnMixedYellow(endpoint, "rejected", "deserialization of one of the transmitted classes.");
+        Logger.eprintlnMixedBlue("The supplied gadget", "did not", "pass the deserialization filter.");
+
+        if( trace )
+            showStackTrace(e);
+    }
+
+    public static void invalidClassBind(Exception e, String operation, String className)
+    {
+        Logger.eprintln(operation + " operation failed!");
+        Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of class ");
+        Logger.printlnPlainBlue(className);
+        Logger.eprintlnMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry.");
+        Logger.eprintlnMixedYellow("This is common for", "JMX", "based registry services.");
+        showStackTrace(e);
+
+        RMGUtils.exit();
+    }
+
+    public static void invalidClassEnum(Exception e, String callName)
+    {
+        Logger.printlnMixedYellow("- Caught", "InvalidClassException", "during " + callName + " call.");
+        Logger.printMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry");
+        Logger.printlnPlainBlue(" (JMX?)");
+        Logger.statusUndecided("Configuration");
+        showStackTrace(e);
+    }
+
+    public static void unsupportedOperationException(Exception e, String callName)
+    {
+        Logger.eprintlnMixedYellow("Caught", "UnsupportedOperationException", "during " + callName + " call.");
+        Logger.eprintlnMixedBlue("The server probably uses a", "custom deserialization filter.");
+        Logger.eprintlnMixedBlue("This behavior is known e.g. by the", "NotSoSerial", "project.");
+        showStackTrace(e);
+
+        RMGUtils.exit();
+    }
+
+    public static void unsupportedOperationExceptionEnum(Exception e, String callName)
+    {
+        Logger.eprintlnMixedYellow("- Caught", "UnsupportedOperationException", "during " + callName + " call.");
+        Logger.eprintlnMixedBlue("  --> The server probably uses a", "custom deserialization filter (NotSoSerial?)");
+        Logger.statusUndecided("Configuration");
+        showStackTrace(e);
     }
 
     public static void accessControl(Exception e, String during1, String during2)
@@ -208,10 +284,26 @@ public class ExceptionHandler {
             RMGUtils.exit();
     }
 
+    public static void noSuchObjectException(Exception e, ObjID objID, boolean exit)
+    {
+        Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
+
+        if(objID != null)
+            Logger.eprintlnMixedBlue("ObjID", objID.toString(), "is not available on this endpoint.");
+
+        else
+            Logger.eprintlnMixedBlue("The targeted object", "is not", "available on this endpoint.");
+
+        showStackTrace(e);
+
+        if(exit)
+            RMGUtils.exit();
+    }
+
     public static void noSuchObjectExceptionRegistryEnum()
     {
         Logger.printlnBlue("RMI Registry Enumeration");
-        Logger.println("");
+        Logger.lineBreak();
         Logger.increaseIndent();
         Logger.printlnMixedYellow("- Specified endpoint", "is not", "an RMI registry");
         Logger.println("  Skipping registry related checks.");
@@ -221,7 +313,10 @@ public class ExceptionHandler {
     public static void eofException(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plain TCP port?");
+        Logger.eprintlnMixedBlue("One possible reason is a missmatch in the", "TLS", "settings.");
+
+        ExceptionHandler.sslOption();
+
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -232,6 +327,13 @@ public class ExceptionHandler {
             Logger.eprintlnMixedBlue("Selected gadget expects a", "listener", "as command input.");
 
         Logger.eprintlnMixedYellow("Listener must be specified in", "host:port", "format.");
+        RMGUtils.exit();
+    }
+
+    public static void invalidHostFormat(String format)
+    {
+        Logger.eprintlnMixedYellow("The specified host format", format, "is invalid.");
+        Logger.eprintlnMixedBlue("Host must be specified in", "host:port", "format.");
         RMGUtils.exit();
     }
 
@@ -254,9 +356,8 @@ public class ExceptionHandler {
 
     public static void unsupportedClassVersion(Exception e, String during1, String during2)
     {
-        Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedYellow("Caught", "UnsupportedClassVersionError", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("You probably used an", "incompatible compiler version", "for class generation.");
-        Logger.eprintln("Exception Message: " + e.getMessage());
         showStackTrace(e);
     }
 
@@ -277,7 +378,7 @@ public class ExceptionHandler {
     public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
     {
         Logger.eprintlnMixedYellow("Caught", "CannotCompileException", "during " + during1 + " " + during2 + ".");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
 
         if(exit)
             RMGUtils.exit();
@@ -287,7 +388,7 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during connection setup.");
         Logger.eprintlnMixedBlue("The IP address of the endpoint", host, "could not be resolved.");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
 
         if(exit)
             RMGUtils.exit();
@@ -297,15 +398,19 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caugth", "SocketException", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("The specified target is", "not reachable", "with your current network configuration.");
-        ExceptionHandler.showStackTrace(e);
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
-    public static void bindException(Throwable t)
+    public static void bindException(Exception e)
     {
-        Logger.println("");
+        Throwable bindException = ExceptionHandler.getThrowable("BindException", e);
+
+        Logger.lineBreak();
         Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
-        Logger.printlnMixedBlue("Exception message:", t.getMessage());
+        Logger.printlnMixedBlue("Exception message:", bindException.getMessage());
+
+        showStackTrace(e);
         RMGUtils.exit();
     }
 
@@ -316,33 +421,104 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
-    public static void missingSignature(boolean codebase)
+    public static void missingSignature()
     {
-        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the specified action.");
+        Logger.eprintlnMixedYellow("The", "--signature", "option is required for the requested operation.");
         Logger.eprintlnMixedBlue("Specify a valid signature like", "--signature \"void login(String password)\"");
-
-        if( codebase ) {
-            Logger.eprintMixedYellow("or use", "--signature dgc|reg|act");
-            Logger.printlnPlainMixedBlue(" to target the", "DGC, Registry or Activator", "directly.");
-        }
-
         RMGUtils.exit();
     }
 
-    public static void missingBoundName(String action)
+    public static void missingTarget(String action)
     {
-        Logger.eprintMixedYellow("Either ", "--bound-name", "or  ");
+        Logger.eprintMixedYellow("Either", "--bound-name", "or ");
         Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
         Logger.printlnPlainMixedBlueFirst(action, "action.");
         RMGUtils.exit();
+    }
+
+    public static void invalidObjectId(String objID)
+    {
+        Logger.eprintlnMixedYellow("The specified ObjID", objID, "is invalid.");
+        Logger.eprintlnMixedBlue("Use plain numbers to target default components:", "Registry: 0, Activator: 1, DGC: 2");
+        Logger.eprintlnMixedBlue("Or the full ObjID string for other remote objects:", "[unique:time:count, objNum]");
+        RMGUtils.exit();
+    }
+
+    public static void unrecognizedMethodHash(Exception e, String action, String signature)
+    {
+        Logger.eprintlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
+        Logger.eprintlnMixedBlue("The specified method signature", signature, "is not supported by the remote object.");
+        showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void localhostBypassNoException()
+    {
+        Logger.printlnMixedYellow("- Server", "did not", "raise any exception during unbind operation.");
+        Logger.printlnMixedBlue("  This can occur for custom RMI implementations like e.g.", "apache-karaf.");
+        Logger.statusNonDefault();
+    }
+
+    public static void lookupClassNotFoundException(Exception e, String name)
+    {
+        name = name.replace(" (no security manager: RMI class loader disabled)", "");
+
+        Logger.eprintlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
+        Logger.eprintlnMixedBlue("The class", name, "could not be resolved within your class path.");
+        Logger.eprintlnMixedBlue("This usually means that the RemoteObject is using a custom", "RMIClientSocketFactory or InvocationHandler.");
+
+        showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void notBoundException(Exception e, String boundName)
+    {
+        Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
+        Logger.printlnPlainBlue(boundName + ".");
+        Logger.eprintln("The specified bound name is not bound to the registry.");
+        showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void timeoutException(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caught", "SocketTimeoutException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedBlue("The specified port is probably", "not an RMI service.");
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void connectionReset(Exception e, String during1, String during2)
+    {
+        Logger.eprintlnMixedYellow("Caught", "Connection Reset", "during " + during1 + " " + during2 + ".");
+        Logger.eprintMixedBlue("The specified port is probably", "not an RMI service ");
+        Logger.printlnPlainMixedBlue("or you used a wrong", "TLS", "setting.");
+
+        ExceptionHandler.sslOption();
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
+    }
+
+    public static void genericCall(Exception e)
+    {
+        Logger.printlnMixedYellow("Caught", e.getClass().getName(), "during generic call action.");
+        Logger.printlnMixedBlue("The call was", "probably successful,", "but caused an exception on the server side.");
+        ExceptionHandler.stackTrace(e);
     }
 
     public static void connectException(Exception e, String callName)
     {
         Throwable t = ExceptionHandler.getCause(e);
 
-        if( t instanceof java.net.ConnectException && t.getMessage().contains("Connection refused")) {
-            ExceptionHandler.connectionRefused(e, callName, "call");
+        if( t instanceof java.net.ConnectException ) {
+
+            String message = t.getMessage();
+
+            if( message.contains("Connection refused") )
+                ExceptionHandler.connectionRefused(e, callName, "call");
+
+            if( message.contains("Network is unreachable") )
+                ExceptionHandler.networkUnreachable(e, callName, "call");
 
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
@@ -353,7 +529,13 @@ public class ExceptionHandler {
     {
         Throwable t = ExceptionHandler.getCause(e);
 
-        if( t instanceof java.net.NoRouteToHostException) {
+        if( t instanceof java.io.EOFException ) {
+            ExceptionHandler.eofException(e, callName, "call");
+
+        } else if( t instanceof java.net.SocketTimeoutException) {
+            ExceptionHandler.timeoutException(e, callName, "call");
+
+        } else if( t instanceof java.net.NoRouteToHostException) {
             ExceptionHandler.noRouteToHost(e, callName, "call");
 
         } else if( t instanceof java.rmi.ConnectIOException && t.getMessage().contains("non-JRMP server")) {
@@ -364,6 +546,9 @@ public class ExceptionHandler {
 
         } else if( t instanceof java.net.SocketException && t.getMessage().contains("Network is unreachable")) {
             ExceptionHandler.networkUnreachable(e, callName, "call");
+
+        } else if( t instanceof java.net.SocketException && t.getMessage().contains("Connection reset")) {
+            ExceptionHandler.connectionReset(e, callName, "call");
 
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
@@ -380,6 +565,9 @@ public class ExceptionHandler {
      */
     public static Throwable getThrowable(String name, Throwable e)
     {
+        if( e.getClass().getSimpleName().equals(name) )
+            return e;
+
         Throwable exception = e;
         Throwable cause = e.getCause();
 
@@ -396,26 +584,16 @@ public class ExceptionHandler {
     }
 
     /**
-     * Sets the value of the alwaysShowExceptions option.
-     *
-     * @param b show stack traces?
-     */
-    public static void showStackTrace(boolean b)
-    {
-        alwaysShowExceptions = b;
-    }
-
-    /**
      * By using the --stack-trace option, uses can always display stack traces if they
      * want to. This is handled by this function. It checks whether --stack-trace was used
-     * (in this case alwaysShowExceptions is true) and prints the stacktrace if desired.
-     * This function should be used in most of the error handling code of rmg.
+     * and prints the stacktrace if desired. This function should be used in most of the error
+     * handling code of remote-method-guesser.
      *
      * @param e Exception that was caught.
      */
-    public static void showStackTrace(Exception e)
+    public static <T extends Throwable> void showStackTrace(T e)
     {
-        if(alwaysShowExceptions) {
+        if( RMGOption.GLOBAL_STACK_TRACE.getBool() ) {
             Logger.eprintln("");
             stackTrace(e);
         }
@@ -426,7 +604,7 @@ public class ExceptionHandler {
      *
      * @param e Exception that was caught.
      */
-    public static void stackTrace(Exception e)
+    public static <T extends Throwable> void stackTrace(T e)
     {
         Logger.eprintln("StackTrace:");
         e.printStackTrace();
@@ -444,9 +622,243 @@ public class ExceptionHandler {
         Throwable cause = null;
         Throwable result = e;
 
-        while(null != (cause = result.getCause())  && (result != cause) ) {
+        while(null != (cause = result.getCause()) && (result != cause) ) {
             result = cause;
         }
+
         return result;
+    }
+
+    /**
+     * Handle an Exception that is thrown during codebase attacks. The exception reasons are similar for most RMI components
+     * and it makes sense to use a unified function here.
+     *
+     * @param exception Exception that was raised during the codebase attack
+     * @param className ClassName that was used during the codebase attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     */
+    public static void handleCodebaseException(Exception exception, String className, RMIComponent component, String method)
+    {
+        ExceptionHandler.handleCodebaseException(exception, className, component, method, null);
+    }
+
+    /**
+     * Handle an Exception that is thrown during codebase attacks. The exception reasons are similar for most RMI components
+     * and it makes sense to use a unified function here. This method uses an additional randomClassName parameter. This can
+     * be used to indicate that a canary was used during the attack.
+     *
+     * @param exception Exception that was raised during the codebase attack
+     * @param className ClassName that was used during the codebase attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     * @param randomClassName Class name of the canary that was used during the attack
+     */
+    public static void handleCodebaseException(Exception exception, String className, RMIComponent component, String method, String randomClassName)
+    {
+        try {
+            throw exception;
+
+        } catch( java.rmi.ServerException e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+
+                if( component != RMIComponent.REGISTRY )
+                    ExceptionHandler.invalidClass(e, component.name);
+
+                else {
+                    ExceptionHandler.invalidClass(e, component.name, false);
+                    Logger.eprintlnMixedBlue("Make sure your payload class", "implements Remote.");
+                    ExceptionHandler.showStackTrace(e);
+                }
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, method);
+
+            } else if( cause instanceof java.lang.ClassFormatError ) {
+
+                if( cause.getClass() == java.lang.UnsupportedClassVersionError.class )
+                    ExceptionHandler.unsupportedClassVersion(e, "codebase", "attack");
+
+                else
+                    ExceptionHandler.codebaseClassFormat(e);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException ) {
+
+                String exceptionMessage = e.getMessage();
+
+                if( exceptionMessage.contains("RMI class loader disabled") ) {
+                    ExceptionHandler.codebaseSecurityManager(e);
+                }
+
+                else if( exceptionMessage.contains(className) ) {
+                    ExceptionHandler.codebaseClassNotFound(e, className);
+                }
+
+                else if( randomClassName != null && exceptionMessage.contains(randomClassName) ) {
+                    ExceptionHandler.codebaseClassNotFoundRandom(e, randomClassName, className);
+
+                } else {
+                    ExceptionHandler.unexpectedException(e, method, "call", false);
+                }
+
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
+                    ExceptionHandler.codebaseClassCast(e, true);
+
+                else
+                    ExceptionHandler.codebaseClassCast(e, false);
+
+            } else if( cause instanceof java.security.AccessControlException) {
+                ExceptionHandler.accessControl(e, method, "call");
+
+            } else {
+
+                Throwable unmarshalException = ExceptionHandler.getThrowable("UnmarshalException", e);
+
+                if( unmarshalException != null)
+                    ExceptionHandler.unknownCodebaseException(unmarshalException.getCause(), false);
+
+                else
+                    ExceptionHandler.unexpectedException(e, method, "call", false);
+            }
+
+        } catch( java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.lang.ClassFormatError) {
+
+                if( cause.getClass() == java.lang.UnsupportedClassVersionError.class )
+                    ExceptionHandler.unsupportedClassVersion(e, "codebase", "attack");
+
+                else
+                    ExceptionHandler.codebaseClassFormat(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, method, "call", false);
+            }
+
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgumentCodebase(e);
+
+        } catch( java.lang.ClassCastException e ) {
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.codebaseClassCast(e, true);
+
+            else
+                ExceptionHandler.codebaseClassCast(e, false);
+
+        } catch( java.security.AccessControlException e ) {
+            ExceptionHandler.accessControl(e, method, "call");
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, component.name, false);
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, method, "call", false);
+        }
+    }
+
+    /**
+     * Handle an Exception that is thrown during gadget call attacks. The exception reasons are similar for most RMI
+     * components and it makes sense to use a unified function here.
+     *
+     * @param exception Exception that was raised during the gadget call attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     */
+    public static void handleGadgetCallException(Exception exception, RMIComponent component, String method)
+    {
+        ExceptionHandler.handleGadgetCallException(exception, component, method, null);
+    }
+
+    /**
+     * Handle an Exception that is thrown during gadget call attacks. The exception reasons are similar for most RMI
+     * components and it makes sense to use a unified function here. This method uses an additional randomClassName
+     * parameter. This can be used to indicate that a canary was used during the attack.
+     *
+     * @param exception Exception that was raised during the gadget call attack
+     * @param component RMIComponent that was targeted
+     * @param method Server-side methodName that was used for the attack
+     * @param randomClassName Class name of the canary that was used during the attack
+     */
+    public static void handleGadgetCallException(Exception exception, RMIComponent component, String method, String randomClassName)
+    {
+        try {
+            throw exception;
+
+        } catch( java.rmi.ServerException | java.rmi.ServerError e ) {
+
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if( cause instanceof java.io.InvalidClassException ) {
+                ExceptionHandler.invalidClass(e, component.name);
+
+            } else if( cause instanceof java.security.AccessControlException ) {
+                ExceptionHandler.accessControl(e, "deserialization", "attack");
+
+            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
+                ExceptionHandler.unsupportedOperationException(e, method);
+
+            } else if( cause instanceof java.lang.ClassNotFoundException ) {
+
+                if( randomClassName != null && e.getMessage().contains(randomClassName) ) {
+                    ExceptionHandler.deserializeClassNotFoundRandom(e, "deserialization", "attack", randomClassName);
+
+                } else {
+                    ExceptionHandler.deserializeClassNotFound(e);
+                }
+
+            } else if( cause instanceof java.lang.ClassCastException ) {
+
+                if ( RMGUtils.createdByReadString(cause.getMessage()) )
+                    ExceptionHandler.deserlializeClassCast(e, true);
+
+                else
+                    ExceptionHandler.deserlializeClassCast(e, false);
+
+            } else {
+                ExceptionHandler.unknownDeserializationException(e);
+            }
+
+        } catch( java.lang.ClassCastException e ) {
+
+            if ( RMGUtils.createdByReadString(e.getMessage()) )
+                ExceptionHandler.deserlializeClassCast(e, true);
+
+            else
+                ExceptionHandler.deserlializeClassCast(e, false);
+
+        } catch( java.lang.IllegalArgumentException e ) {
+            ExceptionHandler.illegalArgument(e);
+
+        } catch( java.rmi.NoSuchObjectException e ) {
+            ExceptionHandler.noSuchObjectException(e, component.name, false);
+
+        } catch( java.rmi.UnmarshalException e ) {
+
+            Throwable t = ExceptionHandler.getCause(e);
+
+            if( t instanceof java.lang.ClassNotFoundException ) {
+                Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
+                Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
+                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                ExceptionHandler.showStackTrace(e);
+
+            } else {
+                ExceptionHandler.unexpectedException(e, "deserialization", "attack", false);
+            }
+
+        } catch( java.security.AccessControlException e ) {
+            ExceptionHandler.accessControl(e, "deserialization", "attack");
+
+        } catch( Exception e ) {
+            ExceptionHandler.unexpectedException(e, method, "call", false);
+        }
     }
 }

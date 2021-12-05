@@ -1,24 +1,31 @@
 tester:
-  name: bind
   title: Binding Tests
-  description: >
-    "Performs tests on remote-methods-guessers 'bind', 'rebind'"
-    "and 'unbind' action."
+  description: |-
+    'Performs tests for the bind, rebind and unbind operations.'
+
+  id: '002-002'
+  groups:
+    - bind
+  id_pattern: '002-002-{:03}'
+
 
 variables:
   bound-name: jdk9-binding-test
 
+
 tests:
   - title: Bind Call
-    description: >
+    description: |-
       'Performs a bind operation.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -28,16 +35,18 @@ tests:
 
 
   - title: Bind Call (localhost bypass)
-    description: >
+    description: |-
       'Performs a bind operation with --localhost-bypass.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -47,10 +56,14 @@ tests:
 
 
   - title: Verify Bind
-    description: >
+    description: |-
       'Verifies the previous bind operation.'
 
-    command: '${BASE-CMD}'
+    command:
+      - rmg
+      - enum
+      - ${TARGET}
+      - ${OPTIONS}
     validators:
       - error: False
       - contains:
@@ -60,16 +73,18 @@ tests:
 
 
   - title: Bind Call (Bound Name Exists)
-    description: >
+    description: |-
       'Attempts to bind an already existing bound name.'
 
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - bind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -81,15 +96,17 @@ tests:
 
 
   - title: Rebind Call
-    description: >
+    description: |-
       'Performs a rebind operation.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - rebind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -100,16 +117,18 @@ tests:
 
 
   - title: Rebind Call (localhost bypass)
-    description: >
+    description: |-
       'Performs a rebind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - rebind
-      - --bound-name 
-      - ${bound-name}
+      - ${TARGET}
       - '127.0.0.1:8000'
+      - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -120,14 +139,16 @@ tests:
 
 
   - title: Unbind Call
-    description: >
+    description: |-
       'Performs an unbind operation.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - ${bound-name}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -138,15 +159,17 @@ tests:
 
 
   - title: Unbind Call (localhost bypass)
-    description: >
+    description: |-
       'Performs an unbind operation with --localhost-bypass.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - ${bound-name}
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -157,10 +180,15 @@ tests:
 
 
   - title: Verify Unbind
-    description: >
+    description: |-
       'Verifies the previous unbind operation.'
 
-    command: '${BASE-CMD}'
+    command:
+      - rmg
+      - enum
+      - ${TARGET}
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:
@@ -170,16 +198,18 @@ tests:
 
 
   - title: Unbind Call (Not Bound)
-    description: >
+    description: |-
       'Performs an unbind operation with --localhost-bypass'
       'on a non existing bound name.'
     
-    command: '${BASE-CMD}'
-    arguments:
+    command:
+      - rmg
       - unbind
-      - --bound-name 
+      - ${TARGET}
       - not-bound
       - --localhost-bypass
+      - ${OPTIONS}
+
     validators:
       - error: False
       - contains:

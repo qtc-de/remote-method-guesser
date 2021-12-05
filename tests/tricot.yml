@@ -5,11 +5,22 @@ tester:
   description: >
     'Launches some end-to-end tests of remote-method-guesser.'
 
+
 variables:
-  rmg: rmg-3.3.0-jar-with-dependencies.jar
+  rmg: rmg-4.0.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
+  TARGET:
+    - ${DOCKER-IP}
+    - 9010
+  TARGET-SSL:
+    - ${DOCKER-IP}
+    - 1090
+    - --ssl
+  OPTIONS:
+    - --no-color
+
 
 plugins:
   - mkdir:
@@ -26,7 +37,9 @@ plugins:
         - utils/CodebaseTest4.class
         - utils/PluginTest.jar
 
+
 testers:
   - ./jdk8/jdk8.yml
   - ./jdk9/jdk9.yml
   - ./jdk11/jdk11.yml
+  - ./generic/generic.yml
