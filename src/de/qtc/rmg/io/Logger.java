@@ -24,9 +24,13 @@ public class Logger {
     public static int printCount = 0;
     public static boolean enabled = true;
 
+    public static void disable() {
+        Logger.enabled = false;
+    }
+
     public static void disableIfNotVerbose() {
         if( !RMGOption.GLOBAL_VERBOSE.getBool() )
-            Logger.enabled = false;
+            disable();
     }
 
     public static void enable() {

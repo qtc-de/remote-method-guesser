@@ -110,6 +110,9 @@ public class ArgumentHandler {
         if( RMGOption.GLOBAL_NO_COLOR.getBool() )
             Logger.disableColor();
 
+        if( RMGOption.SSRF_RAW.getBool() )
+            Logger.disable();
+
         PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
 

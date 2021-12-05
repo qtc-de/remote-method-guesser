@@ -113,7 +113,7 @@ public enum RMGOption {
     private final static EnumSet<RMGOption> booleanOptions = EnumSet.of(RMGOption.GLOBAL_VERBOSE, RMGOption.GLOBAL_NO_COLOR, RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.CONN_FOLLOW, RMGOption.CONN_SSL, RMGOption.SSRF_GOPHER, RMGOption.SSRF, RMGOption.BIND_BYPASS, RMGOption.GUESS_CREATE_SAMPLES,
             RMGOption.GUESS_TRUSTED, RMGOption.GUESS_FORCE_GUESSING, RMGOption.GUESS_DUPLICATES, RMGOption.GUESS_UPDATE, RMGOption.GUESS_ZERO_ARG,
-            RMGOption.ENUM_BYPASS, RMGOption.NO_CANARY, RMGOption.NO_PROGRESS);
+            RMGOption.ENUM_BYPASS, RMGOption.NO_CANARY, RMGOption.NO_PROGRESS, RMGOption.SSRF_ENCODE, RMGOption.SSRF_RAW);
 
     /**
      * Initializes an enum field with the corresponding Option name, the Option description the argument action,
