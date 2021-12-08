@@ -546,9 +546,9 @@ on them:
 [+] Portscan finished.
 ```
 
-The ``scan`` action uses *remote-method-guesser's* port argument as an indicator which ports to scan. Using ``-``
-as a port value results in a scan for all common *RMI* ports. You can also specify numbers, ranges and lists.
-Additionally, you can specify further port specifications after the ``scan`` action:
+By default, the scan actions uses a preconfigured list of common *RMI ports*. To customize the list of ports to scan,
+you can use the ``--ports`` option. This option accepts plain numbers and number ranges for port specifications.
+The dash character (``-``) can be used to reference the default port list.
 
 ```console
 [qtc@devbox ~]$ rmg scan 172.17.0.2 --ports 0-100 1000-1100 9000-9020 35000-36000 40000-45000
@@ -613,7 +613,7 @@ from incoming client connections without disrupting any services. To forward con
 corresponding target as an additional argument. Targets can be specified in two different ways:
 
 1. The IP address and port of an RMI registry together with the bound name of the corresponding *JMX instance*:
-   ```console
+  ```console
   [qtc@devbox ~]$ rmg roguejmx 172.17.0.1 4444 --forward-host 172.17.0.2 --forward-port 9010 --forward-bound-name jmxrmi 
   [+] Statring RogueJMX Server on 172.17.0.1:4444
   [+] 	--> Assigned ObjID is: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
@@ -622,7 +622,7 @@ corresponding target as an additional argument. Targets can be specified in two 
   ```
 
 2. The IP address and port of the *JMX* service itself together with it's *ObjID* value:
-   ```console
+  ```console
   [qtc@devbox ~]$ rmg roguejmx 172.17.0.1 4444 --forward-host 172.17.0.2 --forward-port 41001 --forward-objid '[-40935072:17cd9fc77c4:-7ff8, 6731522247396892423]'
   [+] Statring RogueJMX Server on 172.17.0.1:4444
   [+] 	--> Assigned ObjID is: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
@@ -639,7 +639,7 @@ to *deserialization attacks*. These attacks can target different *RMI components
   * *RMI registry*
   * *DGC*
   * *Activator*
-* User defined *RemoteObjects* (*Application level*)
+* User defined *RemoteObjects* (*application level*)
 
 
 ##### Well Known RMI Components

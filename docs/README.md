@@ -6,15 +6,17 @@ In this folder you can find more detailed documentation on *remote-method-guesse
 work in progress and will be updated from time to time. So far, the following topics are documented:
 
 * *Java RMI*
-  * [Security Manager List](./rmi/security-manager-list.md)
+  * [AccessControlContext List](./rmi/access-control-contexts.md)
+  * [Known Remote Objects](./rmi/known-endpoints.md)
   * [Serialization Filter List](./rmi/serialization-filter-list.md)
   * [Unicast Remote Object](./rmi/unicast-remote-object.md)
 
 * *remote-method-gusser*
   * [Actions](./rmg/actions.md)
-  * [Plugin System](./rmg/plugin-system.md)
+  * [Activation System](./rmg/activation-system.md)
   * [Media](./rmg/media.md)
   * [Method-Guessing](./rmg/method-guessing.md)
+  * [Plugin System](./rmg/plugin-system.md)
 
 
 ### Java RMI - Attack Surface

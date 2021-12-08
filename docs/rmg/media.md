@@ -2,7 +2,9 @@
 
 ----
 
-This document provides some more usage examples for *rmg* in ``gif`` format.
+This document provides some more usage examples for *remote-method-guesser* in ``gif`` format.
+Notice: Some of the usage examples are probably outdated and do not conform to the current
+version of *remote-method-guesser*.
 
 
 ### Registry Bypass

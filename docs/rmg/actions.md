@@ -639,8 +639,7 @@ When targeting *RMI* services via *SSRF*, there are two requirements that need t
 
 The two requirements mentioned above restrict *SSRF* attacks on *Java RMI* endpoints quite a bit. However, when both conditions
 are met, you can fully utilize the *RMI* service via *SSRF*. The *remote-method-guesser* repository also contains an [SSRF example
-server](docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-ssrf-server:1.0), that can be used to practice *SSRF* attacks against
-*Java RMI*.
+server](/docker/ssrf-server), that can be used to practice *SSRF* attacks against *Java RMI*.
 
 To perform the different checks of *remote-method-guesser's* ``enum`` action via *SSRF*, you can use the ``--scan-action`` option.
 Without specifying this option, the *SSRF* payload generated for the ``enum`` action is similar to the payload created when using
