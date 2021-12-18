@@ -104,6 +104,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
         } catch( java.rmi.ConnectException e ) {
             ExceptionHandler.connectException(e, "list");
 
+        } catch( java.rmi.UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+
         } catch( java.rmi.NoSuchObjectException e ) {
             throw e;
 
@@ -164,6 +167,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
 
             } catch( java.rmi.ConnectException e ) {
                 ExceptionHandler.connectException(e, "lookup");
+
+            } catch( java.rmi.UnknownHostException e ) {
+                ExceptionHandler.unknownHost(e, host, true);
 
             } catch( java.rmi.NoSuchObjectException e ) {
                 ExceptionHandler.noSuchObjectException(e, "registry", true);

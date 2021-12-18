@@ -118,6 +118,9 @@ public class RMIEndpoint {
         } catch(java.rmi.ConnectIOException e) {
             ExceptionHandler.connectIOException(e, callName);
 
+        } catch( java.rmi.UnknownHostException e ) {
+            ExceptionHandler.unknownHost(e, host, true);
+
         } catch( SSRFException e ) {
             SSRFSocket.printContent(host, port);
         }
