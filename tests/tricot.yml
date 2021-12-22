@@ -7,7 +7,7 @@ tester:
 
 
 variables:
-  rmg: rmg-4.0.0-jar-with-dependencies.jar
+  rmg: rmg-4.1.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
