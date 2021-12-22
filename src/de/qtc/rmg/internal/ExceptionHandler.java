@@ -444,6 +444,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void wrongArgumentCount(int expected, int is)
+    {
+        Logger.eprintlnMixedYellow("The specified method signature expects", String.valueOf(expected), "arguments,");
+        Logger.eprintlnMixedBlue("but", String.valueOf(is), "arguments have been specified.");
+        RMGUtils.exit();
+    }
+
     public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
         Logger.eprintlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
