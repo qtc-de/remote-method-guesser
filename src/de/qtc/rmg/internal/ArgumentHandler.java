@@ -106,13 +106,14 @@ public class ArgumentHandler {
     {
         config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.name));
         RMGOption.prepareOptions(args, config);
-        checkPortRange();
 
         if( RMGOption.GLOBAL_NO_COLOR.getBool() )
             Logger.disableColor();
 
         if( RMGOption.SSRF_RAW.getBool() )
             Logger.disableStdout();
+
+        checkPortRange();
 
         PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
