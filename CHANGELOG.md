@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.1.0] - Dec 23, 2021
+
+### Added
+
+* Add *TLS* enumeration during ``enum`` action.
+
+### Changed
+
+* Error messages are now printed to stderr.
+* Bugfix: Error messages not being shown when using ``--raw``
+* Bugfix: Uncaught ``UnknownHostException``
+* Bugfix: Uncaught exception during ``call`` action when used with wrong argument count
+* Bugfix: Uncaught exception during ``call`` action when no signature was specified
+* Bugfix: Uncaught exception when the specified port number is out of range
+
+### Docker
+
+* The *SSRF* server now logs in hexdump format
+* Bugfix: Indentation issue within the *SSRF* server
+
+
 ## [4.0.0] - Dec 05, 2021
 
 ### Added
