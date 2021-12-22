@@ -75,7 +75,6 @@ public class SSRFHandler implements HttpHandler {
                 }
 
                 response.write(output);
-                Logger.decreaseIndent();
             }
 
         } catch( IOException | InterruptedException e ){
@@ -90,6 +89,7 @@ public class SSRFHandler implements HttpHandler {
         }
 
         response.close();
+        Logger.decreaseIndent();
     }
 
     /**
