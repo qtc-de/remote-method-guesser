@@ -323,10 +323,21 @@ public class Logger {
         log(first + " " + blue(second));
     }
 
+    public static void eprintlnPlainMixedBlue(String first, String second)
+    {
+        elog(first + " " + blue(second));
+    }
+
     public static void printlnPlainMixedBlue(String first, String second, String third)
     {
         log(first + " " + blue(second) + " " + third);
     }
+
+    public static void eprintlnPlainMixedBlue(String first, String second, String third)
+    {
+        elog(first + " " + blue(second) + " " + third);
+    }
+
 
     public static void printPlainMixedBlue(String first, String second)
     {
