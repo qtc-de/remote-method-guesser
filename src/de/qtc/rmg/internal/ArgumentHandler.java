@@ -111,7 +111,7 @@ public class ArgumentHandler {
             Logger.disableColor();
 
         if( RMGOption.SSRF_RAW.getBool() )
-            Logger.disable();
+            Logger.disableStdout();
 
         PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }

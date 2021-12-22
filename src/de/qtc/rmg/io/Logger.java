@@ -22,10 +22,20 @@ public class Logger {
 
     public static int indent = 0;
     public static int printCount = 0;
-    public static boolean enabled = true;
+    public static boolean stdout = true;
+    public static boolean stderr = true;
 
     public static void disable() {
-        Logger.enabled = false;
+        Logger.stdout = false;
+        Logger.stderr = false;
+    }
+
+    public static void disableStdout() {
+        Logger.stdout = false;
+    }
+
+    public static void disableStderr() {
+        Logger.stderr = false;
     }
 
     public static void disableIfNotVerbose() {
@@ -34,7 +44,16 @@ public class Logger {
     }
 
     public static void enable() {
-        Logger.enabled = true;
+        Logger.stdout = true;
+        Logger.stderr = true;
+    }
+
+    public static void enableStdout() {
+        Logger.stdout = true;
+    }
+
+    public static void enableStderr() {
+        Logger.stderr = true;
     }
 
     public static String blue(String msg)
@@ -81,7 +100,7 @@ public class Logger {
 
     private static void log(String msg, boolean newline)
     {
-        if( Logger.enabled ) {
+        if( Logger.stdout ) {
 
             if( newline )
                 System.out.println(msg);
@@ -97,12 +116,12 @@ public class Logger {
 
     private static void elog(String msg, boolean newline)
     {
-        if( Logger.enabled ) {
+        if( Logger.stderr ) {
 
             if( newline )
-                System.out.println(msg);
+                System.err.println(msg);
             else
-                System.out.print(msg);
+                System.err.print(msg);
         }
     }
 
