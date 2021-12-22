@@ -239,6 +239,11 @@ public class Logger {
         log(first + " " + red(second));
     }
 
+    public static void printPlainMixedRed(String first, String second)
+    {
+        log(first + " " + red(second), false);
+    }
+
     public static void printlnMixedGreen(String first, String second)
     {
         log(prefix() + first + " " + green(second));
@@ -249,6 +254,11 @@ public class Logger {
         log(first + " " + green(second));
     }
 
+    public static void printPlainMixedGreen(String first, String second)
+    {
+        log(first + " " + green(second), false);
+    }
+
     public static void printlnMixedPurple(String first, String second)
     {
         log(prefix() + first + " " + purple(second));
@@ -257,6 +267,11 @@ public class Logger {
     public static void printlnPlainMixedPurple(String first, String second)
     {
         log(first + " " + purple(second));
+    }
+
+    public static void printPlainMixedPurple(String first, String second)
+    {
+        log(first + " " + purple(second), false);
     }
 
     public static void printlnMixedBlue(String first, String second)

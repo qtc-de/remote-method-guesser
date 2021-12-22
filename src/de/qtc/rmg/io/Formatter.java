@@ -248,6 +248,21 @@ public class Formatter {
 
         Logger.print("    ");
         Logger.printPlainMixedBlue("Endpoint:", ref.getTarget());
-        Logger.printlnPlainMixedBlue(" ObjID:", ref.objID.toString());
+
+        switch( ref.isTLSProtected() ) {
+
+            case 1:
+                Logger.printPlainMixedGreen("  TLS:", "yes");
+                break;
+
+            case -1:
+                Logger.printPlainMixedRed("  TLS:", "no");
+                break;
+
+            default:
+                Logger.printPlainMixedPurple("  TLS:", "unknown");
+        }
+
+        Logger.printlnPlainMixedBlue("  ObjID:", ref.objID.toString());
     }
 }
