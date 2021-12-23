@@ -32,6 +32,7 @@ public class MethodCandidate {
     private String signature;
 
     private boolean isVoid;
+    private int argumentCount;
     private int primitiveSize;
 
     /**
@@ -94,10 +95,12 @@ public class MethodCandidate {
      */
     private void initialize(CtMethod method) throws NotFoundException
     {
-        this.hash = getCtMethodHash(method);
         CtClass[] types = method.getParameterTypes();
 
-        if( types.length == 0 ) {
+        this.argumentCount = types.length;
+        this.hash = getCtMethodHash(method);
+
+        if( argumentCount == 0 ) {
 
             this.isVoid = true;
             this.primitiveSize = -99;
@@ -210,6 +213,16 @@ public class MethodCandidate {
 
         else
             return "method";
+    }
+
+    /**
+     * Returns the expected argument count of the method candidate.
+     *
+     * @return expected argument count as int
+     */
+    public int getArgumentCount()
+    {
+        return argumentCount;
     }
 
     /**

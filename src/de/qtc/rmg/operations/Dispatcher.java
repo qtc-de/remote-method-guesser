@@ -353,6 +353,12 @@ public class Dispatcher {
         RMIEndpoint rmi = getRMIEndpoint();
         Object[] argumentArray = p.getCallArguments();
 
+        if( candidate == null )
+            ExceptionHandler.missingSignature();
+
+        if( argumentArray.length != candidate.getArgumentCount() )
+            ExceptionHandler.wrongArgumentCount(candidate.getArgumentCount(), argumentArray.length);
+
         RemoteObjectClient client = getRemoteObjectClient(rmi);
         client.genericCall(candidate, argumentArray);
     }

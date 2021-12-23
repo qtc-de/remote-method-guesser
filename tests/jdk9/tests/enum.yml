@@ -40,7 +40,7 @@ tests:
           description: |-
             'Check whether objID values are displayed'
           match:
-            - 'Endpoint: iinsecure.dev:\d+ ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+            - 'Endpoint: iinsecure.dev:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
           description: |-

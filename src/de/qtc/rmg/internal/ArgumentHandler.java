@@ -111,9 +111,28 @@ public class ArgumentHandler {
             Logger.disableColor();
 
         if( RMGOption.SSRF_RAW.getBool() )
-            Logger.disable();
+            Logger.disableStdout();
+
+        checkPortRange();
 
         PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
+    }
+
+    /**
+     * If the current action uses the TARGET_PORT argument, this function validates that the specified
+     * port number is not out of range.
+     */
+    private void checkPortRange()
+    {
+        if( RMGOption.TARGET_PORT.isNull() )
+            return;
+
+        int port = RMGOption.TARGET_PORT.getValue();
+
+        if( port < 1 || port > 65535 ) {
+            Logger.eprintlnMixedYellow("The specified port number", String.valueOf(port), "is out of range.");
+            RMGUtils.exit();
+        }
     }
 
     /**

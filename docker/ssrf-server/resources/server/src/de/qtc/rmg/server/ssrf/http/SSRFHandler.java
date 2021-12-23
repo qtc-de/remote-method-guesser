@@ -1,6 +1,8 @@
 package de.qtc.rmg.server.ssrf.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -8,6 +10,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import de.qtc.rmg.server.ssrf.utils.Logger;
 
+import org.apache.commons.io.HexDump;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -49,33 +52,47 @@ public class SSRFHandler implements HttpHandler {
 
             } else {
 
-                byte[] output = null;
-                int length = urlParam.length() > 50 ? 50 : urlParam.length();
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
+                int length = urlParam.length() > 57 ? 57 : urlParam.length();
                 Logger.printlnMixedYellow("url parameter:", urlParam.substring(0, length) + "[...]");
+
                 Process p = Runtime.getRuntime().exec(new String[] {"curl", urlParam});
-
                 int exitStatus = p.waitFor();
+
                 Logger.printlnMixedBlue("curl exit status:", String.valueOf(exitStatus));
+                InputStream stream;
 
-                if( exitStatus != 0 ) {
-                    output = IOUtils.toByteArray(p.getErrorStream());
-
-                    Logger.printlnMixedYellow("Stderr:", new String(output));
-                    Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
-                    t.sendResponseHeaders(500, output.length);
+                if( exitStatus == 0 ) {
+                    stream = p.getInputStream();
+                    Logger.println("Stdout:");
 
                 } else {
-                    output = IOUtils.toByteArray(p.getInputStream());
-                    length = output.length > 50 ? 50 : output.length;
+                    stream = p.getErrorStream();
+                    Logger.println("Stderr:");
+                }
 
-                    Logger.printlnMixedYellow("Stdout:", new String(output).substring(0, length));
+                byte[] output = IOUtils.toByteArray(stream);
+                HexDump.dump(output, 0, bos, 0);
+                String[] hexDump = new String(bos.toByteArray()).split("\n");
+
+                Logger.increaseIndent();
+
+                for(String line : hexDump)
+                    Logger.printlnBlue(line);
+
+                Logger.decreaseIndent();
+
+                if( exitStatus == 0 ) {
                     Logger.printlnMixedBlue("Sending", "200 OK", "response.");
                     t.sendResponseHeaders(200, output.length);
+
+                } else {
+                    Logger.printlnMixedBlue("Sending", "500 Internal Server Error", "response.");
+                    t.sendResponseHeaders(500, output.length);
                 }
 
                 response.write(output);
-                Logger.decreaseIndent();
             }
 
         } catch( IOException | InterruptedException e ){
@@ -90,6 +107,7 @@ public class SSRFHandler implements HttpHandler {
         }
 
         response.close();
+        Logger.decreaseIndent();
     }
 
     /**

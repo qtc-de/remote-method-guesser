@@ -189,7 +189,7 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectIOException", "during " + during1 + " " + during2 + ".");
         Logger.eprintMixedBlue("Remote endpoint is either", "no RMI endpoint", "or uses an");
-        Logger.printlnPlainBlue(" SSL socket.");
+        Logger.eprintlnPlainBlue(" SSL socket.");
 
         ExceptionHandler.sslOption();
 
@@ -444,6 +444,13 @@ public class ExceptionHandler {
         RMGUtils.exit();
     }
 
+    public static void wrongArgumentCount(int expected, int is)
+    {
+        Logger.eprintlnMixedYellow("The specified method signature expects", String.valueOf(expected), "arguments,");
+        Logger.eprintlnMixedBlue("but", String.valueOf(is), "arguments have been specified.");
+        RMGUtils.exit();
+    }
+
     public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
         Logger.eprintlnMixedYellow("Caught", "UnmarshalException (unrecognized method hash)", "during " + action + " action.");
@@ -492,7 +499,7 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caught", "Connection Reset", "during " + during1 + " " + during2 + ".");
         Logger.eprintMixedBlue("The specified port is probably", "not an RMI service ");
-        Logger.printlnPlainMixedBlue("or you used a wrong", "TLS", "setting.");
+        Logger.eprintlnPlainMixedBlue("or you used a wrong", "TLS", "setting.");
 
         ExceptionHandler.sslOption();
         ExceptionHandler.showStackTrace(e);

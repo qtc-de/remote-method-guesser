@@ -119,8 +119,7 @@ tests:
       - error: True
       - contains:
           values:
-            - Caught IllegalArgumentException
-            - 'Port value out of range: 4444444'
+            - The specified port number 44444444 is out of range
             - Cannot continue from here
 
 
