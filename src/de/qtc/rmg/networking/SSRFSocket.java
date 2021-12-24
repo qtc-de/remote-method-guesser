@@ -16,6 +16,7 @@ import de.qtc.rmg.exceptions.SSRFException;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
+import de.qtc.rmg.io.SingleOpOutputStream;
 import de.qtc.rmg.utils.RMGUtils;
 import sun.rmi.server.MarshalOutputStream;
 import sun.rmi.transport.TransportConstants;
@@ -78,12 +79,20 @@ public class SSRFSocket extends Socket {
 
     /**
      * Simulate an OutputStream that is connected to an RMI server. Instead of sending
-     * anything, collect all data in a byte array.
+     * anything, collect all data in a byte array. If the SSRF_SINGLEOP option was used,
+     * we choose an SingleOpOutputStream. This stream inspects data written to it and
+     * modifies stream protocol messages to single operation protocol messages.
      */
     public OutputStream getOutputStream()
     {
-        if( bos == null )
-            bos = new ByteArrayOutputStream();
+        if( bos == null ) {
+
+            if( RMGOption.SSRF_STREAM_PROTOCOL.getBool() )
+                bos = new ByteArrayOutputStream();
+
+            else
+                bos = new SingleOpOutputStream();
+        }
 
         return bos;
     }

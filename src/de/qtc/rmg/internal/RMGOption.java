@@ -49,6 +49,7 @@ public enum RMGOption {
     SSRFRESPONSE("--ssrf-response", "evaluate ssrf response from the server", Arguments.store(), RMGOptionGroup.SSRF, "hex"),
     SSRF_ENCODE("--encode", "double URL encode the SSRF payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
     SSRF_RAW("--raw", "print payload without color and without additional text", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    SSRF_STREAM_PROTOCOL("--stream-protocol", "use the stream protocol instead of single operation", Arguments.storeTrue(), RMGOptionGroup.SSRF),
 
     BIND_OBJID("--bind-objid", "ObjID of the bound object.", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
     BIND_ADDRESS("bind-host", "host specifications the bound remote object should point to", Arguments.store(), RMGOptionGroup.ACTION, "host:port"),

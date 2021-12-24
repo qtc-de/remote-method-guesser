@@ -24,7 +24,7 @@ public class SSRFResponseSocketFactory extends RMISocketFactory {
     @Override
     public Socket createSocket(String host, int port) throws IOException
     {
-        return new SSRFResponseSocket(content);
+        return new SSRFResponseSocket(host, port, content);
     }
 
     @Override
