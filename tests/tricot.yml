@@ -18,7 +18,7 @@ tester:
         ge: 1.9.0
 
 variables:
-  rmg: rmg-4.1.0-jar-with-dependencies.jar
+  rmg: rmg-4.2.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
