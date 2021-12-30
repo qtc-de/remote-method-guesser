@@ -8,7 +8,7 @@
     <artifactId>remote-method-guesser</artifactId>
     <name>remote-method-guesser</name>
     <packaging>jar</packaging>
-    <version>4.1.0</version>
+    <version>4.2.0</version>
     <description>Identify common misconfigurations on Java RMI endpoints</description>
 
     <properties>

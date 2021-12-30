@@ -5,9 +5,20 @@ tester:
   description: >
     'Launches some end-to-end tests of remote-method-guesser.'
 
+  requires:
+      files:
+        - /opt/ysoserial/target/ysoserial-0.0.6-SNAPSHOT-all.jar
+      commands:
+        - bash
+        - beanshooter
+        - javac
+        - nc
+        - rmg
+      version:
+        ge: 1.9.0
 
 variables:
-  rmg: rmg-4.1.0-jar-with-dependencies.jar
+  rmg: rmg-4.2.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest

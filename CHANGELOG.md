@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.2.0] - Dec 30, 2021
+
+### Changed
+
+* *SSRF* payloads are now created using the *SingleOpProtocol* by default.
+  The ``--stream-protocol`` option can be used to create *SSRF* payloads using
+  the *Stream Protocol*.
+* Updated test cases.
+
+
 ## [4.1.0] - Dec 23, 2021
 
 ### Added

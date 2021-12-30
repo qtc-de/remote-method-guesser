@@ -1,12 +1,15 @@
 package de.qtc.rmg.networking;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
 import de.qtc.rmg.io.DevNullOutputStream;
+import sun.rmi.transport.TransportConstants;
 
 /**
  * Socket implementation that prevents outputs from being send anywhere and that simulates input
@@ -34,18 +37,41 @@ import de.qtc.rmg.io.DevNullOutputStream;
  */
 public class SSRFResponseSocket extends Socket {
 
+    private int port;
+    private String host;
     private byte[] content;
 
     private int count = 0;
 
-    public SSRFResponseSocket(byte[] response)
+    public SSRFResponseSocket(String host, int port, byte[] response)
     {
+        this.host = host;
+        this.port = port;
         this.content = response;
     }
 
+    /**
+     * Before the input stream is returned, we compare the first byte of the response
+     * to the TransportConstants.Return value. If it matches, the response was created by a
+     * single operation protocol request. In this case we need to prefix the response with
+     * a fake-handshake to simulate the response from a stream protocol request.
+     */
+    @SuppressWarnings("restriction")
     public InputStream getInputStream() throws IOException
     {
-        return new ByteArrayInputStream(content);
+        ByteArrayOutputStream ibos = new ByteArrayOutputStream();
+
+        if( content[0] == TransportConstants.Return ) {
+
+            ibos.write(TransportConstants.ProtocolAck);
+
+            DataOutputStream dos = new DataOutputStream(ibos);
+            dos.writeUTF(host);
+            dos.writeInt(port);
+        }
+
+        ibos.write(content);
+        return new ByteArrayInputStream(ibos.toByteArray());
     }
 
     public OutputStream getOutputStream()
