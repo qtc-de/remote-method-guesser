@@ -712,4 +712,4 @@ The following output shows an example for the ``filter-bypass`` action:
 ```
 
 More examples for the ``--ssrf`` and ``--ssrf-response`` actions can be found in the documentation of the
-[SSRF example server](/docker/ssrf-server).
+[SSRF example server](/docker/ssrf-server) and the [Attacking Java RMI via SSRF blog post](https://blog.tneitzel.eu/posts/01-attacking-java-rmi-via-ssrf/).
