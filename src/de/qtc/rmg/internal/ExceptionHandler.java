@@ -416,8 +416,8 @@ public class ExceptionHandler {
 
     public static void ysoNotPresent(String location)
     {
-        Logger.eprintlnMixedYellow("Unable to find ysoserial library in path", location);
-        Logger.eprintlnMixedYellow("Check your configuration file or specify it on the command line using the", "--yso", "parameter");
+        Logger.eprintlnMixedBlue("Unable to find ysoserial library in path", location);
+        Logger.eprintlnMixedYellow("Check your configuration file or use the", "--yso", "command line parameter.");
         RMGUtils.exit();
     }
 

@@ -55,6 +55,8 @@ public enum RMGOption {
     BIND_ADDRESS("bind-host", "host specifications the bound remote object should point to", Arguments.store(), RMGOptionGroup.ACTION, "host:port"),
     BIND_BOUND_NAME("bound-name", "Bound name to use for (un)bind action", Arguments.store(), RMGOptionGroup.ACTION, "name"),
     BIND_BYPASS("--localhost-bypass", "attempt localhost bypass (CVE-2019-2684)", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    BIND_GADGET_NAME("--gadget-name", "attempt to bind the specified gadget instead of JMXServer", Arguments.store(), RMGOptionGroup.ACTION, "gadget"),
+    BIND_GADGET_CMD("--gadget-cmd", "command for a custom gadget", Arguments.store(), RMGOptionGroup.ACTION, "cmd"),
 
     CODEBASS_CLASS("classname", "classname to load during codebase attack", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
     CODEBASE_URL("url", "codebase URL to load the payload from", Arguments.store(), RMGOptionGroup.ACTION, "url"),
