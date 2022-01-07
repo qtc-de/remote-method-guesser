@@ -42,8 +42,11 @@ function _rmg() {
             _filedir
             return 0
 
-        elif _comp_contains "--ssrf-response --bind-objid --gadget-name --gadget-cmd" $prev; then
+        elif _comp_contains "--ssrf-response --bind-objid --gadget-cmd" $prev; then
             return 0
+
+        elif _comp_contains "--gadget-name" $prev; then
+            opts="$gadgets"
 
         elif [[ $cur == -* ]] || [[ $args -ge 8 ]]; then
             opts="--help"
