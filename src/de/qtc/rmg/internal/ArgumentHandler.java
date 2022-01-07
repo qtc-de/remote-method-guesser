@@ -271,8 +271,12 @@ public class ArgumentHandler {
         String command = null;
 
         if( this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND ) {
-            gadget = "jmx";
-            command = RMGOption.require(RMGOption.BIND_ADDRESS);
+
+            boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
+            boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
+
+            gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
+            command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.require(RMGOption.BIND_ADDRESS);
 
         } else {
             gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);

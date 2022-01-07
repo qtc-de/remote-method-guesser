@@ -41,6 +41,9 @@ public enum Operation {
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
             RMGOption.BIND_ADDRESS,
+            RMGOption.BIND_GADGET_NAME,
+            RMGOption.BIND_GADGET_CMD,
+            RMGOption.YSO,
     }),
 
     CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments", new RMGOption[] {
@@ -154,6 +157,7 @@ public enum Operation {
             RMGOption.LISTEN_PORT,
             RMGOption.GADGET_NAME,
             RMGOption.GADGET_CMD,
+            RMGOption.YSO,
     }),
 
     OBJID("dispatchObjID", "<objid>", "Print information contained within an ObjID", new RMGOption[] {
@@ -183,6 +187,9 @@ public enum Operation {
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
             RMGOption.BIND_ADDRESS,
+            RMGOption.BIND_GADGET_NAME,
+            RMGOption.BIND_GADGET_CMD,
+            RMGOption.YSO,
     }),
 
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
@@ -236,6 +243,7 @@ public enum Operation {
             RMGOption.ARGUMENT_POS,
             RMGOption.GADGET_NAME,
             RMGOption.GADGET_CMD,
+            RMGOption.YSO,
     }),
 
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry", new RMGOption[] {

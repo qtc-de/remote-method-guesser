@@ -38,12 +38,15 @@ function _rmg() {
 
     elif [[ ${words[1]} == "bind" || ${words[1]} == "rebind" ]]; then
 
-        if _comp_contains "--config --plugin" $prev; then
+        if _comp_contains "--config --plugin --yso" $prev; then
             _filedir
             return 0
 
-        elif _comp_contains "--ssrf-response --bind-objid" $prev; then
+        elif _comp_contains "--ssrf-response --bind-objid --gadget-cmd" $prev; then
             return 0
+
+        elif _comp_contains "--gadget-name" $prev; then
+            opts="$gadgets"
 
         elif [[ $cur == -* ]] || [[ $args -ge 8 ]]; then
             opts="--help"
@@ -62,8 +65,11 @@ function _rmg() {
             opts="$opts --no-color"
             opts="$opts --stack-trace"
             opts="$opts --ssl"
+            opts="$opts --yso"
+            opts="$opts --gadget-name"
+            opts="$opts --gadget-cmd"
 
-        elif [[ $cword -eq 4 ]]; then
+        elif [[ $args -eq 4 ]]; then
             _ip_addresses
             compopt -o nospace
             return 0
@@ -142,7 +148,7 @@ function _rmg() {
             opts="$opts --follow"
             opts="$opts --ssl"
 
-        elif [[ $cword -eq 5 ]]; then
+        elif [[ $args -eq 5 ]]; then
             _ip_addresses
             compopt -o nospace
             return 0
@@ -251,7 +257,7 @@ function _rmg() {
 
     elif [[ ${words[1]} == "listen" ]]; then
 
-        if _comp_contains "--config --plugin" $prev; then
+        if _comp_contains "--config --plugin --yso" $prev; then
             _filedir
             return 0
 
@@ -262,12 +268,13 @@ function _rmg() {
             opts="$opts --plugin"
             opts="$opts --no-color"
             opts="$opts --stack-trace"
+            opts="$opts --yso"
 
-        elif [[ $cword -eq 2 ]]; then
+        elif [[ $args -eq 2 ]]; then
             _ip_addresses
             return 0
 
-        elif [[ $cword -eq 4 ]]; then
+        elif [[ $args -eq 4 ]]; then
             opts="$gadgets"
 
         else
@@ -316,7 +323,7 @@ function _rmg() {
             opts="$opts --follow"
             opts="$opts --ssl"
 
-        elif [[ $cword -eq 2 ]]; then
+        elif [[ $args -eq 2 ]]; then
             _ip_addresses
             return 0
 
@@ -352,7 +359,7 @@ function _rmg() {
 
     elif [[ ${words[1]} == "serial" ]]; then
 
-        if _comp_contains "--config --plugin" $prev; then
+        if _comp_contains "--config --plugin --yso" $prev; then
             _filedir
             return 0
 
@@ -382,8 +389,9 @@ function _rmg() {
             opts="$opts --signature"
             opts="$opts --follow"
             opts="$opts --ssl"
+            opts="$opts --yso"
 
-        elif [[ $cword -eq 4 ]]; then
+        elif [[ $args -eq 4 ]]; then
             opts="$gadgets"
 
         else
