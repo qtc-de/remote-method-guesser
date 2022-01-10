@@ -26,9 +26,9 @@ import net.sourceforge.argparse4j.inf.Namespace;
 public enum RMGOption {
 
     // Global arguments
-    GLOBAL_CONFIG("--config", "path to a configuration file", Arguments.store(), RMGOptionGroup.GENERAL, "config-file"),
+    GLOBAL_CONFIG("--config", "path to a configuration file", Arguments.store(), RMGOptionGroup.GENERAL, "path"),
     GLOBAL_VERBOSE("--verbose", "enable verbose output", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
-    GLOBAL_PLUGIN("--plugin", "file system path to a rmg plugin", Arguments.store(), RMGOptionGroup.GENERAL, "plugin-file"),
+    GLOBAL_PLUGIN("--plugin", "file system path to a rmg plugin", Arguments.store(), RMGOptionGroup.GENERAL, "path"),
     GLOBAL_NO_COLOR("--no-color", "disable colored output", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
     GLOBAL_STACK_TRACE("--stack-trace", "display stack traces for caught exceptions", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
 
@@ -41,8 +41,8 @@ public enum RMGOption {
 
     CONN_FOLLOW("--follow", "follow redirects to different servers", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
     CONN_SSL("--ssl", "use SSL for connections", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
-    SCAN_TIMEOUT_READ("--timeout-read", "scan timeout for read operation", Arguments.store(), RMGOptionGroup.CONNECTION, "timout"),
-    SCAN_TIMEOUT_CONNECT("--timeout-connect", "scan timeout for connect operation", Arguments.store(), RMGOptionGroup.CONNECTION, "timout"),
+    SCAN_TIMEOUT_READ("--timeout-read", "scan timeout for read operation", Arguments.store(), RMGOptionGroup.CONNECTION, "sec"),
+    SCAN_TIMEOUT_CONNECT("--timeout-connect", "scan timeout for connect operation", Arguments.store(), RMGOptionGroup.CONNECTION, "sec"),
 
     SSRF_GOPHER("--gopher", "print SSRF content as gopher payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
     SSRF("--ssrf", "print SSRF payload instead of contacting a server", Arguments.storeTrue(), RMGOptionGroup.SSRF),
@@ -70,11 +70,11 @@ public enum RMGOption {
     ROGUEJMX_FORWARD_BOUND_NAME("--forward-bound-name", "bound name to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "name"),
     ROGUEJMX_FORWARD_OBJID("--forward-objid", "objid to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
 
-    GUESS_WORDLIST_FILE("--wordlist-file", "wordlist file to use for method guessing", Arguments.store(), RMGOptionGroup.ACTION, "wordlist-file"),
-    GUESS_WORDLIST_FOLDER("--wordlist-folder", "location of the wordlist folder", Arguments.store(), RMGOptionGroup.ACTION, "wordlist-folder"),
+    GUESS_WORDLIST_FILE("--wordlist-file", "wordlist file to use for method guessing", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    GUESS_WORDLIST_FOLDER("--wordlist-folder", "location of the wordlist folder", Arguments.store(), RMGOptionGroup.ACTION, "path"),
     GUESS_CREATE_SAMPLES("--create-samples", "create sample classes for identified methods", Arguments.storeTrue(), RMGOptionGroup.ACTION),
-    GUESS_SAMPLE_FOLDER("--sample-folder", "folder used for sample generation", Arguments.store(), RMGOptionGroup.ACTION, "sample-folder"),
-    GUESS_TEMPLATE_FOLDER("--template-folder", "location of the template folder", Arguments.store(), RMGOptionGroup.ACTION, "template-folder"),
+    GUESS_SAMPLE_FOLDER("--sample-folder", "folder used for sample generation", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    GUESS_TEMPLATE_FOLDER("--template-folder", "location of the template folder", Arguments.store(), RMGOptionGroup.ACTION, "path"),
     GUESS_TRUSTED("--trusted", "disable bound name filtering", Arguments.storeTrue(), RMGOptionGroup.ACTION),
     GUESS_FORCE_GUESSING("--force-guessing", "force guessing on known remote objects", Arguments.storeTrue(), RMGOptionGroup.ACTION),
     GUESS_DUPLICATES("--guess-duplicates", "guess duplicate remote classes", Arguments.storeTrue(), RMGOptionGroup.ACTION),

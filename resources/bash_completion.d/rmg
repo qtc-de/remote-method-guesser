@@ -226,6 +226,7 @@ function _rmg() {
             opts="$opts --guess-duplicates"
             opts="$opts --update"
             opts="$opts --zero-arg"
+            opts="$opts --no-progress"
             opts="$opts --threads"
             opts="$opts --config"
             opts="$opts --verbose"
@@ -344,6 +345,7 @@ function _rmg() {
         elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
             opts="--help"
             opts="$opts --ports"
+            opts="$opts --no-progress"
             opts="$opts --threads"
             opts="$opts --config"
             opts="$opts --verbose"
