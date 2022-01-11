@@ -139,6 +139,7 @@ public enum Operation {
             RMGOption.GUESS_UPDATE,
             RMGOption.GUESS_ZERO_ARG,
             RMGOption.THREADS,
+            RMGOption.NO_PROGRESS,
     }),
 
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects", new RMGOption[] {
@@ -218,6 +219,7 @@ public enum Operation {
             RMGOption.SCAN_TIMEOUT_CONNECT,
             RMGOption.SCAN_TIMEOUT_READ,
             RMGOption.THREADS,
+            RMGOption.NO_PROGRESS,
     }),
 
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components", new RMGOption[] {
