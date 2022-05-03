@@ -3,18 +3,29 @@ package de.qtc.rmg.server.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.rmi.AccessException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.RemoteObject;
 
 import sun.rmi.server.Activation;
 
 @SuppressWarnings("restriction")
-public class Utils {
+public class Utils
+{
+    private static PrintStream output = null;
 
-    public static String readFromProcess(Process p) throws IOException {
-
+    public static String readFromProcess(Process p) throws IOException
+    {
         StringBuilder result = new StringBuilder();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -52,7 +63,6 @@ public class Utils {
         } catch (Exception e) {}
     }
 
-
     public static RemoteObject getActivator(int port, RMIServerSocketFactory ssf) throws Exception
     {
         disableWarnings();
@@ -69,5 +79,39 @@ public class Utils {
 
         RemoteObject activator = (RemoteObject)constructor.newInstance(activation, port, ssf);
         return activator;
+    }
+
+    public static void startActivation(int port, RMIServerSocketFactory ssf, String logName, String[] args) throws Exception
+    {
+        disableWarnings();
+
+        Class<?> activationClass = Class.forName("sun.rmi.server.Activation");
+        Method startActivation = activationClass.getDeclaredMethod("startActivation", new Class<?>[] { int.class, RMIServerSocketFactory.class, String.class, String[].class } );
+        startActivation.setAccessible(true);
+        startActivation.invoke(null, port, ssf, logName, new String[] {});
+    }
+
+    public static void toogleOutput()
+    {
+        if (output == null) {
+            output = System.err;
+            System.setErr(new PrintStream(new OutputStream() { public void write(int arg0) throws IOException {} }));
+
+        } else {
+            System.setErr(output);
+        }
+    }
+
+    public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException, NotBoundException
+    {
+        Logger.increaseIndent();
+        Logger.printlnMixedYellow("Binding Object as", boundName);
+        registry.bind(boundName, object);
+
+        Object o = registry.lookup(boundName);
+        String className = o.getClass().getInterfaces()[0].getSimpleName();
+        Logger.printMixedYellow("Boundname", boundName);
+        Logger.printlnPlainMixedBlue(" with interface", className, "is ready.");
+        Logger.decreaseIndent();
     }
 }

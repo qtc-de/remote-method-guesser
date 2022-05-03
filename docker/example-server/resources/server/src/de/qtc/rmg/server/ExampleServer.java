@@ -1,6 +1,5 @@
 package de.qtc.rmg.server;
 
-import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
@@ -12,6 +11,7 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
+import de.qtc.rmg.server.activation.ActivationServer;
 import de.qtc.rmg.server.interfaces.IPlainServer;
 import de.qtc.rmg.server.interfaces.ISecureServer;
 import de.qtc.rmg.server.interfaces.ISslServer;
@@ -20,6 +20,7 @@ import de.qtc.rmg.server.operations.PlainServer;
 import de.qtc.rmg.server.operations.SecureServer;
 import de.qtc.rmg.server.operations.SslServer;
 import de.qtc.rmg.server.utils.Logger;
+import de.qtc.rmg.server.utils.Utils;
 
 public class ExampleServer {
 
@@ -31,7 +32,7 @@ public class ExampleServer {
     public static void main(String[] argv)
     {
         String disableColor = System.getProperty("de.qtc.rmg.server.disableColor");
-        if( disableColor != null && disableColor.equalsIgnoreCase("true") )
+        if (disableColor != null && disableColor.equalsIgnoreCase("true"))
             Logger.disableColor();
 
         Logger.println("Initializing Java RMI Server:");
@@ -46,24 +47,25 @@ public class ExampleServer {
             SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
             SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
 
-            Logger.printlnMixedYellow("Creating RMI-Registry on port", String.valueOf(registryPort));
+            Logger.printMixedBlue("Creating", "RMI-Registry", "on port ");
+            Logger.printlnPlainYellow(String.valueOf(registryPort));
             Registry registry = LocateRegistry.createRegistry(registryPort, csf, ssf);
             Logger.println("");
 
             Logger.printlnMixedBlue("Creating", "PlainServer", "object.");
             remoteObject1 = new PlainServer();
             IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject1, 0);
-            bindToRegistry(stub, registry, "plain-server");
+            Utils.bindToRegistry(stub, registry, "plain-server");
 
             Logger.printlnMixedBlue("Creating", "SSLServer", "object.");
             remoteObject2 = new SslServer();
             ISslServer stub2 = (ISslServer)UnicastRemoteObject.exportObject(remoteObject2, 0, csf, ssf);
-            bindToRegistry(stub2, registry, "ssl-server");
+            Utils.bindToRegistry(stub2, registry, "ssl-server");
 
             Logger.printlnMixedBlue("Creating", "SecureServer", "object.");
             remoteObject3 = new SecureServer();
             ISecureServer stub3 = (ISecureServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
-            bindToRegistry(stub3, registry, "secure-server");
+            Utils.bindToRegistry(stub3, registry, "secure-server");
 
             Logger.decreaseIndent();
             Logger.println("");
@@ -72,23 +74,11 @@ public class ExampleServer {
             Logger.println("");
 
             LegacyServer.init();
+            ActivationServer.init();
 
         } catch (RemoteException | AlreadyBoundException | NotBoundException e) {
-            System.err.println("[-] Unexpected RMI Error:");
+            Logger.eprintln("Unexpected RMI Error:");
             e.printStackTrace();
         }
-    }
-
-    public static void bindToRegistry(Remote object, Registry registry, String boundName) throws AccessException, RemoteException, AlreadyBoundException, NotBoundException
-    {
-        Logger.increaseIndent();
-        Logger.printlnMixedYellow("Binding Object as", boundName);
-        registry.bind(boundName, object);
-
-        Object o = registry.lookup(boundName);
-        String className = o.getClass().getInterfaces()[0].getSimpleName();
-        Logger.printMixedYellow("Boundname", boundName);
-        Logger.printlnPlainMixedBlue(" with interface", className, "is ready.");
-        Logger.decreaseIndent();
     }
 }
