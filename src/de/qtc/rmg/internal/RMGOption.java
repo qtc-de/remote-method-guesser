@@ -94,6 +94,8 @@ public enum RMGOption {
     OBJID_OBJID("objid", "ObjID string to parse", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
     KNOWN_CLASS("classname", "classname to check within the database", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
 
+    ACTIVATION("--activate", "enable activation for ActivatableRef", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    FORCE_ACTIVATION("--force-activation", "force activation of ActivatableRef", Arguments.storeTrue(), RMGOptionGroup.ACTION),
     ARGUMENT_POS("--position", "payload argument position", Arguments.store(), RMGOptionGroup.ACTION, "pos"),
     NO_CANARY("--no-canary", "do not use a canary during RMI attacks", Arguments.storeTrue(), RMGOptionGroup.ACTION),
     NO_PROGRESS("--no-progress", "disable progress bars", Arguments.storeTrue(), RMGOptionGroup.ACTION),

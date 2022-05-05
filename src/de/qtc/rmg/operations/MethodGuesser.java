@@ -16,6 +16,7 @@ import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.ProgressBar;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
  * The MethodGuesser class is used to brute force available remote methods on Java RMI endpoints. It uses
@@ -56,7 +57,7 @@ public class MethodGuesser {
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @param candidates MethodCandidates that should be guessed
      */
-    public MethodGuesser(RemoteObjectWrapper[] remoteObjects, Set<MethodCandidate> candidates)
+    public MethodGuesser(UnicastWrapper[] remoteObjects, Set<MethodCandidate> candidates)
     {
         this.candidates = candidates;
 
@@ -82,15 +83,15 @@ public class MethodGuesser {
      *
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      */
-    private List<RemoteObjectClient> initClientList(RemoteObjectWrapper[] remoteObjects)
+    private List<RemoteObjectClient> initClientList(UnicastWrapper[] remoteObjects)
     {
         List<RemoteObjectClient> remoteObjectClients = new ArrayList<RemoteObjectClient>();
         setPadding(remoteObjects);
 
         if( !RMGOption.GUESS_DUPLICATES.getBool() )
-            remoteObjects = RemoteObjectWrapper.handleDuplicates(remoteObjects);
+            remoteObjects = (UnicastWrapper[]) UnicastWrapper.handleDuplicates(remoteObjects);
 
-        for( RemoteObjectWrapper o : remoteObjects ) {
+        for( UnicastWrapper o : remoteObjects ) {
 
             RemoteObjectClient client = new RemoteObjectClient(o);
             remoteObjectClients.add(client);
@@ -166,11 +167,11 @@ public class MethodGuesser {
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @return Array of unknown remote objects
      */
-    private RemoteObjectWrapper[] handleKnownMethods(RemoteObjectWrapper[] remoteObjects)
+    private UnicastWrapper[] handleKnownMethods(UnicastWrapper[] remoteObjects)
     {
         ArrayList<RemoteObjectWrapper> unknown = new ArrayList<RemoteObjectWrapper>();
 
-        for(RemoteObjectWrapper o : remoteObjects) {
+        for(UnicastWrapper o : remoteObjects) {
 
             if(!o.isKnown())
                 unknown.add(o);
@@ -204,7 +205,7 @@ public class MethodGuesser {
             Logger.enable();
         }
 
-        return unknown.toArray(new RemoteObjectWrapper[0]);
+        return unknown.toArray(new UnicastWrapper[0]);
     }
 
     /**

@@ -11,7 +11,9 @@ import de.qtc.rmg.endpoints.Vulnerability;
 import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.operations.RemoteObjectClient;
+import de.qtc.rmg.utils.ActivatableWrapper;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
  * The formatter class is used to print formatted output for the enum and guess operations.
@@ -57,7 +59,7 @@ public class Formatter {
                 Logger.printlnPlainMixedPurple("", "(unknown class)");
             }
 
-            printLiveRef(remoteObject);
+            printRemoteRef(remoteObject);
             Logger.decreaseIndent();
         }
 
@@ -236,12 +238,27 @@ public class Formatter {
     }
 
     /**
-     * Print formatted output to display a LiveRef. To make fields more accessible, the ref needs to
-     * be wrapped into an RemoteObjectWrapper first.
+     * Checks whether the specified RemoteObjectWrapper is a UnicastWrapper or an
+     * ActivatableWrapper and calls the corresponding function accordingly.
      *
-     * @param ref RemoteObjectWrapper wrapper around a LiveRef
+     * @param wrapper RemoteObjectWrapper containing the RemoteRef
      */
-    private void printLiveRef(RemoteObjectWrapper ref)
+    private void printRemoteRef(RemoteObjectWrapper wrapper)
+    {
+        if (wrapper instanceof UnicastWrapper)
+            printUnicastRef((UnicastWrapper)wrapper);
+
+        else
+            printActivatableRef((ActivatableWrapper)wrapper);
+    }
+
+    /**
+     * Print information on a UnicastRef. This information includes the remote
+     * endpoint, whether it uses TLS and the ObjID of the associated remote object.
+     *
+     * @param ref UnicastWrapper containing the UnicastRef
+     */
+    private void printUnicastRef(UnicastWrapper ref)
     {
         if(ref == null || ref.remoteObject == null)
             return;
@@ -264,5 +281,27 @@ public class Formatter {
         }
 
         Logger.printlnPlainMixedBlue("  ObjID:", ref.objID.toString());
+    }
+
+    /**
+     * Print some more information on a ActivatableRef. This always includes
+     * the endpoint of the corresponding Activator instance and the associated
+     * ActivationID. If the ActivatbaleRef was already activated, the associated
+     * UnicastRef information is also printed, as in the case of printUnicastRef.
+     *
+     * @param ref ActivatableWrapper containing the activatbale ref
+     */
+    private void printActivatableRef(ActivatableWrapper ref)
+    {
+        if(ref == null || ref.remoteObject == null)
+            return;
+
+        Logger.print("    ");
+        Logger.printPlainMixedBlue("Activator:", ref.getActivatorEndpoint());
+        Logger.printlnPlainMixedBlue("  ActivationID:", ref.activationUID.toString());
+
+        UnicastWrapper unicastRef = ref.getActivated();
+        if (unicastRef != null)
+            printUnicastRef(unicastRef);
     }
 }

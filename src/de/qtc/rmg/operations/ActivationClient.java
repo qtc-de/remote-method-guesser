@@ -1,6 +1,7 @@
 package de.qtc.rmg.operations;
 
 import java.rmi.server.ObjID;
+import java.rmi.server.RemoteRef;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
@@ -8,6 +9,8 @@ import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
 import de.qtc.rmg.networking.RMIEndpoint;
+import javassist.ClassPool;
+import javassist.CtClass;
 
 /**
  * In the old days, it was pretty common for RMI endpoints to use an Activator. An Activator
@@ -201,8 +204,34 @@ public class ActivationClient {
      * @param maliciousStream whether or not to use MaliciousOutputStream, which activates a custom codebase
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */
-    private void activateCall(MethodArguments callArguments, boolean maliciousStream) throws Exception
+    public void activateCall(MethodArguments callArguments, boolean maliciousStream) throws Exception
     {
         rmi.genericCall(objID, -1, methodHash, callArguments, maliciousStream, "activate");
+    }
+
+    /**
+     * This function is used for performing regular calls to the RMI Activator. It is used when the RMI server
+     * returns an ActivatableRef that needs to be activated. Callers need to obtain the return value
+     * (MarshalledObject<? extends Remote>) by registering a ResponseHandler.
+     *
+     * Notice that the ActivationID is passed as a generic Object argument. This is required, since
+     * remote-method-guesser should stay compatible with Java distributions that already removed the
+     * activation system. Therefore, we should not use activation system related classed directly.
+     *
+     * @param activationID the ActivationID of the reference to activate
+     * @param force whether to force the activation (do not return cached referecnes)
+     * @param ref RemoteRef for the Activator remote object
+     * @throws Exception connection related exceptions are caught, but anything other is thrown
+     */
+    public void regularActivateCall(Object activationID, boolean force, RemoteRef ref) throws Exception
+    {
+        MethodArguments callArguments = new MethodArguments(2);
+        callArguments.add(activationID, Object.class);
+        callArguments.add(force, boolean.class);
+
+        ClassPool pool = ClassPool.getDefault();
+        CtClass type = pool.get("java.rmi.MarshalledObject");
+
+        rmi.genericCall(objID, -1, methodHash, callArguments, false, "activate", ref, type);
     }
 }

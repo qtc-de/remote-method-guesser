@@ -19,6 +19,7 @@ import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
@@ -83,7 +84,7 @@ public class RemoteObjectClient {
      *
      * @param remoteObject Previously obtained remote reference contained in a RemoteObjectWrapper
      */
-    public RemoteObjectClient(RemoteObjectWrapper remoteObject)
+    public RemoteObjectClient(UnicastWrapper remoteObject)
     {
         this.rmi = new RMIEndpoint(remoteObject.getHost(), remoteObject.getPort(), remoteObject.csf);
         this.objID = remoteObject.objID;
@@ -91,7 +92,7 @@ public class RemoteObjectClient {
         this.remoteObject = remoteObject;
         this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
-        remoteRef = remoteObject.remoteRef;
+        remoteRef = remoteObject.unicastRef;
     }
 
     /**
@@ -378,7 +379,7 @@ public class RemoteObjectClient {
             Remote instance = rmiReg.lookup(boundName);
             remoteRef = RMGUtils.extractRef(instance);
 
-            this.remoteObject = new RemoteObjectWrapper(instance, boundName);
+            this.remoteObject = RemoteObjectWrapper.getInstance(instance, boundName);
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);

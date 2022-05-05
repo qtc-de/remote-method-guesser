@@ -67,6 +67,7 @@ public enum Operation {
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
             RMGOption.CALL_ARGUMENTS,
+            RMGOption.FORCE_ACTIVATION,
     }),
 
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks", new RMGOption[] {
@@ -91,6 +92,7 @@ public enum Operation {
             RMGOption.CODEBASE_URL,
             RMGOption.CODEBASS_CLASS,
             RMGOption.ARGUMENT_POS,
+            RMGOption.FORCE_ACTIVATION,
     }),
 
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {
@@ -113,6 +115,8 @@ public enum Operation {
             RMGOption.SSRF_STREAM_PROTOCOL,
             RMGOption.DGC_METHOD,
             RMGOption.REG_METHOD,
+            RMGOption.ACTIVATION,
+            RMGOption.FORCE_ACTIVATION,
     }),
 
     GUESS("dispatchGuess", "", "Guess methods on bound names", new RMGOption[] {
@@ -140,6 +144,7 @@ public enum Operation {
             RMGOption.GUESS_ZERO_ARG,
             RMGOption.THREADS,
             RMGOption.NO_PROGRESS,
+            RMGOption.FORCE_ACTIVATION,
     }),
 
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects", new RMGOption[] {
@@ -246,6 +251,7 @@ public enum Operation {
             RMGOption.GADGET_NAME,
             RMGOption.GADGET_CMD,
             RMGOption.YSO,
+            RMGOption.FORCE_ACTIVATION,
     }),
 
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry", new RMGOption[] {

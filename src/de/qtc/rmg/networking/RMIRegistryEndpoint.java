@@ -139,7 +139,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
         for(int ctr = 0; ctr < boundNames.length; ctr++) {
 
             Remote remoteObject = this.lookup(boundNames[ctr]);
-            remoteObjects[ctr] = new RemoteObjectWrapper(remoteObject, boundNames[ctr]);
+            remoteObjects[ctr] = RemoteObjectWrapper.getInstance(remoteObject, boundNames[ctr]);
         }
 
         return remoteObjects;

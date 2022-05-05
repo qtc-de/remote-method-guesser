@@ -35,6 +35,11 @@ import javassist.NotFoundException;
  * advantages. The probably biggest one is that you have no longer to distinguish between modern proxy-like
  * remote objects and legacy stubs manually, as they are loaded using different calls (loadClass vs loadProxyClass).
  *
+ * From remote-method-guesser v4.3.0, this class also handles issues that are caused by the probably missing
+ * activation system. If the server returns an ActivatableRef, this class is probably no longer existing in
+ * the currently running JVM, as it was deprecated and removed in 2021. This class checks whether the
+ * ActivatbaleRef class is requested and creates it dynamically if required.
+ *
  * Summarized:
  *
  *  1. Extract server specified codebases and store them within a HashMap for later use
@@ -53,6 +58,12 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      * Just a proxy to the loadClass method of the default provider instance. If a codebase
      * was specified, it is added to the codebase list. Afterwards, the codebase is set to
      * null and the call is handed off to the default provider.
+     *
+     * RMI stub classes are attempted to be looked up and if they are not exist, they are
+     * created dynamically. This allows remote-method-guesser to inspect remote stub
+     * objects. Furthermore, the ActivatableRef class is treated special, since it does
+     * no longer exist in more recent Java versions. If an ActivatableRef is encountered,
+     * it is checked whether the class exists and it is created dynamically otherwise.
      */
     public Class<?> loadClass(String codebase, String name, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
@@ -63,8 +74,11 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
 
         try {
 
-            if( name.endsWith("_Stub") )
+            if (name.endsWith("_Stub"))
                 RMGUtils.makeLegacyStub(name);
+
+            if (name.equals("sun.rmi.server.ActivatableRef"))
+                RMGUtils.makeActivatbaleRef();
 
             resolvedClass = originalLoader.loadClass(codebase, name, defaultLoader);
 
@@ -79,6 +93,10 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      * Just a proxy to the loadProxyClass method of the default provider instance. If a codebase
      * was specified, it is added to the codebase list. Afterwards, the codebase is set to
      * null and the call is handed off to the default provider.
+     *
+     * For each interface to be loaded, it is checked whether the interface already exists in
+     * the current JVM. If this is not the case, it is created dynamically. This allows
+     * remote-method-guesser to inspect remote objects that implement unknown interfaces.
      */
     public Class<?> loadProxyClass(String codebase, String[] interfaces, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
