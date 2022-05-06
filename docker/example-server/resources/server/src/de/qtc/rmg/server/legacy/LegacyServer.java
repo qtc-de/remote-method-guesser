@@ -77,6 +77,7 @@ public class LegacyServer {
             Logger.decreaseIndent();
 
             Logger.println("Server setup finished.");
+            Logger.println("Initializing activation server.");
             Logger.println("");
 
         } catch (RemoteException | MalformedURLException | AlreadyBoundException | NotBoundException e) {
