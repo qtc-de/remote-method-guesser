@@ -13,6 +13,11 @@ import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
+/**
+ * The UnicastWrapper class extends RemoteObjectWrapper and is used for wrapping UnicastRef.
+ *
+ * @author Tobias Neitzel (@qtc_de)
+ */
 @SuppressWarnings("restriction")
 public class UnicastWrapper extends RemoteObjectWrapper
 {
@@ -24,10 +29,15 @@ public class UnicastWrapper extends RemoteObjectWrapper
     public final RMIServerSocketFactory ssf;
 
     /**
-     * Create a new RemoteObjectWrapper from a RemoteObject.
+     * Create a new UnicastWrapper from a RemoteObject. The third argument seems superfluous, as the
+     * UnicastRef is already contained within the remote object. However, UnicastWrappers should be
+     * created by using the getInstance method of RemoteObjectWrapper. This one extracts the reference
+     * from the remote object anyway to check whether it is a UnicastRef or ActivatableRef. Therefore,
+     * we can reuse this extracted ref instead of performing another extraction.
      *
      * @param remoteObject Incoming RemoteObject, usually obtained by an RMI lookup call
      * @param boundName The bound name that the remoteObject uses inside the RMI registry
+     * @param ref UnicastRef to build the wrapper around
      * @throws many Exceptions - These only occur if some reflective access fails
      */
     public UnicastWrapper(Remote remoteObject, String boundName, UnicastRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
@@ -48,7 +58,7 @@ public class UnicastWrapper extends RemoteObjectWrapper
     }
 
     /**
-     * Returns the host name associated with the RemoteObjectWrapper
+     * Returns the host name associated with the UnicastWrapper.
      *
      * @return host name the Wrapper is pointing to
      */
@@ -58,7 +68,7 @@ public class UnicastWrapper extends RemoteObjectWrapper
     }
 
     /**
-     * Returns the port number associated with the RemoteObjectWrapper
+     * Returns the port number associated with the UnicastWrapper.
      *
      * @return port number the Wrapper is pointing to
      */
