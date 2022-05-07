@@ -549,7 +549,6 @@ public class Dispatcher {
     public void dispatchGuess()
     {
         Formatter format = new Formatter();
-        UnicastWrapper[] wrappers = RemoteObjectWrapper.getUnicastWrappers(remoteObjects);
 
         try {
             obtainBoundObjects();
@@ -558,6 +557,7 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
+        UnicastWrapper[] wrappers = RemoteObjectWrapper.getUnicastWrappers(remoteObjects);
         MethodGuesser guesser = new MethodGuesser(wrappers, getCandidates());
         guesser.printGuessingIntro();
 

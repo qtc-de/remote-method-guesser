@@ -1,15 +1,12 @@
 package de.qtc.rmg.utils;
 
-import java.lang.reflect.Proxy;
 import java.rmi.Remote;
-import java.rmi.server.RemoteObjectInvocationHandler;
 import java.rmi.server.RemoteRef;
-import java.util.ArrayList;
-import java.util.List;
 
 import de.qtc.rmg.endpoints.KnownEndpoint;
 import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import de.qtc.rmg.internal.ExceptionHandler;
+import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 
 /**
@@ -24,14 +21,12 @@ import sun.rmi.server.UnicastRef;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public class RemoteObjectWrapper
+public abstract class RemoteObjectWrapper
 {
     public String className;
     public String boundName;
     public Remote remoteObject;
     public KnownEndpoint knownEndpoint;
-
-    public List<RemoteObjectWrapper> duplicates;
 
     /**
      * This constructor is only used for special purposes during the enum action. The resulting
@@ -60,7 +55,6 @@ public class RemoteObjectWrapper
         this.remoteObject = remoteObject;
 
         this.className = RMGUtils.getClassName(remoteObject);
-        this.duplicates = new ArrayList<RemoteObjectWrapper>();
         this.knownEndpoint = KnownEndpointHolder.getHolder().lookup(className);
     }
 
@@ -103,65 +97,6 @@ public class RemoteObjectWrapper
 
         return wrapper;
     }
-    /**
-     * Create a new RemoteObjectWrapper from a RemoteRef. This function creates a Proxy that implements
-     * the specified interface and uses a RemoteObjectInvocationHandler to forward method invocations to
-     * the specified RemoteRef.
-     *
-     * @param remoteRef RemoteRef to the targeted RemoteObject
-     * @param intf Interface that is implemented by the RemoteObject
-     * @throws many Exceptions...
-     */
-    public static RemoteObjectWrapper fromRef(RemoteRef remoteRef, Class<?> intf) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
-    {
-        if( !Remote.class.isAssignableFrom(intf) )
-            ExceptionHandler.internalError("RemoteObjectWrapper.fromRef", "Specified interface is not valid");
-
-        RemoteObjectInvocationHandler remoteObjectInvocationHandler = new RemoteObjectInvocationHandler(remoteRef);
-        Remote remoteObject = (Remote)Proxy.newProxyInstance(intf.getClassLoader(), new Class[] { intf }, remoteObjectInvocationHandler);
-
-        return RemoteObjectWrapper.getInstance(remoteObject);
-    }
-
-    /**
-     * Checks whether the Wrapper has any duplicates (other remote objects that implement the same
-     * remote interface).
-     *
-     * @return true if duplicates are present
-     */
-    public boolean hasDuplicates()
-    {
-        if( this.duplicates.size() == 0 )
-            return false;
-
-        return true;
-    }
-
-    /**
-     * Add a duplicate to the RemoteObjectWrapper. This should be a wrapper that implements the same
-     * remote interface as the original wrapper.
-     *
-     * @param o duplicate RemoteObjectWrapper that implements the same remote interface
-     */
-    public void addDuplicate(RemoteObjectWrapper o)
-    {
-        this.duplicates.add(o);
-    }
-
-    /**
-     * Iterates over the list of registered duplicates and returns the associated bound names as an array.
-     *
-     * @return array of String that contains duplicate bound names
-     */
-    public String[] getDuplicateBoundNames()
-    {
-        List<String> duplicateNames = new ArrayList<String>();
-
-        for(RemoteObjectWrapper o : this.duplicates)
-            duplicateNames.add(o.boundName);
-
-        return duplicateNames.toArray(new String[0]);
-    }
 
     /**
      * Searches a supplied list of RemoteObjectWrapper objects for the Wrapper that is associated to the
@@ -183,50 +118,6 @@ public class RemoteObjectWrapper
     }
 
     /**
-     * Takes a list of RemoteObjectWrappers and looks for duplicates within it. The return value
-     * is a list of unique RemoteObjectWrappers that have the corresponding duplicates assigned.
-     *
-     * @param list RemoteObjectWrappers to search for duplicates
-     * @return Unique RemoteObjectWrappers with duplicates assigned
-     */
-    public static RemoteObjectWrapper[] handleDuplicates(RemoteObjectWrapper[] list)
-    {
-        List<RemoteObjectWrapper> unique = new ArrayList<RemoteObjectWrapper>();
-
-        outer: for(RemoteObjectWrapper current : list) {
-
-            for(RemoteObjectWrapper other : unique) {
-
-                if(other.className.equals(current.className)) {
-                    other.addDuplicate(current);
-                    continue outer;
-                }
-            }
-
-            unique.add(current);
-        }
-
-        return unique.toArray(new RemoteObjectWrapper[0]);
-    }
-
-    /**
-     * Takes a list of RemoteObjectWrappers and checks whether one of them contains duplicates.
-     *
-     * @param list RemoteObjectWrappers to check for duplicates
-     * @return true if at least one RemoteObjectWrapper contains a duplicate
-     */
-    public static boolean hasDuplicates(RemoteObjectWrapper[] list)
-    {
-        for(RemoteObjectWrapper o : list) {
-
-            if( o.hasDuplicates() )
-                return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Creates an array of RemoteObjectWrapper from an array of bound names. The resulting RemoteObjectWrappers
      * are dummy objects that just contain the associated bound name. This should only be used during rmg's enum
      * action to display bound names using the Formatter class.
@@ -239,7 +130,7 @@ public class RemoteObjectWrapper
         RemoteObjectWrapper[] returnValue = new RemoteObjectWrapper[boundNames.length];
 
         for(int ctr = 0; ctr < boundNames.length; ctr++)
-            returnValue[ctr] = new RemoteObjectWrapper(boundNames[ctr]);
+            returnValue[ctr] = new EmptyWrapper(boundNames[ctr]);
 
         return returnValue;
     }
@@ -255,6 +146,30 @@ public class RemoteObjectWrapper
             return false;
 
         return true;
+    }
+
+    /**
+     * Transform an RemoteObjectWrapper into a UnicastWrapper. If the RemoteObjectWrapper is already
+     * a UnicastWrapper, it is simply returned. If it is an ActivatableWrapper instead, it is activated.
+     *
+     * @return UnicastWrapper
+     */
+    public UnicastWrapper getUnicastWrapper()
+    {
+        UnicastWrapper returnValue = null;
+
+        if (this instanceof UnicastWrapper)
+            returnValue = (UnicastWrapper)this;
+
+        else
+
+            try {
+                returnValue = ((ActivatableWrapper)this).activate();
+            } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+                ExceptionHandler.unexpectedException(e, "activate", "call", true);
+            }
+
+        return returnValue;
     }
 
     /**
