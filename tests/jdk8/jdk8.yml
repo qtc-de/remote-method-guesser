@@ -3,7 +3,6 @@ tester:
   description: |-
     'Launches some tests for jdk8 based on the rmg-example-server.'
 
-
   id: '001'
   groups:
     - jdk8
@@ -11,7 +10,7 @@ tester:
 
 containers:
   - name: 'rmg-jdk8'
-    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.1-jdk8'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.3-jdk8'
     volumes:
       - '${volume}:${volume-d}'
     aliases:

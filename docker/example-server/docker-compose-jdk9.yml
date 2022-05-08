@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
     rmg:
-      image: ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.2-jdk9
+      image: ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.3-jdk9
       build: .
       environment:
         - > 
