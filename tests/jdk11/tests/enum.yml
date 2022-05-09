@@ -168,3 +168,234 @@ tests:
               [+] 	- Caught IllegalArgumentException during activate call (activator is present).
               [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
               [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
+
+
+  - title: 'Activation Server Enumeration'
+    command:
+      - rmg
+      - enum
+      - ${TARGET-ACT}
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          description: |-
+            'Check whether all registered bound names are detected.'
+          ignore_case: True
+          values:
+            - 'activation-test'
+            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'activation-test2'
+            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'plain-server'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'java.rmi.activation.ActivationSystem'
+            - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
+          invert:
+            - 'TLS: yes  ObjID:'
+
+      - contains:
+          description: |-
+            'Check whether all exposed codebase values are detected.'
+          ignore_case: True
+          values:
+            - http://iinsecure.dev/well-hidden-development-folder/
+
+      - contains:
+          description: |-
+            'Check whether string marshalling behavior is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server String unmarshalling enumeration:
+              [+]
+              [+] 	- Server complained that object cannot be casted to java.lang.String.
+              [+] 	  --> The type java.lang.String is unmarshalled via readString().
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: |-
+            'Check whether the useCodebaseOnly settings is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server useCodebaseOnly enumeration:
+              [+]
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents useCodebaseOnly enumeration from remote.
+
+      - contains:
+          description: |-
+            'Check whether localhost bypass vulnerability is detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+              [+]
+              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	  Vulnerability Status: Non Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether DGC enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI Security Manager enumeration:
+              [+]
+              [+] 	- Security Manager rejected access to the class loader.
+              [+] 	  --> The server does use a Security Manager.
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: |-
+            'Check whether JEP290 enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server JEP290 enumeration:
+              [+]
+              [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+              [+] 	  Vulnerability Status: Non Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether JEP290 Bypass enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry JEP290 bypass enmeration:
+              [+]
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents JEP 290 bypass enumeration from remote.
+
+      - contains:
+          description: |-
+            'Check whether Activator enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI ActivationSystem enumeration:
+              [+]
+              [+] 	- Caught IllegalArgumentException during activate call (activator is present).
+              [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+              [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
+
+
+  - title: 'Activation Server Enumeration (--activate)'
+    command:
+      - rmg
+      - enum
+      - ${TARGET-ACT}
+      - --activate
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          description: |-
+            'Check whether all registered bound names are detected.'
+          ignore_case: True
+          values:
+            - 'activation-test'
+            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'activation-test2'
+            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'plain-server'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'java.rmi.activation.ActivationSystem'
+            - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
+            - 'TLS: yes  ObjID:'
+
+      - contains:
+          description: |-
+            'Check whether all exposed codebase values are detected.'
+          ignore_case: True
+          values:
+            - file:/opt/example-server.jar
+            - http://iinsecure.dev/well-hidden-development-folder/
+
+      - contains:
+          description: |-
+            'Check whether string marshalling behavior is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server String unmarshalling enumeration:
+              [+]
+              [+] 	- Server complained that object cannot be casted to java.lang.String.
+              [+] 	  --> The type java.lang.String is unmarshalled via readString().
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: |-
+            'Check whether the useCodebaseOnly settings is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server useCodebaseOnly enumeration:
+              [+]
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents useCodebaseOnly enumeration from remote.
+
+      - contains:
+          description: |-
+            'Check whether localhost bypass vulnerability is detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+              [+]
+              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	  Vulnerability Status: Non Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether DGC enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI Security Manager enumeration:
+              [+]
+              [+] 	- Security Manager rejected access to the class loader.
+              [+] 	  --> The server does use a Security Manager.
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: |-
+            'Check whether JEP290 enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server JEP290 enumeration:
+              [+]
+              [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
+              [+] 	  Vulnerability Status: Non Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether JEP290 Bypass enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry JEP290 bypass enmeration:
+              [+]
+              [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
+              [+] 	  This prevents JEP 290 bypass enumeration from remote.
+
+      - contains:
+          description: |-
+            'Check whether Activator enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI ActivationSystem enumeration:
+              [+]
+              [+] 	- Caught IllegalArgumentException during activate call (activator is present).
+              [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+              [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default

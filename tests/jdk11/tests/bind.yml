@@ -34,6 +34,26 @@ tests:
             - --localhost-bypass
 
 
+  - title: Bind Call (Activation System)
+    description: |-
+      'Performs a bind operation on a registry created by the activation system.'
+
+    command:
+      - rmg
+      - bind
+      - ${TARGET-ACT}
+      - '127.0.0.1:8000'
+      - ${bound-name}
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - rejected bind call
+            - --localhost-bypass
+
+
   - title: Bind Call (localhost bypass)
     description: |-
       'Performs a bind operation with --localhost-bypass.'
@@ -42,6 +62,27 @@ tests:
       - rmg
       - bind
       - ${TARGET}
+      - '127.0.0.1:8000'
+      - ${bound-name}
+      - --localhost-bypass
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Localhost bypass was used but failed
+
+
+  - title: Bind Call (Activation System localhost bypass)
+    description: |-
+      'Performs a bind operation with --localhost-bypass on a registry created by the
+      activation system.'
+
+    command:
+      - rmg
+      - bind
+      - ${TARGET-ACT}
       - '127.0.0.1:8000'
       - ${bound-name}
       - --localhost-bypass

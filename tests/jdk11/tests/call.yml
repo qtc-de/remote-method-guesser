@@ -33,7 +33,7 @@ tests:
       - call
       - ${TARGET}
       - '"touch ${volume-d}/${file}"'
-      - --bound-name 
+      - --bound-name
       - plain-server
       - --signature
       - 'String execute(String dummy)'
@@ -59,7 +59,7 @@ tests:
       - call
       - ${TARGET}
       - '"id"'
-      - --bound-name 
+      - --bound-name
       - plain-server
       - --signature
       - 'String execute(String dummy)'
@@ -89,7 +89,7 @@ tests:
       - call
       - ${TARGET}
       - login
-      - --bound-name 
+      - --bound-name
       - legacy-service
       - --signature
       - 'String login(java.util.HashMap dummy1)'
@@ -174,7 +174,7 @@ tests:
       - call
       - ${TARGET}
       - '"id"'
-      - --bound-name 
+      - --bound-name
       - legacy-server
       - --signature
       - 'String login(java.util.HashMap dummy1)'
@@ -197,7 +197,7 @@ tests:
       - call
       - ${TARGET}
       - '5'
-      - --bound-name 
+      - --bound-name
       - legacy-service
       - --signature
       - 'String login(java.util.HashMap dummy1)'
@@ -209,3 +209,113 @@ tests:
           values:
             - 5 is invalid
             - Cannot continue from here
+
+
+  - title: Execute Call Activatable
+    description: |-
+      'Invokes the execute function on the activation-test object.'
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-ACT}
+      - '"touch ${volume-d}/${file}"'
+      - --bound-name
+      - activation-test
+      - --signature
+      - 'String execute(String dummy)'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Execute Call Activatable (Response Handler Plugin)
+    description: |-
+      'Invokes the execute function on the activation-test object.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-ACT}
+      - '"id"'
+      - --bound-name
+      - activation-test
+      - --signature
+      - 'String execute(String dummy)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
+
+
+  - title: System Call (Response Handler Plugin)
+    description: |-
+      'Invokes the system function on the plain-server object.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-ACT}
+      - '"/bin/ash", new String[] { "-c", "id" }'
+      - --bound-name
+      - plain-server
+      - --signature
+      - 'String system(String command, String[] args)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
+
+
+  - title: System Call Activatable (Response Handler Plugin)
+    description: |-
+      'Invokes the system function on the activation-test object.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-ACT}
+      - '"/bin/ash", new String[] { "-c", "id" }'
+      - --bound-name
+      - activation-test
+      - --signature
+      - 'String system(String command, String[] args)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - uid=0(root)
+            - gid=0(root)
+            - groups=0(root)
