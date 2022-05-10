@@ -318,9 +318,9 @@ the *RMI registry* and sends it to the *Activator endpoint*. The *Activator* is 
 remote object and returns an ordinary `UnicastRef` to the client. This reference is when used for the call.
 
 Whereas all other actions of *remote-method-guesser* perform activation implicitly, for the `enum` action, you need use
-the command line option `--activate` if you want to activate objects during ernumeration. When doing so, *remote-method-guesser*
+the command line option `--activate` if you want to activate objects during enumeration. When doing so, *remote-method-guesser*
 dispatches one additional call to the *Activator* for each `ActivatableRef` bound to the *RMI registry*. Information from
-the obtaied `UnicastRef` is then displayed as usual below the activation related information:
+the obtained `UnicastRef` is then displayed as usual below the activation related information:
 
 ```console
 [qtc@devbox ~]$ rmg enum 172.17.0.2 1098 --activate
