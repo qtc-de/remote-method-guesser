@@ -80,6 +80,31 @@ tests:
             - The supplied gadget did not pass the deserialization filter
 
 
+  - title: Gadget Call (Activation)
+    description: |-
+      'Attempts a deserialization attack on the registry endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --component
+      - reg
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Registry rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
+
+
   - title: JEP290 Bypass
     description: |-
       'Attempts a deserialization attack on the registry endpoint,'
