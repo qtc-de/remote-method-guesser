@@ -32,9 +32,10 @@ tests:
             - MLet
             - Deserialization
 
-  - title: Activator
+
+  - title: Activation System
     description: |-
-      'Test known action for the RMI activator'
+      'Test known action for the RMI activation system'
 
     command:
       - rmg
@@ -46,11 +47,13 @@ tests:
       - error: False
       - contains:
           values:
-            - RMI Activator
+            - RMI Activation System
             - sun.rmi.server.Activation$ActivationSystemImpl_Stub
             - The activation system is a legacy component of Java RMI. It allows remote objects to become inactive
-            - java.rmi.MarshalledObject activate(java.rmi.Activation.ActivationID id, boolean force)
+            - java.rmi.activation.ActivationID registerObject(java.rmi.activation.ActivationDesc arg)
+            - void shutdown()
             - Deserialization
+
 
   - title: Unknown
     description: |-
