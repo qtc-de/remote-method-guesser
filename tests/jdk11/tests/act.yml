@@ -49,7 +49,7 @@ tests:
     description: |-
       'Performs a deserialization attack on the Activator endpoint.'
       'The expected result is a file being created within the docker'
-      'volume. This tests targets the Activator that was created by'
+      'volume. This test targets the Activator that was created by'
       'the activation system.'
 
     groups:
