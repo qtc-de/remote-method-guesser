@@ -151,24 +151,98 @@
             * [https://github.com/qtc-de/beanshooter](https://github.com/qtc-de/beanshooter)
 
 
+### RMI Activation Group
+
+---
+
+* Name: `RMI Activation Group`
+* Class Names:
+    * `java.rmi.activation.ActivationGroup_Stub`
+    * `java.rmi.activation.ActivationGroup`
+    * `java.rmi.activation.ActivationInstantiator`
+* Description:
+
+    > Remote object that is associated with an ActivationGroup. Can be used to create new instances of activatable
+    > objects that are registered within the group. The activation system was deprecated and removed in 2021.
+
+* Remote Methods:
+
+    ```java
+    java.rmi.MarshalledObject newInstance(java.rmi.activation.ActivationID id, java.rmi.activation.ActivationDesc desc)
+    ```
+* References:
+    * [https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html)
+    * [https://github.com/openjdk/jdk/tree/ed477da9c69bbb4bae3c9e5bc80b67dcfc31b2b1/src/java.rmi/share/classes/sun/rmi/server](https://github.com/openjdk/jdk/tree/ed477da9c69bbb4bae3c9e5bc80b67dcfc31b2b1/src/java.rmi/share/classes/sun/rmi/server)
+* Known Vulnerabilities:
+
+    * Deserialization
+        * Description:
+
+            > ActivationGroup remote objects do not use a deserialization filter.
+        * References:
+            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+
+
+### RMI Activation System
+
+---
+
+* Name: `RMI Activation System`
+* Class Names:
+    * `sun.rmi.server.Activation$ActivationSystemImpl_Stub`
+    * `java.rmi.activation.ActivationSystem`
+* Description:
+
+    > The activation system is a legacy component of Java RMI. It allows remote objects to become inactive
+    > and allows clients to activate them when required. The ActivationSystemImpl remote object can be
+    > understood as a management interface for activation. It is only accessible from localhost and this
+    > restriction cannot be bypassed by the --localhost-bypass option. By accessing the ActivationSystemImpl,
+    > it is possible to register new activatable objects and activation groups. The activation system was
+    > deprecated and removed in 2021.
+
+* Remote Methods:
+
+    ```java
+    java.rmi.activation.ActivationID registerObject(java.rmi.activation.ActivationDesc arg)
+    void unregisterObject(java.rmi.activation.ActivationID arg)
+    java.rmi.activation.ActivationGroupID registerGroup(java.rmi.activation.ActivationGroupDesc arg)
+    java.rmi.activation.ActivationMonitor activeGroup(java.rmi.activation.ActivationGroupID arg, java.rmi.activation.ActivationInstantiator arg, long arg)
+    void unregisterGroup(java.rmi.activation.ActivationGroupID arg)
+    void shutdown()
+    java.rmi.activation.ActivationDesc setActivationDesc(java.rmi.activation.ActivationID arg, java.rmi.activation.ActivationDesc arg)
+    java.rmi.activation.ActivationGroupDesc setActivationGroupDesc(java.rmi.activation.ActivationGroupID arg, java.rmi.activation.ActivationGroupDesc arg)
+    java.rmi.activation.ActivationDesc getActivationDesc(java.rmi.activation.ActivationID arg)
+    java.rmi.activation.ActivationGroupDesc getActivationGroupDesc(java.rmi.activation.ActivationGroupID arg)
+    ```
+* References:
+    * [https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html)
+    * [https://github.com/openjdk/jdk/tree/ed477da9c69bbb4bae3c9e5bc80b67dcfc31b2b1/src/java.rmi/share/classes/sun/rmi/server](https://github.com/openjdk/jdk/tree/ed477da9c69bbb4bae3c9e5bc80b67dcfc31b2b1/src/java.rmi/share/classes/sun/rmi/server)
+* Known Vulnerabilities:
+
+    * Deserialization
+        * Description:
+
+            > When accessed from localhost, the ActivationSystem is vulnerable to deserialization attacks.
+        * References:
+            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+
+
 ### RMI Activator
 
 ---
 
 * Name: `RMI Activator`
 * Class Names:
-    * `sun.rmi.server.Activation$ActivationSystemImpl_Stub`
+    * `java.rmi.activation.Activator`
 * Description:
 
-    > The activation system is a legacy component of Java RMI. It allows remote objects to become inactive
-    > and allows clients to activate them when required. The activation system has been removed from newer
-    > versions of Java. Due to the legacy status and the rare usage in practice, the activation system never
-    > got the JEP290 proposals implemented.
+    > An Activator can be used to create new instances of activatable objects. It has normally a fixed
+    > ObjID and is not bound to an RMI registry by name. The activation system was deprecated and removed in 2021.
 
 * Remote Methods:
 
     ```java
-    java.rmi.MarshalledObject activate(java.rmi.Activation.ActivationID id, boolean force)
+    java.rmi.MarshalledObject newInstance(java.rmi.activation.ActivationID id, boolean force)
     ```
 * References:
     * [https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/rmid.html)

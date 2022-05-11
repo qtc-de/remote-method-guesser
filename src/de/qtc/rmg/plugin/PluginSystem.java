@@ -232,4 +232,24 @@ public class PluginSystem {
     {
         return argumentProvider instanceof IArgumentProvider;
     }
+
+    /**
+     * Returns the currently set ResponseHandler
+     *
+     * @return currently set ResponseHandler
+     */
+    public static IResponseHandler getResponseHandler()
+    {
+        return responseHandler;
+    }
+
+    /**
+     * Sets a new ResponseHandler.
+     *
+     * @param handler the new ResponseHandler to set
+     */
+    public static void setResponeHandler(IResponseHandler handler)
+    {
+        responseHandler = handler;
+    }
 }

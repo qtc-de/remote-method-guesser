@@ -27,6 +27,7 @@ import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
 import de.qtc.rmg.utils.RogueJMX;
+import de.qtc.rmg.utils.UnicastWrapper;
 import de.qtc.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
@@ -368,7 +369,6 @@ public class Dispatcher {
      * option. If the signature is a real method signature, a target needs to  be specified by
      * bound name or ObjID. Otherwise, the --signature is expected to be one of act, dgc or reg.
      */
-    @SuppressWarnings("deprecation")
     public void dispatchCodebase()
     {
         RMGOption.requireTarget();
@@ -557,7 +557,8 @@ public class Dispatcher {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
-        MethodGuesser guesser = new MethodGuesser(remoteObjects, getCandidates());
+        UnicastWrapper[] wrappers = RemoteObjectWrapper.getUnicastWrappers(remoteObjects);
+        MethodGuesser guesser = new MethodGuesser(wrappers, getCandidates());
         guesser.printGuessingIntro();
 
         List<RemoteObjectClient> results = guesser.guessMethods();

@@ -15,7 +15,7 @@ import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.ProgressBar;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
  * The MethodGuesser class is used to brute force available remote methods on Java RMI endpoints. It uses
@@ -49,14 +49,14 @@ public class MethodGuesser {
 
     /**
      * To create a MethodGuesser you need to pass the references for remote objects you want to guess on.
-     * These are usually obtained from the RMI registry and can be passed as an array of RemoteObjectWrapper.
+     * These are usually obtained from the RMI registry and can be passed as an array of UnicastWrapper.
      * Furthermore, you need to specify a Set of MethodCandidates that represents the methods you want
      * to guess.
      *
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @param candidates MethodCandidates that should be guessed
      */
-    public MethodGuesser(RemoteObjectWrapper[] remoteObjects, Set<MethodCandidate> candidates)
+    public MethodGuesser(UnicastWrapper[] remoteObjects, Set<MethodCandidate> candidates)
     {
         this.candidates = candidates;
 
@@ -82,21 +82,21 @@ public class MethodGuesser {
      *
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      */
-    private List<RemoteObjectClient> initClientList(RemoteObjectWrapper[] remoteObjects)
+    private List<RemoteObjectClient> initClientList(UnicastWrapper[] remoteObjects)
     {
         List<RemoteObjectClient> remoteObjectClients = new ArrayList<RemoteObjectClient>();
         setPadding(remoteObjects);
 
         if( !RMGOption.GUESS_DUPLICATES.getBool() )
-            remoteObjects = RemoteObjectWrapper.handleDuplicates(remoteObjects);
+            remoteObjects = UnicastWrapper.handleDuplicates(remoteObjects);
 
-        for( RemoteObjectWrapper o : remoteObjects ) {
+        for( UnicastWrapper o : remoteObjects ) {
 
             RemoteObjectClient client = new RemoteObjectClient(o);
             remoteObjectClients.add(client);
         }
 
-        if( RemoteObjectWrapper.hasDuplicates(remoteObjects) )
+        if( UnicastWrapper.hasDuplicates(remoteObjects) )
             printDuplicates(remoteObjects);
 
         return remoteObjectClients;
@@ -106,11 +106,11 @@ public class MethodGuesser {
      * This function is just used for displaying the result. It is called when iterating over the boundNames
      * and saves the length of the longest boundName. This is used as a padding value for the other boundNames.
      *
-     * @param remoteObjects List containing all RemoteObjectWrappers used during the guess operation
+     * @param remoteObjects List containing all UnicastWrapper used during the guess operation
      */
-    private void setPadding(RemoteObjectWrapper[] remoteObjects)
+    private void setPadding(UnicastWrapper[] remoteObjects)
     {
-        for(RemoteObjectWrapper o : remoteObjects) {
+        for(UnicastWrapper o : remoteObjects) {
 
             if( padding < o.boundName.length() )
                 padding = o.boundName.length();
@@ -122,9 +122,9 @@ public class MethodGuesser {
      * the same class / interface and that only one of them is used during method guessing. The
      * output is disabled by default and only enabled if --verbose was used.
      *
-     * @param remoteObjects List containing all RemoteObjectWrappers used during the guess operation
+     * @param remoteObjects List containing all UnicastWrapper used during the guess operation
      */
-    private void printDuplicates(RemoteObjectWrapper[] remoteObjects)
+    private void printDuplicates(UnicastWrapper[] remoteObjects)
     {
         Logger.disableIfNotVerbose();
         Logger.printInfoBox();
@@ -133,7 +133,7 @@ public class MethodGuesser {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        for( RemoteObjectWrapper remoteObject : remoteObjects ) {
+        for( UnicastWrapper remoteObject : remoteObjects ) {
 
             String[] duplicates = remoteObject.getDuplicateBoundNames();
 
@@ -166,11 +166,11 @@ public class MethodGuesser {
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @return Array of unknown remote objects
      */
-    private RemoteObjectWrapper[] handleKnownMethods(RemoteObjectWrapper[] remoteObjects)
+    private UnicastWrapper[] handleKnownMethods(UnicastWrapper[] remoteObjects)
     {
-        ArrayList<RemoteObjectWrapper> unknown = new ArrayList<RemoteObjectWrapper>();
+        ArrayList<UnicastWrapper> unknown = new ArrayList<UnicastWrapper>();
 
-        for(RemoteObjectWrapper o : remoteObjects) {
+        for(UnicastWrapper o : remoteObjects) {
 
             if(!o.isKnown())
                 unknown.add(o);
@@ -204,7 +204,7 @@ public class MethodGuesser {
             Logger.enable();
         }
 
-        return unknown.toArray(new RemoteObjectWrapper[0]);
+        return unknown.toArray(new UnicastWrapper[0]);
     }
 
     /**

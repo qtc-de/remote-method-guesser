@@ -226,7 +226,7 @@ Corresponding class names can be used in *remote-method-guesser's* ``known`` act
 [+]
 [+] 	- jmxrmi
 [+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
-[+] 		    Endpoint: iinsecure.dev:42222 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+[+] 		    Endpoint: iinsecure.dev:42222  TLS: no  ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
 [+]
 [qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
 [+] Name:
@@ -280,7 +280,67 @@ Corresponding class names can be used in *remote-method-guesser's* ``known`` act
 ```
 
 Apart from the bound names and the class information, *remote-method-guesser* displays information on the remote
-objects ``ObjID`` and the corresponding *RMI endpoint* the bound name is referring to.
+objects ``ObjID``, the location of the corresponding *RMI endpoint* the bound name is referring to and whether
+connections to the *RMI endpoint* are encrypted (*TLS*).
+
+
+#### Activatable Bound Names
+
+In some cases, bound names listed by *remote-method-guesser* use a different format as mentioned above. This
+is usually the case when the *RMI server* uses an *Activation System* and *activatable remote objects*. The
+following listing shows an example for this situation:
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 1098
+[+] RMI registry bound names:
+[+]
+[+] 	- activation-test
+[+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
+[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
+[+] 	- activation-test2
+[+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
+[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
+[+] 	- java.rmi.activation.ActivationSystem
+[+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
+[+] 		    Endpoint: iinsecure.dev:1098  TLS: no  ObjID: [0:0:0, 4]
+```
+
+Instead of displaying the target endpoint, the *TLS* status and the associated `ObjID`, *remote-method-guesser*
+displays the targeted *Activator* instance and the associated `ActivationID`.
+
+In contrast to ordinary remote objects, that can be called directly, activatable remote objects need to be activated
+first. The idea is, that the server components that implement the activatable remote objects can suspend and do not
+need to be available all the time. When a client wants to call such an object, it uses the `ActivationID` obtained from
+the *RMI registry* and sends it to the *Activator endpoint*. The *Activator* is when responsible to start the associated
+remote object and returns an ordinary `UnicastRef` to the client. This reference is when used for the call.
+
+Whereas all other actions of *remote-method-guesser* perform activation implicitly, for the `enum` action, you need use
+the command line option `--activate` if you want to activate objects during enumeration. When doing so, *remote-method-guesser*
+dispatches one additional call to the *Activator* for each `ActivatableRef` bound to the *RMI registry*. Information from
+the obtained `UnicastRef` is then displayed as usual below the activation related information:
+
+```console
+[qtc@devbox ~]$ rmg enum 172.17.0.2 1098 --activate
+[+] RMI registry bound names:
+[+]
+[+] 	- activation-test
+[+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
+[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
+[+] 		    Endpoint: iinsecure.dev:37597  TLS: no  ObjID: [1c74dc89:180ac521427:-7ffb, 3078273701606404425]
+[+] 	- activation-test2
+[+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
+[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
+[+] 		    Endpoint: iinsecure.dev:35721  TLS: yes  ObjID: [1c74dc89:180ac521427:-7ff8, 6235870260204364974]
+[+] 	- plain-server
+[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		    Endpoint: iinsecure.dev:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
+[+] 	- java.rmi.activation.ActivationSystem
+[+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
+[+] 		    Endpoint: iinsecure.dev:1098  TLS: no  ObjID: [0:0:0, 4]
+```
 
 
 #### Codebase Enumeration

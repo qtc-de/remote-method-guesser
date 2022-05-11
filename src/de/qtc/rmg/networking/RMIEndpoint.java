@@ -79,7 +79,7 @@ public class RMIEndpoint {
      * @param objID identifies the targeted remote object on the server side
      * @return newly constructed RemoteRef
      */
-    public RemoteRef getRemoteRef(ObjID objID)
+    public UnicastRef getRemoteRef(ObjID objID)
     {
         Endpoint endpoint = new TCPEndpoint(host, port, csf, null);
         return new UnicastRef(new LiveRef(objID, endpoint, false));

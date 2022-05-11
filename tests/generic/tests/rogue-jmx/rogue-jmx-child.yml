@@ -67,19 +67,21 @@ tests:
 
     command:
       - beanshooter
+      - enum
       - 127.0.0.1
       - 1090
-      - status
       - --username
       - admin
       - --password
       - s3crEt!
+      - --no-color
 
     validators:
-      - error: True
+      - error: False
       - contains:
           values:
-            - 'Authentication failed!'
+            - 'Caught AuthenticationException during login attempt'
+            - 'Configuration Status: Undecided'
       - file_contains:
             - file: ${JMX_LOG_1}
               contains:
@@ -112,22 +114,21 @@ tests:
 
     command:
       - beanshooter
+      - enum
       - 127.0.0.1
       - 1090
-      - status
       - --username
       - admin
       - --password
       - s3crEt!
+      - --no-color
 
     validators:
       - error: False
       - contains:
           values:
-            - 'Getting Status of MLet... done!'
-            - 'MLet is not registered on the JMX server.'
-            - 'Getting Status of malicious Bean... done!'
-            - 'Malicious MBean is not registered on the JMX server.'
+            - 'Login successful! The specified credentials are correct.'
+            - '22 MBeans are currently registred on the MBean server.'
 
       - file_contains:
             - file: ${JMX_LOG_2}

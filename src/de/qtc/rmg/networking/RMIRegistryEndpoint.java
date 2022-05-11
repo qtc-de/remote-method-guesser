@@ -136,11 +136,8 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
     {
         RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
 
-        for(int ctr = 0; ctr < boundNames.length; ctr++) {
-
-            Remote remoteObject = this.lookup(boundNames[ctr]);
-            remoteObjects[ctr] = new RemoteObjectWrapper(remoteObject, boundNames[ctr]);
-        }
+        for(int ctr = 0; ctr < boundNames.length; ctr++)
+            remoteObjects[ctr] = this.lookup(boundNames[ctr]);
 
         return remoteObjects;
     }
@@ -151,8 +148,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
+     * @throws Reflection related exceptions. RMI related once are caught and handeled directly
      */
-    public Remote lookup(String boundName)
+    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
         Remote remoteObject = remoteObjectCache.get(boundName);
 
@@ -192,7 +190,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
             }
         }
 
-        return remoteObject;
+        return RemoteObjectWrapper.getInstance(remoteObject, boundName);
     }
 
     /**

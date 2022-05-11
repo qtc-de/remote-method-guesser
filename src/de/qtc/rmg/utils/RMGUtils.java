@@ -184,6 +184,27 @@ public class RMGUtils {
     }
 
     /**
+     * Create required classes for the activation system. This function is called when the server
+     * contains an ActivatableRef. It checks whether the class exists within the currently running
+     * JVM and creates it otherwise.
+     *
+     * @return Class object for ActivatableRef
+     * @throws CannotCompileException
+     */
+    public static Class makeActivatbaleRef() throws CannotCompileException
+    {
+        try {
+            return Class.forName("sun.rmi.server.ActivatableRef");
+        } catch (ClassNotFoundException e) {
+            // TODO needs to be implemented correctly
+            Logger.printlnYellow("[-] Not implemented yet!");
+            RMGUtils.exit();
+        }
+
+        return null;
+    }
+
+    /**
      * Creates a method from a signature string. Methods need to be assigned to a class, therefore the static
      * dummyClass is used that is created during the initialization of RMGUtils. The class relationship of the
      * created method is not really important, as the method is mainly used to compute the method hash and to

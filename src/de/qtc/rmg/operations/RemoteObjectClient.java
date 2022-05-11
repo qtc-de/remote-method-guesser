@@ -1,8 +1,6 @@
 package de.qtc.rmg.operations;
 
-import java.rmi.Remote;
 import java.rmi.server.ObjID;
-import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -18,10 +16,12 @@ import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import sun.rmi.server.UnicastRef;
+
 
 /**
  * The RemoteObjectClient class is used for method guessing and communication to user defined remote objects.
@@ -30,17 +30,18 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
+@SuppressWarnings("restriction")
 public class RemoteObjectClient {
 
     private ObjID objID;
-    private RemoteRef remoteRef;
+    private UnicastRef remoteRef;
 
     private RMIEndpoint rmi;
 
     private String boundName;
     private String randomClassName;
 
-    public RemoteObjectWrapper remoteObject;
+    public UnicastWrapper remoteObject;
     public List<MethodCandidate> remoteMethods;
 
     /**
@@ -79,11 +80,11 @@ public class RemoteObjectClient {
 
     /**
      * If you already obtained a reference to the remote object, you can also use it directly
-     * in form of passing an RemoteObjectWrapper.
+     * in form of passing an UnicastWrapper.
      *
-     * @param remoteObject Previously obtained remote reference contained in a RemoteObjectWrapper
+     * @param remoteObject Previously obtained remote reference contained in a UnicastWrapper
      */
-    public RemoteObjectClient(RemoteObjectWrapper remoteObject)
+    public RemoteObjectClient(UnicastWrapper remoteObject)
     {
         this.rmi = new RMIEndpoint(remoteObject.getHost(), remoteObject.getPort(), remoteObject.csf);
         this.objID = remoteObject.objID;
@@ -91,26 +92,26 @@ public class RemoteObjectClient {
         this.remoteObject = remoteObject;
         this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
-        remoteRef = remoteObject.remoteRef;
+        remoteRef = remoteObject.unicastRef;
     }
 
     /**
-     * When a RemoteObjectClient was obtained using an ObjID, it has no assigned RemoteObjectWrapper.
-     * remote-method-guesser only creates a RemoteRef using the endpoint information and the ObjID,
-     * which is sufficient for RMI calls. Constructing a RemoteObject from a RemoteRef is easily
+     * When a RemoteObjectClient was obtained using an ObjID, it has no assigned UnicastWrapper.
+     * remote-method-guesser only creates a UnicastRef using the endpoint information and the ObjID,
+     * which is sufficient for RMI calls. Constructing a RemoteObject from a UnicastRef is easily
      * possible, but it is only useful when also the implemented remote interface is known.
      *
-     * This functions lets you create a RemoteObjectWrapper (RemoteObject) that is based on the already
-     * constructed RemoteRef and implements the specified interface.
+     * This functions creates a UnicastWrapper (RemoteObject) that is based on the already
+     * constructed UnicastRef and implements the specified interface.
      *
      * @param intf Interface implemented by the RemoteObject
      */
-    public RemoteObjectWrapper assignInterface(Class<?> intf)
+    public UnicastWrapper assignInterface(Class<?> intf)
     {
-        RemoteObjectWrapper remoteObject = null;
+        UnicastWrapper remoteObject = null;
 
         try {
-            remoteObject = RemoteObjectWrapper.fromRef(remoteRef, intf);
+            remoteObject = UnicastWrapper.fromRef(remoteRef, intf);
             this.remoteObject = remoteObject;
 
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
@@ -351,7 +352,7 @@ public class RemoteObjectClient {
      *
      * @return Remote reference to the target object
      */
-    private RemoteRef getRemoteRefByObjID()
+    private UnicastRef getRemoteRefByObjID()
     {
         if(objID == null)
             ExceptionHandler.internalError("getRemoteRefByObjID", "Function was called with missing objID.");
@@ -366,25 +367,21 @@ public class RemoteObjectClient {
      *
      * @return Remote reference to the target object
      */
-    private RemoteRef getRemoteRefByName()
+    private UnicastRef getRemoteRefByName()
     {
         if(boundName == null || !(rmi instanceof RMIRegistryEndpoint))
             ExceptionHandler.internalError("getRemoteRefByName", "Function was called without the required fields.");
 
-        RemoteRef remoteRef = null;
         RMIRegistryEndpoint rmiReg = (RMIRegistryEndpoint)rmi;
 
         try {
-            Remote instance = rmiReg.lookup(boundName);
-            remoteRef = RMGUtils.extractRef(instance);
-
-            this.remoteObject = new RemoteObjectWrapper(instance, boundName);
+            remoteObject = rmiReg.lookup(boundName).getUnicastWrapper();
 
         } catch(Exception e) {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
         }
 
-        return remoteRef;
+        return remoteObject.unicastRef;
     }
 
     /**

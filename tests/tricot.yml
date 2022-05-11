@@ -18,7 +18,7 @@ tester:
         ge: 1.9.0
 
 variables:
-  rmg: rmg-4.2.2-jar-with-dependencies.jar
+  rmg: rmg-4.3.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
@@ -29,6 +29,9 @@ variables:
     - ${DOCKER-IP}
     - 1090
     - --ssl
+  TARGET-ACT:
+    - ${DOCKER-IP}
+    - 1098
   OPTIONS:
     - --no-color
 
@@ -46,6 +49,7 @@ plugins:
         - utils/CodebaseTest2.class
         - utils/CodebaseTest3.class
         - utils/CodebaseTest4.class
+        - utils/CodebaseTest5.class
         - utils/PluginTest.jar
 
 

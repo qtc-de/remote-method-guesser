@@ -65,3 +65,27 @@ tests:
           values:
             - 'Caught java.lang.NoClassDefFoundError during deserialization attack'
 
+
+  - title: Gadget Call (Activation System)
+    description: |-
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'The deserialization should work, but the chain is broken at some point.'
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'Caught java.lang.NoClassDefFoundError during deserialization attack.'
+            - 'This could be caused by your gadget an the attack probably worked anyway.'

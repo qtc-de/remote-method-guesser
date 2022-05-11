@@ -1,7 +1,7 @@
 package de.qtc.rmg.server.ssrf.utils;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Logger class that helps to print some formatted output including timestamps.
@@ -16,7 +16,6 @@ public class Logger {
 
     public static int indent = 0;
     public static boolean verbose = true;
-    public static Calendar cal = Calendar.getInstance();
     public static SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd - HH:mm:ss");
 
     private static String blue(String msg)
@@ -31,12 +30,12 @@ public class Logger {
 
     private static String prefix()
     {
-        return "[" + date.format(cal.getTime()) + "]" + Logger.getIndent();
+        return "[" + date.format(new Date()) + "]" + Logger.getIndent();
     }
 
     private static String eprefix()
     {
-        return "[" + date.format(cal.getTime()) + "]" + Logger.getIndent();
+        return "[" + date.format(new Date()) + "]" + Logger.getIndent();
     }
 
     private static void log(String msg)
