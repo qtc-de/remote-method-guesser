@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
 import de.qtc.rmg.plugin.IResponseHandler;
+import de.qtc.rmg.utils.ActivatableWrapper;
+import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
  * GenericPrint is an rmg ResponseHandler plugin that attempts to print all incoming
@@ -115,31 +117,51 @@ public class GenericPrint implements IResponseHandler {
     public void handleRemote(Remote o)
     {
         try {
-            RemoteObjectWrapper liveRef = new RemoteObjectWrapper(o);
+            RemoteObjectWrapper objectWrapper = RemoteObjectWrapper.getInstance(o);
 
-            Logger.printlnYellow("Printing RemoteObject:");
-            Logger.increaseIndent();
+            if (objectWrapper instanceof UnicastWrapper)
+            {
+                UnicastWrapper wrapper = (UnicastWrapper)objectWrapper;
 
-            String csf = "default";
-            String ssf = "default";
+                String csf = "default";
+                String ssf = "default";
 
-            if(liveRef.csf != null)
-                csf = liveRef.csf.getClass().getName();
+                if(wrapper.csf != null)
+                    csf = wrapper.csf.getClass().getName();
 
-            if(liveRef.ssf != null)
-                ssf = liveRef.ssf.getClass().getName();
+                if(wrapper.ssf != null)
+                    ssf = wrapper.ssf.getClass().getName();
 
-            Logger.printlnMixedBlue("Remote Class:\t\t", liveRef.className);
-            Logger.printlnMixedBlue("Endpoint:\t\t", liveRef.getTarget());
-            Logger.printlnMixedBlue("ObjID:\t\t\t", liveRef.objID.toString());
-            Logger.printlnMixedBlue("ClientSocketFactory:\t", csf);
-            Logger.printlnMixedBlue("ServerSocketFactory:\t", ssf);
+                Logger.printlnYellow("Printing unicast RemoteObject:");
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Remote Class:\t\t", wrapper.className);
+                Logger.printlnMixedBlue("Endpoint:\t\t", wrapper.getTarget());
+                Logger.printlnMixedBlue("ObjID:\t\t\t", wrapper.objID.toString());
+                Logger.printlnMixedBlue("ClientSocketFactory:\t", csf);
+                Logger.printlnMixedBlue("ServerSocketFactory:\t", ssf);
+            }
 
-            Logger.decreaseIndent();
+            else if(objectWrapper instanceof ActivatableWrapper)
+            {
+                ActivatableWrapper wrapper = (ActivatableWrapper)objectWrapper;
+
+                Logger.printlnYellow("Printing activatable RemoteObject:");
+                Logger.increaseIndent();
+                Logger.printlnMixedBlue("Remote Class:\t\t", wrapper.className);
+                Logger.printlnMixedBlue("Activator:\t\t", wrapper.getActivatorEndpoint());
+                Logger.printlnMixedBlue("ActivationID:\t\t", wrapper.activationUID.toString());
+            }
+
+            else
+                Logger.eprintlnYellow("Unsupported object type.");
+
 
         } catch (Exception e) {
-            Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "when constructing AccesibleLiveRef.");
-            RMGUtils.exit();
+            ExceptionHandler.unexpectedException(e, "constructing", "RemoteObjectWrapper", true);
+        }
+
+        finally {
+            Logger.decreaseIndent();
         }
     }
 
