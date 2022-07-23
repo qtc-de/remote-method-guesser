@@ -36,7 +36,7 @@ public class ActivatableWrapper extends RemoteObjectWrapper
 
     /**
      * ActivatableWrapper is constructed from a remote object. It expects the underlying RemoteRef to
-     * be an ActivatableRef and attempts tp extract the ActivationID from it. The ActivationID is then
+     * be an ActivatableRef and attempts to extract the ActivationID from it. The ActivationID is then
      * used to obtain the actual UID used for activation and the reference to the Activator.
      *
      * To provide compatibility to newer Java versions, the constructor uses reflection to perform operations
