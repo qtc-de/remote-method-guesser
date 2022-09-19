@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Updated snakeyaml dependency to `v1.32`
+* Changed the default *ysoserial* path to `/opt/ysoserial.jar`
 * Typofix `enmeration` -> `enumeration`
 
 
