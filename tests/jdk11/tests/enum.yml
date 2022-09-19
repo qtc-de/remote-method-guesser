@@ -152,7 +152,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
               [+] 	  This prevents JEP 290 bypass enumeration from remote.
@@ -267,7 +267,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
               [+] 	  This prevents JEP 290 bypass enumeration from remote.
@@ -383,7 +383,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- RMI registry uses readString() for unmarshalling java.lang.String.
               [+] 	  This prevents JEP 290 bypass enumeration from remote.

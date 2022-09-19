@@ -156,7 +156,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
               [+] 	  Vulnerability Status: Vulnerable
@@ -273,7 +273,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
               [+] 	  Vulnerability Status: Vulnerable
@@ -391,7 +391,7 @@ tests:
           ignore_case: True
           values:
             - |-
-              [+] RMI registry JEP290 bypass enmeration:
+              [+] RMI registry JEP290 bypass enumeration:
               [+]
               [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
               [+] 	  Vulnerability Status: Vulnerable
