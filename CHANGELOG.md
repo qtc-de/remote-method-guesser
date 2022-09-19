@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.3.1] - Sep 19, 2022
+
+### Changed
+
+* Updated snakeyaml dependency to `v1.32`
+* Typofix `enmeration` -> `enumeration`
+
+
 ## [4.3.0] - May 11, 2022
 
 ### Added
