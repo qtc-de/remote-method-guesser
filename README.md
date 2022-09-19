@@ -344,7 +344,7 @@ page](./docs/rmg/actions.md#enum).
 [+]   - DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 [+]     Vulnerability Status: Non Vulnerable
 [+]
-[+] RMI registry JEP290 bypass enmeration:
+[+] RMI registry JEP290 bypass enumeration:
 [+]
 [+]   - Caught IllegalArgumentException after sending An Trinh gadget.
 [+]     Vulnerability Status: Vulnerable

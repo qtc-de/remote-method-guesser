@@ -78,7 +78,7 @@ The registry on port `1090` is *SSL* protected and contains three available boun
 [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 [+] 	  Vulnerability Status: Non Vulnerable
 [+]
-[+] RMI registry JEP290 bypass enmeration:
+[+] RMI registry JEP290 bypass enumeration:
 [+]
 [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
 [+] 	  Vulnerability Status: Vulnerable
@@ -144,7 +144,7 @@ The registry on port `1098` hosts an *Activation System* and has some *activatab
 [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 [+] 	  Vulnerability Status: Non Vulnerable
 [+]
-[+] RMI registry JEP290 bypass enmeration:
+[+] RMI registry JEP290 bypass enumeration:
 [+]
 [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
 [+] 	  Vulnerability Status: Vulnerable
@@ -210,7 +210,7 @@ registry port binds an *RMI Activator instance*, but not a full working *Activat
 [+] 	- DGC rejected deserialization of java.util.HashMap (JEP290 is installed).
 [+] 	  Vulnerability Status: Non Vulnerable
 [+]
-[+] RMI registry JEP290 bypass enmeration:
+[+] RMI registry JEP290 bypass enumeration:
 [+]
 [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
 [+] 	  Vulnerability Status: Vulnerable
