@@ -1,6 +1,8 @@
 package de.qtc.rmg.internal;
 
 import java.rmi.server.ObjID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -560,6 +562,28 @@ public class ExceptionHandler {
         } else {
             ExceptionHandler.unexpectedException(e, callName, "call", true);
         }
+    }
+
+    public static void invalidClassException(Exception e, String message)
+    {
+        Logger.eprintlnMixedYellow("Caught", "InvalidClassException", "while unmarshalling an RMI stub.");
+
+        Pattern pattern = Pattern.compile("serialVersionUID = (\\d+),.+ = (\\d+)");
+        Matcher matcher = pattern.matcher(message);
+
+        if(matcher.find()) {
+            Logger.eprintMixedBlue("Local serialVersionUid is", matcher.group(2) + "L", "whereas the server expects ");
+            Logger.printlnPlainBlue(matcher.group(1) + "L");
+
+            Logger.eprintlnMixedYellow("Try again using the", "--serial-version-uid " + matcher.group(1), "option.");
+
+        } else {
+            Logger.eprintlnMixedBlue("Try again using the", "--serial-version-uid", "option to resolve the following conflict:");
+            Logger.println(message);
+        }
+
+        ExceptionHandler.showStackTrace(e);
+        RMGUtils.exit();
     }
 
     /**

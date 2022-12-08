@@ -179,6 +179,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
 
                 Throwable cause = ExceptionHandler.getCause(e);
 
+                if( e instanceof java.rmi.UnmarshalException && cause instanceof java.io.InvalidClassException )
+                    ExceptionHandler.invalidClassException(e, cause.getMessage());
+
                 if( cause instanceof ClassNotFoundException )
                     ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());
 

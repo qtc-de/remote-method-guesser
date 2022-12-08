@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
@@ -579,9 +580,11 @@ public class RMGUtils {
      */
     private static void addSerialVersionUID(CtClass ctClass) throws CannotCompileException
     {
+        long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
+
         CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
         serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+        ctClass.addField(serialID, CtField.Initializer.constant(serialVersionUID));
     }
 
     /**
