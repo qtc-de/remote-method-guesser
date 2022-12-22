@@ -1,5 +1,6 @@
 package de.qtc.rmg.utils;
 
+import java.io.InvalidClassException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -121,11 +122,12 @@ public class RMGUtils {
      * After everything is setup, the function returns the class object that extends RemoteStub.
      *
      * @param className full qualified class name to create the stub object for
+     * @param serialVersionUID  the serialVersionUID to use for the new class
      * @return dynamically created stub Class object
      * @throws CannotCompileException may be thrown when the specified class name is invalid
      * @throws NotFoundException should never be thrown in practice
      */
-    public static Class makeLegacyStub(String className) throws CannotCompileException, NotFoundException
+    public static Class makeLegacyStub(String className, long serialVersionUID) throws CannotCompileException, NotFoundException
     {
         try {
             return Class.forName(className);
@@ -136,7 +138,7 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
-        addSerialVersionUID(ctClass);
+        addSerialVersionUID(ctClass, serialVersionUID);
 
         createdClasses.add(className);
         return ctClass.toClass();
@@ -168,10 +170,11 @@ public class RMGUtils {
      * to the remote RMI server.
      *
      * @param className name of the serializable class to generate
+     * @param serialVersionUID  the serialVersionUID to use for the new class
      * @return Class object of a serializable class with specified class name
      * @throws CannotCompileException may be thrown if the specified class name is invalid
      */
-    public static Class makeSerializableClass(String className) throws CannotCompileException
+    public static Class makeSerializableClass(String className, long serialVersionUID) throws CannotCompileException
     {
         try {
             return Class.forName(className);
@@ -179,7 +182,7 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className);
         ctClass.addInterface(serializable);
-        addSerialVersionUID(ctClass);
+        addSerialVersionUID(ctClass, serialVersionUID);
 
         return ctClass.toClass();
     }
@@ -573,15 +576,14 @@ public class RMGUtils {
     }
 
     /**
-     * Helper function that adds the serialVersionUID of 2L to a class. This is required for certain RMI classes.
+     * Helper function that adds a serialVersionUID to a class. This is required for certain RMI classes.
      *
      * @param ctClass class where the serialVersionUID should be added to
+     * @param serialVersionUID  the serialVersionUID to add
      * @throws CannotCompileException should never be thrown in practice
      */
-    private static void addSerialVersionUID(CtClass ctClass) throws CannotCompileException
+    private static void addSerialVersionUID(CtClass ctClass, long serialVersionUID) throws CannotCompileException
     {
-        long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
-
         CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
         serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
         ctClass.addField(serialID, CtField.Initializer.constant(serialVersionUID));
@@ -1233,5 +1235,32 @@ public class RMGUtils {
             return true;
 
         return false;
+    }
+
+    /**
+     * Parse the class name from an InvalidClassException.
+     *
+     * @param e  the InvalidClassException
+     * @return the class name of the invalid class
+     */
+    public static String getClass(InvalidClassException e)
+    {
+        String message = e.getMessage();
+
+        return message.substring(0, message.indexOf(';'));
+    }
+
+    /**
+     * Parse the SerialVersionUID of the foreign class from an an InvalidClassException.
+     *
+     * @param e  the InvalidClassException
+     * @return the serialVersionUID of the foreign class
+     */
+    public static long getSerialVersionUID(InvalidClassException e)
+    {
+        String message = e.getMessage();
+        message = message.substring(message.indexOf('=') + 2, message.indexOf(','));
+
+        return Long.parseLong(message);
     }
 }

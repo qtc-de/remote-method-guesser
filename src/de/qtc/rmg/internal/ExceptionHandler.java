@@ -564,25 +564,13 @@ public class ExceptionHandler {
         }
     }
 
-    public static void invalidClassException(Exception e, String message)
+    public static void invalidClassException(Exception e)
     {
         Logger.eprintlnMixedYellow("Caught", "InvalidClassException", "while unmarshalling an RMI stub.");
+        Logger.eprintlnMixedBlue("This indicates a problem in rmg's dynamic", "class creation", "process.");
+        Logger.eprintln("Please report the following stacktrace to help improve rmg :)");
 
-        Pattern pattern = Pattern.compile("serialVersionUID = (\\d+),.+ = (\\d+)");
-        Matcher matcher = pattern.matcher(message);
-
-        if(matcher.find()) {
-            Logger.eprintMixedBlue("Local serialVersionUid is", matcher.group(2) + "L", "whereas the server expects ");
-            Logger.printlnPlainBlue(matcher.group(1) + "L");
-
-            Logger.eprintlnMixedYellow("Try again using the", "--serial-version-uid " + matcher.group(1), "option.");
-
-        } else {
-            Logger.eprintlnMixedBlue("Try again using the", "--serial-version-uid", "option to resolve the following conflict:");
-            Logger.println(message);
-        }
-
-        ExceptionHandler.showStackTrace(e);
+        ExceptionHandler.stackTrace(e);
         RMGUtils.exit();
     }
 

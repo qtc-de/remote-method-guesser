@@ -1,6 +1,7 @@
 package de.qtc.rmg.networking;
 
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.qtc.rmg.exceptions.SSRFException;
+import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
@@ -25,10 +27,12 @@ import javassist.tools.reflect.Reflection;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class RMIRegistryEndpoint extends RMIEndpoint {
-
+public class RMIRegistryEndpoint extends RMIEndpoint
+{
     private Registry rmiRegistry;
     private Map<String,Remote> remoteObjectCache;
+
+    private static boolean stopLookupLoop = false;
 
     /**
      * The main purpose of this constructor function is to setup the different socket factories.
@@ -148,7 +152,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
-     * @throws Reflection related exceptions. RMI related once are caught and handeled directly
+     * @throws Reflection related exceptions. RMI related once are caught and handled directly
      */
     public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -179,8 +183,28 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
 
                 Throwable cause = ExceptionHandler.getCause(e);
 
-                if( e instanceof java.rmi.UnmarshalException && cause instanceof java.io.InvalidClassException )
-                    ExceptionHandler.invalidClassException(e, cause.getMessage());
+                if( e instanceof java.rmi.UnmarshalException && cause instanceof InvalidClassException )
+                {
+                    InvalidClassException invalidClassException = (InvalidClassException)cause;
+
+                    if (stopLookupLoop || ! cause.getMessage().contains("serialVersionUID"))
+                        ExceptionHandler.invalidClassException(invalidClassException);
+
+                    try {
+                        String className = RMGUtils.getClass(invalidClassException);
+                        long serialVersionUID = RMGUtils.getSerialVersionUID(invalidClassException);
+
+                        CodebaseCollector.addSerialVersionUID(className, serialVersionUID);
+                        stopLookupLoop = true;
+                    }
+
+                    catch (Exception e1)
+                    {
+                        ExceptionHandler.invalidClassException(invalidClassException);
+                    }
+
+                    return this.lookup(boundName);
+                }
 
                 if( cause instanceof ClassNotFoundException )
                     ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());
