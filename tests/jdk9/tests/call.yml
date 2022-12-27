@@ -316,3 +316,34 @@ tests:
             - uid=0(root)
             - gid=0(root)
             - groups=0(root)
+
+
+  - title: Execute Call (Non default SerialVersionUID)
+    description: |-
+      'Invokes a method on the legacy-service with the --serial-version-uid
+      option. Within the option, we specify an uncommon serial-version-uid,
+      which should be autocorrected by rmg.'
+
+    groups:
+      - response-handler
+
+    command:
+      - rmg
+      - call
+      - ${TARGET}
+      - --bound-name
+      - legacy-service
+      - --signature
+      - 'int math(int dummy1, int dummy2)'
+      - 'new Integer(338), new Integer(999)'
+      - --plugin
+      - ../../utils/PluginTest.jar
+      - ${OPTIONS}
+      - --serial-version-uid
+      - 4444
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - 1337

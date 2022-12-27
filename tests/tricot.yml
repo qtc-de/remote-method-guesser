@@ -50,6 +50,7 @@ plugins:
         - utils/CodebaseTest3.class
         - utils/CodebaseTest4.class
         - utils/CodebaseTest5.class
+        - utils/CodebaseTest6.class
         - utils/PluginTest.jar
 
 

