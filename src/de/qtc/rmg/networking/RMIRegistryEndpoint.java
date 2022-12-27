@@ -152,7 +152,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
-     * @throws Reflection related exceptions. RMI related once are caught and handled directly
+     * @throws Reflection related exceptions. RMI related one are caught and handled directly
      */
     public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {

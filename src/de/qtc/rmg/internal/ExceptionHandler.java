@@ -1,8 +1,6 @@
 package de.qtc.rmg.internal;
 
 import java.rmi.server.ObjID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.RMGUtils;
@@ -567,7 +565,7 @@ public class ExceptionHandler {
     public static void invalidClassException(Exception e)
     {
         Logger.eprintlnMixedYellow("Caught", "InvalidClassException", "while unmarshalling an RMI stub.");
-        Logger.eprintlnMixedBlue("This indicates a problem in rmg's dynamic", "class creation", "process.");
+        Logger.eprintlnMixedBlue("This indicates a problem with rmg's dynamic", "class creation", "process.");
         Logger.eprintln("Please report the following stacktrace to help improve rmg :)");
 
         ExceptionHandler.stackTrace(e);
