@@ -81,18 +81,32 @@ public class Dispatcher {
      * was specified on the command line, all registered bound names within the RMI registry are looked up.
      * The result is stored within an object attribute.
      *
+     * It was observed that using --serial-version-uid option can cause an invalid transport return code
+     * exception. This seems to be some kind of race condition and cannot be reproduced reliably. The lookup
+     * operation on the RMI registry does pass only this UnmarshalException to the caller. If this is the case,
+     * we just retry a few times.
+     *
      * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not an RMI registry
      */
     private void obtainBoundObjects() throws NoSuchObjectException
     {
+        int retryCount = 0;
+
         if( boundNames == null )
             obtainBoundNames();
 
-        try {
-            remoteObjects = getRegistry().lookup(boundNames);
+        while (retryCount < 5)
+        {
+            try {
+                remoteObjects = getRegistry().lookup(boundNames);
+                return;
 
-        } catch( Exception e ) {
-            ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+            } catch (java.rmi.UnmarshalException e) {
+                retryCount += 1;
+
+            } catch( Exception e ) {
+                ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+            }
         }
     }
 

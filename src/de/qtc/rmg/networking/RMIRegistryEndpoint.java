@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMISocketFactory;
@@ -136,7 +137,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * @return List of wrapped remote objects
      * @throws Reflection related exceptions. RMI related once are caught by the other lookup function.
      */
-    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {
         RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
 
@@ -154,7 +155,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * @return Remote representing the requested remote object
      * @throws Reflection related exceptions. RMI related one are caught and handled directly
      */
-    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {
         Remote remoteObject = remoteObjectCache.get(boundName);
 
@@ -183,7 +184,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
 
                 Throwable cause = ExceptionHandler.getCause(e);
 
-                if( e instanceof java.rmi.UnmarshalException && cause instanceof InvalidClassException )
+                if (e instanceof UnmarshalException && cause instanceof InvalidClassException)
                 {
                     InvalidClassException invalidClassException = (InvalidClassException)cause;
 
@@ -205,6 +206,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint
 
                     return this.lookup(boundName);
                 }
+
+                else if (e instanceof UnmarshalException && e.getMessage().contains("Transport return code invalid"))
+                    throw (UnmarshalException)e;
 
                 if( cause instanceof ClassNotFoundException )
                     ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());
