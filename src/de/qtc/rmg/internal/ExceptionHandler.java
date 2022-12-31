@@ -37,7 +37,7 @@ public class ExceptionHandler {
     public static void internalException(Exception e, String functionName, boolean exit)
     {
         Logger.eprintMixedYellow("Internal error. Caught unexpected", e.getClass().getName(), "within the ");
-        Logger.printlnPlainMixedBlue(functionName, "function.");
+        Logger.eprintlnPlainMixedBlue(functionName, "function.");
         stackTrace(e);
 
         if(exit)
@@ -47,7 +47,7 @@ public class ExceptionHandler {
     public static void unexpectedException(Exception e, String during1, String during2, boolean exit)
     {
         Logger.eprintMixedYellow("Caught unexpected", e.getClass().getName(), "during ");
-        Logger.printlnPlainMixedBlueFirst(during1, during2 + ".");
+        Logger.eprintlnPlainMixedBlueFirst(during1, during2 + ".");
         Logger.eprintln("Please report this to improve rmg :)");
         stackTrace(e);
 
@@ -97,7 +97,7 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Server", "accepted", "deserialization of the supplied gadget, but");
         Logger.eprintlnMixedBlue("during the deserialization, a", "ClassNotFoundException", "was encountered.");
         Logger.eprintMixedYellow("The supplied gadget may have", "worked anyway", "or it is ");
-        Logger.printlnPlainMixedBlueFirst("not available", "on the servers classpath.", "");
+        Logger.eprintlnPlainMixedBlueFirst("not available", "on the servers classpath.");
         showStackTrace(e);
     }
 
@@ -162,7 +162,7 @@ public class ExceptionHandler {
 
     public static void codebaseClassFormat(Exception e)
     {
-        Logger.printlnMixedYellow("Caught", "ClassFormatError", "during codebase attack.");
+        Logger.eprintlnMixedYellow("Caught", "ClassFormatError", "during codebase attack.");
         Logger.eprintlnMixedBlue("The loaded file", "is not", "a valid Java class.");
 
         showStackTrace(e);
@@ -172,7 +172,7 @@ public class ExceptionHandler {
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "ConnectException", "during " + during1 + " " + during2 + ".");
         Logger.eprintMixedBlue("Target", "refused", "the connection.");
-        Logger.printlnPlainMixedBlue(" The specified port is probably", "closed.");
+        Logger.eprintlnPlainMixedBlue(" The specified port is probably", "closed.");
         showStackTrace(e);
         RMGUtils.exit();
     }
@@ -224,7 +224,7 @@ public class ExceptionHandler {
     {
         Logger.eprintln(operation + " operation failed!");
         Logger.eprintMixedYellow("RMI registry", "rejected", "deserialization of class ");
-        Logger.printlnPlainBlue(className);
+        Logger.eprintlnPlainBlue(className);
         Logger.eprintlnMixedBlue("  --> The server uses a", "custom deserialization filter", "for the RMI registry.");
         Logger.eprintlnMixedYellow("This is common for", "JMX", "based registry services.");
         showStackTrace(e);
@@ -407,8 +407,8 @@ public class ExceptionHandler {
         Throwable bindException = ExceptionHandler.getThrowable("BindException", e);
 
         Logger.lineBreak();
-        Logger.printlnMixedYellow("Caught", "BindException", "while starting the listener.");
-        Logger.printlnMixedBlue("Exception message:", bindException.getMessage());
+        Logger.eprintlnMixedYellow("Caught", "BindException", "while starting the listener.");
+        Logger.eprintlnMixedBlue("Exception message:", bindException.getMessage());
 
         showStackTrace(e);
         RMGUtils.exit();
@@ -431,8 +431,8 @@ public class ExceptionHandler {
     public static void missingTarget(String action)
     {
         Logger.eprintMixedYellow("Either", "--bound-name", "or ");
-        Logger.printPlainMixedYellowFirst("--objid", "must be specified for the ");
-        Logger.printlnPlainMixedBlueFirst(action, "action.");
+        Logger.eprintPlainMixedYellowFirst("--objid", "must be specified for the ");
+        Logger.eprintlnPlainMixedBlueFirst(action, "action.");
         RMGUtils.exit();
     }
 
@@ -481,7 +481,7 @@ public class ExceptionHandler {
     public static void notBoundException(Exception e, String boundName)
     {
         Logger.eprintMixedYellow("Caught", "NotBoundException", "on bound name ");
-        Logger.printlnPlainBlue(boundName + ".");
+        Logger.eprintlnPlainBlue(boundName + ".");
         Logger.eprintln("The specified bound name is not bound to the registry.");
         showStackTrace(e);
         RMGUtils.exit();
