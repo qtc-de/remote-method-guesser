@@ -125,7 +125,7 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Caught", "ClassNotFoundException", "during codebase attack.");
         Logger.eprintlnMixedBlue("The payload class could", "not be loaded", "from the specified endpoint.");
         Logger.eprintMixedYellow("The endpoint is probably configured with", "useCodeBaseOnly=true");
-        Logger.printlnPlainYellow(" (not vulnerable)");
+        Logger.eprintlnPlainYellow(" (not vulnerable)");
         Logger.eprintlnMixedBlue("or the file", className + ".class", "was not found on the specified endpoint.");
         showStackTrace(e);
     }
