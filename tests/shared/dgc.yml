@@ -1,0 +1,76 @@
+tests:
+  - title: Gadget Call
+    description: |-
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
+      - CommonsCollections6
+      - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
+
+
+  - title: Gadget Call (SSL)
+    description: |-
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-SSL}
+      - CommonsCollections6
+      - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - rejected deserialization
+            - The supplied gadget did not pass the deserialization filter
+
+
+  - title: Gadget Call (Activation System)
+    description: |-
+      'Attempts a deserialization attack on the DGC endpoint.'
+      'This should fail, as the server has JEP290 installed.'
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET-ACT}
+      - CommonsCollections6
+      - ls
+      - --component
+      - dgc
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - rejected deserialization
+            - The supplied gadget did not pass the deserialization filter

