@@ -95,6 +95,7 @@ public enum Operation {
             RMGOption.ARGUMENT_POS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
+            RMGOption.PAYLOAD_SERIAL_VERSION_UID,
     }),
 
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {

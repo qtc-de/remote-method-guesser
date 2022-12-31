@@ -12,7 +12,7 @@ function _rmg() {
 
     value_options="--argument-position --bound-name --component --config --objid --plugin --sample-folder"
     value_options="$value_options --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
-    value_options="$value_options --serial-version-uid"
+    value_options="$value_options --serial-version-uid --payload-serial-version-uid"
 
     _count_args "" "@(${value_options// /|})"
     _comp_get_parameter 3
@@ -128,7 +128,7 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif _comp_contains "--serial-version-uid --ssrf-response --position --objid --signature --bound-name" $prev; then
+        elif _comp_contains "--payload-serial-version-uid --serial-version-uid --ssrf-response --position --objid --signature --bound-name" $prev; then
             return 0
 
         elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
@@ -142,6 +142,7 @@ function _rmg() {
             opts="$opts --gopher"
             opts="$opts --no-color"
             opts="$opts --objid"
+            opts="$opts --payload-serial-version-uid"
             opts="$opts --position"
             opts="$opts --raw"
             opts="$opts --serial-version-uid"

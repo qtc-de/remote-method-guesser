@@ -103,7 +103,8 @@ public enum RMGOption {
     YSO("--yso", "location of ysoserial.jar for deserialization attacks", Arguments.store(), RMGOptionGroup.ACTION, "yso-path"),
     DGC_METHOD("--dgc-method", "method to use for dgc operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
     REG_METHOD("--registry-method", "method to use for registry operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
-    SERIAL_VERSION_UID("--serial-version-uid", "serialVersionUID to use for RMI stubs", Arguments.store(), RMGOptionGroup.ACTION, "uid");
+    SERIAL_VERSION_UID("--serial-version-uid", "serialVersionUID to use for RMI stubs", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
+    PAYLOAD_SERIAL_VERSION_UID("--payload-serial-version-uid", "serialVersionUID to use for payload classes", Arguments.store(), RMGOptionGroup.ACTION, "uid");
 
 
     public final String name;
@@ -120,7 +121,7 @@ public enum RMGOption {
             RMGOption.CONN_FOLLOW, RMGOption.CONN_SSL, RMGOption.SSRF_GOPHER, RMGOption.SSRF, RMGOption.BIND_BYPASS, RMGOption.GUESS_CREATE_SAMPLES,
             RMGOption.GUESS_TRUSTED, RMGOption.GUESS_FORCE_GUESSING, RMGOption.GUESS_DUPLICATES, RMGOption.GUESS_UPDATE, RMGOption.GUESS_ZERO_ARG,
             RMGOption.ENUM_BYPASS, RMGOption.NO_CANARY, RMGOption.NO_PROGRESS, RMGOption.SSRF_ENCODE, RMGOption.SSRF_RAW);
-    private final static EnumSet<RMGOption> longOptions = EnumSet.of(RMGOption.SERIAL_VERSION_UID);
+    private final static EnumSet<RMGOption> longOptions = EnumSet.of(RMGOption.SERIAL_VERSION_UID, RMGOption.PAYLOAD_SERIAL_VERSION_UID);
 
     /**
      * Initializes an enum field with the corresponding Option name, the Option description the argument action,

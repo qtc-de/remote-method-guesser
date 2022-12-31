@@ -383,7 +383,7 @@ public class Dispatcher {
         int argumentPosition = RMGOption.ARGUMENT_POS.getValue();
 
         try {
-            payload = RMGUtils.makeSerializableClass(className, RMGOption.SERIAL_VERSION_UID.getValue());
+            payload = RMGUtils.makeSerializableClass(className, RMGOption.PAYLOAD_SERIAL_VERSION_UID.getValue());
             payload = ((Class<?>)payload).newInstance();
 
         } catch (CannotCompileException | InstantiationException | IllegalAccessException e) {
