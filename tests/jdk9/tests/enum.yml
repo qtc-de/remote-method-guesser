@@ -40,14 +40,14 @@ tests:
           description: |-
             'Check whether objID values are displayed'
           match:
-            - 'Endpoint: iinsecure.dev:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+            - 'Endpoint: iinsecure.example:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
           description: |-
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: 'Check whether Activator enumeration is working.'
@@ -90,7 +90,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-
@@ -191,10 +191,10 @@ tests:
           values:
             - 'activation-test'
             - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
             - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
             - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
@@ -207,7 +207,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-
@@ -309,10 +309,10 @@ tests:
           values:
             - 'activation-test'
             - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
             - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
             - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
@@ -324,7 +324,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
             - 'file:/opt/example-server.jar'
 
       - contains:
@@ -443,7 +443,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-
