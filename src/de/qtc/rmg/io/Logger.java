@@ -308,6 +308,10 @@ public class Logger {
         log(yellow(first) + " " + second, false);
     }
 
+    public static void eprintPlainMixedYellowFirst(String first, String second) {
+        elog(yellow(first) + " " + second, false);
+    }
+
     public static void printlnPlainMixedYellowFirst(String first, String second)
     {
         log(yellow(first) + " " + second);
@@ -382,6 +386,16 @@ public class Logger {
     public static void printlnPlainMixedBlueFirst(String first, String second)
     {
         log(blue(first) + " " + second);
+    }
+
+    public static void eprintlnPlainMixedBlueFirst(String first, String second)
+    {
+        elog(blue(first) + " " + second);
+    }
+
+    public static void eprintlnPlainMixedBlueFirst(String first, String second, String third)
+    {
+        elog(blue(first) + " " + second + " " +  blue(third));
     }
 
     public static void printlnPlainMixedBlueFirst(String first, String second, String third)

@@ -1,5 +1,6 @@
 package de.qtc.rmg.utils;
 
+import java.io.InvalidClassException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -40,8 +41,8 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
-import sun.rmi.transport.LiveRef;
 import sun.rmi.server.UnicastServerRef;
+import sun.rmi.transport.LiveRef;
 
 
 /**
@@ -116,15 +117,21 @@ public class RMGUtils {
      * this class is configured to implement the previously created interface.
      *
      * Interestingly, it is not required to provide implementations for the interface methods when using javassist. However,
-     * what needs to be done is adding a serialVersionUID of 2L, as this default value is expected for RMI RemoteStubs.
+     * what needs to be done is adding a serialVersionUID that allows deserialization of the RMI RemoteStubs. In previous
+     * versions of remote-method-guesser, this value was set to 2L per default, as this is also the default value when legacy
+     * RMI stubs are compiled via rmic. However, edge cases were observed where legacy RMI stubs were compiled with a different
+     * serialVersionUID, which caused exceptions in remote-method-guesser. Therefore, the serialVersionUID can now be dynamically
+     * supplied.
+     *
      * After everything is setup, the function returns the class object that extends RemoteStub.
      *
      * @param className full qualified class name to create the stub object for
+     * @param serialVersionUID  the serialVersionUID to use for the new class
      * @return dynamically created stub Class object
      * @throws CannotCompileException may be thrown when the specified class name is invalid
      * @throws NotFoundException should never be thrown in practice
      */
-    public static Class makeLegacyStub(String className) throws CannotCompileException, NotFoundException
+    public static Class makeLegacyStub(String className, long serialVersionUID) throws CannotCompileException, NotFoundException
     {
         try {
             return Class.forName(className);
@@ -135,7 +142,7 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className, remoteStubClass);
         ctClass.setInterfaces(new CtClass[] { intf });
-        addSerialVersionUID(ctClass);
+        addSerialVersionUID(ctClass, serialVersionUID);
 
         createdClasses.add(className);
         return ctClass.toClass();
@@ -167,10 +174,11 @@ public class RMGUtils {
      * to the remote RMI server.
      *
      * @param className name of the serializable class to generate
+     * @param serialVersionUID  the serialVersionUID to use for the new class
      * @return Class object of a serializable class with specified class name
      * @throws CannotCompileException may be thrown if the specified class name is invalid
      */
-    public static Class makeSerializableClass(String className) throws CannotCompileException
+    public static Class makeSerializableClass(String className, long serialVersionUID) throws CannotCompileException
     {
         try {
             return Class.forName(className);
@@ -178,7 +186,7 @@ public class RMGUtils {
 
         CtClass ctClass = pool.makeClass(className);
         ctClass.addInterface(serializable);
-        addSerialVersionUID(ctClass);
+        addSerialVersionUID(ctClass, serialVersionUID);
 
         return ctClass.toClass();
     }
@@ -572,16 +580,20 @@ public class RMGUtils {
     }
 
     /**
-     * Helper function that adds the serialVersionUID of 2L to a class. This is required for certain RMI classes.
+     * Helper function that adds a serialVersionUID to a class. This is required for RMI legacy stubs that usually
+     * use a serialVersionUID of 2L. Previous versions of remote-method-guesser used a value of 2L per default in
+     * this function, but issues were reported that not all RMI legacy stubs are compiled with a serialVersionUID of
+     * 2L. To resolve these issues, the serialVersionUID can now be dynamically supplied.
      *
      * @param ctClass class where the serialVersionUID should be added to
+     * @param serialVersionUID  the serialVersionUID to add
      * @throws CannotCompileException should never be thrown in practice
      */
-    private static void addSerialVersionUID(CtClass ctClass) throws CannotCompileException
+    private static void addSerialVersionUID(CtClass ctClass, long serialVersionUID) throws CannotCompileException
     {
         CtField serialID = new CtField(CtPrimitiveType.longType, "serialVersionUID", ctClass);
         serialID.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-        ctClass.addField(serialID, CtField.Initializer.constant(2L));
+        ctClass.addField(serialID, CtField.Initializer.constant(serialVersionUID));
     }
 
     /**
@@ -1230,5 +1242,32 @@ public class RMGUtils {
             return true;
 
         return false;
+    }
+
+    /**
+     * Parse the class name from an InvalidClassException.
+     *
+     * @param e  the InvalidClassException
+     * @return the class name of the invalid class
+     */
+    public static String getClass(InvalidClassException e)
+    {
+        String message = e.getMessage();
+
+        return message.substring(0, message.indexOf(';'));
+    }
+
+    /**
+     * Parse the SerialVersionUID of the foreign class from an an InvalidClassException.
+     *
+     * @param e  the InvalidClassException
+     * @return the serialVersionUID of the foreign class
+     */
+    public static long getSerialVersionUID(InvalidClassException e)
+    {
+        String message = e.getMessage();
+        message = message.substring(message.indexOf('=') + 2, message.indexOf(','));
+
+        return Long.parseLong(message);
     }
 }

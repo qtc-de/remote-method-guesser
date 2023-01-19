@@ -40,6 +40,15 @@ import javassist.NotFoundException;
  * the currently running JVM, as it was deprecated and removed in 2021. This class checks whether the
  * ActivatbaleRef class is requested and creates it dynamically if required.
  *
+ * From remote-method-guesser v4.3.2, this class has another purpose of handling uncommon serialVersionUIDs.
+ * The regular case is that legacy RMI stubs have a serialVersionUID of 2L. However, it was observed that not
+ * all RMI servers follow this convention and that there are stubs with different serialVersionUID. When creating
+ * the RMI stub classes dynamically, remote-method-guesser used the 2L as a static value. This was now changed.
+ * By default, RMI stub classes are still created with a serialVersionUID of 2L. However, if an InvalidClassException
+ * indicates an serialVersionUID mismatch during deserialization, the class is recreated with a different
+ * serialVersionUID. Since changing the serialVersionUID of an already existing class is not possible, we instead
+ * create a new class where the full qualified class name is prefixed with an underscore.
+ *
  * Summarized:
  *
  *  1. Extract server specified codebases and store them within a HashMap for later use
@@ -51,6 +60,7 @@ import javassist.NotFoundException;
  */
 public class CodebaseCollector extends RMIClassLoaderSpi {
 
+    private static HashMap<String, Long> serialVersionUIDMap = new HashMap<String,Long>();
     private static HashMap<String, Set<String>> codebases = new HashMap<String,Set<String>>();
     private static RMIClassLoaderSpi originalLoader = RMIClassLoader.getDefaultProviderInstance();
 
@@ -75,7 +85,17 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
         try {
 
             if (name.endsWith("_Stub"))
-                RMGUtils.makeLegacyStub(name);
+            {
+                long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
+
+                if (serialVersionUIDMap.containsKey(name))
+                {
+                    serialVersionUID = serialVersionUIDMap.get(name);
+                    name = "_" + name;
+                }
+
+                RMGUtils.makeLegacyStub(name, serialVersionUID);
+            }
 
             if (name.equals("sun.rmi.server.ActivatableRef"))
                 RMGUtils.makeActivatbaleRef();
@@ -160,6 +180,17 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
     public static HashMap<String,Set<String>> getCodebases()
     {
         return codebases;
+    }
+
+    /**
+     * Add a new className<->serialVersionUID pair to the serialVersionUID map.
+     *
+     * @param className  the className to add to the map
+     * @param serialVersionUID  the serialVerisonUID to add to the map
+     */
+    public static void addSerialVersionUID(String className, long serialVersionUID)
+    {
+        serialVersionUIDMap.put(className, serialVersionUID);
     }
 
     /**

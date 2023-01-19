@@ -40,14 +40,14 @@ tests:
           description: |-
             'Check whether objID values are displayed'
           match:
-            - 'Endpoint: iinsecure.dev:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+            - 'Endpoint: iinsecure.example:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
           description: |-
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: 'Check whether Activator enumeration is working.'
@@ -90,7 +90,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-
@@ -191,10 +191,10 @@ tests:
           values:
             - 'activation-test'
             - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
             - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
             - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
@@ -207,7 +207,7 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-
@@ -309,10 +309,10 @@ tests:
           values:
             - 'activation-test'
             - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
             - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
-            - 'Activator: iinsecure.dev:1098  ActivationID:'
+            - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
             - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
@@ -324,8 +324,126 @@ tests:
             'Check whether all exposed codebase values are detected.'
           ignore_case: True
           values:
-            - 'http://iinsecure.dev/well-hidden-development-folder/'
+            - 'http://iinsecure.example/well-hidden-development-folder/'
             - 'file:/opt/example-server.jar'
+
+      - contains:
+          description: |-
+            'Check whether string marshalling behavior is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server String unmarshalling enumeration:
+              [+]
+              [+] 	- Caught ClassNotFoundException during lookup call.
+              [+] 	  --> The type java.lang.String is unmarshalled via readObject().
+              [+] 	  Configuration Status: Outdated
+
+      - contains:
+          description: |-
+            'Check whether the useCodebaseOnly settings is correctly detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server useCodebaseOnly enumeration:
+              [+]
+              [+] 	- Caught MalformedURLException during lookup call.
+              [+] 	  --> The server attempted to parse the provided codebase (useCodebaseOnly=false).
+              [+] 	  Configuration Status: Non Default
+
+      - contains:
+          description: |-
+            'Check whether localhost bypass vulnerability is detected.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
+              [+]
+              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	  Vulnerability Status: Non Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether DGC enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI Security Manager enumeration:
+              [+]
+              [+] 	- Security Manager rejected access to the class loader.
+              [+] 	  --> The server does use a Security Manager.
+              [+] 	  Configuration Status: Current Default
+
+      - contains:
+          description: |-
+            'Check whether JEP290 enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI server JEP290 enumeration:
+              [+]
+              [+] 	- DGC accepted deserialization of java.util.HashMap (JEP290 is not installed).
+              [+] 	  Vulnerability Status: Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether JEP290 Bypass enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI registry JEP290 bypass enumeration:
+              [+]
+              [+] 	- Caught IllegalArgumentException after sending An Trinh gadget.
+              [+] 	  Vulnerability Status: Vulnerable
+
+      - contains:
+          description: |-
+            'Check whether Activator enumeration is working.'
+          ignore_case: True
+          values:
+            - |-
+              [+] RMI ActivationSystem enumeration:
+              [+]
+              [+] 	- Caught IllegalArgumentException during activate call (activator is present).
+              [+] 	  --> Deserialization allowed	 - Vulnerability Status: Vulnerable
+              [+] 	  --> Client codebase enabled	 - Configuration Status: Non Default
+
+
+  - title: 'Legacy Server Enumeration - non default serialVersionUID'
+    description: |-
+      'Compare enum results to the expected values. This time, we change the default serialVersionUID
+      using the --serial-version-uid parameter. remote-method-guessers autocorrect feature should
+      detect the correct serialVersionUID automatically and still provide correct results.'
+
+    command:
+      - rmg
+      - enum
+      - --serial-version-uid
+      - 1337
+      - ${TARGET}
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+
+      - contains:
+          description: |-
+            'Check whether all registered bound names are detected.'
+          ignore_case: True
+          values:
+            - 'plain-server2'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'plain-server'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'legacy-service'
+            - '_de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
+
+      - contains:
+          description: |-
+            'Check whether all exposed codebase values are detected.'
+          ignore_case: True
+          values:
+            - 'http://iinsecure.example/well-hidden-development-folder/'
 
       - contains:
           description: |-

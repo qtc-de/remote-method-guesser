@@ -8,7 +8,7 @@ GATEWAY=$(ip r | grep "default via" | cut -d" " -f 3)
 echo "$GATEWAY prevent.reverse.dns" >> /etc/hosts
 
 echo "[+] Adding RMI hostname to /etc/hosts file..."
-echo "127.0.0.1 iinsecure.dev" >> /etc/hosts
+echo "127.0.0.1 iinsecure.example" >> /etc/hosts
 
 echo "[+] Starting rmi server..."
 exec /usr/bin/java -jar /opt/example-server.jar

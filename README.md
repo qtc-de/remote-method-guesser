@@ -4,7 +4,7 @@
 
 [![](https://github.com/qtc-de/remote-method-guesser/workflows/master%20maven%20CI/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/master.yml)
 [![](https://github.com/qtc-de/remote-method-guesser/workflows/develop%20maven%20CI/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/develop.yml)
-[![](https://img.shields.io/badge/version-4.3.1-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
+[![](https://img.shields.io/badge/version-4.4.0-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
 [![](https://img.shields.io/badge/build%20system-maven-blue)](https://maven.apache.org/)
 ![](https://img.shields.io/badge/java-8%2b-blue)
 [![](https://img.shields.io/badge/license-GPL%20v3.0-blue)](https://github.com/qtc-de/remote-method-guesser/blob/master/LICENSE)
@@ -140,13 +140,13 @@ bind operations. When using the ``bind`` or ``rebind`` action *remote-method-gue
 [+]
 [+] 	- plain-server2
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ff7, 9040809218460289711]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ff7, 9040809218460289711]
 [+] 	- legacy-service
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ffc, 4854919471498518309]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ffc, 4854919471498518309]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ff8, 6721714394791464813]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ff8, 6721714394791464813]
 
 [qtc@devbox ~]$ rmg bind 172.17.0.2 9010 127.0.0.1:4444 my-object --localhost-bypass 
 [+] Binding name my-object to javax.management.remote.rmi.RMIServerImpl_Stub
@@ -159,16 +159,16 @@ bind operations. When using the ``bind`` or ``rebind`` action *remote-method-gue
 [+]
 [+] 	- plain-server2
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ff7, 9040809218460289711]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ff7, 9040809218460289711]
 [+] 	- my-object
 [+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
 [+] 		    Endpoint: 127.0.0.1:4444 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
 [+] 	- legacy-service
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ffc, 4854919471498518309]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ffc, 4854919471498518309]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:39153 ObjID: [-af587e6:17d6f7bb318:-7ff8, 6721714394791464813]
+[+] 		    Endpoint: iinsecure.example:39153 ObjID: [-af587e6:17d6f7bb318:-7ff8, 6721714394791464813]
 ```
 
 By using *remote-method-guesser's Plugin System*, it is also possible to bind custom objects to the *RMI registry*. To learn more about
@@ -302,17 +302,17 @@ page](./docs/rmg/actions.md#enum).
 [+]
 [+]   - plain-server2
 [+]     --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+]         Endpoint: iinsecure.dev:42273 ObjID: [-49c48e31:17d6f8692ae:-7ff7, -3079588349672331489]
+[+]         Endpoint: iinsecure.example:42273 ObjID: [-49c48e31:17d6f8692ae:-7ff7, -3079588349672331489]
 [+]   - legacy-service
 [+]     --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+]         Endpoint: iinsecure.dev:42273 ObjID: [-49c48e31:17d6f8692ae:-7ffc, -2969569395601583761]
+[+]         Endpoint: iinsecure.example:42273 ObjID: [-49c48e31:17d6f8692ae:-7ffc, -2969569395601583761]
 [+]   - plain-server
 [+]     --> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+]         Endpoint: iinsecure.dev:42273 ObjID: [-49c48e31:17d6f8692ae:-7ff8, 1319708214331962145]
+[+]         Endpoint: iinsecure.example:42273 ObjID: [-49c48e31:17d6f8692ae:-7ff8, 1319708214331962145]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+]   - http://iinsecure.dev/well-hidden-development-folder/
+[+]   - http://iinsecure.example/well-hidden-development-folder/
 [+]     --> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
 [+]     --> de.qtc.rmg.server.interfaces.IPlainServer
 [+]
@@ -412,7 +412,7 @@ a general description and possible vulnerabilities:
 [+]
 [+] 	- jmxrmi
 [+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
-[+] 		    Endpoint: iinsecure.dev:41991 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+[+] 		    Endpoint: iinsecure.example:41991 ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
 
 [qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
 [+] Name:
@@ -500,13 +500,13 @@ for each *bound name* and *remote-method-guesser* displays them during the ``enu
 [+]
 [+] 	- plain-server2
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ff7, 1096154566158180646]
+[+] 		    Endpoint: iinsecure.example:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ff7, 1096154566158180646]
 [+] 	- legacy-service
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ffc, 625759208507801754]
+[+] 		    Endpoint: iinsecure.example:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ffc, 625759208507801754]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ff8, -6355415622579283910]
+[+] 		    Endpoint: iinsecure.example:40393 ObjID: [-2bc5d969:17d6f8cf44c:-7ff8, -6355415622579283910]
 ```
 
 ``ObjID`` values consist out of different components. These components are displayed in human readable form when

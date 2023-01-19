@@ -190,7 +190,7 @@ Caused by: java.rmi.UnmarshalException: error unmarshalling arguments; nested ex
 	[...]
 Caused by: java.lang.ClassNotFoundException: access to class loader denied
 	[...]
-Caused by: java.security.AccessControlException: access denied ("java.net.SocketPermission" "iinsecure.dev:80" "connect,resolve")
+Caused by: java.security.AccessControlException: access denied ("java.net.SocketPermission" "iinsecure.example:80" "connect,resolve")
 	at java.security.AccessControlContext.checkPermission(Unknown Source)
 	[...]
 ```
@@ -198,7 +198,7 @@ Caused by: java.security.AccessControlException: access denied ("java.net.Socket
 The message that access to the class loader is denied and the fact that the *DGC* requests *connect* and
 *resolve* permissions looks like it would actually respect the user specified codebase. However, this is not the case.
 As mentioned above, the *DGC* nowadays always runs with ``useCodebaseOnly=true`` and does not respect user defined settings.
-The crucial part in the above error message is the location from which the *DGC* want's to load the class: ``iinsecure.dev:80``.
+The crucial part in the above error message is the location from which the *DGC* want's to load the class: ``iinsecure.example:80``.
 This is the server side codebase and not the codebase location that was specified on the command line. A setting of
 ``useCodebaseOnly=false`` only ignores client specified codebases, whereas server codebases are still used. However, since
 the *DGC* uses it's own and very strict ``AccessControlContext``, you get the *access denied* error.
@@ -226,7 +226,7 @@ Corresponding class names can be used in *remote-method-guesser's* ``known`` act
 [+]
 [+] 	- jmxrmi
 [+] 		--> javax.management.remote.rmi.RMIServerImpl_Stub (known class: JMX Server)
-[+] 		    Endpoint: iinsecure.dev:42222  TLS: no  ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
+[+] 		    Endpoint: iinsecure.example:42222  TLS: no  ObjID: [6633018:17cb5d1bb57:-7ff8, -8114172517417646722]
 [+]
 [qtc@devbox ~]$ rmg known javax.management.remote.rmi.RMIServerImpl_Stub
 [+] Name:
@@ -296,16 +296,16 @@ following listing shows an example for this situation:
 [+]
 [+] 	- activation-test
 [+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
+[+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
 [+] 	- activation-test2
 [+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
+[+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
+[+] 		    Endpoint: iinsecure.example:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
-[+] 		    Endpoint: iinsecure.dev:1098  TLS: no  ObjID: [0:0:0, 4]
+[+] 		    Endpoint: iinsecure.example:1098  TLS: no  ObjID: [0:0:0, 4]
 ```
 
 Instead of displaying the target endpoint, the *TLS* status and the associated `ObjID`, *remote-method-guesser*
@@ -328,18 +328,18 @@ the obtained `UnicastRef` is then displayed as usual below the activation relate
 [+]
 [+] 	- activation-test
 [+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
-[+] 		    Endpoint: iinsecure.dev:37597  TLS: no  ObjID: [1c74dc89:180ac521427:-7ffb, 3078273701606404425]
+[+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
+[+] 		    Endpoint: iinsecure.example:37597  TLS: no  ObjID: [1c74dc89:180ac521427:-7ffb, 3078273701606404425]
 [+] 	- activation-test2
 [+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
-[+] 		    Endpoint: iinsecure.dev:35721  TLS: yes  ObjID: [1c74dc89:180ac521427:-7ff8, 6235870260204364974]
+[+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
+[+] 		    Endpoint: iinsecure.example:35721  TLS: yes  ObjID: [1c74dc89:180ac521427:-7ff8, 6235870260204364974]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
+[+] 		    Endpoint: iinsecure.example:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
-[+] 		    Endpoint: iinsecure.dev:1098  TLS: no  ObjID: [0:0:0, 4]
+[+] 		    Endpoint: iinsecure.example:1098  TLS: no  ObjID: [0:0:0, 4]
 ```
 
 
@@ -368,7 +368,7 @@ be useful for other attacks as well.
 [qtc@devbox ~]$ rmg enum 172.17.0.2 9010 | rg "RMI server codebase" -A 3
 [+] RMI server codebase enumeration:
 [+]
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 	- http://iinsecure.example/well-hidden-development-folder/
 [+]
 ```
 
@@ -660,7 +660,7 @@ execute  IPlainServer.java
 [qtc@devbox execute]$ java execute
 [+] Connecting to registry on 172.17.0.2:1090... done!
 [+] Starting lookup on plain-server...
-[+] RMI object tries to connect to different remote host: iinsecure.dev
+[+] RMI object tries to connect to different remote host: iinsecure.example
 [+]	Redirecting the connection back to 172.17.0.2...
 [+]	This is done for all further requests. This message is not shown again.
 [+] Invoking method execute... done!

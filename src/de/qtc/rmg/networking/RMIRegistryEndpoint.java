@@ -1,8 +1,10 @@
 package de.qtc.rmg.networking;
 
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMISocketFactory;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.qtc.rmg.exceptions.SSRFException;
+import de.qtc.rmg.internal.CodebaseCollector;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
@@ -25,10 +28,12 @@ import javassist.tools.reflect.Reflection;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class RMIRegistryEndpoint extends RMIEndpoint {
-
+public class RMIRegistryEndpoint extends RMIEndpoint
+{
     private Registry rmiRegistry;
     private Map<String,Remote> remoteObjectCache;
+
+    private static boolean stopLookupLoop = false;
 
     /**
      * The main purpose of this constructor function is to setup the different socket factories.
@@ -132,7 +137,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
      * @return List of wrapped remote objects
      * @throws Reflection related exceptions. RMI related once are caught by the other lookup function.
      */
-    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {
         RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
 
@@ -148,9 +153,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
-     * @throws Reflection related exceptions. RMI related once are caught and handeled directly
+     * @throws Reflection related exceptions. RMI related one are caught and handled directly
      */
-    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {
         Remote remoteObject = remoteObjectCache.get(boundName);
 
@@ -178,6 +183,32 @@ public class RMIRegistryEndpoint extends RMIEndpoint {
             } catch( Exception e ) {
 
                 Throwable cause = ExceptionHandler.getCause(e);
+
+                if (e instanceof UnmarshalException && cause instanceof InvalidClassException)
+                {
+                    InvalidClassException invalidClassException = (InvalidClassException)cause;
+
+                    if (stopLookupLoop || ! cause.getMessage().contains("serialVersionUID"))
+                        ExceptionHandler.invalidClassException(invalidClassException);
+
+                    try {
+                        String className = RMGUtils.getClass(invalidClassException);
+                        long serialVersionUID = RMGUtils.getSerialVersionUID(invalidClassException);
+
+                        CodebaseCollector.addSerialVersionUID(className, serialVersionUID);
+                        stopLookupLoop = true;
+                    }
+
+                    catch (Exception e1)
+                    {
+                        ExceptionHandler.invalidClassException(invalidClassException);
+                    }
+
+                    return this.lookup(boundName);
+                }
+
+                else if (e instanceof UnmarshalException && e.getMessage().contains("Transport return code invalid"))
+                    throw (UnmarshalException)e;
 
                 if( cause instanceof ClassNotFoundException )
                     ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());

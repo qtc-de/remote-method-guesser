@@ -12,6 +12,7 @@ function _rmg() {
 
     value_options="--argument-position --bound-name --component --config --objid --plugin --sample-folder"
     value_options="$value_options --signature --template-folder --threads --wordlist-file --wordlist-folder --yso"
+    value_options="$value_options --serial-version-uid --payload-serial-version-uid"
 
     _count_args "" "@(${value_options// /|})"
     _comp_get_parameter 3
@@ -50,24 +51,24 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 8 ]]; then
             opts="--help"
+            opts="$opts --bind-bound-name"
+            opts="$opts --bind-objid"
+            opts="$opts --config"
+            opts="$opts --encode"
+            opts="$opts --gadget-cmd"
+            opts="$opts --gadget-name"
             opts="$opts --gopher"
+            opts="$opts --localhost-bypass"
+            opts="$opts --no-color"
+            opts="$opts --plugin"
+            opts="$opts --raw"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --bind-objid"
-            opts="$opts --bind-bound-name"
-            opts="$opts --localhost-bypass"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --plugin"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
             opts="$opts --yso"
-            opts="$opts --gadget-name"
-            opts="$opts --gadget-cmd"
 
         elif [[ $args -eq 4 ]]; then
             _ip_addresses
@@ -88,28 +89,30 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif _comp_contains "--ssrf-response --objid --signature --bound-name" $prev; then
+        elif _comp_contains "--serial-version-uid --ssrf-response --objid --signature --bound-name" $prev; then
             return 0
 
         elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
             opts="--help"
+            opts="$opts --bound-name"
+            opts="$opts --component"
+            opts="$opts --config"
+            opts="$opts --encode"
+            opts="$opts --follow"
+            opts="$opts --force-activation"
             opts="$opts --gopher"
+            opts="$opts --no-color"
+            opts="$opts --objid"
+            opts="$opts --plugin"
+            opts="$opts --raw"
+            opts="$opts --serial-version-uid"
+            opts="$opts --signature"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --plugin"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --component"
-            opts="$opts --bound-name"
-            opts="$opts --objid"
-            opts="$opts --signature"
-            opts="$opts --follow"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
 
         else
             return 0
@@ -125,28 +128,31 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif _comp_contains "--ssrf-response --position --objid --signature --bound-name" $prev; then
+        elif _comp_contains "--payload-serial-version-uid --serial-version-uid --ssrf-response --position --objid --signature --bound-name" $prev; then
             return 0
 
         elif [[ $cur == -* ]] || [[ $args -gt 7 ]]; then
             opts="--help"
+            opts="$opts --bound-name"
+            opts="$opts --component"
+            opts="$opts --config"
+            opts="$opts --encode"
+            opts="$opts --follow"
+            opts="$opts --force-activation"
             opts="$opts --gopher"
+            opts="$opts --no-color"
+            opts="$opts --objid"
+            opts="$opts --payload-serial-version-uid"
+            opts="$opts --position"
+            opts="$opts --raw"
+            opts="$opts --serial-version-uid"
+            opts="$opts --signature"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --position"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --component"
-            opts="$opts --bound-name"
-            opts="$opts --objid"
-            opts="$opts --signature"
-            opts="$opts --follow"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
 
         elif [[ $args -eq 5 ]]; then
             _ip_addresses
@@ -164,7 +170,7 @@ function _rmg() {
             _filedir
             return 0
 
-        elif _comp_contains "--ssrf-response --bound-name" $prev; then
+        elif _comp_contains "--serial-version-uid --ssrf-response --bound-name" $prev; then
             return 0
 
         elif _comp_contains "--scan-action" $prev; then
@@ -178,24 +184,27 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
             opts="--help"
+            opts="$opts --activate"
             opts="$opts --bound-name"
+            opts="$opts --config"
+            opts="$opts --dgc-method"
+            opts="$opts --encode"
+            opts="$opts --follow"
+            opts="$opts --force-activation"
             opts="$opts --gopher"
+            opts="$opts --localhost-bypass"
+            opts="$opts --no-color"
+            opts="$opts --raw"
+            opts="$opts --registry-method"
+            opts="$opts --scan-action"
+            opts="$opts --serial-version-uid"
+            opts="$opts --signature"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --localhost-bypass"
-            opts="$opts --scan-action"
-            opts="$opts --dgc-method"
-            opts="$opts --registry-method"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --signature"
-            opts="$opts --follow"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
 
         else
             return 0
@@ -211,33 +220,35 @@ function _rmg() {
         elif _comp_contains "--component" $prev; then
             opts="$components"
 
-        elif _comp_contains "--bound-name --objid --signature --threads" $prev; then
+        elif _comp_contains "--serial-version-uid --bound-name --objid --signature --threads" $prev; then
             return 0
 
         elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
             opts="--help"
-            opts="$opts --wordlist-file"
-            opts="$opts --wordlist-folder"
+            opts="$opts --bound-name"
+            opts="$opts --component"
+            opts="$opts --config"
             opts="$opts --create-samples"
-            opts="$opts --sample-folder"
-            opts="$opts --template-folder"
-            opts="$opts --trusted"
+            opts="$opts --follow"
+            opts="$opts --force-activation"
             opts="$opts --force-guessing"
             opts="$opts --guess-duplicates"
-            opts="$opts --update"
-            opts="$opts --zero-arg"
-            opts="$opts --no-progress"
-            opts="$opts --threads"
-            opts="$opts --config"
-            opts="$opts --verbose"
             opts="$opts --no-color"
-            opts="$opts --stack-trace"
-            opts="$opts --component"
-            opts="$opts --bound-name"
+            opts="$opts --no-progress"
             opts="$opts --objid"
+            opts="$opts --sample-folder"
+            opts="$opts --serial-version-uid"
             opts="$opts --signature"
-            opts="$opts --follow"
             opts="$opts --ssl"
+            opts="$opts --stack-trace"
+            opts="$opts --template-folder"
+            opts="$opts --threads"
+            opts="$opts --trusted"
+            opts="$opts --update"
+            opts="$opts --verbose"
+            opts="$opts --wordlist-file"
+            opts="$opts --wordlist-folder"
+            opts="$opts --zero-arg"
 
         else
             return 0
@@ -265,10 +276,10 @@ function _rmg() {
         elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
             opts="--help"
             opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --plugin"
             opts="$opts --no-color"
+            opts="$opts --plugin"
             opts="$opts --stack-trace"
+            opts="$opts --verbose"
             opts="$opts --yso"
 
         elif [[ $args -eq 2 ]]; then
@@ -292,9 +303,9 @@ function _rmg() {
         elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
             opts="--help"
             opts="$opts --config"
-            opts="$opts --verbose"
             opts="$opts --no-color"
             opts="$opts --stack-trace"
+            opts="$opts --verbose"
 
         else
             return 0
@@ -312,17 +323,17 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 4 ]]; then
             opts="--help"
-            opts="$opts --objid"
-            opts="$opts --forward-host"
-            opts="$opts --forward-port"
-            opts="$opts --forward-bound-name"
-            opts="$opts --forward-objid"
             opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --no-color"
-            opts="$opts --stack-trace"
             opts="$opts --follow"
+            opts="$opts --forward-bound-name"
+            opts="$opts --forward-host"
+            opts="$opts --forward-objid"
+            opts="$opts --forward-port"
+            opts="$opts --no-color"
+            opts="$opts --objid"
             opts="$opts --ssl"
+            opts="$opts --stack-trace"
+            opts="$opts --verbose"
 
         elif [[ $args -eq 2 ]]; then
             _ip_addresses
@@ -344,15 +355,15 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
             opts="--help"
-            opts="$opts --ports"
-            opts="$opts --no-progress"
-            opts="$opts --threads"
             opts="$opts --config"
-            opts="$opts --verbose"
             opts="$opts --no-color"
+            opts="$opts --no-progress"
+            opts="$opts --ports"
             opts="$opts --stack-trace"
-            opts="$opts --timeout-read"
+            opts="$opts --threads"
             opts="$opts --timeout-connect"
+            opts="$opts --timeout-read"
+            opts="$opts --verbose"
 
         else
             return 0
@@ -365,7 +376,7 @@ function _rmg() {
             _filedir
             return 0
 
-        elif _comp_contains "--ssrf-response --position --bound-name --objid --signature" $prev; then
+        elif _comp_contains "--serial-version-uid --ssrf-response --position --bound-name --objid --signature" $prev; then
             return 0
 
         elif _comp_contains "--component" $prev; then
@@ -373,24 +384,26 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 6 ]]; then
             opts="--help"
+            opts="$opts --bound-name"
+            opts="$opts --component"
+            opts="$opts --config"
+            opts="$opts --encode"
+            opts="$opts --follow"
+            opts="$opts --force-activation"
             opts="$opts --gopher"
+            opts="$opts --no-color"
+            opts="$opts --objid"
+            opts="$opts --plugin"
+            opts="$opts --position"
+            opts="$opts --raw"
+            opts="$opts --serial-version-uid"
+            opts="$opts --signature"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --position"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --plugin"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --component"
-            opts="$opts --bound-name"
-            opts="$opts --objid"
-            opts="$opts --signature"
-            opts="$opts --follow"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
             opts="$opts --yso"
 
         elif [[ $args -eq 4 ]]; then
@@ -412,19 +425,19 @@ function _rmg() {
 
         elif [[ $cur == -* ]] || [[ $args -ge 3 ]]; then
             opts="--help"
+            opts="$opts --config"
+            opts="$opts --encode"
             opts="$opts --gopher"
+            opts="$opts --localhost-bypass"
+            opts="$opts --no-color"
+            opts="$opts --plugin"
+            opts="$opts --raw"
+            opts="$opts --ssl"
             opts="$opts --ssrf"
             opts="$opts --ssrf-response"
-            opts="$opts --stream-protocol"
-            opts="$opts --encode"
-            opts="$opts --raw"
-            opts="$opts --localhost-bypass"
-            opts="$opts --config"
-            opts="$opts --verbose"
-            opts="$opts --plugin"
-            opts="$opts --no-color"
             opts="$opts --stack-trace"
-            opts="$opts --ssl"
+            opts="$opts --stream-protocol"
+            opts="$opts --verbose"
 
         else
             return 0

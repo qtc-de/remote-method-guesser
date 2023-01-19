@@ -2,18 +2,18 @@ version: '3.7'
 
 services:
     rmg:
-      image: ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.3-jdk11
+      image: ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk11
       build: .
       environment:
         - > 
           _JAVA_OPTIONS=
-          -Djava.rmi.server.hostname=iinsecure.dev
+          -Djava.rmi.server.hostname=iinsecure.example
           -Djavax.net.ssl.keyStorePassword=password
           -Djavax.net.ssl.keyStore=/opt/store.p12
           -Djavax.net.ssl.keyStoreType=pkcs12
           -Djava.rmi.server.useCodebaseOnly=false
           -Djava.security.policy=/opt/policy
-          -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
+          -Djava.rmi.server.codebase=http://iinsecure.example/well-hidden-development-folder/
         - >
           DELETE_THIS_AND_THE_ABOVE_LINE_TO_ENABLE_CODEBASE_LOGGING_OR_TO_DISABLE_COLOR=
           -Djava.rmi.server.RMIClassLoaderSpi=de.qtc.rmg.server.utils.CodebaseLogger

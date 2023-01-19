@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -348,6 +349,18 @@ public class SampleWriter {
         String methodVarPlaceholder = "    <METHOD_VAR>";
         String methodLookupPlaceholder = "            <METHOD_LOOKUP>";
         List<String> types = new ArrayList<String>();
+
+        try {
+            Field serialVersionUIDField = Class.forName(className).getDeclaredField("serialVersionUID");
+            serialVersionUIDField.setAccessible(true);
+            long serialVersionUID = serialVersionUIDField.getLong(null);
+
+            if (serialVersionUID != 2L)
+                stubTemplate = stubTemplate.replace("2L", String.valueOf(serialVersionUID) + "L");
+
+        } catch (Exception e) {
+            Logger.eprintlnMixedBlue("Unable to obtain", "serialVersionUID", "of legacy stub.");
+        }
 
         for(MethodCandidate method : methods) {
 
