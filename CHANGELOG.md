@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.4.0] - Jan 19, 2023
+
+### Changed
+
+* Add support for non default `serialVersionUID` values
+* Refactored test configurations
+* Update dependencies
+* Make *rmg* Java16+ compatible
+
+
 ## [4.3.1] - Sep 19, 2022
 
 ### Changed
