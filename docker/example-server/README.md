@@ -11,9 +11,9 @@ You can either build the container from source or pull it from *GitHub Packages*
 
 * To load the container from the *GitHub Container Registry* just use the corresponding pull command:
   ```console
-  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.2-jdk8
-  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.2-jdk9
-  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.2-jdk11
+  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk8
+  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk9
+  $ docker pull ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk11
   ```
 
 To change the default configuration of the container (like e.g. the *SSL* certificate), you can modify the [docker-compose.yml](./docker-compose-jdk8.yml)
@@ -35,17 +35,17 @@ The registry on port `1090` is *SSL* protected and contains three available boun
 [+]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fff, 8831379559932805383]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fff, 8831379559932805383]
 [+] 	- ssl-server
 [+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:42031  TLS: yes  ObjID: [-492549a8:1809adab6bf:-7ffe, -8819602238278920745]
+[+] 		    Endpoint: iinsecure.example:42031  TLS: yes  ObjID: [-492549a8:1809adab6bf:-7ffe, -8819602238278920745]
 [+] 	- secure-server
 [+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffd, -5037949272481440924]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffd, -5037949272481440924]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 	- http://iinsecure.example/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.interfaces.ISslServer
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
@@ -97,20 +97,20 @@ The registry on port `1098` hosts an *Activation System* and has some *activatab
 [+]
 [+] 	- activation-test
 [+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: -492549a8:1809adab6bf:-7ff1
+[+] 		    Activator: iinsecure.example:1098  ActivationID: -492549a8:1809adab6bf:-7ff1
 [+] 	- activation-test2
 [+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
-[+] 		    Activator: iinsecure.dev:1098  ActivationID: -492549a8:1809adab6bf:-7fee
+[+] 		    Activator: iinsecure.example:1098  ActivationID: -492549a8:1809adab6bf:-7fee
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fec, 5541025679742310482]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fec, 5541025679742310482]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activator)
-[+] 		    Endpoint: iinsecure.dev:1098  TLS: no  ObjID: [0:0:0, 4]
+[+] 		    Endpoint: iinsecure.example:1098  TLS: no  ObjID: [0:0:0, 4]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 	- http://iinsecure.example/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+] 		--> de.qtc.rmg.server.activation.IActivationService
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub
@@ -168,17 +168,17 @@ registry port binds an *RMI Activator instance*, but not a full working *Activat
 [+]
 [+] 	- plain-server2
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff7, 8893583921173173865]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff7, 8893583921173173865]
 [+] 	- legacy-service
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffc, -5452660335673756521]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffc, -5452660335673756521]
 [+] 	- plain-server
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
-[+] 		    Endpoint: iinsecure.dev:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff8, 5860842907020657289]
+[+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff8, 5860842907020657289]
 [+]
 [+] RMI server codebase enumeration:
 [+]
-[+] 	- http://iinsecure.dev/well-hidden-development-folder/
+[+] 	- http://iinsecure.example/well-hidden-development-folder/
 [+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
 [+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
 [+]
@@ -238,12 +238,12 @@ Each successful method call is logged on the server side. The following listing 
 was started. Additionally, one successful method call on the ``login`` method was logged:
 
 ```console
-[qtc@devbox ~]$ docker run ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:3.2-jdk9
+[qtc@devbox ~]$ docker run ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk9
 [+] IP address of the container: 172.17.0.2
 [+] Adding gateway address to /etc/hosts file...
 [+] Adding RMI hostname to /etc/hosts file...
 [+] Starting rmi server...
-Picked up _JAVA_OPTIONS: -Djava.rmi.server.hostname=iinsecure.dev     -Djavax.net.ssl.keyStorePassword=password     -Djavax.net.ssl.keyStore=/opt/store.p12     -Djavax.net.ssl.keyStoreType=pkcs12     -Djava.rmi.server.useCodebaseOnly=false     -Djava.security.policy=/opt/policy     -Djava.rmi.server.codebase=http://iinsecure.dev/well-hidden-development-folder/
+Picked up _JAVA_OPTIONS: -Djava.rmi.server.hostname=iinsecure.example     -Djavax.net.ssl.keyStorePassword=password     -Djavax.net.ssl.keyStore=/opt/store.p12     -Djavax.net.ssl.keyStoreType=pkcs12     -Djava.rmi.server.useCodebaseOnly=false     -Djava.security.policy=/opt/policy     -Djava.rmi.server.codebase=http://iinsecure.example/well-hidden-development-folder/
 [2022.05.06 - 19:45:12] Initializing Java RMI Server:
 [2022.05.06 - 19:45:12] 
 [2022.05.06 - 19:45:12]     Creating RMI-Registry on port 1090
