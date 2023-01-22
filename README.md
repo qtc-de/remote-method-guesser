@@ -55,6 +55,7 @@ Both servers are available as containers within the *GitHub Container Registry*:
   + [scan](#scan)
   + [serial](#serial)
 - [More Features](#more-features)
+- [Docker Image](#docker-image)
 - [Acknowledgements](#acknowledgements)
 
 
@@ -773,6 +774,28 @@ of them are listed below:
   invoke successfully guessed methods.
 
 More information on these features can be found within the [documentation folder](/docs).
+
+
+### Docker Image
+
+----
+
+Since version `v4.4.0`, *remote-method-guesser* is also available as docker image and can be pulled from the
+[GitHub Container Registry](https://github.com/qtc-de/remote-method-guesser/pkgs/container/remote-method-guesser%2Frmg).
+For each release, there is a *normal* and a *slim* version available. Both provide a full working version of
+*remote-method-guesser*, but only the *normal* version ships with [ysoserial](https://github.com/frohoff/ysoserial)
+included, resulting in a larger image size:
+
+* `docker pull ghcr.io/qtc-de/remote-method-guesser/rmg:4.4.0` - `121MB`
+* `docker pull ghcr.io/qtc-de/remote-method-guesser/rmg:4.4.0-slim` - `61.9MB`
+
+You can also build the container on your own by running the following commands:
+
+```console
+[user@host ~]$ git clone https://github.com/qtc-de/remote-method-guesser
+[user@host ~]$ cd remote-method-guesser
+[user@host remote-method-guesser]$ docker build -t rmg .
+```
 
 
 ### Acknowledgements
