@@ -793,8 +793,7 @@ You can also build the container on your own by running the following commands:
 
 ```console
 [user@host ~]$ git clone https://github.com/qtc-de/remote-method-guesser
-[user@host ~]$ cd remote-method-guesser
-[user@host remote-method-guesser]$ docker build -t rmg .
+[user@host ~]$ cd remote-method-guesser && docker build -t rmg .
 ```
 
 
@@ -806,4 +805,4 @@ You can also build the container on your own by running the following commands:
 and [Jake Miller](https://labs.bishopfox.com/tech-blog/rmiscout). Furthermore, the [rmiscout wordlist](./wordlists/rmiscout.txt) was obviously copied from the [rmiscout](https://github.com/BishopFox/rmiscout)
 project (as you can already tell by the different license agreement). Thanks *Jake*, for this awesome wordlist of *remote methods* collected from different *GitHub* repositories.
 
-*Copyright 2021, Tobias Neitzel and the remote-method-guesser contributors.*
+*Copyright 2023, Tobias Neitzel and the remote-method-guesser contributors.*
