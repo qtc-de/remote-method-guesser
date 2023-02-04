@@ -18,7 +18,7 @@ import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;
 
 /**
- * The ActivatableWrapper class extends RemoteObjectWrapper and is used for wrapping ActiviatableRef.
+ * The ActivatableWrapper class extends RemoteObjectWrapper and is used for wrapping ActivatableRef.
  * By using the activate method of ActivatableWrapper, it is possible to turn it into an UnicastWrapper.
  *
  * @author Tobias Neitzel (@qtc_de)
@@ -128,10 +128,10 @@ public class ActivatableWrapper extends RemoteObjectWrapper
         activationRefField.setAccessible(true);
 
         PluginSystem.setResponeHandler(cachedHandler);
-        Remote activedObject = handler.getRemote();
-        activatableRef = RMGUtils.extractRef(activedObject);
+        Remote activatedObject = handler.getRemote();
+        activatableRef = RMGUtils.extractRef(activatedObject);
 
-        activatedRef = new UnicastWrapper(activedObject, boundName, (UnicastRef) activationRefField.get(activatableRef));
+        activatedRef = new UnicastWrapper(activatedObject, boundName, (UnicastRef) activationRefField.get(activatableRef));
 
         return activatedRef;
     }
@@ -148,7 +148,7 @@ public class ActivatableWrapper extends RemoteObjectWrapper
     }
 
     /**
-     * Return a formated string in host:port format for the Activator endpoint.
+     * Return a formatted string in host:port format for the Activator endpoint.
      *
      * @return String representation of the activator endpoint
      */

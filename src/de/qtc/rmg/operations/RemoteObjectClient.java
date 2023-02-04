@@ -46,9 +46,9 @@ public class RemoteObjectClient {
 
     /**
      * The RemoteObjectClient makes use of an RMIRegistryEndpoint to obtain a RemoteObject reference from the RMI
-     * registry. Afterwards, it needs access to the underlying UnicastRemoteRef to perform low level RMi calls.
+     * registry. Afterwards, it needs access to the underlying UnicastRemoteRef to perform low level RMI calls.
      *
-     * @param rmiRegistry RNIRegistryEndpoint to perform lookup operations
+     * @param rmiRegistry RMIRegistryEndpoint to perform lookup operations
      * @param boundName for the lookup on the RMI registry
      */
     public RemoteObjectClient(RMIRegistryEndpoint rmiRegistry, String boundName)
@@ -153,7 +153,7 @@ public class RemoteObjectClient {
 
     /**
      * Gets a list of bound names associated with the RemoteObjectClient itself and
-     * all of it's duplicates.
+     * all of its duplicates.
      *
      * @return bound name associated with the RemoteObjectClient
      */
@@ -174,7 +174,7 @@ public class RemoteObjectClient {
     /**
      * Invokes the specified MethodCandiate with a user specified payload object. This is used during deserialization
      * attacks and needs to target non primitive input arguments of RMI methods. By default, the function attempts
-     * to find a non primitive method argument on it's own. However, by using the argumentPosition parameter, it is
+     * to find a non primitive method argument on its own. However, by using the argumentPosition parameter, it is
      * also possible to specify it manually.
      *
      * @param targetMethod method to target for the attack
@@ -254,7 +254,7 @@ public class RemoteObjectClient {
      * This function is used for regular RMI calls on the specified MethodCandidate. It takes an array of Objects as
      * input arguments and invokes the MethodCandidate with them accordingly. The function itself is basically just a
      * wrapper around the genericCall function of the RMIEndpoint class. Especially the transformation from the raw
-     * Object array into the MethodArguments type is one of it's purposes.
+     * Object array into the MethodArguments type is one of its purposes.
      *
      * @param targetMethod remote method to call
      * @param argumentArray method arguments to use for the call
@@ -490,7 +490,7 @@ public class RemoteObjectClient {
         try {
             methodName = targetMethod.getName();
         } catch (CannotCompileException | NotFoundException e) {
-            ExceptionHandler.unexpectedException(e, "compliation", "process", true);
+            ExceptionHandler.unexpectedException(e, "compilation", "process", true);
         }
 
         return methodName;

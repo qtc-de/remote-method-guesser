@@ -74,7 +74,7 @@ public class RogueJMX implements RMIServer {
      */
     public Remote export() throws RemoteException
     {
-        Logger.printlnMixedBlue("Statring RogueJMX Server on", address + ":" + String.valueOf(port));
+        Logger.printlnMixedBlue("Starting RogueJMX Server on", address + ":" + String.valueOf(port));
 
         RMIClientSocketFactory csf = RMISocketFactory.getDefaultSocketFactory();
         RMIServerSocketFactory ssf = new LimitedSocketFactory(address);

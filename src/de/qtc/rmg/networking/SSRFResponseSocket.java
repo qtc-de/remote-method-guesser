@@ -12,7 +12,7 @@ import de.qtc.rmg.io.DevNullOutputStream;
 import sun.rmi.transport.TransportConstants;
 
 /**
- * Socket implementation that prevents outputs from being send anywhere and that simulates input
+ * Socket implementation that prevents outputs from being sent anywhere and that simulates input
  * by using a byte array that is set when calling the constructor. This socket is used for the
  * --ssrf-response option, where no real network interaction is desired and where the server response
  * is already present in form of a byte array.

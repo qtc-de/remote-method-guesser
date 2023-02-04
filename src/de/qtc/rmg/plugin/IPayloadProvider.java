@@ -4,7 +4,7 @@ import de.qtc.rmg.operations.Operation;
 
 /**
  * The IPayloadProvider interface is used during all rmg actions that send payload objects to the remote server.
- * This includes all actions that perform desrialization attacks, but also the bind, rebind and unbind actions.
+ * This includes all actions that perform deserialization attacks, but also the bind, rebind and unbind actions.
  * Implementors are expected to implement the getPayloadObject function, that is called to obtain the actual payload
  * object. The function takes the current rmg action (in case you want to provide different gadgets for different calls)
  * and the gadget name and gadget arguments that were specified on the command line.

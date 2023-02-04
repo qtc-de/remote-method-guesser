@@ -124,7 +124,7 @@ public class WordlistHandler {
      * Reads all files ending with .txt within the wordlist folder and returns the corresponding MethodCandidates.
      *
      * @param folder wordlist folder to read the wordlist files from
-     * @param updateWordlists determiens whether wordlists should be updated after creating MethodCandidates
+     * @param updateWordlists determines whether wordlists should be updated after creating MethodCandidates
      * @return HashSet of MethodCandidates parsed from the wordlist files
      * @throws IOException if an IO operation fails
      */
@@ -154,7 +154,7 @@ public class WordlistHandler {
      * constructor, each wordlist file is updated to the advanced format after the parsing.
      *
      * @param filename wordlist file to parse
-     * @param updateWordlists determiens whether wordlists should be updated after creating MethodCandidates
+     * @param updateWordlists determines whether wordlists should be updated after creating MethodCandidates
      * @return HashSet of MethodCandidates parsed from the wordlist file
      * @throws IOException if an IO operation fails
      */

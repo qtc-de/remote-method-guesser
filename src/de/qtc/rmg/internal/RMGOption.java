@@ -46,7 +46,7 @@ public enum RMGOption {
 
     SSRF_GOPHER("--gopher", "print SSRF content as gopher payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
     SSRF("--ssrf", "print SSRF payload instead of contacting a server", Arguments.storeTrue(), RMGOptionGroup.SSRF),
-    SSRFRESPONSE("--ssrf-response", "evaluate ssrf response from the server", Arguments.store(), RMGOptionGroup.SSRF, "hex"),
+    SSRFRESPONSE("--ssrf-response", "evaluate SSRF response from the server", Arguments.store(), RMGOptionGroup.SSRF, "hex"),
     SSRF_ENCODE("--encode", "double URL encode the SSRF payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
     SSRF_RAW("--raw", "print payload without color and without additional text", Arguments.storeTrue(), RMGOptionGroup.SSRF),
     SSRF_STREAM_PROTOCOL("--stream-protocol", "use the stream protocol instead of single operation", Arguments.storeTrue(), RMGOptionGroup.SSRF),
@@ -58,17 +58,17 @@ public enum RMGOption {
     BIND_GADGET_NAME("--gadget-name", "attempt to bind the specified gadget instead of JMXServer", Arguments.store(), RMGOptionGroup.ACTION, "gadget"),
     BIND_GADGET_CMD("--gadget-cmd", "command for a custom gadget", Arguments.store(), RMGOptionGroup.ACTION, "cmd"),
 
-    CODEBASS_CLASS("classname", "classname to load during codebase attack", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
+    CODEBASE_CLASS("classname", "classname to load during codebase attack", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
     CODEBASE_URL("url", "codebase URL to load the payload from", Arguments.store(), RMGOptionGroup.ACTION, "url"),
 
     LISTEN_IP("ip", "IP address to start the listener on", Arguments.store(), RMGOptionGroup.ACTION, "ip"),
     LISTEN_PORT("port", "port number to start the listener on", Arguments.store(), RMGOptionGroup.ACTION, "port"),
 
-    ROGUEJMX_OBJID("--objid", "objid to use for the JMX listener", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
+    ROGUEJMX_OBJID("--objid", "ObjID to use for the JMX listener", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
     ROGUEJMX_FORWARD_HOST("--forward-host", "host to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "host"),
     ROGUEJMX_FORWARD_PORT("--forward-port", "port to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "port"),
     ROGUEJMX_FORWARD_BOUND_NAME("--forward-bound-name", "bound name to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "name"),
-    ROGUEJMX_FORWARD_OBJID("--forward-objid", "objid to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
+    ROGUEJMX_FORWARD_OBJID("--forward-objid", "ObjID to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
 
     GUESS_WORDLIST_FILE("--wordlist-file", "wordlist file to use for method guessing", Arguments.store(), RMGOptionGroup.ACTION, "path"),
     GUESS_WORDLIST_FOLDER("--wordlist-folder", "location of the wordlist folder", Arguments.store(), RMGOptionGroup.ACTION, "path"),
@@ -390,7 +390,7 @@ public enum RMGOption {
             }
         }
 
-        Logger.eprintlnMixedYellow("Error: The specified aciton requires the", option.name, "option.");
+        Logger.eprintlnMixedYellow("Error: The specified action requires the", option.name, "option.");
         RMGUtils.exit();
 
         return null;
@@ -419,7 +419,7 @@ public enum RMGOption {
 
          helpString.setLength(helpString.length() - 2);
 
-        Logger.eprintlnMixedYellow("Error: The specified aciton requires one of the", helpString.toString(), "options.");
+        Logger.eprintlnMixedYellow("Error: The specified action requires one of the", helpString.toString(), "options.");
         RMGUtils.exit();
 
         return null;
@@ -437,7 +437,7 @@ public enum RMGOption {
         for( RMGOption option : options ) {
 
             if( !option.notNull() ) {
-                Logger.eprintlnMixedYellow("Error: The specified aciton requires the", option.name, "option.");
+                Logger.eprintlnMixedYellow("Error: The specified action requires the", option.name, "option.");
                 RMGUtils.exit();
             }
         }

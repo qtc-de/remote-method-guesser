@@ -318,7 +318,7 @@ public class RegistryClient {
      * annotation is always a String in ordinary use cases, it is read via readObject again. Therefore, when readObject is
      * used to unmarshal values, you have a second, implicit readObject call.
      *
-     * This function passes a class that is unknown to the server as annotation for an Integer object, that is send as the
+     * This function passes a class that is unknown to the server as annotation for an Integer object, that is sent as the
      * regular argument. When the server unmarshals via readObject, this should lead to a ClassNotFound exception. Otherwise,
      * the server unmarshals via readString.
      *
@@ -435,7 +435,7 @@ public class RegistryClient {
             Throwable t = ExceptionHandler.getCause(e);
 
             if( t instanceof java.rmi.AccessException && t.getMessage().contains("non-local host") ) {
-                Logger.printlnMixedYellow("- Registry", "rejected unbind call", "cause it was not send from localhost.");
+                Logger.printlnMixedYellow("- Registry", "rejected unbind call", "cause it was not sent from localhost.");
                 Logger.statusOk();
                 ExceptionHandler.showStackTrace(e);
 
@@ -448,7 +448,7 @@ public class RegistryClient {
 
         } catch( java.rmi.NotBoundException e ) {
             Logger.printMixedYellow("- Caught", "NotBoundException", "during unbind call ");
-            Logger.printlnPlainBlue("(unbind was accepeted).");
+            Logger.printlnPlainBlue("(unbind was accepted).");
             Logger.statusVulnerable();
             ExceptionHandler.showStackTrace(e);
 
@@ -491,7 +491,7 @@ public class RegistryClient {
         try {
             payloadObject = YsoIntegration.prepareAnTrinhGadget("127.0.0.1", 1234567);
         } catch(Exception e) {
-            ExceptionHandler.unexpectedException(e, "pyload", "creation", true);
+            ExceptionHandler.unexpectedException(e, "payload", "creation", true);
         }
 
         try {
