@@ -14,7 +14,7 @@ import sun.rmi.server.UnicastRef;
  * It stores the basic information that is required to use the remote object as usual, but adds additional
  * fields that allow to obtain meta information more easily.
  *
- * From remote-method-guesser v4.3.0 on, the class gets extended by the UnicastWrapper and ActivatbaleWrapper
+ * From remote-method-guesser v4.3.0 on, the class gets extended by the UnicastWrapper and ActivatableWrapper
  * classes. As the names suggest, UnicastWrapper is used to wrap remote objects that contain a UnicastRef,
  * whereas ActivatableWrapper is used for wrapping ActivatabaseRef types.
  *
@@ -74,11 +74,11 @@ public abstract class RemoteObjectWrapper
     /**
      * Create a RemoteObjectWrapper for the specified Remote. This function uses reflection
      * to inspect the reference type of the specified Remote. If it is a UnicastRef, a UnicastWrapper
-     * is returned. Otherwise, an ActivatbaleWrapper is returned.
+     * is returned. Otherwise, an ActivatableWrapper is returned.
      *
      * @param remote remote to create the wrapper for
      * @param boundName bound name as specified in the RMI registry
-     * @return RemoteObjectWrapper - Either a UnicastWrapper or a ActivatbaleWrapper depending on the Remote
+     * @return RemoteObjectWrapper - Either a UnicastWrapper or a ActivatableWrapper depending on the Remote
      * @throws Reflection related exceptions
      */
     public static RemoteObjectWrapper getInstance(Remote remote, String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException

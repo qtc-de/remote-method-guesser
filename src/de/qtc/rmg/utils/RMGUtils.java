@@ -170,7 +170,7 @@ public class RMGUtils {
 
     /**
      * Dynamically creates a serializable class that can be used within RMI calls. This function is used
-     * to perform codebase attacks, where a serializale class with user controlled class name needs to be send
+     * to perform codebase attacks, where a serializable class with user controlled class name needs to be sent
      * to the remote RMI server.
      *
      * @param className name of the serializable class to generate
@@ -199,7 +199,7 @@ public class RMGUtils {
      * @return Class object for ActivatableRef
      * @throws CannotCompileException
      */
-    public static Class makeActivatbaleRef() throws CannotCompileException
+    public static Class makeActivatableRef() throws CannotCompileException
     {
         try {
             return Class.forName("sun.rmi.server.ActivatableRef");
@@ -289,7 +289,7 @@ public class RMGUtils {
     }
 
     /**
-     * Just a helper function that combines geTypesFromSignature and createTypesFrom list. This function should
+     * Just a helper function that combines getTypesFromSignature and createTypesFrom list. This function should
      * be called before a method signature is compiled, as it makes sure that all required classes are on the
      * class path.
      *
@@ -420,7 +420,7 @@ public class RMGUtils {
      * into an Integer. Therefore, this function replaces primitives by their corresponding Object compatible representations.
      * During ordinary RMI calls, this is done automatically by using the Proxy object, which also wraps primitive types into
      * their corresponding Object compatible representations before passing them to the invoke method. However, as legacy stubs
-     * are'nt invoked via a Proxy, we have to implement the wrapping ourself.
+     * aren't invoked via a Proxy, we have to implement the wrapping ourselves.
      *
      * @param type the type of the argument in question
      * @param argName the name of the argument in question
@@ -600,7 +600,7 @@ public class RMGUtils {
      * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
      * The known remote object classes are looked up by using the CtClassPool. Afterwards, all implemented interfaces
      * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmi.Remote (this
-     * is required for all methods, that can be called from remote). From these interface,s all methods are obtained
+     * is required for all methods, that can be called from remote). From these interfaces, all methods are obtained
      * and added to the list of successfully guessed methods.
      *
      * @param boundName bound name that is using the known class
@@ -688,7 +688,7 @@ public class RMGUtils {
     /**
      * During regular RMI calls, method arguments are usually passed as Object array as methods are invoked using a
      * Proxy mechanism. However, on the network layer argument types need to be marshalled according to the expected
-     * type from the method signature. E.g. an argument value might be an Integer, but is epxected by the method as int.
+     * type from the method signature. E.g. an argument value might be an Integer, but is expected by the method as int.
      * Therefore, passing an Object array alone is not sufficient to correctly write the method arguments to the output
      * stream.
      *
@@ -698,7 +698,7 @@ public class RMGUtils {
      *
      * @param method CtMethod that is going to be invoked
      * @param parameterArray array of arguments to use for the call
-     * @return MerhodArguments - basically a list of Object value -> Type pairs
+     * @return MethodArguments - basically a list of Object value -> Type pairs
      * @throws NotFoundException
      */
     public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
@@ -1011,7 +1011,7 @@ public class RMGUtils {
     }
 
     /**
-     * Parses an ObjID from a String. In previous versions of rmg, only well known ObjID's were supported,
+     * Parses an ObjID from a String. In previous versions of rmg, only well known ObjIDs were supported,
      * as it was only possible to specify the ObjNum property of an ObjID. For non well known RemoteObjects,
      * an UID is required too. This function accepts now both inputs. You can just specify a number like
      * 1, 2 or 3 to target one of the well known RMI components or a full ObjID string to target a different
@@ -1069,7 +1069,7 @@ public class RMGUtils {
      * the function returns the first implemented interface name that is not java.rmi.Remote.
      *
      * @param remoteObject Object to obtain the class from
-     * @return Class name of the implementor or one of it's interfaces in case of a Proxy
+     * @return Class name of the implementor or one of its interfaces in case of a Proxy
      */
     public static String getClassName(Remote remoteObject)
     {
@@ -1149,7 +1149,7 @@ public class RMGUtils {
     /**
      * Provides a Java8+ compatible way to create an ObjectInputFilter using reflection. Using
      * ordinary class access does not work for projects that should be compatible with Java8 and
-     * Java9+, since the ObjectInputFIlter class is located in different packages.
+     * Java9+, since the ObjectInputFilter class is located in different packages.
      *
      * @param pattern Serial filter pattern as usually used for ObjectInputFilter
      * @return Either sun.misc.ObjectInputFilter or java.io.ObjectInputFilter depending on the Java environment

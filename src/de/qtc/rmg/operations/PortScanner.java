@@ -135,7 +135,7 @@ public class PortScanner {
 
 
         /**
-         * A PortScanWorkers obtains the candidate port it should scan and a boolean
+         * A PortScanWorker obtains the candidate port it should scan and a boolean
          * that indicates whether the connection needs to be made using TLS.
          *
          * @param port port to scan
@@ -161,7 +161,7 @@ public class PortScanner {
          * An RMI service that does not implement an RMI registry will return an NoSuchObjectException.
          * In this case, we perform additional scans for the DGC and the Activator remote objects. On
          * the other hand, an RMI port that implements an RMI registry will answer with an
-         * ArrayIndexOutOfBoundException (due to the non existing operation number). In this case we mark
+         * ArrayIndexOutOfBoundsException (due to the non existing operation number). In this case we mark
          * the port as registry port and perform additional scans for the DGC and Activator remote objects.
          */
         public void run()

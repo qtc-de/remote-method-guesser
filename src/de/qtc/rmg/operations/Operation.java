@@ -22,7 +22,7 @@ import net.sourceforge.argparse4j.inf.Subparsers;
  */
 public enum Operation {
 
-    BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry thats points to listener", new RMGOption[] {
+    BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
             RMGOption.GLOBAL_CONFIG,
@@ -46,7 +46,7 @@ public enum Operation {
             RMGOption.YSO,
     }),
 
-    CALL("dispatchCall", "<arguments>", "Regulary calls a method with the specified arguments", new RMGOption[] {
+    CALL("dispatchCall", "<arguments>", "Regularly calls a method with the specified arguments", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
             RMGOption.TARGET_BOUND_NAME,
@@ -91,7 +91,7 @@ public enum Operation {
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
             RMGOption.CODEBASE_URL,
-            RMGOption.CODEBASS_CLASS,
+            RMGOption.CODEBASE_CLASS,
             RMGOption.ARGUMENT_POS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,

@@ -15,7 +15,7 @@ import de.qtc.rmg.io.Logger;
  * Remote objects bound to an RMI registry are usually pointing to remote endpoints
  * on the same host. In order to protect from unauthorized access, some developers
  * suggest setting these references to localhost or 127.0.0.1 explicitly. This will
- * indeed cause hickups in most RMI clients, as they try to call to 127.0.0.1 after
+ * indeed cause hiccups in most RMI clients, as they try to call to 127.0.0.1 after
  * fetching a remote object. However, when the TCP ports of the corresponding remote
  * objects are open, it is still possible to communicate with them.
  *

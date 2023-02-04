@@ -15,7 +15,7 @@ import javassist.CtClass;
 /**
  * In the old days, it was pretty common for RMI endpoints to use an Activator. An Activator
  * is basically another well known RemoteObject like the registry or the distributed garbage
- * collector. It's purpose was the activation of RemoteObjects, which were not constantly
+ * collector. Its purpose was the activation of RemoteObjects, which were not constantly
  * available, but created on demand. Apart from a remote reference, RMI clients also obtained
  * an ActivationID during the lookup. When the RemoteObject was currently available, it was
  * just used in a regular way. However, when the remote object was not available, clients could
@@ -182,7 +182,7 @@ public class ActivationClient {
 
     /**
      * Helper method to pack the arguments for the activate call. The first parameter of the corresponding remote method
-     * is the non primitive and contains the payload object. The second one is a boolean and always contains failse.
+     * is the non primitive and contains the payload object. The second one is a boolean and always contains false.
      *
      * @param payloadObject payload to use for the first non primitive argument
      * @return MethodArguments object that can be used for the activate call
@@ -219,7 +219,7 @@ public class ActivationClient {
      * activation system. Therefore, we should not use activation system related classed directly.
      *
      * @param activationID the ActivationID of the reference to activate
-     * @param force whether to force the activation (do not return cached referecnes)
+     * @param force whether to force the activation (do not return cached references)
      * @param ref RemoteRef for the Activator remote object
      * @throws Exception connection related exceptions are caught, but anything other is thrown
      */

@@ -40,7 +40,7 @@ public enum RMGOptionGroup {
 
     /**
      * Helper function that adds the ArgumentGroup to an ArgumentParser. Each remote-method-guesser operation
-     * uses a separate subparser. Each subparser contains it's own ArgumentGroup. Therefore, it is required to
+     * uses a separate subparser. Each subparser contains its own ArgumentGroup. Therefore, it is required to
      * create each ArgumentGroup for each operation.
      *
      * This function first checks whether the ArgumentGroup for the specified operation was already created.

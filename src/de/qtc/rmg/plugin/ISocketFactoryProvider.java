@@ -17,7 +17,7 @@ import java.rmi.server.RMISocketFactory;
  * The getDefaultSSLSocketFactory function can be used to overwrite the RMISocketFactory that is used on RMI operations
  * that are invoked on remote objects obtained from an RMI registry, that use the default SSLSocketFactory implementation.
  *
- * When an RMI server implements a custom RMISocketFactory on the RMI registry and for it's remote objects, you usually
+ * When an RMI server implements a custom RMISocketFactory on the RMI registry and for its remote objects, you usually
  * need to do the following:
  *
  *         1. Add an compiled version of the server's RMISocketFactory class to your class path

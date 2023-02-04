@@ -44,13 +44,13 @@ public class DGCClient {
      * class loading and inform the caller about the missing Security Manager within the raised exception.
      *
      * If a Security Manager is in use, the DGC should raise an UnmarshalException that contains the ClassNotFoundException
-     * as it's cause. During the RMI call, the enumSecurityManager function sets an invalid URL as client side codebase.
+     * as its cause. During the RMI call, the enumSecurityManager function sets an invalid URL as client side codebase.
      * However, modern DGC implementations set useCodebaseOnly to false internally and do not respect user defined
      * settings for this property. Remote class loading is therefore always disabled on modern DGC endpoints. Getting
      * an UnmarshalException containing a plain ClassNotFoundException is therefore the most common behavior when a Security
      * Manager is in use.
      *
-     * If the remote server specifies a codebase value on it's own, we may also encounter a ClassNotFoundException that
+     * If the remote server specifies a codebase value on its own, we may also encounter a ClassNotFoundException that
      * contains 'access to class loader denied' within the Exception text. This is caused by the separate AccessControlContext
      * that is used by the DGC. Since the codebase is defined by the server itself, useCodebaseOnly=true does not matter here
      * and the DGC attempts to load the unknown class from the server specified codebase. However, due to the separate and

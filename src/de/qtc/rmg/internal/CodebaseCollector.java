@@ -14,12 +14,12 @@ import javassist.NotFoundException;
 /**
  * The CodebaseCollector class is used to detect server specified codebases and to report
  * them to the user. Such a functionality sounds easy to implement, but it was surprisingly
- * difficult. Java RMI does not support programmatically access to an RMI servers codebase,
+ * difficult. Java RMI does not support programmatically access to an RMI server's codebase,
  * but only uses it internally for class loading purposes.
  *
  * The trick is to override the default class loader by using the java.rmi.server.RMIClassLoaderSpi
  * property. This property is used to determine the class that is actually used to perform the
- * class loading and it's functions are called with the servers specified codebase (if available).
+ * class loading and its functions are called with the server's specified codebase (if available).
  * When a server side codebase is available, the codebase parameter for methods within RMIClassLoaderSpi
  * is a String that contains the corresponding codebase URL. If no codebase was specified, the codebase
  * parameter is set to null. However, this is only true if the client is running with useCodebaseOnly=false,
@@ -38,7 +38,7 @@ import javassist.NotFoundException;
  * From remote-method-guesser v4.3.0, this class also handles issues that are caused by the probably missing
  * activation system. If the server returns an ActivatableRef, this class is probably no longer existing in
  * the currently running JVM, as it was deprecated and removed in 2021. This class checks whether the
- * ActivatbaleRef class is requested and creates it dynamically if required.
+ * ActivatableRef class is requested and creates it dynamically if required.
  *
  * From remote-method-guesser v4.3.2, this class has another purpose of handling uncommon serialVersionUIDs.
  * The regular case is that legacy RMI stubs have a serialVersionUID of 2L. However, it was observed that not
@@ -98,7 +98,7 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
             }
 
             if (name.equals("sun.rmi.server.ActivatableRef"))
-                RMGUtils.makeActivatbaleRef();
+                RMGUtils.makeActivatableRef();
 
             resolvedClass = originalLoader.loadClass(codebase, name, defaultLoader);
 
@@ -186,7 +186,7 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
      * Add a new className<->serialVersionUID pair to the serialVersionUID map.
      *
      * @param className  the className to add to the map
-     * @param serialVersionUID  the serialVerisonUID to add to the map
+     * @param serialVersionUID  the serialVersionUID to add to the map
      */
     public static void addSerialVersionUID(String className, long serialVersionUID)
     {
