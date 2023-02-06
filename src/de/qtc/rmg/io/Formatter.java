@@ -105,7 +105,7 @@ public class Formatter {
      * to classes that their annotated with it. This function prints this HashMap in a human readable
      * format.
      */
-    public void listCodeases()
+    public void listCodebases()
     {
         Logger.printlnBlue("RMI server codebase enumeration:");
         Logger.lineBreak();
@@ -286,10 +286,10 @@ public class Formatter {
     /**
      * Print some more information on a ActivatableRef. This always includes
      * the endpoint of the corresponding Activator instance and the associated
-     * ActivationID. If the ActivatbaleRef was already activated, the associated
+     * ActivationID. If the ActivatableRef was already activated, the associated
      * UnicastRef information is also printed, as in the case of printUnicastRef.
      *
-     * @param ref ActivatableWrapper containing the activatbale ref
+     * @param ref ActivatableWrapper containing the activatable ref
      */
     private void printActivatableRef(ActivatableWrapper ref)
     {

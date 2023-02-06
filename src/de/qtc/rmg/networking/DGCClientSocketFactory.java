@@ -13,7 +13,7 @@ import java.rmi.server.RMISocketFactory;
  * sockets that discard all incoming data and return an malformed DGC response when being read.
  *
  * Since no outgoing data is expected when using --ssrf-response, this socket factory is set
- * to the default RMI socket factory if the --ssrf-resopnse option is used.
+ * to the default RMI socket factory if the --ssrf-response option is used.
  *
  * @author Tobias Neitzel (@qtc_de)
  */

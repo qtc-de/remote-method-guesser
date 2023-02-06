@@ -78,7 +78,7 @@ public class FileManager extends UnicastRemoteObject implements IFileManager {
      *
      * @param src Source location to copy a file from
      * @param dest Destination location to copy a file to
-     * @return Status information whether the copy operation was successfull.
+     * @return Status information whether the copy operation was successful.
      */
     @Override
     public String copy(String src, String dest) throws RemoteException, IOException, InterruptedException

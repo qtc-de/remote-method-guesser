@@ -24,7 +24,7 @@ import javassist.NotFoundException;
 
 /**
  * The SampleWriter class handles the dynamic creation of RMI code. It uses samples defined within the template folder
- * of the project and replaces some place holders that are defined within them. The result should be compilable Java
+ * of the project and replaces some place holders that are defined within them. The result should be compileable Java
  * code that can be used to perform RMI operations.
  *
  * @author Tobias Neitzel (@qtc_de)
@@ -42,8 +42,8 @@ public class SampleWriter {
     private static String argumentPlaceholder = "            <ARGUMENTTYPE> <ARGUMENT> = TODO;";
 
     /**
-     * Creates a SmapleWriter object. During the creation, a samples folder may be generated if not
-     * already present. If the specified template folder is null or empty, rmg defaults to use it's
+     * Creates a SampleWriter object. During the creation, a samples folder may be generated if not
+     * already present. If the specified template folder is null or empty, rmg defaults to use its
      * internal template folder that is packed into the JAR file.
      *
      * @param templateFolder folder where template files are stored
@@ -87,7 +87,7 @@ public class SampleWriter {
     }
 
     /**
-     * Reads a template file form the internal template folder and returns it's contents. As the
+     * Reads a template file form the internal template folder and returns its contents. As the
      * internal template folder is contained within the JAR file, getResourceAsStream is used to
      * load the template.
      *
@@ -250,7 +250,7 @@ public class SampleWriter {
 
         if( returnType.getName().equals("void") ) {
             template = remove(template, "<RETURNTYPE> response = ");
-            template = remove(template, "System.out.println(\"[+] The servers response is: \" + response);");
+            template = remove(template, "System.out.println(\"[+] The server's response is: \" + response);");
         } else {
             template = template.replace("<RETURNTYPE>", returnType.getName());
         }

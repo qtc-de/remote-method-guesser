@@ -28,8 +28,8 @@ import javassist.CtNewMethod;
  * IPayloadProvider and ISocketFactoryProvider interfaces and is always loaded when no user specified
  * plugin overwrites one of these interfaces.
  *
- * Within it's IPayloadProvider override, it returns either a RMIServerImpl object as used by JMX (for bind, rebind
- * and unbin actions) or a ysoserial gadget (for basically all other actions). The IArgumentProvider override attempts
+ * Within its IPayloadProvider override, it returns either a RMIServerImpl object as used by JMX (for bind, rebind
+ * and unbind actions) or a ysoserial gadget (for basically all other actions). The IArgumentProvider override attempts
  * to evaluate the user specified argument string as Java code and attempts to create an Object array out of it that
  * is used for method calls. The ISocketFactoryProvider implementation returns remote-method-guesser's loopback
  * factories that prevent redirections from the server side.

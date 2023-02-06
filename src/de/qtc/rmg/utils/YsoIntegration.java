@@ -35,10 +35,10 @@ import sun.rmi.transport.tcp.TCPEndpoint;
  * for the following reasons:
  *
  *      1. The ysoserial library is quite big in file size (~55MB). If each offensive tool includes it within
- *         its own .jar file, you loose a non neglectable amount of disc space to duplicate stuff.
+ *         its own .jar file, you loose a non negligible amount of disc space to duplicate stuff.
  *      2. Including ysoserial as a dependency means that you have all available gadgets within your own classpath,
  *         which make you vulnerable against deserialization attacks on the client side.
- *      3. Each security professional is expected to has a ysoserial.jar on his machine anyway, so why shipping
+ *      3. Each security professional is expected to have a ysoserial.jar on his machine anyway, so why shipping
  *         an additional one?
  *
  * Instead of using it as a library, remote-method-guesser uses a URLClassLoader to load the .jar and Reflection
@@ -52,7 +52,7 @@ public class YsoIntegration {
     private static String[] bypassGadgets = new String[]{"JRMPClient2", "AnTrinh"};
 
     /**
-     * Basically a wrapper around prapreAnTrinhGadget that attempts to parse the command string as a listener
+     * Basically a wrapper around prepareAnTrinhGadget that attempts to parse the command string as a listener
      * before creating the listener object. This is called during gadget creation, when the specified gadget
      * is the AnTrinh gadget.
      *
@@ -130,7 +130,7 @@ public class YsoIntegration {
      * the JRMPListener class of ysoserial. The ysoserial library is loaded via URLClassLoader and the
      * JRMPListener class is accessed via reflection.
      *
-     * The only noticable difference to the default JRMPListener of ysoserial is, that you can specify
+     * The only noticeable difference to the default JRMPListener of ysoserial is, that you can specify
      * the listening host in this implementation. The JRMPListener will then only be opened on the specified
      * IP address.
      *

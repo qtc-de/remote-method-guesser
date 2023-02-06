@@ -299,7 +299,7 @@ public class MethodGuesser {
          * Initialize the guessing worker with all the required information.
          *
          * @param client RemoteObjectClient to the targeted remote object
-         * @param candidates MethodCanidates to guess
+         * @param candidates MethodCandidates to guess
          */
         public GuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates)
         {

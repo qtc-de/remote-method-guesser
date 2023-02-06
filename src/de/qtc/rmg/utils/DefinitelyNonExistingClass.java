@@ -8,8 +8,8 @@ import java.io.Serializable;
  * class is still used in one DGC function (although it is not really required there), but could
  * theoretically be removed. We leave it for now, as it may be useful for future development.
  *
- * The initial idea of the class was just to have a default object that can be send to server, that
- * is certainly not available within the servers class path.
+ * The initial idea of the class was just to have a default object that can be sent to server, that
+ * is certainly not available within the server's class path.
  *
  * @author Tobias Neitzel (@qtc_de)
  */

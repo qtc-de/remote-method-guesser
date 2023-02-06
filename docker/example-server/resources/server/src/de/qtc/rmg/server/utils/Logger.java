@@ -207,7 +207,7 @@ public class Logger {
         elog(eprefix() + blue(first) + " " + second);
     }
 
-    public static void erintlnMixedBlueFirst(String first, String second, String third)
+    public static void eprintlnMixedBlueFirst(String first, String second, String third)
     {
         elog(eprefix() + blue(first) + " " + second + " " + blue(third));
     }
@@ -297,7 +297,7 @@ public class Logger {
         elog(eprefix() + blue(first) + " " + second, false);
     }
 
-    public static void erintMixedBlueFirst(String first, String second, String third)
+    public static void eprintMixedBlueFirst(String first, String second, String third)
     {
         elog(eprefix() + blue(first) + " " + second + " " + blue(third), false);
     }

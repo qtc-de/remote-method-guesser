@@ -24,7 +24,7 @@ import sun.rmi.transport.TransportConstants;
  * at maximum one DGC connection per remote endpoint. The implementation in this class is not suitable
  * for connection reuse. If connections are reused, the DGC will encounter errors, since the static
  * response always contains a full RMI handshake. In the current state this should never occur and even
- * if it occurs, it shouldn't impact the user experience as DGC exceptions are handeled hidden from the
+ * if it occurs, it shouldn't impact the user experience as DGC exceptions are handled hidden from the
  * user. If reuse of connections is required in future, you may want to add a more sophisticated connection
  * handling in this class, which checks whether a connection is newly created or being reused.
  *

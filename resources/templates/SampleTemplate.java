@@ -58,7 +58,7 @@ public class <SAMPLECLASSNAME> extends SSLSocketFactory {
          * Setup the default ssl.SocketFactory. The DummyTrustManager is a trust manager
          * that skips certificate verification. The SSLSocketFactory needs to be a public
          * class. To make the code self contained, the current class is implementing this
-         * interface and implements the same redirection funcationality as the
+         * interface and implements the same redirection functionality as the
          * LoopbackSocketFactory.
          */
         try {
