@@ -8,7 +8,7 @@ import org.yaml.snakeyaml.constructor.Constructor;
 
 /**
  * The KnownEndpointHolder is a helper class to work with KnownEndpoints. It is responsible
- * to create the list of KnownEndpoints from the known-endpoins.yml file that is contained
+ * to create the list of KnownEndpoints from the known-endpoints.yml file that is contained
  * within the remote-method-guesser .jar file. Furthermore, it can be used to perform certain
  * operations on the list, like checking whether a KnownEndpoint exists in the list or returning
  * a KnownEndpoint by name.
@@ -45,7 +45,7 @@ public class KnownEndpointHolder {
 
     /**
      * Can be used to lookup a class name within the List of KnownEndpoints. The first endpoint
-     * that contains the corresponding class name within it's className list is returned. If no
+     * that contains the corresponding class name within its className list is returned. If no
      * endpoint is matching, return null.
      *
      * @param className KnownEndpoint className to look for

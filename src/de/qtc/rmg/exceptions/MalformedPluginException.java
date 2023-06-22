@@ -2,7 +2,7 @@ package de.qtc.rmg.exceptions;
 
 /**
  * MalformedPluginExceptions are thrown then an rmg plugin was specified on the command
- * line that does not satisfy the plugin requirements. Usually that happens then the
+ * line that does not satisfy the plugin requirements. Usually, if that happens, then the
  * Manifest of the corresponding plugin does not contain a reference to the rmg plugin
  * class.
  *

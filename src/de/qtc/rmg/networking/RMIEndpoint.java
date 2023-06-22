@@ -131,7 +131,7 @@ public class RMIEndpoint {
      * less parameters and offers only limited control to the caller. Methods are called with a specially prepared
      * set of arguments. In case of a method that accepts non primitive arguments, the function sends as many primitive
      * bytes over the network as it is required to reach the first non primitive argument. The advantage of this technique
-     * is that all data is send within one BLOCKDATA block in the ObjectOutputStream (same block that contains the method hash).
+     * is that all data is sent within one BLOCKDATA block in the ObjectOutputStream (same block that contains the method hash).
      * The RMI server will read and drop the complete BLOCKDATA block in any case (method exists / method does not exist)
      * and the stream is clean and ready for the next invocation. In case of methods that take only primitive arguments,
      * the ObjectOutputStream is modified to send a RMI ping message that cuts of the BLOCKDATA array that contains the
@@ -208,7 +208,7 @@ public class RMIEndpoint {
      *                 RMI calls. For current calling convention, it should be negative
      * @param methodHash hash value of the method to call or interface hash for legacy calls
      * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
-     * @param locationStream if true, uses the MaliciousOutpuStream class to write custom annotation objects
+     * @param locationStream if true, uses the MaliciousOutputStream class to write custom annotation objects
      * @param callName the name of the RMI call you want to dispatch (only used for logging)
      * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port
      *                 of this class are used

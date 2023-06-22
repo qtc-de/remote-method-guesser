@@ -210,7 +210,7 @@ public class Dispatcher {
     }
 
     /**
-     * Is expected to be called other the method guessing. Takes a HashMap of bound name -> [MethodCandidaite]
+     * Is expected to be called other the method guessing. Takes a HashMap of bound name -> [MethodCandidate]
      * pairs and writes sample files for each bound name. The sample files contain Java code that can be used to
      * call the corresponding remote methods.
      *
@@ -258,7 +258,7 @@ public class Dispatcher {
         } catch (UnexpectedCharacterException e) {
             Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
             Logger.eprintln("This is caused by special characters within bound- or classes names.");
-            Logger.eprintlnMixedYellow("You can enforce sample cration with the", "--trusted", "switch.");
+            Logger.eprintlnMixedYellow("You can enforce sample creation with the", "--trusted", "switch.");
             RMGUtils.exit();
         }
 
@@ -388,7 +388,7 @@ public class Dispatcher {
         RMGOption.requireTarget();
 
         String codebase = RMGOption.require(RMGOption.CODEBASE_URL);
-        String className = RMGOption.require(RMGOption.CODEBASS_CLASS);
+        String className = RMGOption.require(RMGOption.CODEBASE_CLASS);
         RMGUtils.setCodebase(codebase);
 
         Object payload = null;
@@ -499,7 +499,7 @@ public class Dispatcher {
                     format.listBoundNames(remoteObjects);
 
                     Logger.lineBreak();
-                    format.listCodeases();
+                    format.listCodebases();
 
                 } else {
                     remoteObjects = RemoteObjectWrapper.fromBoundNames(boundNames);
@@ -530,7 +530,7 @@ public class Dispatcher {
             enumJEP290Bypass = false;
 
             Logger.lineBreak();
-            format.listCodeases();
+            format.listCodebases();
         }
 
         if( actions.contains(ScanAction.SECURITY_MANAGER) ) {
@@ -611,7 +611,7 @@ public class Dispatcher {
     public void dispatchPortScan()
     {
         String host = RMGOption.require(RMGOption.TARGET_HOST);
-        int[] rmiPorts = p.getRmiPots();
+        int[] rmiPorts = p.getRmiPorts();
 
         Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
         Logger.printlnPlainMixedBlueFirst(host, "for RMI services.");

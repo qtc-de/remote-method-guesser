@@ -326,7 +326,7 @@ public class ArgumentHandler {
      * @return array of int which contains all ports that should be scanned
      */
     @SuppressWarnings("unchecked")
-    public int[] getRmiPots()
+    public int[] getRmiPorts()
     {
         Set<Integer> rmiPorts = new HashSet<Integer>();
 

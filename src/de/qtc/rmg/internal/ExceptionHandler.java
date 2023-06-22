@@ -75,12 +75,12 @@ public class ExceptionHandler {
 
     public static void nonLocalhost(Exception e, String callName, boolean bypass)
     {
-        Logger.eprintlnMixedYellow("Registry", "rejected " + callName + " call", "because it was not send from localhost.");
+        Logger.eprintlnMixedYellow("Registry", "rejected " + callName + " call", "because it was not sent from localhost.");
 
         if(!bypass)
             Logger.eprintlnMixedBlue("You can attempt to bypass this restriction using the", "--localhost-bypass", "option.");
         else
-            Logger.eprintlnMixedBlue("Localhost bypass was used but", "failed.");
+            Logger.eprintlnMixedBlue("Localhost bypass was used, but", "failed.");
 
         showStackTrace(e);
     }
@@ -97,7 +97,7 @@ public class ExceptionHandler {
         Logger.eprintlnMixedYellow("Server", "accepted", "deserialization of the supplied gadget, but");
         Logger.eprintlnMixedBlue("during the deserialization, a", "ClassNotFoundException", "was encountered.");
         Logger.eprintMixedYellow("The supplied gadget may have", "worked anyway", "or it is ");
-        Logger.eprintlnPlainMixedBlueFirst("not available", "on the servers classpath.");
+        Logger.eprintlnPlainMixedBlueFirst("not available", "on the server's classpath.");
         showStackTrace(e);
     }
 
@@ -109,7 +109,7 @@ public class ExceptionHandler {
         showStackTrace(e);
     }
 
-    public static void deserlializeClassCast(Exception e, boolean wasString)
+    public static void deserializeClassCast(Exception e, boolean wasString)
     {
         Logger.printlnMixedYellow("Caught", "ClassCastException", "during deserialization attack.");
 
@@ -262,14 +262,14 @@ public class ExceptionHandler {
     public static void accessControl(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "AccessControlException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("The servers", "SecurityManager", "may refused the operation.");
+        Logger.eprintlnMixedBlue("The server's", "SecurityManager", "may refused the operation.");
         showStackTrace(e);
     }
 
     public static void singleEntryRegistry(Exception e, String during1)
     {
         Logger.eprintlnMixedYellow("- Caught", "AccessException", "during " + during1 + "call.");
-        Logger.eprintlnMixedBlue("  --> The servers seems to use a", "SingleEntryRegistry", "(probably JMX based).");
+        Logger.eprintlnMixedBlue("  --> The server seems to use a", "SingleEntryRegistry", "(probably JMX based).");
         Logger.statusUndecided("Vulnerability");
         showStackTrace(e);
     }
@@ -277,7 +277,7 @@ public class ExceptionHandler {
     public static void noSuchObjectException(Exception e, String object, boolean exit)
     {
         Logger.eprintlnMixedYellow("Caught", "NoSuchObjectException", "during RMI call.");
-        Logger.eprintlnMixedBlue("There seems to be no", object, "object avaibale on the specified endpoint.");
+        Logger.eprintlnMixedBlue("There seems to be no", object, "object available on the specified endpoint.");
         showStackTrace(e);
 
         if(exit)
@@ -313,7 +313,7 @@ public class ExceptionHandler {
     public static void eofException(Exception e, String during1, String during2)
     {
         Logger.eprintlnMixedYellow("Caught unexpected", "EOFException", "during " + during1 + " " + during2 + ".");
-        Logger.eprintlnMixedBlue("One possible reason is a missmatch in the", "TLS", "settings.");
+        Logger.eprintlnMixedBlue("One possible reason is a mismatch in the", "TLS", "settings.");
 
         ExceptionHandler.sslOption();
 
@@ -386,7 +386,7 @@ public class ExceptionHandler {
 
     public static void unknownHost(Exception e, String host, boolean exit)
     {
-        Logger.eprintlnMixedYellow("Caugth", "UnknownHostException", "during connection setup.");
+        Logger.eprintlnMixedYellow("Caught", "UnknownHostException", "during connection setup.");
         Logger.eprintlnMixedBlue("The IP address of the endpoint", host, "could not be resolved.");
         showStackTrace(e);
 
@@ -396,7 +396,7 @@ public class ExceptionHandler {
 
     public static void networkUnreachable(Exception e, String during1, String during2)
     {
-        Logger.eprintlnMixedYellow("Caugth", "SocketException", "during " + during1 + " " + during2 + ".");
+        Logger.eprintlnMixedYellow("Caught", "SocketException", "during " + during1 + " " + during2 + ".");
         Logger.eprintlnMixedBlue("The specified target is", "not reachable", "with your current network configuration.");
         showStackTrace(e);
         RMGUtils.exit();
@@ -631,7 +631,7 @@ public class ExceptionHandler {
      * Taken from https://stackoverflow.com/questions/17747175/how-can-i-loop-through-exception-getcause-to-find-root-cause-with-detail-messa
      * Returns the actual cause of an exception.
      *
-     * @param e Exception that should be handeled.
+     * @param e Exception that should be handled.
      * @return cause of the Exception.
      */
     public static Throwable getCause(Throwable e)
@@ -834,10 +834,10 @@ public class ExceptionHandler {
             } else if( cause instanceof java.lang.ClassCastException ) {
 
                 if ( RMGUtils.createdByReadString(cause.getMessage()) )
-                    ExceptionHandler.deserlializeClassCast(e, true);
+                    ExceptionHandler.deserializeClassCast(e, true);
 
                 else
-                    ExceptionHandler.deserlializeClassCast(e, false);
+                    ExceptionHandler.deserializeClassCast(e, false);
 
             } else {
                 ExceptionHandler.unknownDeserializationException(e);
@@ -846,10 +846,10 @@ public class ExceptionHandler {
         } catch( java.lang.ClassCastException e ) {
 
             if ( RMGUtils.createdByReadString(e.getMessage()) )
-                ExceptionHandler.deserlializeClassCast(e, true);
+                ExceptionHandler.deserializeClassCast(e, true);
 
             else
-                ExceptionHandler.deserlializeClassCast(e, false);
+                ExceptionHandler.deserializeClassCast(e, false);
 
         } catch( java.lang.IllegalArgumentException e ) {
             ExceptionHandler.illegalArgument(e);
@@ -864,7 +864,7 @@ public class ExceptionHandler {
             if( t instanceof java.lang.ClassNotFoundException ) {
                 Logger.eprintlnMixedYellow("Caught local", "ClassNotFoundException", "during deserialization attack.");
                 Logger.eprintlnMixedBlue("This usually occurs when the", "gadget caused an exception", "on the server side.");
-                Logger.eprintlnMixedYellow("You probably entered entered an", "invalid command", "for the gadget.");
+                Logger.eprintlnMixedYellow("You probably entered an", "invalid command", "for the gadget.");
                 ExceptionHandler.showStackTrace(e);
 
             } else {

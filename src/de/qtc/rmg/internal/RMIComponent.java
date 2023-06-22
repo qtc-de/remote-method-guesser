@@ -3,7 +3,7 @@ package de.qtc.rmg.internal;
 /**
  * The RMIComponent enum represents the different RMI components that may be targeted
  * when communicating with an RMI server. The enum contains the three well known components
- * Registry, Activator and DGC as well as a member named CUSTOM, that is used for non
+ * Registry, Activator and DGC as well as a member named CUSTOM, that is used for not
  * well known remote objects.
  *
  * @author Tobias Neitzel (@qtc_de)
@@ -19,7 +19,7 @@ public enum RMIComponent {
     public String shortName;
 
     /**
-     * RMIComponents consist our of a human readable name and a short name. Human readable names
+     * RMIComponents consist out of a human readable name and a short name. Human readable names
      * are used within error messages. Short names are used for help messages and command line parsing.
      *
      * @param name Human readable name for the component
@@ -32,7 +32,7 @@ public enum RMIComponent {
     }
 
     /**
-     * Get the corresponding RMIComponent by specifying it's short name.
+     * Get the corresponding RMIComponent by specifying its short name.
      *
      * @param shortName Component shortName to look for
      * @return RMIComponent matching the shortName or null

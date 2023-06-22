@@ -57,7 +57,7 @@ public class ProgressBar {
     }
 
     /**
-     * Prits the current progress bar to stdout.
+     * Prints the current progress bar to stdout.
      */
     private void printBar()
     {

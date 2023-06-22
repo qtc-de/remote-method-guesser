@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.4.1] - Jun 22, 2023
+
+### Added
+
+* Add pull request template (see #46)
+
+### Changed
+
+* Fix many typos (see #46)
+* Improve *rmg*s Java16+ compatibility (see #49)
+
+
 ## [4.4.0] - Jan 19, 2023
 
 ### Changed

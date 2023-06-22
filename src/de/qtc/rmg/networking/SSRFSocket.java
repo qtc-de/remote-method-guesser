@@ -25,14 +25,14 @@ import sun.rmi.transport.TransportConstants;
  * The SSRFSocket class is an alternative Socket implementation that sends all socket output
  * to a byte array and that uses another static byte array for simulating server input. This
  * kind of socket is used when the --ssrf option was specified. In this case, all RMI output
- * should be printed instead of being send to a server. Since no real server communication
+ * should be printed instead of being sent to a server. Since no real server communication
  * occurs, server responses have to be simulated.
  *
  * When simulating server responses, the socket uses some static data that always ends in an
  * ExceptionalReturn (RMI transport code for an exception that was caused on the server side).
  * The corresponding exception is an SSRFException, that is defined within remote-method-guesser.
  * This mechanism is used to terminate the program after the output operation has finished.
- * As soon as the tool attempts to read the servers response, it will catch the exception, print
+ * As soon as the tool attempts to read the server's response, it will catch the exception, print
  * all data that was collected by the output stream, byte array buffer, and exit.
  *
  * @author Tobias Neitzel (@qtc_de)
