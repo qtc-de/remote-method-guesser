@@ -8,10 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.4.1] - Jun 22, 2023
 
+### Added
+
+* Add pull request template (see #46)
+
 ### Changed
 
-* Fixe many typos (see #46)
-* Add pull request template (see #46)
+* Fix many typos (see #46)
 * Improve *rmg*s Java16+ compatibility (see #49)
 
 
