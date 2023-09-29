@@ -44,6 +44,7 @@ public enum Operation {
             RMGOption.BIND_GADGET_NAME,
             RMGOption.BIND_GADGET_CMD,
             RMGOption.YSO,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     CALL("dispatchCall", "<arguments>", "Regularly calls a method with the specified arguments", new RMGOption[] {
@@ -69,6 +70,7 @@ public enum Operation {
             RMGOption.CALL_ARGUMENTS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks", new RMGOption[] {
@@ -96,6 +98,7 @@ public enum Operation {
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
             RMGOption.PAYLOAD_SERIAL_VERSION_UID,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {
@@ -121,6 +124,7 @@ public enum Operation {
             RMGOption.ACTIVATION,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     GUESS("dispatchGuess", "", "Guess methods on bound names", new RMGOption[] {
@@ -150,6 +154,7 @@ public enum Operation {
             RMGOption.NO_PROGRESS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects", new RMGOption[] {
@@ -201,6 +206,7 @@ public enum Operation {
             RMGOption.BIND_GADGET_NAME,
             RMGOption.BIND_GADGET_CMD,
             RMGOption.YSO,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
@@ -258,6 +264,7 @@ public enum Operation {
             RMGOption.YSO,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
+            RMGOption.SOCKET_FACTORY,
     }),
 
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry", new RMGOption[] {
@@ -276,6 +283,7 @@ public enum Operation {
             RMGOption.SSRF_STREAM_PROTOCOL,
             RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
+            RMGOption.SOCKET_FACTORY,
     });
 
     private Method method;

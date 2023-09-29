@@ -49,6 +49,15 @@ import javassist.NotFoundException;
  * serialVersionUID. Since changing the serialVersionUID of an already existing class is not possible, we instead
  * create a new class where the full qualified class name is prefixed with an underscore.
  *
+ * From remote-method-guesser v4.5.0, this class has another purpose of handling custom socket factories. When the
+ * server exposes RMI objects with custom socket factory classes, this usually causes a ClassNotFound error, as
+ * we do not have the associated implementations on the client side. In this case, remote-method-guesser now attempts
+ * to create the socket factory class dynamically. Since the implementation is still unknown, it simply clones the
+ * default socket factory class TrustAllSocketFactory. This works surprisingly often, as most custom socket factory
+ * classes use simple socket implementations under the hood. This dynamic class creation is done for all classes that
+ * are unknown and contain "SocketFactory" within their class name or end with "Factory" or "SF". The user can also
+ * specify other patterns using the --socket-factory option.
+ *
  * Summarized:
  *
  *  1. Extract server specified codebases and store them within a HashMap for later use
@@ -78,31 +87,48 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
     public Class<?> loadClass(String codebase, String name, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
         Class<?> resolvedClass = null;
+        long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
 
         addCodebase(codebase, name);
         codebase = null;
+
+        if (serialVersionUIDMap.containsKey(name))
+        {
+            serialVersionUID = serialVersionUIDMap.get(name);
+            name = "_" + name;
+        }
 
         try {
 
             if (name.endsWith("_Stub"))
             {
-                long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
-
-                if (serialVersionUIDMap.containsKey(name))
-                {
-                    serialVersionUID = serialVersionUIDMap.get(name);
-                    name = "_" + name;
-                }
-
                 RMGUtils.makeLegacyStub(name, serialVersionUID);
             }
 
-            if (name.equals("sun.rmi.server.ActivatableRef"))
+            else if (name.equals("sun.rmi.server.ActivatableRef"))
+            {
                 RMGUtils.makeActivatableRef();
+            }
+
+            else if (!RMGOption.SOCKET_FACTORY.isNull())
+            {
+                if (name.contains(RMGOption.SOCKET_FACTORY.<String>getValue()))
+                {
+                    RMGUtils.makeSocketFactory(name, serialVersionUID);
+                }
+            }
+
+            else if (name.contains("SocketFactory") || name.endsWith("Factory") || name.endsWith("SF"))
+            {
+                RMGUtils.makeSocketFactory(name, serialVersionUID);
+            }
 
             resolvedClass = originalLoader.loadClass(codebase, name, defaultLoader);
 
-        } catch (CannotCompileException | NotFoundException e) {
+        }
+
+        catch (CannotCompileException | NotFoundException e)
+        {
             ExceptionHandler.internalError("loadClass", "Unable to compile unknown stub class.");
         }
 

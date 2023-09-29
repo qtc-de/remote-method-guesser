@@ -159,39 +159,54 @@ public class RMIRegistryEndpoint extends RMIEndpoint
     {
         Remote remoteObject = remoteObjectCache.get(boundName);
 
-        if( remoteObject == null ) {
-
-            try {
+        if (remoteObject == null)
+        {
+            try
+            {
                 remoteObject = rmiRegistry.lookup(boundName);
                 remoteObjectCache.put(boundName, remoteObject);
+            }
 
-            } catch( java.rmi.ConnectIOException e ) {
+            catch (java.rmi.ConnectIOException e)
+            {
                 ExceptionHandler.connectIOException(e, "lookup");
+            }
 
-            } catch( java.rmi.ConnectException e ) {
+            catch (java.rmi.ConnectException e)
+            {
                 ExceptionHandler.connectException(e, "lookup");
+            }
 
-            } catch( java.rmi.UnknownHostException e ) {
+            catch (java.rmi.UnknownHostException e)
+            {
                 ExceptionHandler.unknownHost(e, host, true);
+            }
 
-            } catch( java.rmi.NoSuchObjectException e ) {
+            catch (java.rmi.NoSuchObjectException e)
+            {
                 ExceptionHandler.noSuchObjectException(e, "registry", true);
+            }
 
-            } catch( java.rmi.NotBoundException e ) {
+            catch (java.rmi.NotBoundException e)
+            {
                 ExceptionHandler.notBoundException(e, boundName);
+            }
 
-            } catch( Exception e ) {
-
+            catch( Exception e )
+            {
                 Throwable cause = ExceptionHandler.getCause(e);
 
                 if (e instanceof UnmarshalException && cause instanceof InvalidClassException)
                 {
                     InvalidClassException invalidClassException = (InvalidClassException)cause;
 
-                    if (stopLookupLoop || ! cause.getMessage().contains("serialVersionUID"))
+                    if (stopLookupLoop || !cause.getMessage().contains("serialVersionUID"))
+                    {
                         ExceptionHandler.invalidClassException(invalidClassException);
+                    }
 
-                    try {
+                    try
+                    {
                         String className = RMGUtils.getClass(invalidClassException);
                         long serialVersionUID = RMGUtils.getSerialVersionUID(invalidClassException);
 
@@ -208,16 +223,24 @@ public class RMIRegistryEndpoint extends RMIEndpoint
                 }
 
                 else if (e instanceof UnmarshalException && e.getMessage().contains("Transport return code invalid"))
+                {
                     throw (UnmarshalException)e;
+                }
 
                 if( cause instanceof ClassNotFoundException )
+                {
                     ExceptionHandler.lookupClassNotFoundException(e, cause.getMessage());
+                }
 
                 else if( cause instanceof SSRFException )
+                {
                     SSRFSocket.printContent(host, port);
+                }
 
                 else
+                {
                     ExceptionHandler.unexpectedException(e, "lookup", "call", true);
+                }
             }
         }
 

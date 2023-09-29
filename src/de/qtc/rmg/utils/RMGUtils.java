@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.io.MaliciousOutputStream;
@@ -210,6 +211,44 @@ public class RMGUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Dynamically create a socket factory class that implements RMIClientSocketFactory. This function is used when
+     * the RMI server uses a custom socket factory class. In this case, rmg attempts to connect with it's default
+     * TrustAllSocketFactory, which works if the custom socket factory provided by the server is not too different.
+     *
+     * To achieve this, rmg just clones TrustAllSocketFactory and assigns it a new name. As in the case of Stub
+     * classes with unusual serialVersionUIDs, the serialVersionUID is determined error based. The factory is first
+     * created using a default serialVersionUID. This should cause an exception revealing the actual serialVersionUID.
+     * This is then used to recreate the class.
+     *
+     * Check the CodebaseCollector class documentation for more information.
+     *
+     * @return socket factory class that implements RMIClientSocketFactory
+     * @throws CannotCompileException
+     */
+    public static Class makeSocketFactory(String className, long serialVersionUID) throws CannotCompileException
+    {
+        try
+        {
+            return Class.forName(className);
+        }
+
+        catch (ClassNotFoundException e) {}
+
+        CtClass ctClass = null;
+
+        try
+        {
+            ctClass = pool.getAndRename("de.qtc.rmg.networking.TrustAllSocketFactory", className);
+            ctClass.addInterface(serializable);
+            addSerialVersionUID(ctClass, serialVersionUID);
+        }
+
+        catch (NotFoundException e) {}
+
+        return ctClass.toClass();
     }
 
     /**

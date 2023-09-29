@@ -104,8 +104,8 @@ public enum RMGOption {
     DGC_METHOD("--dgc-method", "method to use for dgc operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
     REG_METHOD("--registry-method", "method to use for registry operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
     SERIAL_VERSION_UID("--serial-version-uid", "serialVersionUID to use for RMI stubs", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
-    PAYLOAD_SERIAL_VERSION_UID("--payload-serial-version-uid", "serialVersionUID to use for payload classes", Arguments.store(), RMGOptionGroup.ACTION, "uid");
-
+    PAYLOAD_SERIAL_VERSION_UID("--payload-serial-version-uid", "serialVersionUID to use for payload classes", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
+    SOCKET_FACTORY("--socket-factory", "dynamically create a socket factory class with the specified name", Arguments.store(), RMGOptionGroup.ACTION, "classname");
 
     public final String name;
     public final String description;
