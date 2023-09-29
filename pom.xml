@@ -85,6 +85,9 @@
                         <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                     </manifest>
                     <manifestEntries>
+                        <Built-By>
+                            Tobias Neitzel (@qtc_de)
+                        </Built-By>
                         <Add-Opens>
                             java.base/java.io
                             java.base/java.lang
