@@ -15,8 +15,8 @@ import org.yaml.snakeyaml.constructor.Constructor;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class KnownEndpointHolder {
-
+public class KnownEndpointHolder
+{
     private List<KnownEndpoint> knownEndpoints = null;
     private static KnownEndpointHolder instance = null;
 
@@ -53,13 +53,18 @@ public class KnownEndpointHolder {
      */
     public KnownEndpoint lookup(String className)
     {
-        if( knownEndpoints == null )
+        if (knownEndpoints == null)
+        {
             return null;
+        }
 
-        for( KnownEndpoint endpoint : knownEndpoints )
-
-            if( endpoint.getClassName().contains(className) )
+        for (KnownEndpoint endpoint : knownEndpoints)
+        {
+            if (endpoint.getClassName().contains(className))
+            {
                 return endpoint;
+            }
+        }
 
         return null;
     }
@@ -73,8 +78,10 @@ public class KnownEndpointHolder {
      */
     public boolean isKnown(String className)
     {
-        if( lookup(className) == null )
+        if (lookup(className) == null)
+        {
             return false;
+        }
 
         return true;
     }
@@ -92,7 +99,8 @@ public class KnownEndpointHolder {
      */
     public static KnownEndpointHolder getHolder()
     {
-        if( instance == null ) {
+        if (instance == null)
+        {
             Yaml yaml = new Yaml(new Constructor(KnownEndpointHolder.class));
 
             InputStream stream = KnownEndpoint.class.getResourceAsStream(resource);

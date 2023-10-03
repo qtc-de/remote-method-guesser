@@ -11,10 +11,10 @@ import de.qtc.rmg.utils.RMGUtils;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class Starter {
-
-    public static void main(String[] argv) {
-
+public class Starter
+{
+    public static void main(String[] argv)
+    {
         ArgumentHandler handler = new ArgumentHandler(argv);
         Operation operation = handler.getAction();
 

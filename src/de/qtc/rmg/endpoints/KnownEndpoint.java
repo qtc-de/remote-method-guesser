@@ -16,8 +16,8 @@ import de.qtc.rmg.io.Logger;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class KnownEndpoint {
-
+public class KnownEndpoint
+{
     private String name;
     private String description;
 
@@ -96,9 +96,13 @@ public class KnownEndpoint {
         String format = String.format("(known class: %s)", name);
 
         if( vulnerabilities.size() == 0 )
+        {
             Logger.printlnPlainGreen(format);
+        }
 
         else
+        {
             Logger.printlnPlainYellow(format);
+        }
     }
 }

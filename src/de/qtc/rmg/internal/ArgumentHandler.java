@@ -56,10 +56,13 @@ public class ArgumentHandler {
         Subparsers subparsers = parser.addSubparsers().help(" ").metavar("action").dest("action");
         Operation.addSubparsers(subparsers);
 
-        try {
+        try
+        {
             args = parser.parseArgs(argv);
+        }
 
-        } catch (ArgumentParserException e) {
+        catch (ArgumentParserException e)
+        {
             parser.handleError(e);
             System.exit(1);
         }
@@ -78,26 +81,29 @@ public class ArgumentHandler {
     {
         Properties config = new Properties();
 
-        try {
+        try
+        {
             InputStream configStream = null;
 
             configStream = ArgumentParser.class.getResourceAsStream(defaultConfiguration);
             config.load(configStream);
             configStream.close();
 
-            if( filename != null ) {
+            if (filename != null)
+            {
                 configStream = new FileInputStream(filename);
                 config.load(configStream);
                 configStream.close();
             }
+        }
 
-        } catch( IOException e ) {
+        catch (IOException e)
+        {
             ExceptionHandler.unexpectedException(e, "loading", ".properties file", true);
         }
 
         return config;
     }
-
 
     /**
      * Initializes the RMGOption enum and sets some static variables depending on the specified options.
@@ -107,14 +113,17 @@ public class ArgumentHandler {
         config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.name));
         RMGOption.prepareOptions(args, config);
 
-        if( RMGOption.GLOBAL_NO_COLOR.getBool() )
+        if (RMGOption.GLOBAL_NO_COLOR.getBool())
+        {
             Logger.disableColor();
+        }
 
-        if( RMGOption.SSRF_RAW.getBool() )
+        if (RMGOption.SSRF_RAW.getBool())
+        {
             Logger.disableStdout();
+        }
 
         checkPortRange();
-
         PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
 
@@ -124,12 +133,15 @@ public class ArgumentHandler {
      */
     private void checkPortRange()
     {
-        if( RMGOption.TARGET_PORT.isNull() )
+        if (RMGOption.TARGET_PORT.isNull())
+        {
             return;
+        }
 
         int port = RMGOption.TARGET_PORT.getValue();
 
-        if( port < 1 || port > 65535 ) {
+        if (port < 1 || port > 65535)
+        {
             Logger.eprintlnMixedYellow("The specified port number", String.valueOf(port), "is out of range.");
             RMGUtils.exit();
         }
@@ -144,8 +156,10 @@ public class ArgumentHandler {
     {
         this.action = Operation.getByName(args.getString("action"));
 
-        if( action == null )
+        if (action == null)
+        {
             ExceptionHandler.internalError("ArgumentHandler.getAction", "Invalid action was specified");
+        }
 
         return action;
     }
@@ -161,20 +175,24 @@ public class ArgumentHandler {
      */
     public String getRegMethod()
     {
-        if( regMethod != null )
+        if (regMethod != null)
+        {
             return regMethod;
+        }
 
         String signature = RMGOption.REG_METHOD.getValue();
         String[] supported =  new String[]{"lookup", "unbind", "rebind", "bind"};
 
-        if( signature == null ) {
+        if (signature == null)
+        {
             regMethod = "lookup";
             return regMethod;
         }
 
-        for(String methodName : supported ) {
-
-            if( signature.contains(methodName) ) {
+        for (String methodName : supported)
+        {
+            if (signature.contains(methodName))
+            {
                 regMethod = methodName;
                 return methodName;
             }
@@ -198,19 +216,23 @@ public class ArgumentHandler {
      */
     public String getDgcMethod()
     {
-        if( dgcMethod != null )
+        if (dgcMethod != null)
+        {
             return dgcMethod;
+        }
 
         String signature = RMGOption.DGC_METHOD.getValue();
 
-        if( signature == null ) {
+        if (signature == null)
+        {
             dgcMethod = "clean";
             return dgcMethod;
         }
 
-        for(String methodName : new String[]{"clean", "dirty"} ) {
-
-            if( signature.contains(methodName) ) {
+        for (String methodName : new String[]{"clean", "dirty"})
+        {
+            if (signature.contains(methodName))
+            {
                 dgcMethod = methodName;
                 return methodName;
             }
@@ -232,16 +254,20 @@ public class ArgumentHandler {
      */
     public RMIComponent getComponent()
     {
-        if( component != null )
+        if (component != null)
+        {
             return component;
+        }
 
         RMIComponent targetComponent = RMIComponent.getByShortName(RMGOption.TARGET_COMPONENT.getValue());
 
-        if( targetComponent == null )
+        if (targetComponent == null)
+        {
             return null;
+        }
 
-        switch( targetComponent ) {
-
+        switch (targetComponent)
+        {
             case REGISTRY:
             case DGC:
             case ACTIVATOR:
@@ -255,7 +281,6 @@ public class ArgumentHandler {
         }
 
         component = targetComponent;
-
         return targetComponent;
     }
 
@@ -270,15 +295,17 @@ public class ArgumentHandler {
         String gadget = null;
         String command = null;
 
-        if( this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND ) {
-
+        if (this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND)
+        {
             boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
             boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
 
             gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
             command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.require(RMGOption.BIND_ADDRESS);
+        }
 
-        } else {
+        else
+        {
             gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
             command = RMGOption.require(RMGOption.GADGET_CMD);
         }
@@ -310,8 +337,10 @@ public class ArgumentHandler {
     {
         List<String> scanActions = (List<String>) RMGOption.ENUM_ACTION.value;
 
-        if( scanActions == null )
+        if (scanActions == null)
+        {
             return EnumSet.allOf(ScanAction.class);
+        }
 
         return ScanAction.parseScanActions(scanActions);
     }
@@ -333,18 +362,23 @@ public class ArgumentHandler {
         String defaultPorts = config.getProperty("rmi_ports");
         List<String> portStrings = (List<String>)RMGOption.SCAN_PORTS.value;
 
-        if( portStrings == null ) {
+        if (portStrings == null)
+        {
             portStrings = new ArrayList<String>();
             portStrings.add("-");
         }
 
-        for(String portString : portStrings) {
-
-            if( portString.equals("-") )
+        for (String portString : portStrings)
+        {
+            if (portString.equals("-"))
+            {
                 addPorts(defaultPorts, rmiPorts);
+            }
 
             else
+            {
                 addPorts(portString, rmiPorts);
+            }
         }
 
         return rmiPorts.stream().mapToInt(i->i).toArray();
@@ -360,7 +394,8 @@ public class ArgumentHandler {
     {
         String[] ports = portString.split(",");
 
-        for(String port: ports) {
+        for (String port: ports)
+        {
             addRange(port, portList);
         }
     }
@@ -373,9 +408,10 @@ public class ArgumentHandler {
      */
     public void addRange(String portRange, Set<Integer> portList)
     {
-        try {
-
-            if(!portRange.contains("-")) {
+        try
+        {
+            if (!portRange.contains("-"))
+            {
                 portList.add(Integer.valueOf(portRange));
                 return;
             }
@@ -384,10 +420,14 @@ public class ArgumentHandler {
             int start = Integer.valueOf(split[0]);
             int end = Integer.valueOf(split[1]);
 
-            for(int ctr = start; ctr <= end; ctr++)
+            for (int ctr = start; ctr <= end; ctr++)
+            {
                 portList.add(ctr);
+            }
+        }
 
-        } catch( java.lang.NumberFormatException | java.lang.ArrayIndexOutOfBoundsException e ) {
+        catch (java.lang.NumberFormatException | java.lang.ArrayIndexOutOfBoundsException e)
+        {
             Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getSimpleName(), "while parsing RMI ports.");
             Logger.eprintlnMixedBlue("The specified value", portRange, "is invalid.");
             RMGUtils.exit();

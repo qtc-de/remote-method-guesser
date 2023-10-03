@@ -8,13 +8,14 @@ package de.qtc.rmg.exceptions;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class MalformedPluginException extends Exception {
-
+public class MalformedPluginException extends Exception
+{
     private static final long serialVersionUID = 1L;
 
     public MalformedPluginException() {}
 
-    public MalformedPluginException(String message) {
+    public MalformedPluginException(String message)
+    {
        super(message);
     }
 }

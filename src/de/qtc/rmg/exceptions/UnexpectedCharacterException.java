@@ -14,10 +14,12 @@ package de.qtc.rmg.exceptions;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("serial")
-public class UnexpectedCharacterException extends Exception {
+public class UnexpectedCharacterException extends Exception
+{
     public UnexpectedCharacterException() {}
 
-    public UnexpectedCharacterException(String message) {
+    public UnexpectedCharacterException(String message)
+    {
        super(message);
     }
 }
