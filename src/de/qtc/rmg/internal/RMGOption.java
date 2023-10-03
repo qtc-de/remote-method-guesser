@@ -105,7 +105,10 @@ public enum RMGOption {
     REG_METHOD("--registry-method", "method to use for registry operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
     SERIAL_VERSION_UID("--serial-version-uid", "serialVersionUID to use for RMI stubs", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
     PAYLOAD_SERIAL_VERSION_UID("--payload-serial-version-uid", "serialVersionUID to use for payload classes", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
-    SOCKET_FACTORY("--socket-factory", "dynamically create a socket factory class with the specified name", Arguments.store(), RMGOptionGroup.ACTION, "classname");
+
+    SOCKET_FACTORY_PLAIN("--socket-factory-plain", "enforce plaintext connections from dynamically created socket factories", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    SOCKET_FACTORY_SSL("--socket-factory-ssl", "enforce SSL connections from dynamically created socket factories", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    SOCKET_FACTORY("--socket-factory", "dynamically create a socket factory class with the specified name", Arguments.store(), RMGOptionGroup.CONNECTION, "classname");
 
     public final String name;
     public final String description;

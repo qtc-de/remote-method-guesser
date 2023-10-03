@@ -74,11 +74,15 @@ public class RMGUtils {
     {
         pool = ClassPool.getDefault();
 
-        try {
+        try
+        {
             remoteClass = pool.getCtClass(Remote.class.getName());
             serializable = pool.getCtClass("java.io.Serializable");
             remoteStubClass = pool.getCtClass(RemoteStub.class.getName());
-        } catch (NotFoundException e) {
+        }
+
+        catch (NotFoundException e)
+        {
             ExceptionHandler.internalError("RMGUtils.init", "Caught unexpected NotFoundException.");
         }
 
@@ -215,13 +219,15 @@ public class RMGUtils {
 
     /**
      * Dynamically create a socket factory class that implements RMIClientSocketFactory. This function is used when
-     * the RMI server uses a custom socket factory class. In this case, rmg attempts to connect with it's default
-     * TrustAllSocketFactory, which works if the custom socket factory provided by the server is not too different.
+     * the RMI server uses a custom socket factory class. In this case, remote-method-guesser attempts to connect
+     * with it's default LoopbackSslSocketFactory or LoopbackSocketFactory (depending on the value of the settings
+     * --ssl, --socket-factory-ssl and --socket-factory-plain) which works if the custom socket factory provided by
+     * the server is not too different.
      *
-     * To achieve this, rmg just clones TrustAllSocketFactory and assigns it a new name. As in the case of Stub
-     * classes with unusual serialVersionUIDs, the serialVersionUID is determined error based. The factory is first
-     * created using a default serialVersionUID. This should cause an exception revealing the actual serialVersionUID.
-     * This is then used to recreate the class.
+     * To achieve this, remote-method-guesser just clones LoopbackSslSocketFactory or LoopbackSocketFactory and assigns
+     * it a new name. As in the case of Stub classes with unusual serialVersionUIDs, the serialVersionUID is determined
+     * error based. The factory is first created using a default serialVersionUID. This should cause an exception revealing
+     * the actual serialVersionUID. This is then used to recreate the class.
      *
      * Check the CodebaseCollector class documentation for more information.
      *
@@ -241,7 +247,23 @@ public class RMGUtils {
 
         try
         {
-            ctClass = pool.getAndRename("de.qtc.rmg.networking.TrustAllSocketFactory", className);
+
+            if (!RMGOption.SOCKET_FACTORY_PLAIN.getBool() && (RMGOption.CONN_SSL.getBool() || RMGOption.SOCKET_FACTORY_SSL.getBool()))
+            {
+                ctClass = pool.getAndRename("de.qtc.rmg.networking.LoopbackSslSocketFactory", className);
+            }
+
+            else if (!RMGOption.SOCKET_FACTORY_SSL.getBool() && (!RMGOption.CONN_SSL.getBool() || RMGOption.SOCKET_FACTORY_PLAIN.getBool()))
+            {
+                ctClass = pool.getAndRename("de.qtc.rmg.networking.LoopbackSocketFactory", className);
+            }
+
+            else
+            {
+                Logger.eprintlnYellow("Invalid combination of SSL related options.");
+                exit();
+            }
+
             ctClass.addInterface(serializable);
             addSerialVersionUID(ctClass, serialVersionUID);
         }

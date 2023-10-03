@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.rmi.server.RMIClientSocketFactory;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -20,7 +21,7 @@ import de.qtc.rmg.io.Logger;
  * objects are open, it is still possible to communicate with them.
  *
  * The LoopbackSslSocketFactory class extends the default SSLSocketFactory and can be set
- * as a replacement. The class uses static variables to define configuration parameters and
+ * as a replacement. The class uses remote-method-guessers global option access to obtain
  * the actual target of the RMI communication (usually the registry host). All other RMI
  * connections are then expected to target the same host. This is implemented by overwriting
  * the createSocket function. If the specified host value does not match the expected value,
@@ -28,17 +29,15 @@ import de.qtc.rmg.io.Logger;
  *
  * During a redirect, the class prints a warning to the user to inform about the
  * redirection. If redirection is a desired behavior, the user can use the --follow option
- * with rmg, which sets the followRedirect attribute to true. In these cases, a warning
- * is still printed, but the connection goes to the specified target.
+ * with remote-method-guesser, which sets the followRedirect attribute to true. In these
+ * cases, a warning is still printed, but the connection goes to the specified target.
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class LoopbackSslSocketFactory extends SSLSocketFactory {
-
-    public static String host = "";
-    public static SSLSocketFactory fac = null;
-    public static boolean printInfo = true;
-    public static boolean followRedirect = false;
+public class LoopbackSslSocketFactory extends SSLSocketFactory implements RMIClientSocketFactory
+{
+    public transient SSLSocketFactory fax;
+    public transient boolean printInfo = true;
 
     /**
      * Overwrites the default implementation of createSocket. Checks whether host matches the expected
@@ -50,39 +49,49 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
     {
         Socket sock = null;
 
-        if(!host.equals(target)) {
+        if(!RMGOption.TARGET_HOST.getValue().equals(target)) {
 
-            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
+            if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+            {
                 Logger.printInfoBox();
                 Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", target);
             }
 
-            if( followRedirect ) {
-                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() )
+            if (RMGOption.CONN_FOLLOW.getBool())
+            {
+                if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+                {
                     Logger.println("Following SSL redirect to new target...");
+                }
+            }
 
-            } else {
+            else
+            {
+                target = RMGOption.TARGET_HOST.getValue();
 
-                target = host;
-
-                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
-                    Logger.printlnMixedBlue("Redirecting the SSL connection back to", host);
+                if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+                {
+                    Logger.printlnMixedBlue("Redirecting the SSL connection back to", target);
                     Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
                 }
             }
 
-            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
+            if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+            {
                 Logger.decreaseIndent();
             }
 
             printInfo = false;
         }
 
-        try {
-            sock = fac.createSocket(host, port);
+        try
+        {
+            sock = getFax().createSocket(target, port);
+        }
 
-        } catch( UnknownHostException e ) {
-            ExceptionHandler.unknownHost(e, host, true);
+        catch (UnknownHostException e)
+        {
+            ExceptionHandler.unknownHost(e, target, true);
         }
 
         return sock;
@@ -91,36 +100,50 @@ public class LoopbackSslSocketFactory extends SSLSocketFactory {
     @Override
     public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException
     {
-        return fac.createSocket(arg0, arg1, arg2, arg3);
+        return getFax().createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public String[] getDefaultCipherSuites()
     {
-        return fac.getDefaultCipherSuites();
+        return getFax().getDefaultCipherSuites();
     }
 
     @Override
     public String[] getSupportedCipherSuites()
     {
-        return fac.getSupportedCipherSuites();
+        return getFax().getSupportedCipherSuites();
     }
 
     @Override
     public Socket createSocket(InetAddress arg0, int arg1) throws IOException
     {
-        return fac.createSocket(arg0, arg1);
+        return getFax().createSocket(arg0, arg1);
     }
 
     @Override
     public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException
     {
-        return fac.createSocket(arg0, arg1, arg2, arg3);
+        return getFax().createSocket(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException
     {
-        return fac.createSocket(arg0, arg1, arg2, arg3);
+        return getFax().createSocket(arg0, arg1, arg2, arg3);
+    }
+
+    /**
+     * Obtain the SSLSocketFactory to create sockets from. This is always the underlying SSLSocketFactory
+     * from the TrustAllSocketFactory.
+     */
+    private SSLSocketFactory getFax()
+    {
+        if (fax == null)
+        {
+            fax = new TrustAllSocketFactory().getSSLSocketFactory();
+        }
+
+        return fax;
     }
 }

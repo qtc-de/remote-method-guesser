@@ -53,9 +53,10 @@ import javassist.NotFoundException;
  * server exposes RMI objects with custom socket factory classes, this usually causes a ClassNotFound error, as
  * we do not have the associated implementations on the client side. In this case, remote-method-guesser now attempts
  * to create the socket factory class dynamically. Since the implementation is still unknown, it simply clones the
- * default socket factory class TrustAllSocketFactory. This works surprisingly often, as most custom socket factory
- * classes use simple socket implementations under the hood. This dynamic class creation is done for all classes that
- * are unknown and contain "SocketFactory" within their class name or end with "Factory" or "SF". The user can also
+ * default socket factory class LoopbackSslSocketFactory or LoopbackSocketFactory depending on the values for the
+ * --ssl, --socket-factory-ssl and --socket-factory-plain options. This works surprisingly often, as most custom socket
+ * factory classes use simple socket implementations under the hood. This dynamic class creation is done for all classes
+ * that are unknown and contain "SocketFactory" within their class name or end with "Factory" or "SF". The user can also
  * specify other patterns using the --socket-factory option.
  *
  * Summarized:
@@ -67,8 +68,8 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class CodebaseCollector extends RMIClassLoaderSpi {
-
+public class CodebaseCollector extends RMIClassLoaderSpi
+{
     private static HashMap<String, Long> serialVersionUIDMap = new HashMap<String,Long>();
     private static HashMap<String, Set<String>> codebases = new HashMap<String,Set<String>>();
     private static RMIClassLoaderSpi originalLoader = RMIClassLoader.getDefaultProviderInstance();
@@ -98,8 +99,8 @@ public class CodebaseCollector extends RMIClassLoaderSpi {
             name = "_" + name;
         }
 
-        try {
-
+        try
+        {
             if (name.endsWith("_Stub"))
             {
                 RMGUtils.makeLegacyStub(name, serialVersionUID);

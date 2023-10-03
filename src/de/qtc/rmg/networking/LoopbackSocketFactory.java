@@ -19,7 +19,7 @@ import de.qtc.rmg.io.Logger;
  * objects are open, it is still possible to communicate with them.
  *
  * The LoopbackSocketFactory class extends the default RMISocketFactory and can be set
- * as a replacement. Within its constructor, it requires to specify a host that is the
+ * as a replacement. The class uses remote-method-guessers global option access to obtain
  * actual target of the RMI communication (usually the registry host). All other RMI
  * connections are then expected to target the same host. This is implemented by overwriting
  * the createSocket function. If the specified host value does not match the expected value,
@@ -32,30 +32,15 @@ import de.qtc.rmg.io.Logger;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class LoopbackSocketFactory extends RMISocketFactory {
+public class LoopbackSocketFactory extends RMISocketFactory
+{
+    private transient RMISocketFactory fax;
+    private transient boolean printInfo = true;
 
-    private String host;
-    private RMISocketFactory fac;
-    private boolean printInfo = true;
-    private boolean followRedirect = false;
-
-    /**
-     * Creates a new LoopbackSocketFactory.
-     *
-     * @param host remote host that is expected to get all further RMI connections
-     * @param fac original socket factory to create sockets from
-     * @param followRedirect if true, connections are not redirected to the expected host
-     */
-    public LoopbackSocketFactory(String host, RMISocketFactory fac, boolean followRedirect)
-    {
-        this.host = host;
-        this.fac = fac;
-        this.followRedirect= followRedirect;
-    }
-
+    @Override
     public ServerSocket createServerSocket(int port) throws IOException
     {
-        return fac.createServerSocket(port);
+        return getFax().createServerSocket(port);
     }
 
     /**
@@ -67,41 +52,64 @@ public class LoopbackSocketFactory extends RMISocketFactory {
     {
         Socket sock = null;
 
-        if(!this.host.equals(host)) {
-
-            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
+        if (!RMGOption.TARGET_HOST.getValue().equals(host))
+        {
+            if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+            {
                 Logger.printInfoBox();
                 Logger.printlnMixedBlue("RMI object tries to connect to different remote host:", host);
             }
 
-            if( this.followRedirect ) {
-                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() )
+            if (RMGOption.CONN_FOLLOW.getBool())
+            {
+                if ( printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+                {
                     Logger.println("Following redirect to new target...");
+                }
+            }
 
-            } else {
+            else
+            {
+                host = RMGOption.TARGET_HOST.getValue();
 
-                host = this.host;
-
-                if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
+                if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+                {
                     Logger.printlnMixedBlue("Redirecting the connection back to", host);
                     Logger.printlnMixedYellow("You can use", "--follow", "to prevent this.");
                 }
             }
 
-            if( printInfo && RMGOption.GLOBAL_VERBOSE.getBool() ) {
+            if (printInfo && RMGOption.GLOBAL_VERBOSE.getBool())
+            {
                 Logger.decreaseIndent();
             }
 
             this.printInfo = false;
         }
 
-        try {
-            sock = fac.createSocket(host, port);
+        try
+        {
+            sock = getFax().createSocket(host, port);
+        }
 
-        } catch( UnknownHostException e ) {
+        catch( UnknownHostException e )
+        {
             ExceptionHandler.unknownHost(e, host, true);
         }
 
         return sock;
+    }
+
+    /**
+     * Obtain the RMISocketFactory to create sockets from. This is always the default RMISocketFactory.
+     */
+    private RMISocketFactory getFax()
+    {
+        if (fax == null)
+        {
+            fax = RMISocketFactory.getDefaultSocketFactory();
+        }
+
+        return fax;
     }
 }

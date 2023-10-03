@@ -9,7 +9,6 @@ import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.networking.DGCClientSocketFactory;
 import de.qtc.rmg.networking.LoopbackSocketFactory;
-import de.qtc.rmg.networking.LoopbackSslSocketFactory;
 import de.qtc.rmg.networking.SSRFResponseSocketFactory;
 import de.qtc.rmg.networking.SSRFSocketFactory;
 import de.qtc.rmg.networking.TrustAllSocketFactory;
@@ -172,11 +171,12 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public RMISocketFactory getDefaultSocketFactory(String host, int port)
     {
-        if( RMGOption.SSRFRESPONSE.notNull() )
+        if (RMGOption.SSRFRESPONSE.notNull())
+        {
             return new DGCClientSocketFactory();
+        }
 
-        RMISocketFactory fac = RMISocketFactory.getDefaultSocketFactory();
-        return new LoopbackSocketFactory(host, fac, RMGOption.CONN_FOLLOW.getBool());
+        return new LoopbackSocketFactory();
     }
 
     /**
@@ -193,14 +193,10 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public String getDefaultSSLSocketFactory(String host, int port)
     {
-        if( RMGOption.SSRFRESPONSE.notNull() )
+        if (RMGOption.SSRFRESPONSE.notNull())
+        {
             return "de.qtc.rmg.networking.DGCClientSslSocketFactory";
-
-        TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
-
-        LoopbackSslSocketFactory.host = host;
-        LoopbackSslSocketFactory.fac = trustAllFax.getSSLSocketFactory();
-        LoopbackSslSocketFactory.followRedirect = RMGOption.CONN_FOLLOW.getBool();
+        }
 
         return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
     }
