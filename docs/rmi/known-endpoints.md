@@ -34,7 +34,7 @@
             > attacks. With JEP290, deserialization filters were introduced. The deserialization filters of DGC
             > endpoints are more restrictive than for the RMI registry and there a no known bypasses.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
 
 
 ### JMX Connection
@@ -93,7 +93,7 @@
             > other MBeans dynamically from user specified codebase locations (URLs). Access to the MLet MBean
             > is therefore most of the time equivalent to remote code execution.
         * References:
-            * [https://github.com/qtc-de/beanshooter](https://github.com/qtc-de/beanshooter)
+            * [https://github.com/qtc-de/beanshooter#generic-deploy](https://github.com/qtc-de/beanshooter#generic-deploy)
 
     * Deserialization
         * Description:
@@ -101,7 +101,7 @@
             > All communication to JMX that is dispatched over this remote object is not filtered for deserialization
             > attacks. Therefore, each suitable method can be used to pass a deserialization payload to the server.
         * References:
-            * [https://github.com/qtc-de/beanshooter](https://github.com/qtc-de/beanshooter)
+            * [https://github.com/qtc-de/beanshooter#serial](https://github.com/qtc-de/beanshooter#serial)
 
 
 ### JMX Server
@@ -138,7 +138,7 @@
             > other MBeans dynamically from user specified codebase locations (URLs). Access to the MLet MBean
             > is therefore most of the time equivalent to remote code execution.
         * References:
-            * [https://github.com/qtc-de/beanshooter](https://github.com/qtc-de/beanshooter)
+            * [https://github.com/qtc-de/beanshooter#generic-deploy](https://github.com/qtc-de/beanshooter#generic-deploy)
 
     * Deserialization
         * Description:
@@ -148,7 +148,7 @@
             > actual JMX communication using the RMIConnection object is not filtered. Therefore, if you can
             > establish a working JMX connection, you can also perform deserialization attacks.
         * References:
-            * [https://github.com/qtc-de/beanshooter](https://github.com/qtc-de/beanshooter)
+            * [https://github.com/qtc-de/beanshooter#serial](https://github.com/qtc-de/beanshooter#serial)
 
 
 ### RMI Activation Group
@@ -180,7 +180,7 @@
 
             > ActivationGroup remote objects do not use a deserialization filter.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
 
 
 ### RMI Activation System
@@ -224,7 +224,7 @@
 
             > When accessed from localhost, the ActivationSystem is vulnerable to deserialization attacks.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
 
 
 ### RMI Activator
@@ -255,7 +255,7 @@
             > Deserialization filters were never applied to the activation system and the Activator can be used
             > for deserialization attacks.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
 
 
 ### RMI Registry
@@ -292,7 +292,7 @@
             > JEP290, deserialization filters were introduced. Depending on the patch level of the corresponding
             > Java instance, the filters may be bypassed.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
 
     * Localhost Bypass
         * Description:
@@ -301,7 +301,7 @@
             > RMI registry instance. In 2019, a bypass for this localhost restriction was identified, that may allows
             > an attacker to bind, rebind or unbind names from remote.
         * References:
-            * [https://github.com/qtc-de/remote-method-guesser](https://github.com/qtc-de/remote-method-guesser)
+            * [https://github.com/qtc-de/remote-method-guesser#bind-rebind-and-unbind](https://github.com/qtc-de/remote-method-guesser#bind-rebind-and-unbind)
 
     * UnicastRemoteObject
         * Description:
@@ -311,3 +311,44 @@
             > existing remote objects that are listening on an user specified TCP port.
         * References:
             * [https://github.com/qtc-de/remote-method-guesser/blob/master/docs/rmi/unicast-remote-object.md](https://github.com/qtc-de/remote-method-guesser/blob/master/docs/rmi/unicast-remote-object.md)
+
+
+### Spring RmiInvocationHandler
+
+---
+
+* Name: `Spring RmiInvocationHandler`
+* Class Names:
+    * `org.springframework.remoting.rmi.RmiInvocationHandler`
+* Description:
+
+    > RmiInvocationHandler is basically a wrapper around the actual RMI services that are implemented by the server. The
+    > interface supports an invoke method that forwards the call to the actual RMI service. Moreover, the getTargetInterfaceName
+    > method can be used to retrieve the interface that is implemented by the actual RMI service.
+
+* Remote Methods:
+
+    ```java
+    java.lang.String getTargetInterfaceName()
+    java.lang.Object invoke(org.springframework.remoting.support RemoteInvocation)
+    ```
+* References:
+    * [https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/rmi/RmiInvocationHandler.html](https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/rmi/RmiInvocationHandler.html)
+    * [https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/support/RemoteInvocation.html](https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/support/RemoteInvocation.html)
+* Known Vulnerabilities:
+
+    * Deserialization
+        * Description:
+
+            > The invoke method uses a method parameter with non trivial type and is therefore vulnerable to arbitrary deserialization.
+        * References:
+            * [https://github.com/qtc-de/remote-method-guesser#serial](https://github.com/qtc-de/remote-method-guesser#serial)
+
+    * Vulnerable Methods
+        * Description:
+
+            > The actual RMI services behind the wrapper may expose other methods that contain vulnerabilities. Obtaining the interface name
+            > by calling getTargetInterfaceName may allow to obtain the interface definition using online resources. If this is not possible,
+            > remote-method-guesser can be used to guess remote methods.
+        * References:
+            * [https://github.com/qtc-de/remote-method-guesser#guess](https://github.com/qtc-de/remote-method-guesser#guess)
