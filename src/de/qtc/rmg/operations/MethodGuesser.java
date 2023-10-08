@@ -63,8 +63,10 @@ public class MethodGuesser {
         this.knownClientList = new ArrayList<RemoteObjectClient>();
         this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getValue());
 
-        if( !RMGOption.GUESS_FORCE_GUESSING.getBool() )
+        if (!RMGOption.GUESS_FORCE_GUESSING.getBool())
+        {
             remoteObjects = handleKnownMethods(remoteObjects);
+        }
 
         this.clientList = initClientList(remoteObjects);
         this.progressBar = new ProgressBar(candidates.size() * clientList.size(), 37);
@@ -87,17 +89,21 @@ public class MethodGuesser {
         List<RemoteObjectClient> remoteObjectClients = new ArrayList<RemoteObjectClient>();
         setPadding(remoteObjects);
 
-        if( !RMGOption.GUESS_DUPLICATES.getBool() )
+        if (!RMGOption.GUESS_DUPLICATES.getBool())
+        {
             remoteObjects = UnicastWrapper.handleDuplicates(remoteObjects);
+        }
 
-        for( UnicastWrapper o : remoteObjects ) {
-
+        for (UnicastWrapper o : remoteObjects)
+        {
             RemoteObjectClient client = new RemoteObjectClient(o);
             remoteObjectClients.add(client);
         }
 
-        if( UnicastWrapper.hasDuplicates(remoteObjects) )
+        if (UnicastWrapper.hasDuplicates(remoteObjects))
+        {
             printDuplicates(remoteObjects);
+        }
 
         return remoteObjectClients;
     }
@@ -110,10 +116,12 @@ public class MethodGuesser {
      */
     private void setPadding(UnicastWrapper[] remoteObjects)
     {
-        for(UnicastWrapper o : remoteObjects) {
-
-            if( padding < o.boundName.length() )
+        for (UnicastWrapper o : remoteObjects)
+        {
+            if (padding < o.boundName.length())
+            {
                 padding = o.boundName.length();
+            }
         }
     }
 
@@ -133,17 +141,20 @@ public class MethodGuesser {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        for( UnicastWrapper remoteObject : remoteObjects ) {
-
+        for (UnicastWrapper remoteObject : remoteObjects)
+        {
             String[] duplicates = remoteObject.getDuplicateBoundNames();
 
-            if( duplicates.length == 0 )
+            if (duplicates.length == 0)
+            {
                 continue;
+            }
 
             Logger.printlnMixedBlue("-", remoteObject.boundName);
             Logger.increaseIndent();
 
-            for(String dup : duplicates ) {
+            for (String dup : duplicates)
+            {
                 Logger.printlnMixedYellow("-->", dup);
             }
 
@@ -170,12 +181,15 @@ public class MethodGuesser {
     {
         ArrayList<UnicastWrapper> unknown = new ArrayList<UnicastWrapper>();
 
-        for(UnicastWrapper o : remoteObjects) {
-
-            if(!o.isKnown())
+        for (UnicastWrapper o : remoteObjects)
+        {
+            if (!o.isKnown())
+            {
                 unknown.add(o);
+            }
 
-            else {
+            else
+            {
                 RemoteObjectClient knownClient = new RemoteObjectClient(o);
                 knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.className));
 
@@ -183,8 +197,8 @@ public class MethodGuesser {
             }
         }
 
-        if(knownClientList.size() != 0) {
-
+        if (knownClientList.size() != 0)
+        {
             Logger.disableIfNotVerbose();
             Logger.printInfoBox();
 
@@ -192,8 +206,10 @@ public class MethodGuesser {
             Logger.lineBreak();
             Logger.increaseIndent();
 
-            for(RemoteObjectClient o : knownClientList)
+            for (RemoteObjectClient o : knownClientList)
+            {
                 Logger.printlnMixedBlue("-", o.getBoundName() + " (" + o.getBoundName() + ")");
+            }
 
             Logger.decreaseIndent();
             Logger.lineBreak();
@@ -215,19 +231,23 @@ public class MethodGuesser {
     {
         int count = candidates.size();
 
-        if(count == 0) {
+        if (count == 0)
+        {
             Logger.eprintlnMixedYellow("List of candidate methods contains", "0", "elements.");
             Logger.eprintln("Please use a valid and non empty wordlist file.");
             RMGUtils.exit();
+        }
 
-        } else if( clientList.size() == 0 ) {
+        else if (clientList.size() == 0)
+        {
             return;
         }
 
         Logger.lineBreak();
         Logger.printlnMixedYellow("Starting Method Guessing on", String.valueOf(count), "method signature(s).");
 
-        if( count == 1 ) {
+        if (count == 1)
+        {
             Logger.printlnMixedBlue("Method signature:", ((MethodCandidate)candidates.toArray()[0]).getSignature() + ".");
         }
     }
@@ -243,7 +263,8 @@ public class MethodGuesser {
     {
         Logger.lineBreak();
 
-        if( clientList.size() == 0 ) {
+        if (clientList.size() == 0)
+        {
             clientList.addAll(knownClientList);
             return clientList;
         }
@@ -255,18 +276,23 @@ public class MethodGuesser {
 
         ExecutorService pool = Executors.newFixedThreadPool(RMGOption.THREADS.getValue());
 
-        for( RemoteObjectClient client : clientList ) {
-            for( Set<MethodCandidate> candidates : candidateSets ) {
+        for (RemoteObjectClient client : clientList)
+        {
+            for (Set<MethodCandidate> candidates : candidateSets)
+            {
                 Runnable r = new GuessingWorker(client, candidates);
                 pool.execute(r);
             }
         }
 
-        try {
+        try
+        {
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        }
 
-        } catch (InterruptedException e) {
+        catch (InterruptedException e)
+        {
              Logger.eprintln("Interrupted!");
         }
 
@@ -289,8 +315,8 @@ public class MethodGuesser {
      *
      * @author Tobias Neitzel (@qtc_de)
      */
-    private class GuessingWorker implements Runnable {
-
+    private class GuessingWorker implements Runnable
+    {
         private String boundName;
         private Set<MethodCandidate> candidates;
         private RemoteObjectClient client;
@@ -327,16 +353,18 @@ public class MethodGuesser {
          * simultaneously preventing corruption of the underlying TCP stream. This allows to reuse the TCP connection
          * during method guessing which makes the process much faster, especially on TLS protected connections.
          */
-        public void run() {
-
-            for( MethodCandidate candidate : candidates ) {
-
-                try {
+        public void run()
+        {
+            for (MethodCandidate candidate : candidates)
+            {
+                try
+                {
                     client.guessingCall(candidate);
                     logHit(candidate); // If there was no exception, the method exists (zero arg / valid call)
+                }
 
-                } catch(java.rmi.ServerException e) {
-
+                catch (java.rmi.ServerException e)
+                {
                     Throwable cause = ExceptionHandler.getCause(e);
 
                     /*
@@ -345,12 +373,14 @@ public class MethodGuesser {
                      * One could also attempt to catch the 'unrecognized method hash' exception from the server to match non
                      * existing methods, but this requires an additional string compare that might be slower.
                      */
-                    if( cause instanceof java.io.OptionalDataException || cause instanceof java.io.StreamCorruptedException) {
+                    if (cause instanceof java.io.OptionalDataException || cause instanceof java.io.StreamCorruptedException)
+                    {
                         logHit(candidate);
                     }
+                }
 
-                } catch(Exception e) {
-
+                catch(Exception e)
+                {
                     /*
                      * If we end up here, an unexpected exception was raised that indicates a general error.
                      */
@@ -363,8 +393,10 @@ public class MethodGuesser {
                                  +writer.toString();
 
                     Logger.println(info);
+                }
 
-                } finally {
+                finally
+                {
                     progressBar.taskDone();
                 }
             }
