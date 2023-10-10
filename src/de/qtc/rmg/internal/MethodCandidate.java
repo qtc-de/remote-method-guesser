@@ -24,8 +24,8 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class MethodCandidate {
-
+public class MethodCandidate
+{
     private long hash;
 
     private CtMethod method;
@@ -100,13 +100,14 @@ public class MethodCandidate {
         this.argumentCount = types.length;
         this.hash = getCtMethodHash(method);
 
-        if( argumentCount == 0 ) {
-
+        if (argumentCount == 0)
+        {
             this.isVoid = true;
             this.primitiveSize = -99;
+        }
 
-        } else {
-
+        else
+        {
             this.isVoid = false;
             this.primitiveSize = RMGUtils.getPrimitiveSize(types);
         }
@@ -132,10 +133,13 @@ public class MethodCandidate {
      * @param methodSignature signature to compute the hash on
      * @return RMI method hash
      */
-    private static long computeMethodHash(String methodSignature) {
+    private static long computeMethodHash(String methodSignature)
+    {
         long hash = 0;
         ByteArrayOutputStream sink = new ByteArrayOutputStream(127);
-        try {
+
+        try
+        {
             MessageDigest md = MessageDigest.getInstance("SHA");
             DataOutputStream out = new DataOutputStream(new DigestOutputStream(sink, md));
 
@@ -144,15 +148,24 @@ public class MethodCandidate {
             // use only the first 64 bits of the digest for the hash
             out.flush();
             byte hasharray[] = md.digest();
-            for (int i = 0; i < Math.min(8, hasharray.length); i++) {
+
+            for (int i = 0; i < Math.min(8, hasharray.length); i++)
+            {
                 hash += ((long) (hasharray[i] & 0xFF)) << (i * 8);
             }
-        } catch (IOException ignore) {
+        }
+
+        catch (IOException ignore)
+        {
             /* can't happen, but be deterministic anyway. */
             hash = -1;
-        } catch (NoSuchAlgorithmException complain) {
+        }
+
+        catch (NoSuchAlgorithmException complain)
+        {
             throw new SecurityException(complain.getMessage());
         }
+
         return hash;
     }
 
@@ -170,17 +183,20 @@ public class MethodCandidate {
     @SuppressWarnings("restriction")
     public void sendArguments(ObjectOutputStream oo) throws IOException
     {
-        if( this.primitiveSize == -99 ) {
-
+        if (this.primitiveSize == -99)
+        {
             oo.flush();
+        }
 
-        } else if( this.primitiveSize == -1 ) {
-
+        else if (this.primitiveSize == -1)
+        {
             oo.flush();
             RawObjectOutputStream rout = new RawObjectOutputStream(oo);
             rout.writeRaw(sun.rmi.transport.TransportConstants.Ping);
+        }
 
-        } else {
+        else
+        {
             oo.write(new byte[this.primitiveSize]);
             oo.writeByte(1);
         }
@@ -208,11 +224,15 @@ public class MethodCandidate {
      */
     public String getName() throws CannotCompileException, NotFoundException
     {
-        if(this.method != null)
+        if (this.method != null)
+        {
             return this.getMethod().getName();
+        }
 
         else
+        {
             return "method";
+        }
     }
 
     /**
@@ -244,14 +264,16 @@ public class MethodCandidate {
     {
         CtClass[] types = this.getParameterTypes();
 
-        if(selected != -1) {
-
-            if( selected >= types.length ) {
+        if (selected != -1)
+        {
+            if (selected >= types.length)
+            {
                 Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is out of bounds.");
                 return -1;
             }
 
-            if( types[selected].isPrimitive() ) {
+            if (types[selected].isPrimitive())
+            {
                 Logger.eprintlnMixedYellow("Specified argument position", String.valueOf(selected), "is a primitive type.");
                 return -1;
             }
@@ -260,17 +282,22 @@ public class MethodCandidate {
         }
 
         int result = -1;
-        for(int ctr = 0; ctr < types.length; ctr++) {
-
-            if(!types[ctr].isPrimitive()) {
-
-                if( types[ctr].getName().equals("java.lang.String") )
+        for (int ctr = 0; ctr < types.length; ctr++)
+        {
+            if (!types[ctr].isPrimitive())
+            {
+                if (types[ctr].getName().equals("java.lang.String"))
+                {
                     result = ctr;
+                }
 
                 else
+                {
                     return ctr;
+                }
             }
         }
+
         return result;
     }
 
@@ -323,7 +350,8 @@ public class MethodCandidate {
      */
     public CtMethod getMethod() throws CannotCompileException, NotFoundException
     {
-        if( this.method == null ) {
+        if (this.method == null)
+        {
             MethodCandidate tmp = new MethodCandidate(this.getSignature());
             this.method = tmp.getMethod();
         }
@@ -349,10 +377,13 @@ public class MethodCandidate {
     {
         String typeName = "None";
 
-        try {
+        try
+        {
             typeName = this.method.getParameterTypes()[position].getName();
+        }
 
-        } catch( Exception e ) {
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "parameter type", "determination", true);
         }
 
@@ -365,8 +396,10 @@ public class MethodCandidate {
     @Override
     public boolean equals(Object o)
     {
-        if(!(o instanceof MethodCandidate))
+        if (!(o instanceof MethodCandidate))
+        {
             return false;
+        }
 
         MethodCandidate other = (MethodCandidate)o;
         return this.hash == other.getHash();
@@ -376,7 +409,8 @@ public class MethodCandidate {
      * MethodCandidates are hashed according to their method hash.
      */
     @Override
-    public int hashCode(){
+    public int hashCode()
+    {
        return Long.hashCode(this.hash);
     }
 }
