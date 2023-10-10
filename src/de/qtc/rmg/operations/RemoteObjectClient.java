@@ -31,8 +31,8 @@ import sun.rmi.server.UnicastRef;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public class RemoteObjectClient {
-
+public class RemoteObjectClient
+{
     private ObjID objID;
     private UnicastRef remoteRef;
 
@@ -110,11 +110,14 @@ public class RemoteObjectClient {
     {
         UnicastWrapper remoteObject = null;
 
-        try {
+        try
+        {
             remoteObject = UnicastWrapper.fromRef(remoteRef, intf);
             this.remoteObject = remoteObject;
+        }
 
-        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+        catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e)
+        {
             ExceptionHandler.internalError("RemoteObjectClient.assignInterface", "Caught unexpected exception: " + e.getClass().getName());
         }
 
@@ -164,7 +167,8 @@ public class RemoteObjectClient {
         String[] boundNames = new String[boundNamesSize + 1];
         boundNames[0] = this.boundName;
 
-        for(int ctr = 0; ctr < boundNamesSize; ctr++) {
+        for(int ctr = 0; ctr < boundNamesSize; ctr++)
+        {
             boundNames[ctr + 1] = remoteObject.duplicates.get(ctr).boundName;
         }
 
@@ -190,21 +194,26 @@ public class RemoteObjectClient {
 
         MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
-        try {
+        try
+        {
             rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, false, getMethodName(targetMethod), remoteRef);
 
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
+        }
 
-        } catch (Exception e) {
-
+        catch (Exception e)
+        {
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash")) {
+            if (cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash"))
+            {
                 Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
+            }
 
-            } else {
+            else
+            {
                 ExceptionHandler.handleGadgetCallException(e, RMIComponent.CUSTOM, "method", randomClassName);
             }
         }
@@ -230,21 +239,26 @@ public class RemoteObjectClient {
 
         MethodArguments argumentArray = prepareArgumentArray(targetMethod, gadget, attackArgument);
 
-        try {
+        try
+        {
             rmi.genericCall(null, -1, targetMethod.getHash(), argumentArray, true, methodName, remoteRef);
 
             Logger.eprintln("Remote method invocation didn't cause any exception.");
             Logger.eprintln("This is unusual and the attack probably didn't work.");
+        }
 
-        } catch (Exception e) {
-
+        catch (Exception e)
+        {
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash")) {
+            if (cause instanceof java.rmi.UnmarshalException && cause.getMessage().contains("unrecognized method hash"))
+            {
                 Logger.eprintlnMixedYellow("Method", targetMethod.getSignature(), "does not exist on this remote object.");
                 ExceptionHandler.showStackTrace(e);
+            }
 
-            } else {
+            else
+            {
                 ExceptionHandler.handleCodebaseException(e, gadget.getClass().getName(), RMIComponent.CUSTOM, "method", randomClassName);
             }
         }
@@ -264,38 +278,54 @@ public class RemoteObjectClient {
         CtClass rtype = null;
         MethodArguments callArguemnts = null;
 
-        try {
+        try
+        {
             rtype = targetMethod.getMethod().getReturnType();
             callArguemnts = RMGUtils.applyParameterTypes(targetMethod.getMethod(), argumentArray);
+        }
 
-        } catch(Exception e) {
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "preparation", "of remote method call", true);
         }
 
-        try {
+        try
+        {
             rmi.genericCall(null, -1, targetMethod.getHash(), callArguemnts, false, getMethodName(targetMethod), remoteRef, rtype);
+        }
 
-        } catch( java.rmi.ServerException e ) {
-
+        catch (java.rmi.ServerException e)
+        {
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash")) {
+            if (cause instanceof java.rmi.UnmarshalException && e.getMessage().contains("unrecognized method hash"))
+            {
                 ExceptionHandler.unrecognizedMethodHash(e, "call", targetMethod.getSignature());
-
-            } else if( cause instanceof java.io.InvalidClassException ) {
-                ExceptionHandler.invalidClass(e, "RMI endpoint");
-
-            } else if( cause instanceof java.lang.UnsupportedOperationException ) {
-                ExceptionHandler.unsupportedOperationException(e, "method");
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
             }
 
-        } catch( java.rmi.NoSuchObjectException e ) {
-            ExceptionHandler.noSuchObjectException(e, this.objID, true);
+            else if (cause instanceof java.io.InvalidClassException)
+            {
+                ExceptionHandler.invalidClass(e, "RMI endpoint");
+            }
 
-        } catch( Exception e ) {
+            else if (cause instanceof java.lang.UnsupportedOperationException)
+            {
+                ExceptionHandler.unsupportedOperationException(e, "method");
+            }
+
+            else
+            {
+                ExceptionHandler.unexpectedException(e, "generic call", "operation", false);
+            }
+        }
+
+        catch (java.rmi.NoSuchObjectException e)
+        {
+            ExceptionHandler.noSuchObjectException(e, this.objID, true);
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.genericCall(e);
         }
     }
@@ -322,10 +352,12 @@ public class RemoteObjectClient {
     public static List<RemoteObjectClient> filterEmpty(List<RemoteObjectClient> clientList)
     {
         Iterator<RemoteObjectClient> it = clientList.iterator();
-        while(it.hasNext()) {
-
-            if( it.next().remoteMethods.isEmpty() )
+        while (it.hasNext())
+        {
+            if (it.next().remoteMethods.isEmpty())
+            {
                 it.remove();
+            }
         }
 
         return clientList;
@@ -354,8 +386,10 @@ public class RemoteObjectClient {
      */
     private UnicastRef getRemoteRefByObjID()
     {
-        if(objID == null)
+        if (objID == null)
+        {
             ExceptionHandler.internalError("getRemoteRefByObjID", "Function was called with missing objID.");
+        }
 
         return rmi.getRemoteRef(objID);
     }
@@ -369,15 +403,20 @@ public class RemoteObjectClient {
      */
     private UnicastRef getRemoteRefByName()
     {
-        if(boundName == null || !(rmi instanceof RMIRegistryEndpoint))
+        if (boundName == null || !(rmi instanceof RMIRegistryEndpoint))
+        {
             ExceptionHandler.internalError("getRemoteRefByName", "Function was called without the required fields.");
+        }
 
         RMIRegistryEndpoint rmiReg = (RMIRegistryEndpoint)rmi;
 
-        try {
+        try
+        {
             remoteObject = rmiReg.lookup(boundName).getUnicastWrapper();
+        }
 
-        } catch(Exception e) {
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "remote reference lookup", "operation", true);
         }
 
@@ -397,17 +436,22 @@ public class RemoteObjectClient {
     {
         int attackArgument = 0;
 
-        try {
+        try
+        {
             attackArgument = targetMethod.getPrimitive(position);
+        }
 
-        } catch (CannotCompileException | NotFoundException e) {
+        catch (CannotCompileException | NotFoundException e)
+        {
             ExceptionHandler.unexpectedException(e, "search", "for primitive types", true);
         }
 
-        if( attackArgument == -1 ) {
-
-            if( position == -1 )
+        if (attackArgument == -1)
+        {
+            if (position == -1)
+            {
                 Logger.eprintlnMixedYellow("No non primitive arguments were found for method signature", targetMethod.getSignature());
+            }
 
             RMGUtils.exit();
         }
@@ -434,25 +478,34 @@ public class RemoteObjectClient {
     {
         Object[] methodArguments = null;
 
-        try {
+        try
+        {
             methodArguments = RMGUtils.getArgumentArray(targetMethod.getMethod());
-        } catch (Exception e) {
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "argument array", "construction", true);
         }
 
-        if( RMGOption.NO_CANARY.getBool() )
+        if (RMGOption.NO_CANARY.getBool())
+        {
             methodArguments[attackArgument] = gadget;
+        }
 
-        else {
-
+        else
+        {
             Object[] payloadArray = new Object[2];
             Object randomInstance = null;
 
-            try {
+            try
+            {
                 Class<?> randomClass = RMGUtils.makeRandomClass();
                 randomInstance = randomClass.newInstance();
+            }
 
-            } catch (Exception e) {
+            catch (Exception e)
+            {
                 randomInstance = new DefinitelyNonExistingClass();
             }
 
@@ -465,10 +518,13 @@ public class RemoteObjectClient {
 
         MethodArguments callArguments = null;
 
-        try {
+        try
+        {
             callArguments = RMGUtils.applyParameterTypes(targetMethod.getMethod(), methodArguments);
+        }
 
-        } catch(Exception e) {
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "parameter types", "mapping", true);
         }
 
@@ -487,21 +543,33 @@ public class RemoteObjectClient {
     {
         String methodName = "";
 
-        try {
+        try
+        {
             methodName = targetMethod.getName();
-        } catch (CannotCompileException | NotFoundException e) {
+        }
+
+        catch (CannotCompileException | NotFoundException e)
+        {
             ExceptionHandler.unexpectedException(e, "compilation", "process", true);
         }
 
         return methodName;
     }
 
+    /**
+     * Returns the string representation of an RemoteObjectClient. The format is host:port:identifier,
+     * where the identifier is either the bound name or the ObjID associated with the RemoteObjectClient.
+     *
+     * @return String representation of the RemoteObjectClient
+     */
     public String toString()
     {
         String identifier = this.objID == null ? this.boundName : this.objID.toString();
 
-        if( identifier == null )
+        if (identifier == null)
+        {
             identifier = "";
+        }
 
         return String.format("%s:%d:%s", rmi.host, rmi.port, identifier);
     }
