@@ -330,7 +330,7 @@
 
     ```java
     java.lang.String getTargetInterfaceName()
-    java.lang.Object invoke(org.springframework.remoting.support RemoteInvocation)
+    java.lang.Object invoke(org.springframework.remoting.support.RemoteInvocation invo)
     ```
 * References:
     * [https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/rmi/RmiInvocationHandler.html](https://docs.spring.io/spring-framework/docs/5.3.0/javadoc-api/org/springframework/remoting/rmi/RmiInvocationHandler.html)
