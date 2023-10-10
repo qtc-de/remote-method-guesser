@@ -16,6 +16,7 @@ import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.SpringRemoting;
 import de.qtc.rmg.utils.UnicastWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -275,6 +276,12 @@ public class RemoteObjectClient
      */
     public void genericCall(MethodCandidate targetMethod, Object[] argumentArray)
     {
+        if (SpringRemoting.isRemotingCall(remoteObject, targetMethod))
+        {
+            argumentArray = new Object[] { SpringRemoting.buildRemoteInvocation(targetMethod, argumentArray) };
+            targetMethod = SpringRemoting.getInvokeMethod();
+        }
+
         CtClass rtype = null;
         MethodArguments callArguemnts = null;
 
