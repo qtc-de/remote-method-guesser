@@ -1,13 +1,18 @@
 package de.qtc.rmg.utils;
 
+import java.rmi.Remote;
+
 import org.springframework.remoting.support.RemoteInvocation;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.internal.RMGOption;
+import de.qtc.rmg.operations.RemoteObjectClient;
+import de.qtc.rmg.plugin.PluginSystem;
+import de.qtc.rmg.plugin.ReturnValueProvider;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import sun.rmi.server.UnicastRef;
 
 /**
  * SpringRemoting represents a wrapper around regular Java RMI. Exposed methods are not directly available via
@@ -16,7 +21,8 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class SpringRemoting
+@SuppressWarnings("restriction")
+public class SpringRemotingWrapper extends UnicastWrapper
 {
     public final static String invocationHandlerClass = "org.springframework.remoting.rmi.RmiInvocationHandler";
     public final static String methodGetStr = "java.lang.String getTargetInterfaceName()";
@@ -24,6 +30,26 @@ public class SpringRemoting
 
     private static MethodCandidate methodGet;
     private static MethodCandidate methodInvoke;
+
+    private static String interfaceName;
+
+    public SpringRemotingWrapper(Remote remoteObject, String boundName, UnicastRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
+    {
+        super(remoteObject, boundName, ref);
+
+        ReturnValueProvider respHandler = new ReturnValueProvider();
+        PluginSystem.setResponeHandler(respHandler);
+
+        RemoteObjectClient client = new RemoteObjectClient(this);
+        client.genericCall(getInterfaceNameMethod(), new Object[] {});
+
+        interfaceName = (String)respHandler.getValue();
+    }
+
+    public String getInterfaceName()
+    {
+        return interfaceName;
+    }
 
     /**
      * Return a MethodCandidate for the getTargetInterfaceName method that is exposed by the RmiInvocationHandler
@@ -73,18 +99,8 @@ public class SpringRemoting
         return methodInvoke;
     }
 
-    public static boolean isRemotingCall(RemoteObjectWrapper remoteObject, MethodCandidate targetMethod)
+    public boolean isRemotingCall(MethodCandidate targetMethod)
     {
-        if (RMGOption.SPRING_REMOTING.getBool())
-        {
-            return true;
-        }
-
-        if (remoteObject == null || !remoteObject.className.equals(invocationHandlerClass))
-        {
-            return false;
-        }
-
         long targetHash = targetMethod.getHash();
 
         if (targetHash == getInvokeMethod().getHash() || targetHash == getInterfaceNameMethod().getHash())

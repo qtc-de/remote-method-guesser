@@ -13,6 +13,7 @@ import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.operations.RemoteObjectClient;
 import de.qtc.rmg.utils.ActivatableWrapper;
 import de.qtc.rmg.utils.RemoteObjectWrapper;
+import de.qtc.rmg.utils.SpringRemotingWrapper;
 import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
@@ -245,11 +246,40 @@ public class Formatter {
      */
     private void printRemoteRef(RemoteObjectWrapper wrapper)
     {
-        if (wrapper instanceof UnicastWrapper)
+        if (wrapper instanceof SpringRemotingWrapper)
+        {
+            printSpringRemoting((SpringRemotingWrapper)wrapper);
+        }
+
+        else if (wrapper instanceof UnicastWrapper)
+        {
             printUnicastRef((UnicastWrapper)wrapper);
+        }
 
         else
+        {
             printActivatableRef((ActivatableWrapper)wrapper);
+        }
+    }
+
+    /**
+     * Print information on a SpringRemotingWrapper. This information includes the real
+     * interface name that can be accessed via the spring remoting wrapper and all information
+     * that is printed by the printUnicastRef method.
+     *
+     * @param ref SpringRemotingWrapper containing the wrapper
+     */
+    private void printSpringRemoting(SpringRemotingWrapper ref)
+    {
+        String interfaceName = ref.getInterfaceName();
+
+        if (interfaceName != null)
+        {
+            Logger.print("    ");
+            Logger.printlnPlainMixedPurple("Spring Remoting Interface:", interfaceName);
+        }
+
+        printUnicastRef((UnicastWrapper)ref);
     }
 
     /**

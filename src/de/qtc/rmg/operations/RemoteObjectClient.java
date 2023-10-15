@@ -16,7 +16,7 @@ import de.qtc.rmg.networking.RMIEndpoint;
 import de.qtc.rmg.networking.RMIRegistryEndpoint;
 import de.qtc.rmg.utils.DefinitelyNonExistingClass;
 import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.SpringRemoting;
+import de.qtc.rmg.utils.SpringRemotingWrapper;
 import de.qtc.rmg.utils.UnicastWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -276,10 +276,10 @@ public class RemoteObjectClient
      */
     public void genericCall(MethodCandidate targetMethod, Object[] argumentArray)
     {
-        if (SpringRemoting.isRemotingCall(remoteObject, targetMethod))
+        if (remoteObject instanceof SpringRemotingWrapper && ((SpringRemotingWrapper)remoteObject).isRemotingCall(targetMethod))
         {
-            argumentArray = new Object[] { SpringRemoting.buildRemoteInvocation(targetMethod, argumentArray) };
-            targetMethod = SpringRemoting.getInvokeMethod();
+            argumentArray = new Object[] { SpringRemotingWrapper.buildRemoteInvocation(targetMethod, argumentArray) };
+            targetMethod = SpringRemotingWrapper.getInvokeMethod();
         }
 
         CtClass rtype = null;
@@ -359,6 +359,7 @@ public class RemoteObjectClient
     public static List<RemoteObjectClient> filterEmpty(List<RemoteObjectClient> clientList)
     {
         Iterator<RemoteObjectClient> it = clientList.iterator();
+
         while (it.hasNext())
         {
             if (it.next().remoteMethods.isEmpty())

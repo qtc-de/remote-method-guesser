@@ -84,16 +84,32 @@ public abstract class RemoteObjectWrapper
     public static RemoteObjectWrapper getInstance(Remote remote, String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
         RemoteObjectWrapper wrapper = null;
+
         RemoteRef ref = RMGUtils.extractRef(remote);
+        String className = RMGUtils.getClassName(remote);
 
         if (ref instanceof UnicastRef)
-            wrapper = new UnicastWrapper(remote, boundName, (UnicastRef)ref);
+        {
+            if (className.equals(SpringRemotingWrapper.invocationHandlerClass))
+            {
+                wrapper = new SpringRemotingWrapper(remote, boundName, (UnicastRef)ref);
+            }
+
+            else
+            {
+                wrapper = new UnicastWrapper(remote, boundName, (UnicastRef)ref);
+            }
+        }
 
         else if (ref.getClass().getName().contains("ActivatableRef"))
+        {
             wrapper = new ActivatableWrapper(remote, boundName, ref);
+        }
 
         else
+        {
             ExceptionHandler.internalError("RemoteObjectWrapper.getInstance", "Unexpected reference type");
+        }
 
         return wrapper;
     }
@@ -188,14 +204,18 @@ public abstract class RemoteObjectWrapper
         {
             if (wrappers[ctr] instanceof UnicastWrapper)
             {
-                unicastWrappers[ctr] = (UnicastWrapper) wrappers[ctr];
+                unicastWrappers[ctr] = (UnicastWrapper)wrappers[ctr];
             }
 
             else
             {
-                try {
+                try
+                {
                     unicastWrappers[ctr] = ((ActivatableWrapper)wrappers[ctr]).activate();
-                } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+                }
+
+                catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e)
+                {
                     ExceptionHandler.unexpectedException(e, "activate", "call", true);
                 }
             }
