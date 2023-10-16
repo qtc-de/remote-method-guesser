@@ -1,6 +1,9 @@
 package de.qtc.rmg.utils;
 
 import java.rmi.Remote;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.remoting.support.RemoteInvocation;
 
@@ -13,7 +16,6 @@ import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.plugin.ReturnValueProvider;
 import javassist.CannotCompileException;
 import javassist.CtClass;
-import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 import sun.rmi.server.UnicastRef;
 
@@ -116,9 +118,6 @@ public class SpringRemotingWrapper extends UnicastWrapper
 
         try
         {
-            String methodName = targetMethod.getName();
-            invo.setMethodName(methodName);
-
             CtClass[] argTypes = targetMethod.getParameterTypes();
             Class<?>[] parameterTypes = new Class<?>[argTypes.length];
 
@@ -126,44 +125,7 @@ public class SpringRemotingWrapper extends UnicastWrapper
             {
                 for (int ctr = 0; ctr < argTypes.length; ctr++)
                 {
-                    if (argTypes[ctr].isPrimitive())
-                    {
-                        if (argTypes[ctr] == CtPrimitiveType.intType) {
-                            parameterTypes[ctr] = int.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.booleanType) {
-                            parameterTypes[ctr] = boolean.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.byteType) {
-                            parameterTypes[ctr] = byte.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.charType) {
-                            parameterTypes[ctr] = char.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.shortType) {
-                            parameterTypes[ctr] = short.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.longType) {
-                            parameterTypes[ctr] = long.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.floatType) {
-                            parameterTypes[ctr] = float.class;
-                        } else if (argTypes[ctr] == CtPrimitiveType.doubleType) {
-                            parameterTypes[ctr] = double.class;
-                        } else {
-                            throw new Error("unrecognized primitive type: " + argTypes[ctr]);
-                        }
-
-                    }
-
-                    else
-                    {
-                        String className = argTypes[ctr].getName();
-                        className = className.replaceAll("\\[\\]", "");
-
-                        if (argTypes[ctr].isArray())
-                        {
-                            className = "[L" + className + ";";
-                        }
-
-                        Logger.printlnYellow(className);
-                        Class<?> cls = Class.forName(className);
-                        parameterTypes[ctr] = cls;
-                    }
+                    parameterTypes[ctr] = RMGUtils.ctClassToClass(argTypes[ctr]);
                 }
             }
 
@@ -172,6 +134,9 @@ public class SpringRemotingWrapper extends UnicastWrapper
                 ExceptionHandler.internalError("SpringRemoting.buildRemoteInvocation", e.getMessage());
             }
 
+            String methodName = targetMethod.getName();
+
+            invo.setMethodName(methodName);
             invo.setArguments(args);
             invo.setParameterTypes(parameterTypes);
         }
@@ -182,6 +147,26 @@ public class SpringRemotingWrapper extends UnicastWrapper
         }
 
         return invo;
+    }
+
+    public static Map<RemoteInvocation, MethodCandidate> buildInvocationMap(Set<MethodCandidate> candidates)
+    {
+        Map<RemoteInvocation, MethodCandidate> invocationMap = new HashMap<RemoteInvocation, MethodCandidate>();
+
+        for (MethodCandidate candidate : candidates)
+        {
+            Object[] args = new Object[] {};
+
+            if (candidate.getArgumentCount() == 0)
+            {
+                args = new Object[] {1};
+            }
+
+            RemoteInvocation invo = buildRemoteInvocation(candidate, args);
+            invocationMap.put(invo, candidate);
+        }
+
+        return invocationMap;
     }
 
     public String getInterfaceName()

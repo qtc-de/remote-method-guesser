@@ -4,12 +4,16 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.remoting.support.RemoteInvocation;
+
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
@@ -283,7 +287,8 @@ public class MethodGuesser
             {
                 if (client.remoteObject instanceof SpringRemotingWrapper)
                 {
-                    Runnable r = new SpringGuessingWorker(client, candidates);
+                    Map<RemoteInvocation, MethodCandidate> invocations = SpringRemotingWrapper.buildInvocationMap(candidates);
+                    Runnable r = new SpringGuessingWorker(client, invocations);
                     pool.execute(r);
                 }
 
@@ -413,28 +418,59 @@ public class MethodGuesser
         }
     }
 
-    private class SpringGuessingWorker extends GuessingWorker
+    private class SpringGuessingWorker implements Runnable
     {
-        public SpringGuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates)
+        protected String boundName;
+        protected RemoteObjectClient client;
+        protected Map<RemoteInvocation, MethodCandidate> invocationMap;
+
+        public SpringGuessingWorker(RemoteObjectClient client, Map<RemoteInvocation, MethodCandidate> invocationMap)
         {
-            super(client, candidates);
+            this.client = client;
+            this.boundName = client.getBoundName();
+            this.invocationMap = invocationMap;
+        }
+
+        protected void logHit(RemoteInvocation invocation)
+        {
+            MethodCandidate existingMethod = invocationMap.get(invocation);
+
+            String prefix = Logger.blue("[ " + Logger.padRight(boundName, padding) + " ] ");
+            Logger.printlnMixedYellow(prefix + "HIT! Method with signature", existingMethod.getSignature(), "exists!");
+            client.addRemoteMethod(existingMethod);
         }
 
         public void run()
         {
-            for (MethodCandidate candidate : candidates)
+            for (RemoteInvocation invocation : invocationMap.keySet())
             {
                 try
                 {
-                    client.guessingCallSpring(candidate);
-                    logHit(candidate);
+                    client.unmanagedCall(SpringRemotingWrapper.getInvokeMethod(), new MethodArguments(invocation, RemoteInvocation.class));
+
+                    /*
+                     * We always provide an invalid argument count for our SpringRemoting calls.
+                     * We should never endup here, which would indicate a successful call.
+                     */
+                    unexpectedError(invocation, null);
+                }
+
+                catch (java.lang.IllegalArgumentException e)
+                {
+                    /*
+                     * Since SpringRemoting calls exposed methods via reflection, we can always provide an incorrect
+                     * argument count during the call. If the method exists, this leads to an IllegalArgumentException,
+                     * which is used to identify valid methods.
+                     */
+                    logHit(invocation);
                 }
 
                 catch (java.lang.NoSuchMethodException e)
                 {
                     /*
-                     * SpringRemoting resolves remote methods via reflection. If the requetsed method does not
-                     * exist, it throws a java.lang.NoSuchMethodException.
+                     * SpringRemoting resolves remote methods via reflection. If the requested method does not
+                     * exist, it throws a java.lang.NoSuchMethodException. So this branch means that the guessed
+                     * method simply does not exist and we can continue.
                      */
                 }
 
@@ -444,11 +480,19 @@ public class MethodGuesser
 
                     if (cause instanceof java.lang.ClassNotFoundException)
                     {
+                        /*
+                         * Since SpringRemoting requires valid RMI calls, guessed methods may contain classes that
+                         * are not known on the server side. In this case, ClassNotFoundExceptions are expected. This
+                         * means that the method does not exist and we can continue.
+                         */
                     }
 
                     else
                     {
-                        logHit(candidate);
+                        /*
+                         * If we end up here, an unexpected exception was raised that indicates a general error.
+                         */
+                        unexpectedError(invocation, e);
                     }
                 }
 
@@ -457,16 +501,7 @@ public class MethodGuesser
                     /*
                      * If we end up here, an unexpected exception was raised that indicates a general error.
                      */
-                    Logger.printlnYellow(candidate.getSignature());
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-
-                    String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
-                                 +"Please report this to improve rmg :)\n"
-                                 +"Stack-Trace:\n"
-                                 +writer.toString();
-
-                    Logger.println(info);
+                    unexpectedError(invocation, e);
                 }
 
                 finally
@@ -474,6 +509,31 @@ public class MethodGuesser
                     progressBar.taskDone();
                 }
             }
+        }
+
+        private void unexpectedError(RemoteInvocation invocation, Exception e)
+        {
+            String info = "";
+            StringWriter writer = new StringWriter();
+
+            Logger.printlnYellow(invocationMap.get(invocation).getSignature());
+
+            if (e != null)
+            {
+                e.printStackTrace(new PrintWriter(writer));
+
+                info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
+                             +"Please report this to improve rmg :)\n"
+                             +"Stack-Trace:\n"
+                             +writer.toString();
+            }
+
+            else
+            {
+                info = "Spring Remoting call did not cause an exception. This is not expected.";
+            }
+
+            Logger.println(info);
         }
     }
 }

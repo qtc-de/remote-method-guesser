@@ -1,6 +1,7 @@
 package de.qtc.rmg.utils;
 
 import java.io.InvalidClassException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -210,7 +211,7 @@ public class RMGUtils
             return Class.forName("sun.rmi.server.ActivatableRef");
         } catch (ClassNotFoundException e) {
             // TODO needs to be implemented correctly
-            Logger.printlnYellow("[-] Not implemented yet!");
+            Logger.eprintlnYellow("Not implemented yet!");
             RMGUtils.exit();
         }
 
@@ -285,8 +286,7 @@ public class RMGUtils
      */
     public static CtMethod makeMethod(String signature) throws CannotCompileException
     {
-        CtMethod method = CtNewMethod.make("public " + signature + ";", dummyClass);
-        return method;
+        return CtNewMethod.make("public " + signature + ";", dummyClass);
     }
 
     /**
@@ -1330,5 +1330,41 @@ public class RMGUtils
         message = message.substring(message.indexOf('=') + 2, message.indexOf(','));
 
         return Long.parseLong(message);
+    }
+
+    public static Class<?> ctClassToClass(CtClass type) throws ClassNotFoundException, NotFoundException
+    {
+        if (type.isPrimitive())
+        {
+            if (type == CtPrimitiveType.intType) {
+                return int.class;
+            } else if (type == CtPrimitiveType.booleanType) {
+                return boolean.class;
+            } else if (type == CtPrimitiveType.byteType) {
+                return byte.class;
+            } else if (type == CtPrimitiveType.charType) {
+                return char.class;
+            } else if (type == CtPrimitiveType.shortType) {
+                return short.class;
+            } else if (type == CtPrimitiveType.longType) {
+                return long.class;
+            } else if (type == CtPrimitiveType.floatType) {
+                return float.class;
+            } else if (type == CtPrimitiveType.doubleType) {
+                return double.class;
+            } else {
+                throw new Error("unrecognized primitive type: " + type);
+            }
+        }
+
+        else if (type.isArray())
+        {
+            return Array.newInstance(ctClassToClass(type.getComponentType()), 0).getClass();
+        }
+
+        else
+        {
+            return Class.forName(type.getName());
+        }
     }
 }

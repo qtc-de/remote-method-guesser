@@ -340,14 +340,9 @@ public class RemoteObjectClient
     }
 
 
-    public void guessingCallSpring(MethodCandidate targetMethod) throws Exception
+    public void unmanagedCall(MethodCandidate targetMethod, MethodArguments args) throws Exception
     {
-        RemoteInvocation invo = SpringRemotingWrapper.buildRemoteInvocation(targetMethod, new Object[] {});
-
-        MethodArguments args = new MethodArguments(invo, RemoteInvocation.class);
-        targetMethod = SpringRemotingWrapper.getInvokeMethod();
-
-        rmi.genericCall(null, -1, SpringRemotingWrapper.getInvokeMethod().getHash(), args, false, "Invoke", remoteRef, null);
+        rmi.genericCall(null, -1, targetMethod.getHash(), args, false, targetMethod.getName(), remoteRef, null);
     }
 
     /**
