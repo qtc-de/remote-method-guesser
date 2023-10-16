@@ -55,8 +55,8 @@ import sun.rmi.transport.LiveRef;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings({ "rawtypes", "deprecation", "restriction" })
-public class RMGUtils {
-
+public class RMGUtils
+{
     private static ClassPool pool;
     private static CtClass dummyClass;
     private static CtClass remoteClass;
@@ -1132,7 +1132,7 @@ public class RMGUtils {
      * @param remoteObject Object to obtain the class from
      * @return Class name of the implementor or one of its interfaces in case of a Proxy
      */
-    public static String getClassName(Remote remoteObject)
+    public static String getInterfaceName(Remote remoteObject)
     {
         if( Proxy.isProxyClass(remoteObject.getClass()) ) {
 

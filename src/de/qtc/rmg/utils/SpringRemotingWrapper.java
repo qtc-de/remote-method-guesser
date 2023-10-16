@@ -4,13 +4,16 @@ import java.rmi.Remote;
 
 import org.springframework.remoting.support.RemoteInvocation;
 
+import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
+import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.RemoteObjectClient;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.plugin.ReturnValueProvider;
 import javassist.CannotCompileException;
 import javassist.CtClass;
+import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 import sun.rmi.server.UnicastRef;
 
@@ -31,7 +34,7 @@ public class SpringRemotingWrapper extends UnicastWrapper
     private static MethodCandidate methodGet;
     private static MethodCandidate methodInvoke;
 
-    private static String interfaceName;
+    private static String remotingInterfaceName;
 
     public SpringRemotingWrapper(Remote remoteObject, String boundName, UnicastRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -43,12 +46,8 @@ public class SpringRemotingWrapper extends UnicastWrapper
         RemoteObjectClient client = new RemoteObjectClient(this);
         client.genericCall(getInterfaceNameMethod(), new Object[] {});
 
-        interfaceName = (String)respHandler.getValue();
-    }
-
-    public String getInterfaceName()
-    {
-        return interfaceName;
+        remotingInterfaceName = (String)respHandler.getValue();
+        knownEndpoint = KnownEndpointHolder.getHolder().lookup(remotingInterfaceName);
     }
 
     /**
@@ -118,17 +117,53 @@ public class SpringRemotingWrapper extends UnicastWrapper
         try
         {
             String methodName = targetMethod.getName();
-            CtClass[] argTypes = targetMethod.getParameterTypes();
-
             invo.setMethodName(methodName);
-            Class<?>[] parameterTypes = new Class<?>[args.length];
+
+            CtClass[] argTypes = targetMethod.getParameterTypes();
+            Class<?>[] parameterTypes = new Class<?>[argTypes.length];
 
             try
             {
-                for (int ctr = 0; ctr < args.length; ctr++)
+                for (int ctr = 0; ctr < argTypes.length; ctr++)
                 {
-                    Class<?> cls = Class.forName(argTypes[ctr].getName());
-                    parameterTypes[ctr] = cls;
+                    if (argTypes[ctr].isPrimitive())
+                    {
+                        if (argTypes[ctr] == CtPrimitiveType.intType) {
+                            parameterTypes[ctr] = int.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.booleanType) {
+                            parameterTypes[ctr] = boolean.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.byteType) {
+                            parameterTypes[ctr] = byte.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.charType) {
+                            parameterTypes[ctr] = char.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.shortType) {
+                            parameterTypes[ctr] = short.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.longType) {
+                            parameterTypes[ctr] = long.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.floatType) {
+                            parameterTypes[ctr] = float.class;
+                        } else if (argTypes[ctr] == CtPrimitiveType.doubleType) {
+                            parameterTypes[ctr] = double.class;
+                        } else {
+                            throw new Error("unrecognized primitive type: " + argTypes[ctr]);
+                        }
+
+                    }
+
+                    else
+                    {
+                        String className = argTypes[ctr].getName();
+                        className = className.replaceAll("\\[\\]", "");
+
+                        if (argTypes[ctr].isArray())
+                        {
+                            className = "[L" + className + ";";
+                        }
+
+                        Logger.printlnYellow(className);
+                        Class<?> cls = Class.forName(className);
+                        parameterTypes[ctr] = cls;
+                    }
                 }
             }
 
@@ -147,5 +182,10 @@ public class SpringRemotingWrapper extends UnicastWrapper
         }
 
         return invo;
+    }
+
+    public String getInterfaceName()
+    {
+        return remotingInterfaceName;
     }
 }

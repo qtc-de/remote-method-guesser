@@ -15,6 +15,7 @@ import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.ProgressBar;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.SpringRemotingWrapper;
 import de.qtc.rmg.utils.UnicastWrapper;
 
 /**
@@ -37,8 +38,8 @@ import de.qtc.rmg.utils.UnicastWrapper;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class MethodGuesser {
-
+public class MethodGuesser
+{
     private int padding = 0;
     private final ProgressBar progressBar;
 
@@ -191,7 +192,7 @@ public class MethodGuesser {
             else
             {
                 RemoteObjectClient knownClient = new RemoteObjectClient(o);
-                knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.className));
+                knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.getInterfaceName()));
 
                 knownClientList.add(knownClient);
             }
@@ -280,8 +281,17 @@ public class MethodGuesser {
         {
             for (Set<MethodCandidate> candidates : candidateSets)
             {
-                Runnable r = new GuessingWorker(client, candidates);
-                pool.execute(r);
+                if (client.remoteObject instanceof SpringRemotingWrapper)
+                {
+                    Runnable r = new SpringGuessingWorker(client, candidates);
+                    pool.execute(r);
+                }
+
+                else
+                {
+                    Runnable r = new GuessingWorker(client, candidates);
+                    pool.execute(r);
+                }
             }
         }
 
@@ -317,9 +327,9 @@ public class MethodGuesser {
      */
     private class GuessingWorker implements Runnable
     {
-        private String boundName;
-        private Set<MethodCandidate> candidates;
-        private RemoteObjectClient client;
+        protected String boundName;
+        protected Set<MethodCandidate> candidates;
+        protected RemoteObjectClient client;
 
         /**
          * Initialize the guessing worker with all the required information.
@@ -340,7 +350,7 @@ public class MethodGuesser {
          *
          * @param candidate MethodCandidate that was successfully guessed
          */
-        private void logHit(MethodCandidate candidate)
+        protected void logHit(MethodCandidate candidate)
         {
             String prefix = Logger.blue("[ " + Logger.padRight(boundName, padding) + " ] ");
             Logger.printlnMixedYellow(prefix + "HIT! Method with signature", candidate.getSignature(), "exists!");
@@ -384,6 +394,70 @@ public class MethodGuesser {
                     /*
                      * If we end up here, an unexpected exception was raised that indicates a general error.
                      */
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+
+                    String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
+                                 +"Please report this to improve rmg :)\n"
+                                 +"Stack-Trace:\n"
+                                 +writer.toString();
+
+                    Logger.println(info);
+                }
+
+                finally
+                {
+                    progressBar.taskDone();
+                }
+            }
+        }
+    }
+
+    private class SpringGuessingWorker extends GuessingWorker
+    {
+        public SpringGuessingWorker(RemoteObjectClient client, Set<MethodCandidate> candidates)
+        {
+            super(client, candidates);
+        }
+
+        public void run()
+        {
+            for (MethodCandidate candidate : candidates)
+            {
+                try
+                {
+                    client.guessingCallSpring(candidate);
+                    logHit(candidate);
+                }
+
+                catch (java.lang.NoSuchMethodException e)
+                {
+                    /*
+                     * SpringRemoting resolves remote methods via reflection. If the requetsed method does not
+                     * exist, it throws a java.lang.NoSuchMethodException.
+                     */
+                }
+
+                catch (java.rmi.ServerException e)
+                {
+                    Throwable cause = ExceptionHandler.getCause(e);
+
+                    if (cause instanceof java.lang.ClassNotFoundException)
+                    {
+                    }
+
+                    else
+                    {
+                        logHit(candidate);
+                    }
+                }
+
+                catch(Exception e)
+                {
+                    /*
+                     * If we end up here, an unexpected exception was raised that indicates a general error.
+                     */
+                    Logger.printlnYellow(candidate.getSignature());
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
 

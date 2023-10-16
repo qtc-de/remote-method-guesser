@@ -197,7 +197,7 @@ public class UnicastWrapper extends RemoteObjectWrapper
 
             for(UnicastWrapper other : unique) {
 
-                if(other.className.equals(current.className)) {
+                if(other.getInterfaceName().equals(current.getInterfaceName())) {
                     other.addDuplicate(current);
                     continue outer;
                 }

@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.remoting.support.RemoteInvocation;
+
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -335,6 +337,17 @@ public class RemoteObjectClient
         {
             ExceptionHandler.genericCall(e);
         }
+    }
+
+
+    public void guessingCallSpring(MethodCandidate targetMethod) throws Exception
+    {
+        RemoteInvocation invo = SpringRemotingWrapper.buildRemoteInvocation(targetMethod, new Object[] {});
+
+        MethodArguments args = new MethodArguments(invo, RemoteInvocation.class);
+        targetMethod = SpringRemotingWrapper.getInvokeMethod();
+
+        rmi.genericCall(null, -1, SpringRemotingWrapper.getInvokeMethod().getHash(), args, false, "Invoke", remoteRef, null);
     }
 
     /**

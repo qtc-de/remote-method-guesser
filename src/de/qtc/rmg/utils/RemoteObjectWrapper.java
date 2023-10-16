@@ -23,10 +23,11 @@ import sun.rmi.server.UnicastRef;
 @SuppressWarnings("restriction")
 public abstract class RemoteObjectWrapper
 {
-    public String className;
     public String boundName;
     public Remote remoteObject;
     public KnownEndpoint knownEndpoint;
+
+    private String interfaceName;
 
     /**
      * This constructor is only used for special purposes during the enum action. The resulting
@@ -54,8 +55,8 @@ public abstract class RemoteObjectWrapper
         this.boundName = boundName;
         this.remoteObject = remoteObject;
 
-        this.className = RMGUtils.getClassName(remoteObject);
-        this.knownEndpoint = KnownEndpointHolder.getHolder().lookup(className);
+        this.interfaceName = RMGUtils.getInterfaceName(remoteObject);
+        this.knownEndpoint = KnownEndpointHolder.getHolder().lookup(interfaceName);
     }
 
     /**
@@ -86,11 +87,11 @@ public abstract class RemoteObjectWrapper
         RemoteObjectWrapper wrapper = null;
 
         RemoteRef ref = RMGUtils.extractRef(remote);
-        String className = RMGUtils.getClassName(remote);
+        String interfaceName = RMGUtils.getInterfaceName(remote);
 
         if (ref instanceof UnicastRef)
         {
-            if (className.equals(SpringRemotingWrapper.invocationHandlerClass))
+            if (interfaceName.equals(SpringRemotingWrapper.invocationHandlerClass))
             {
                 wrapper = new SpringRemotingWrapper(remote, boundName, (UnicastRef)ref);
             }
@@ -126,8 +127,10 @@ public abstract class RemoteObjectWrapper
     {
         for(RemoteObjectWrapper o : list)
         {
-            if( o != null && o.boundName.equals(boundName) )
+            if (o != null && o.boundName.equals(boundName))
+            {
                 return o;
+            }
         }
 
         return null;
@@ -158,10 +161,22 @@ public abstract class RemoteObjectWrapper
      */
     public boolean isKnown()
     {
-        if( knownEndpoint == null )
+        if (knownEndpoint == null)
+        {
             return false;
+        }
 
         return true;
+    }
+
+    /**
+     * Return the interface name that is implemented by the remote object.
+     *
+     * @return interface name implemented by the remote object
+     */
+    public String getInterfaceName()
+    {
+        return interfaceName;
     }
 
     /**
@@ -175,15 +190,22 @@ public abstract class RemoteObjectWrapper
         UnicastWrapper returnValue = null;
 
         if (this instanceof UnicastWrapper)
+        {
             returnValue = (UnicastWrapper)this;
+        }
 
         else
-
-            try {
+        {
+            try
+            {
                 returnValue = ((ActivatableWrapper)this).activate();
-            } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            }
+
+            catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e)
+            {
                 ExceptionHandler.unexpectedException(e, "activate", "call", true);
             }
+        }
 
         return returnValue;
     }

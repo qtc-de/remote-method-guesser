@@ -44,8 +44,8 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class Dispatcher {
-
+public class Dispatcher
+{
     private ArgumentHandler p;
 
     private String[] boundNames = null;
@@ -71,7 +71,9 @@ public class Dispatcher {
     private void obtainBoundNames() throws NoSuchObjectException
     {
         if(boundNames != null)
+        {
             return;
+        }
 
         boundNames = getRegistry().getBoundNames();
     }
@@ -92,19 +94,26 @@ public class Dispatcher {
     {
         int retryCount = 0;
 
-        if( boundNames == null )
+        if (boundNames == null)
+        {
             obtainBoundNames();
+        }
 
         while (retryCount < 5)
         {
-            try {
+            try
+            {
                 remoteObjects = getRegistry().lookup(boundNames);
                 return;
+            }
 
-            } catch (java.rmi.UnmarshalException e) {
+            catch (java.rmi.UnmarshalException e)
+            {
                 retryCount += 1;
+            }
 
-            } catch( Exception e ) {
+            catch (Exception e)
+            {
                 ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
             }
         }
@@ -115,15 +124,20 @@ public class Dispatcher {
      */
     private void createMethodCandidate()
     {
-        if( !RMGOption.TARGET_SIGNATURE.notNull() )
+        if (!RMGOption.TARGET_SIGNATURE.notNull())
+        {
             return;
+        }
 
         String signature = RMGOption.TARGET_SIGNATURE.getValue();
 
-        try {
+        try
+        {
             candidate = new MethodCandidate(signature);
+        }
 
-        } catch (CannotCompileException | NotFoundException e) {
+        catch (CannotCompileException | NotFoundException e)
+        {
             ExceptionHandler.invalidSignature(signature);
         }
     }
@@ -162,8 +176,10 @@ public class Dispatcher {
      */
     private RMIRegistryEndpoint getRegistry(RMIEndpoint rmi)
     {
-        if(rmiReg == null)
+        if (rmiReg == null)
+        {
             rmiReg = new RMIRegistryEndpoint(rmi);
+        }
 
         return rmiReg;
     }
@@ -178,7 +194,8 @@ public class Dispatcher {
     {
         RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME, RMGOption.TARGET_COMPONENT);
 
-        if(RMGOption.TARGET_BOUND_NAME.isNull() && RMGOption.TARGET_OBJID.isNull()) {
+        if (RMGOption.TARGET_BOUND_NAME.isNull() && RMGOption.TARGET_OBJID.isNull())
+        {
             RMIComponent component = p.getComponent();
             RMGOption.TARGET_OBJID.setValue( RMGUtils.getObjIDByComponent(component).toString() );
         }
@@ -196,14 +213,19 @@ public class Dispatcher {
      */
     private RemoteObjectClient getRemoteObjectClient(String objIDString, String boundName, RMIEndpoint rmi)
     {
-        if( objIDString != null ) {
+        if (objIDString != null)
+        {
             ObjID objID = RMGUtils.parseObjID(objIDString);
             return new RemoteObjectClient(rmi, objID);
+        }
 
-        } else if( boundName != null ) {
+        else if (boundName != null)
+        {
             return new RemoteObjectClient(getRegistry(rmi), boundName);
+        }
 
-        } else {
+        else
+        {
             ExceptionHandler.missingTarget(p.getAction().name());
             return null;
         }
@@ -218,8 +240,10 @@ public class Dispatcher {
      */
     private void writeSamples(List<RemoteObjectClient> results)
     {
-        if( results.size() == 0 )
+        if (results.size() == 0)
+        {
             return;
+        }
 
         String templateFolder = RMGOption.GUESS_TEMPLATE_FOLDER.getValue();
         String sampleFolder = RMGOption.GUESS_SAMPLE_FOLDER.getValue();
@@ -231,31 +255,38 @@ public class Dispatcher {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        try {
+        try
+        {
             SampleWriter writer = new SampleWriter(templateFolder, sampleFolder, sslValue, followRedirect);
 
-            for(RemoteObjectClient client: results) {
-
+            for (RemoteObjectClient client: results)
+            {
                 RemoteObjectWrapper remoteObject = client.remoteObject;
 
-                for(String boundName : client.getBoundNames()) {
-
+                for (String boundName : client.getBoundNames())
+                {
                     Logger.printlnMixedYellow("Creating samples for bound name", boundName + ".");
                     Logger.increaseIndent();
 
-                    if(!remoteObject.isKnown())
-                        writer.createInterface(boundName, remoteObject.className, client.remoteMethods);
+                    if (!remoteObject.isKnown())
+                    {
+                        writer.createInterface(boundName, remoteObject.getInterfaceName(), client.remoteMethods);
+                    }
 
-                    writer.createSamples(boundName, remoteObject.className, !remoteObject.isKnown(), client.remoteMethods, getRMIEndpoint());
+                    writer.createSamples(boundName, remoteObject.getInterfaceName(), !remoteObject.isKnown(), client.remoteMethods, getRMIEndpoint());
 
                     Logger.decreaseIndent();
                 }
             }
+        }
 
-        } catch (IOException | CannotCompileException | NotFoundException e) {
+        catch (IOException | CannotCompileException | NotFoundException e)
+        {
             ExceptionHandler.unexpectedException(e, "sample", "creation", true);
+        }
 
-        } catch (UnexpectedCharacterException e) {
+        catch (UnexpectedCharacterException e)
+        {
             Logger.eprintlnMixedYellow("Caught", "UnexpectedCharacterException", "during sample creation.");
             Logger.eprintln("This is caused by special characters within bound- or classes names.");
             Logger.eprintlnMixedYellow("You can enforce sample creation with the", "--trusted", "switch.");
@@ -279,15 +310,21 @@ public class Dispatcher {
         boolean zeroArg = RMGOption.GUESS_ZERO_ARG.getBool();
         boolean updateWordlist = RMGOption.GUESS_UPDATE.getBool();
 
-        if( candidate != null ) {
+        if (candidate != null)
+        {
             candidates.add(candidate);
+        }
 
-        } else {
-
-            try {
+        else
+        {
+            try
+            {
                 WordlistHandler wlHandler = new WordlistHandler(wordlistFile, wordlistFolder, updateWordlist, zeroArg);
                 candidates = wlHandler.getWordlistMethods();
-            } catch( IOException e ) {
+            }
+
+            catch (IOException e)
+            {
                 Logger.eprintlnMixedYellow("Caught", "IOException", "while reading wordlist file(s).");
                 ExceptionHandler.stackTrace(e);
                 RMGUtils.exit();
@@ -319,20 +356,23 @@ public class Dispatcher {
         RMIEndpoint rmi = getRMIEndpoint();
         RMIComponent component = p.getComponent();
 
-        if( component == null ) {
-
-            if( candidate == null )
+        if (component == null)
+        {
+            if (candidate == null)
+            {
                 ExceptionHandler.missingSignature();
+            }
 
             int argumentPosition = RMGOption.ARGUMENT_POS.getValue();
 
             RemoteObjectClient client = getRemoteObjectClient(rmi);
             client.gadgetCall(candidate, p.getGadget(), argumentPosition);
+        }
 
-        } else {
-
-            switch( component ) {
-
+        else
+        {
+            switch (component)
+            {
                 case ACTIVATOR:
                     ActivationClient act = new ActivationClient(rmi);
                     act.gadgetCall(p.getGadget());
@@ -368,11 +408,15 @@ public class Dispatcher {
         RMIEndpoint rmi = getRMIEndpoint();
         Object[] argumentArray = p.getCallArguments();
 
-        if( candidate == null )
+        if (candidate == null)
+        {
             ExceptionHandler.missingSignature();
+        }
 
-        if( argumentArray.length != candidate.getArgumentCount() )
+        if (argumentArray.length != candidate.getArgumentCount())
+        {
             ExceptionHandler.wrongArgumentCount(candidate.getArgumentCount(), argumentArray.length);
+        }
 
         RemoteObjectClient client = getRemoteObjectClient(rmi);
         client.genericCall(candidate, argumentArray);
@@ -396,18 +440,23 @@ public class Dispatcher {
         RMIComponent component = p.getComponent();
         int argumentPosition = RMGOption.ARGUMENT_POS.getValue();
 
-        try {
+        try
+        {
             payload = RMGUtils.makeSerializableClass(className, RMGOption.PAYLOAD_SERIAL_VERSION_UID.getValue());
             payload = ((Class<?>)payload).newInstance();
+        }
 
-        } catch (CannotCompileException | InstantiationException | IllegalAccessException e) {
+        catch (CannotCompileException | InstantiationException | IllegalAccessException e)
+        {
             ExceptionHandler.unexpectedException(e, "payload", "creation", true);
         }
 
-        if( component == null ) {
-
-            if( candidate == null)
+        if (component == null)
+        {
+            if (candidate == null)
+            {
                 ExceptionHandler.missingSignature();
+            }
 
             RemoteObjectClient client = getRemoteObjectClient(rmi);
             client.codebaseCall(candidate, payload, argumentPosition);
@@ -416,18 +465,22 @@ public class Dispatcher {
 
             DGCClient dgc = new DGCClient(rmi);
             dgc.codebaseCall(p.getDgcMethod(), payload);
+        }
 
-        } else if( component == RMIComponent.REGISTRY ) {
-
+        else if (component == RMIComponent.REGISTRY)
+        {
             RegistryClient reg = new RegistryClient(rmi);
             reg.codebaseCall(payload, p.getRegMethod(), RMGOption.BIND_BYPASS.getBool());
+        }
 
-        } else if( component == RMIComponent.ACTIVATOR ) {
-
+        else if (component == RMIComponent.ACTIVATOR)
+        {
             ActivationClient act = new ActivationClient(rmi);
             act.codebaseCall(payload);
+        }
 
-        } else {
+        else
+        {
             ExceptionHandler.internalError("dispatchCodebase", "No target was selected.");
         }
     }
@@ -488,44 +541,54 @@ public class Dispatcher {
         boolean enumJEP290Bypass = true;
         boolean marshal = true;
 
-        try {
-
-            if( actions.contains(ScanAction.LIST) ) {
-
+        try
+        {
+            if (actions.contains(ScanAction.LIST))
+            {
                 obtainBoundNames();
 
-                if( !RMGOption.SSRFRESPONSE.notNull() || RMGOption.TARGET_BOUND_NAME.notNull() ) {
+                if (!RMGOption.SSRFRESPONSE.notNull() || RMGOption.TARGET_BOUND_NAME.notNull())
+                {
                     obtainBoundObjects();
                     format.listBoundNames(remoteObjects);
 
                     Logger.lineBreak();
                     format.listCodebases();
+                }
 
-                } else {
+                else
+                {
                     remoteObjects = RemoteObjectWrapper.fromBoundNames(boundNames);
                     format.listBoundNames(remoteObjects);
                 }
 
-                if( RMGOption.SSRFRESPONSE.notNull() )
+                if (RMGOption.SSRFRESPONSE.notNull())
+                {
                     return;
+                }
             }
 
-            if( actions.contains(ScanAction.STRING_MARSHALLING) ) {
+            if (actions.contains(ScanAction.STRING_MARSHALLING))
+            {
                 Logger.lineBreak();
                 marshal = registryClient.enumerateStringMarshalling();
             }
 
-            if( actions.contains(ScanAction.CODEBASE) ) {
+            if (actions.contains(ScanAction.CODEBASE))
+            {
                 Logger.lineBreak();
                 registryClient.enumCodebase(marshal, p.getRegMethod(), RMGOption.ENUM_BYPASS.getBool());
             }
 
-            if( actions.contains(ScanAction.LOCALHOST_BYPASS) ) {
+            if (actions.contains(ScanAction.LOCALHOST_BYPASS))
+            {
                 Logger.lineBreak();
                 registryClient.enumLocalhostBypass();
             }
+        }
 
-        } catch( java.rmi.NoSuchObjectException e ) {
+        catch (java.rmi.NoSuchObjectException e)
+        {
             ExceptionHandler.noSuchObjectExceptionRegistryEnum();
             enumJEP290Bypass = false;
 
@@ -533,22 +596,26 @@ public class Dispatcher {
             format.listCodebases();
         }
 
-        if( actions.contains(ScanAction.SECURITY_MANAGER) ) {
+        if (actions.contains(ScanAction.SECURITY_MANAGER))
+        {
             Logger.lineBreak();
             dgc.enumSecurityManager(p.getDgcMethod());
         }
 
-        if( actions.contains(ScanAction.JEP290) ) {
+        if (actions.contains(ScanAction.JEP290))
+        {
             Logger.lineBreak();
             dgc.enumJEP290(p.getDgcMethod());
         }
 
-        if(enumJEP290Bypass && actions.contains(ScanAction.FILTER_BYPASS) ) {
+        if (enumJEP290Bypass && actions.contains(ScanAction.FILTER_BYPASS))
+        {
             Logger.lineBreak();
             registryClient.enumJEP290Bypass(p.getRegMethod(), RMGOption.ENUM_BYPASS.getBool(), marshal);
         }
 
-        if( actions.contains(ScanAction.ACTIVATOR) ) {
+        if (actions.contains(ScanAction.ACTIVATOR))
+        {
             Logger.lineBreak();
             ActivationClient activationClient = new ActivationClient(rmi);
             activationClient.enumActivator();
@@ -564,10 +631,13 @@ public class Dispatcher {
     {
         Formatter format = new Formatter();
 
-        try {
+        try
+        {
             obtainBoundObjects();
+        }
 
-        } catch( NoSuchObjectException e ) {
+        catch (NoSuchObjectException e)
+        {
             ExceptionHandler.noSuchObjectException(e, "registry", true);
         }
 
@@ -580,8 +650,10 @@ public class Dispatcher {
         Logger.decreaseIndent();
         format.listGuessedMethods(results);
 
-        if(results.size() > 0 && RMGOption.GUESS_CREATE_SAMPLES.getBool())
+        if (results.size() > 0 && RMGOption.GUESS_CREATE_SAMPLES.getBool())
+        {
             this.writeSamples(results);
+        }
     }
 
     /**
@@ -598,10 +670,15 @@ public class Dispatcher {
         KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
         KnownEndpoint endpoint = keh.lookup(className);
 
-        if( endpoint == null )
+        if (endpoint == null)
+        {
             Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
+        }
+
         else
+        {
             formatter.listKnownEndpoint(endpoint);
+        }
     }
 
     /**
@@ -651,8 +728,8 @@ public class Dispatcher {
 
         RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getValue());
 
-        if( RMGOption.ROGUEJMX_FORWARD_HOST.notNull() ) {
-
+        if (RMGOption.ROGUEJMX_FORWARD_HOST.notNull())
+        {
             String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getValue();
             int forwardPort = RMGOption.require(RMGOption.ROGUEJMX_FORWARD_PORT);
 
@@ -666,11 +743,14 @@ public class Dispatcher {
             rogueJMX.forwardTo(client);
         }
 
-        try {
+        try
+        {
             rogueJMX.export();
             Logger.lineBreak();
+        }
 
-        } catch( java.rmi.RemoteException e ) {
+        catch (java.rmi.RemoteException e)
+        {
             ExceptionHandler.unexpectedException(e, "exporting", "rogue JMX server", true);
         }
     }

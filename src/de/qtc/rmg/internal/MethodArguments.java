@@ -28,8 +28,8 @@ import java.util.Iterator;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("rawtypes")
-public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<Pair<Object,Class>> {
-
+public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<Pair<Object,Class>>
+{
     private int size = 0;
     private int capacity = 0;
     private int currentIndex = 0;
@@ -43,24 +43,38 @@ public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<P
         this.methodArguments = new Pair[capacity];
     }
 
+    @SuppressWarnings("unchecked")
+    public MethodArguments(Object argumentObject, Class argumentClass)
+    {
+        this.capacity = 1;
+        this.methodArguments = new Pair[capacity];
+
+        methodArguments[size++] = new Pair<Object, Class>(argumentObject, argumentClass);
+    }
+
     @Override
-    public Iterator<Pair<Object,Class>> iterator() {
+    public Iterator<Pair<Object,Class>> iterator()
+    {
         return this;
     }
 
     @Override
-    public boolean hasNext() {
+    public boolean hasNext()
+    {
         return currentIndex < size;
     }
 
     @Override
-    public Pair<Object,Class> next() {
+    public Pair<Object,Class> next()
+    {
         return methodArguments[currentIndex++];
     }
 
     public void add(Object argumentObject, Class argumentClass)
     {
-        if(size < capacity)
+        if (size < capacity)
+        {
             methodArguments[size++] = new Pair<Object, Class>(argumentObject, argumentClass);
+        }
     }
 }

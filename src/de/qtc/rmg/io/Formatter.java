@@ -21,8 +21,8 @@ import de.qtc.rmg.utils.UnicastWrapper;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class Formatter {
-
+public class Formatter
+{
     /**
      * Creates a formatted list of available bound names and their corresponding classes. Classes
      * are divided in known classes (classes that are available on the current class path) and
@@ -37,26 +37,32 @@ public class Formatter {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        if( remoteObjects == null || remoteObjects.length == 0 ) {
+        if (remoteObjects == null || remoteObjects.length == 0)
+        {
             Logger.println("- No objects are bound to the registry.");
             return;
         }
 
-        for(RemoteObjectWrapper remoteObject : remoteObjects) {
-
+        for (RemoteObjectWrapper remoteObject : remoteObjects)
+        {
             Logger.printlnMixedYellow("-", remoteObject.boundName);
 
-            if( remoteObject.remoteObject == null)
+            if (remoteObject.remoteObject == null)
+            {
                 continue;
+            }
 
             Logger.increaseIndent();
 
-            if( remoteObject.isKnown() ) {
-                Logger.printMixedBlue("-->", remoteObject.className, "");
+            if (remoteObject.isKnown())
+            {
+                Logger.printMixedBlue("-->", remoteObject.getInterfaceName(), "");
                 remoteObject.knownEndpoint.printEnum();
+            }
 
-            } else {
-                Logger.printMixedBlue("-->", remoteObject.className);
+            else
+            {
+                Logger.printMixedBlue("-->", remoteObject.getInterfaceName());
                 Logger.printlnPlainMixedPurple("", "(unknown class)");
             }
 
@@ -74,7 +80,8 @@ public class Formatter {
      */
     public void listGuessedMethods(List<RemoteObjectClient> results)
     {
-        if( results.isEmpty() ) {
+        if (results.isEmpty())
+        {
             Logger.printlnBlue("No remote methods identified :(");
             return;
         }
@@ -83,14 +90,15 @@ public class Formatter {
         Logger.lineBreak();
         Logger.increaseIndent();
 
-        for(RemoteObjectClient client : results ) {
-
+        for (RemoteObjectClient client : results)
+        {
             List<MethodCandidate> methods = client.remoteMethods;
 
             Logger.printlnMixedBlue("-", String.join(" == ", client.getBoundNames()));
             Logger.increaseIndent();
 
-            for( MethodCandidate m : methods ) {
+            for (MethodCandidate m : methods)
+            {
                 Logger.printlnMixedYellow("-->", m.getSignature());
             }
 
@@ -113,19 +121,21 @@ public class Formatter {
         Logger.increaseIndent();
 
         HashMap<String,Set<String>> codebases = CodebaseCollector.getCodebases();
-        if(codebases.isEmpty()) {
+        if (codebases.isEmpty())
+        {
             Logger.printlnMixedYellow("- The remote server", "does not", "expose any codebases.");
             Logger.decreaseIndent();
             return;
         }
 
-        for( Entry<String,Set<String>> item : codebases.entrySet() ) {
-
+        for (Entry<String,Set<String>> item : codebases.entrySet())
+        {
             Logger.printlnMixedYellow("-", item.getKey());
             Logger.increaseIndent();
 
             Iterator<String> iterator = item.getValue().iterator();
-            while( iterator.hasNext() ) {
+            while (iterator.hasNext())
+            {
                 Logger.printlnMixedBlue("-->", iterator.next());
             }
 
@@ -153,8 +163,10 @@ public class Formatter {
         Logger.printlnBlue("Class Name:");
         Logger.increaseIndent();
 
-        for(String className : knownEndpoint.getClassName())
+        for (String className : knownEndpoint.getClassName())
+        {
             Logger.printlnMixedYellow("-", className);
+        }
 
         Logger.decreaseIndent();
         Logger.lineBreak();
@@ -164,8 +176,10 @@ public class Formatter {
 
         String[] lines = knownEndpoint.getDescription().split("\n");
 
-        for( String line : lines)
+        for (String line : lines)
+        {
             Logger.printlnYellow(line);
+        }
 
         Logger.decreaseIndent();
         Logger.lineBreak();
@@ -173,8 +187,10 @@ public class Formatter {
         Logger.printlnBlue("Remote Methods:");
         Logger.increaseIndent();
 
-        for(String remoteMethod : knownEndpoint.getRemoteMethods())
+        for (String remoteMethod : knownEndpoint.getRemoteMethods())
+        {
             Logger.printlnMixedYellow("-", remoteMethod);
+        }
 
         Logger.decreaseIndent();
         Logger.lineBreak();
@@ -182,8 +198,10 @@ public class Formatter {
         Logger.printlnBlue("References:");
         Logger.increaseIndent();
 
-        for(String reference : knownEndpoint.getReferences())
+        for (String reference : knownEndpoint.getReferences())
+        {
             Logger.printlnMixedYellow("-", reference);
+        }
 
         Logger.decreaseIndent();
         listVulnerabilities(knownEndpoint.getVulnerabilities());
@@ -198,15 +216,17 @@ public class Formatter {
      */
     private void listVulnerabilities(List<Vulnerability> vulns)
     {
-        if( vulns == null || vulns.size() == 0 )
+        if (vulns == null || vulns.size() == 0)
+        {
             return;
+        }
 
         Logger.lineBreak();
         Logger.printlnBlue("Vulnerabilities:");
         Logger.increaseIndent();
 
-        for( Vulnerability vuln : vulns ) {
-
+        for (Vulnerability vuln : vulns)
+        {
             Logger.lineBreak();
             Logger.printlnBlue("-----------------------------------");
 
@@ -222,8 +242,10 @@ public class Formatter {
 
             String[] lines = vuln.getDescription().split("\n");
 
-            for( String line : lines)
+            for (String line : lines)
+            {
                 Logger.printlnYellow(line);
+            }
 
             Logger.decreaseIndent();
             Logger.lineBreak();
@@ -231,8 +253,10 @@ public class Formatter {
             Logger.printlnBlue("References:");
             Logger.increaseIndent();
 
-            for(String reference : vuln.getReferences())
+            for (String reference : vuln.getReferences())
+            {
                 Logger.printlnMixedYellow("-", reference);
+            }
 
             Logger.decreaseIndent();
         }
@@ -290,14 +314,16 @@ public class Formatter {
      */
     private void printUnicastRef(UnicastWrapper ref)
     {
-        if(ref == null || ref.remoteObject == null)
+        if (ref == null || ref.remoteObject == null)
+        {
             return;
+        }
 
         Logger.print("    ");
         Logger.printPlainMixedBlue("Endpoint:", ref.getTarget());
 
-        switch( ref.isTLSProtected() ) {
-
+        switch (ref.isTLSProtected())
+        {
             case 1:
                 Logger.printPlainMixedGreen("  TLS:", "yes");
                 break;
@@ -323,8 +349,10 @@ public class Formatter {
      */
     private void printActivatableRef(ActivatableWrapper ref)
     {
-        if(ref == null || ref.remoteObject == null)
+        if (ref == null || ref.remoteObject == null)
+        {
             return;
+        }
 
         Logger.print("    ");
         Logger.printPlainMixedBlue("Activator:", ref.getActivatorEndpoint());
@@ -332,6 +360,8 @@ public class Formatter {
 
         UnicastWrapper unicastRef = ref.getActivated();
         if (unicastRef != null)
+        {
             printUnicastRef(unicastRef);
+        }
     }
 }
