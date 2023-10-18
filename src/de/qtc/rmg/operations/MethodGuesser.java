@@ -19,6 +19,7 @@ import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.utils.ProgressBar;
 import de.qtc.rmg.utils.RMGUtils;
+import de.qtc.rmg.utils.RemoteInvocationHolder;
 import de.qtc.rmg.utils.SpringRemotingWrapper;
 import de.qtc.rmg.utils.UnicastWrapper;
 
@@ -51,6 +52,7 @@ public class MethodGuesser
     private List<RemoteObjectClient> clientList;
     private List<RemoteObjectClient> knownClientList;
     private List<Set<MethodCandidate>> candidateSets;
+    private List<Set<RemoteInvocationHolder>> invocationHolderSets;
 
     /**
      * To create a MethodGuesser you need to pass the references for remote objects you want to guess on.
@@ -67,6 +69,12 @@ public class MethodGuesser
 
         this.knownClientList = new ArrayList<RemoteObjectClient>();
         this.candidateSets = RMGUtils.splitSet(candidates, RMGOption.THREADS.getValue());
+
+        if (SpringRemotingWrapper.containsSpringRemotingClient(remoteObjects))
+        {
+            Set<RemoteInvocationHolder> invocationHolders = SpringRemotingWrapper.getInvocationHolders(candidates);
+            invocationHolderSets = RMGUtils.splitSet(invocationHolders, RMGOption.THREADS.getValue());
+        }
 
         if (!RMGOption.GUESS_FORCE_GUESSING.getBool())
         {
@@ -283,16 +291,18 @@ public class MethodGuesser
 
         for (RemoteObjectClient client : clientList)
         {
-            for (Set<MethodCandidate> candidates : candidateSets)
+            if (client.remoteObject instanceof SpringRemotingWrapper)
             {
-                if (client.remoteObject instanceof SpringRemotingWrapper)
+                for (Set<RemoteInvocationHolder> invoHolder : invocationHolderSets)
                 {
-                    Map<RemoteInvocation, MethodCandidate> invocations = SpringRemotingWrapper.buildInvocationMap(candidates);
-                    Runnable r = new SpringGuessingWorker(client, invocations);
+                    Runnable r = new SpringGuessingWorker(client, invoHolder);
                     pool.execute(r);
                 }
+            }
 
-                else
+            else
+            {
+                for (Set<MethodCandidate> candidates : candidateSets)
                 {
                     Runnable r = new GuessingWorker(client, candidates);
                     pool.execute(r);
@@ -422,37 +432,37 @@ public class MethodGuesser
     {
         protected String boundName;
         protected RemoteObjectClient client;
-        protected Map<RemoteInvocation, MethodCandidate> invocationMap;
+        protected Set<RemoteInvocationHolder> invocationHolders;
 
-        public SpringGuessingWorker(RemoteObjectClient client, Map<RemoteInvocation, MethodCandidate> invocationMap)
+        public SpringGuessingWorker(RemoteObjectClient client, Set<RemoteInvocationHolder> invocationHolders)
         {
             this.client = client;
             this.boundName = client.getBoundName();
-            this.invocationMap = invocationMap;
+            this.invocationHolders = invocationHolders;
         }
 
-        protected void logHit(RemoteInvocation invocation)
+        protected void logHit(RemoteInvocationHolder invoHolder)
         {
-            MethodCandidate existingMethod = invocationMap.get(invocation);
+            MethodCandidate existingMethod = invoHolder.getCandidate();
 
             String prefix = Logger.blue("[ " + Logger.padRight(boundName, padding) + " ] ");
-            Logger.printlnMixedYellow(prefix + "HIT! Method with signature", existingMethod.getSignature(), "exists!");
+            Logger.printlnMixedYellow(prefix + "HIT! Method with signature", SpringRemotingWrapper.getSignature(existingMethod), "exists!");
             client.addRemoteMethod(existingMethod);
         }
 
         public void run()
         {
-            for (RemoteInvocation invocation : invocationMap.keySet())
+            for (RemoteInvocationHolder invocationHolder : invocationHolders)
             {
                 try
                 {
-                    client.unmanagedCall(SpringRemotingWrapper.getInvokeMethod(), new MethodArguments(invocation, RemoteInvocation.class));
+                    client.unmanagedCall(SpringRemotingWrapper.getInvokeMethod(), new MethodArguments(invocationHolder.getInvo(), RemoteInvocation.class));
 
                     /*
                      * We always provide an invalid argument count for our SpringRemoting calls.
                      * We should never endup here, which would indicate a successful call.
                      */
-                    unexpectedError(invocation, null);
+                    unexpectedError(invocationHolder, null);
                 }
 
                 catch (java.lang.IllegalArgumentException e)
@@ -462,7 +472,7 @@ public class MethodGuesser
                      * argument count during the call. If the method exists, this leads to an IllegalArgumentException,
                      * which is used to identify valid methods.
                      */
-                    logHit(invocation);
+                    logHit(invocationHolder);
                 }
 
                 catch (java.lang.NoSuchMethodException e)
@@ -492,7 +502,7 @@ public class MethodGuesser
                         /*
                          * If we end up here, an unexpected exception was raised that indicates a general error.
                          */
-                        unexpectedError(invocation, e);
+                        unexpectedError(invocationHolder, e);
                     }
                 }
 
@@ -501,7 +511,7 @@ public class MethodGuesser
                     /*
                      * If we end up here, an unexpected exception was raised that indicates a general error.
                      */
-                    unexpectedError(invocation, e);
+                    unexpectedError(invocationHolder, e);
                 }
 
                 finally
@@ -511,12 +521,12 @@ public class MethodGuesser
             }
         }
 
-        private void unexpectedError(RemoteInvocation invocation, Exception e)
+        private void unexpectedError(RemoteInvocationHolder invoHolder, Exception e)
         {
             String info = "";
             StringWriter writer = new StringWriter();
 
-            Logger.printlnYellow(invocationMap.get(invocation).getSignature());
+            Logger.printlnYellow(invoHolder.getCandidate().getSignature());
 
             if (e != null)
             {

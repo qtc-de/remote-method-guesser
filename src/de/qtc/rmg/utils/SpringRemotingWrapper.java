@@ -1,8 +1,7 @@
 package de.qtc.rmg.utils;
 
 import java.rmi.Remote;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.remoting.support.RemoteInvocation;
@@ -10,7 +9,6 @@ import org.springframework.remoting.support.RemoteInvocation;
 import de.qtc.rmg.endpoints.KnownEndpointHolder;
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.RemoteObjectClient;
 import de.qtc.rmg.plugin.PluginSystem;
 import de.qtc.rmg.plugin.ReturnValueProvider;
@@ -112,6 +110,11 @@ public class SpringRemotingWrapper extends UnicastWrapper
         return true;
     }
 
+    public String getInterfaceName()
+    {
+        return remotingInterfaceName;
+    }
+
     public static RemoteInvocation buildRemoteInvocation(MethodCandidate targetMethod, Object[] args)
     {
         RemoteInvocation invo = new RemoteInvocation();
@@ -149,9 +152,9 @@ public class SpringRemotingWrapper extends UnicastWrapper
         return invo;
     }
 
-    public static Map<RemoteInvocation, MethodCandidate> buildInvocationMap(Set<MethodCandidate> candidates)
+    public static Set<RemoteInvocationHolder> getInvocationHolders(Set<MethodCandidate> candidates)
     {
-        Map<RemoteInvocation, MethodCandidate> invocationMap = new HashMap<RemoteInvocation, MethodCandidate>();
+        Set<RemoteInvocationHolder> invocationHolderSet = new HashSet<RemoteInvocationHolder>();
 
         for (MethodCandidate candidate : candidates)
         {
@@ -162,15 +165,31 @@ public class SpringRemotingWrapper extends UnicastWrapper
                 args = new Object[] {1};
             }
 
-            RemoteInvocation invo = buildRemoteInvocation(candidate, args);
-            invocationMap.put(invo, candidate);
+
+            RemoteInvocationHolder invoHolder = new RemoteInvocationHolder(buildRemoteInvocation(candidate, args), candidate);
+            invocationHolderSet.add(invoHolder);
         }
 
-        return invocationMap;
+        return invocationHolderSet;
     }
 
-    public String getInterfaceName()
+    public static String getSignature(MethodCandidate method)
     {
-        return remotingInterfaceName;
+        String signature = method.getSignature();
+
+        return "???" + signature.substring(signature.indexOf(' '));
+    }
+
+    public static boolean containsSpringRemotingClient(UnicastWrapper[] wrappers)
+    {
+        for (UnicastWrapper wrapper : wrappers)
+        {
+            if (wrapper instanceof SpringRemotingWrapper)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

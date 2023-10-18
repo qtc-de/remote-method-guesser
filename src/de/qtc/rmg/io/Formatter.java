@@ -99,7 +99,15 @@ public class Formatter
 
             for (MethodCandidate m : methods)
             {
-                Logger.printlnMixedYellow("-->", m.getSignature());
+                if (client.remoteObject instanceof SpringRemotingWrapper)
+                {
+                    Logger.printlnMixedYellow("-->",SpringRemotingWrapper.getSignature(m));
+                }
+
+                else
+                {
+                    Logger.printlnMixedYellow("-->", m.getSignature());
+                }
             }
 
             Logger.decreaseIndent();
