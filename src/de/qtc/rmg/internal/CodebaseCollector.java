@@ -190,10 +190,14 @@ public class CodebaseCollector extends RMIClassLoaderSpi
      * function to return the codebase only supports String types. The currently selected approach
      * of rmg (which is the MaliciousOutputStream class) allows arbitrary objects and is therefore
      * more flexible.
+     *
+     * Since version v4.5.0, this function always returns null instead of invoking the original loaders
+     * getClassAnnotation method. This was changed, as the original loaders getClassAnnotation method
+     * leaked the local ysoserial path when using remote-method-guessers ysoserial integration.
      */
     public String getClassAnnotation(Class<?> cl)
     {
-        return originalLoader.getClassAnnotation(cl);
+        return null;
     }
 
     /**
