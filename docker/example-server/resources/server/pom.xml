@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.qtc.rmg.server.ExampleServer</groupId>
   <artifactId>rmg-example-server</artifactId>
-  <version>3.3.0</version>
+  <version>4.1.0</version>
   <name>rmg-example-server</name>
   <description>RMG Example Server</description>
 
@@ -49,6 +49,11 @@
             <manifest>
               <mainClass>de.qtc.rmg.server.ExampleServer</mainClass>
             </manifest>
+            <manifestEntries>
+                <Built-By>
+                    Tobias Neitzel (@qtc_de)
+                </Built-By>
+            </manifestEntries>
           </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>

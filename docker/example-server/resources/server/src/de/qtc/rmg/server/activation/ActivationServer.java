@@ -30,10 +30,13 @@ import de.qtc.rmg.server.utils.Utils;
 @SuppressWarnings("unused")
 public class ActivationServer
 {
-    private static int activationSystemPort = 1098;
-    private static Remote remoteObject1 = null;
-    private static Remote remoteObject2 = null;
-    private static Remote remoteObject3 = null;
+    private static Remote remoteObjectOne;
+    private static Remote remoteObjectTwo;
+    private static Remote remoteObjectThree;
+
+    private static final String boundNameOne = "activation-test";
+    private static final String boundNameTwo = "activation-test2";
+    private static final String boundNameThree = "plain-server";
 
     private final static String codebase = "file:///opt/example-server.jar";
 
@@ -42,11 +45,12 @@ public class ActivationServer
      * group is created and two activatable RMI services are bound to the registry. Additionally, we bind one
      * non activatable service.
      */
-    public static void init()
+    public static void init(int activationSystemPort)
     {
         Logger.increaseIndent();
 
-        try {
+        try
+        {
             Logger.printMixedBlue("Creating", "ActivationSystem", "on port ");
             Logger.printlnPlainYellow(String.valueOf(activationSystemPort));
             Utils.startActivation(activationSystemPort, null, "/tmp/activation-log", null);
@@ -90,28 +94,25 @@ public class ActivationServer
             Utils.toogleOutput();
 
             ActivationDesc desc = new ActivationDesc(groupID, ActivationService.class.getName(), codebase, null);
-            remoteObject1 = Activatable.register(desc);
+            remoteObjectOne = Activatable.register(desc);
 
             ActivationDesc desc2 = new ActivationDesc(groupID, ActivationService2.class.getName(), codebase, null);
-            remoteObject2 = Activatable.register(desc2);
+            remoteObjectTwo = Activatable.register(desc2);
 
-            remoteObject3 = new PlainServer();
-            IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObject3, 0);
+            remoteObjectThree = new PlainServer();
+            IPlainServer stub = (IPlainServer)UnicastRemoteObject.exportObject(remoteObjectThree, 0);
 
-            Utils.bindToRegistry(remoteObject1, LocateRegistry.getRegistry(activationSystemPort), "activation-test");
-            Utils.bindToRegistry(remoteObject2, LocateRegistry.getRegistry(activationSystemPort), "activation-test2");
-            Utils.bindToRegistry(stub, LocateRegistry.getRegistry(activationSystemPort), "plain-server");
+            Utils.bindToRegistry(remoteObjectOne, LocateRegistry.getRegistry(activationSystemPort), boundNameOne);
+            Utils.bindToRegistry(remoteObjectTwo, LocateRegistry.getRegistry(activationSystemPort), boundNameTwo);
+            Utils.bindToRegistry(stub, LocateRegistry.getRegistry(activationSystemPort), boundNameThree);
+        }
 
-            Logger.println("");
-            Logger.decreaseIndent();
-
-            Logger.println("Server setup finished.");
-            Logger.println("Waiting for incoming connections.");
-            Logger.println("");
-
-        } catch (Exception e) {
+        catch (Exception e)
+        {
             Logger.eprintln("Unexpected RMI Error:");
             e.printStackTrace();
         }
-    }
+
+        Logger.println("");
+        Logger.decreaseIndent();    }
 }
