@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +21,8 @@ import de.qtc.rmg.utils.RMGUtils;
 import de.qtc.rmg.utils.RemoteInvocationHolder;
 import de.qtc.rmg.utils.SpringRemotingWrapper;
 import de.qtc.rmg.utils.UnicastWrapper;
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
 
 /**
  * The MethodGuesser class is used to brute force available remote methods on Java RMI endpoints. It uses
@@ -59,6 +60,10 @@ public class MethodGuesser
      * These are usually obtained from the RMI registry and can be passed as an array of UnicastWrapper.
      * Furthermore, you need to specify a Set of MethodCandidates that represents the methods you want
      * to guess.
+     *
+     * If one of the UnicastWrapper objects within the array is a SpringRemotingWrapper, the set of
+     * MethodCandidates gets cloned and transformed into a set of RemoteInvocation. Both sets are still
+     * available and the guessing procedure decides based on the wrapper type which set should be used.
      *
      * @param remoteObjects Array of looked up remote objects from the RMI registry
      * @param candidates MethodCandidates that should be guessed
@@ -203,9 +208,23 @@ public class MethodGuesser
 
             else
             {
+                List<MethodCandidate> knownMethods = new ArrayList<MethodCandidate>();
                 RemoteObjectClient knownClient = new RemoteObjectClient(o);
-                knownClient.addRemoteMethods(RMGUtils.getKnownMethods(o.getInterfaceName()));
 
+                for (String method : o.knownEndpoint.getRemoteMethods())
+                {
+                    try
+                    {
+                        knownMethods.add(new MethodCandidate(method));
+                    }
+
+                    catch (CannotCompileException | NotFoundException e)
+                    {
+                        Logger.printlnMixedYellowFirst("Internal Error", "- Unable to compile known method with signature: " + method);
+                    }
+                }
+
+                knownClient.addRemoteMethods(knownMethods);
                 knownClientList.add(knownClient);
             }
         }
@@ -267,7 +286,8 @@ public class MethodGuesser
 
     /**
      * This method starts the actual guessing process. It creates a GuessingWorker for each remoteClient in the clientList
-     * and for each Set of MethodCandidates in the candidateSets.
+     * and for each Set of MethodCandidates in the candidateSets. If the underlying RemoteObjectWrapper type of a client
+     * is a SpringRemotingWrapper, the spring remoting compatible SpringGuessingWorker will be used.
      *
      * @return List of RemoteObjectClient containing the successfully guessed methods. Only clients containing
      *         guessed methods are returned. Clients without guessed methods are filtered.
@@ -428,12 +448,23 @@ public class MethodGuesser
         }
     }
 
+    /**
+     * The SpringGuessingWorker does basically the same as the GuessingWorker, but for spring remoting :)
+     *
+     * @author Tobias Neitzel (@qtc_de)
+     */
     private class SpringGuessingWorker implements Runnable
     {
         protected String boundName;
         protected RemoteObjectClient client;
         protected Set<RemoteInvocationHolder> invocationHolders;
 
+        /**
+         * Initialize the spring guessing worker with all the required information.
+         *
+         * @param client RemoteObjectClient to the targeted remote object
+         * @param invocationHolders  set of RemoteInvocationHolders that contain the RemoteInvocations to guess
+         */
         public SpringGuessingWorker(RemoteObjectClient client, Set<RemoteInvocationHolder> invocationHolders)
         {
             this.client = client;
@@ -441,6 +472,12 @@ public class MethodGuesser
             this.invocationHolders = invocationHolders;
         }
 
+        /**
+         * This function is called when a guessed RemoteInvocation exists. It creates a corresponding log entry and
+         * saves the candidate within the results map.
+         *
+         * @param invoHolder  RemoteInvocationHolder that contains the RemoteInvocation that lead to an successful method call
+         */
         protected void logHit(RemoteInvocationHolder invoHolder)
         {
             MethodCandidate existingMethod = invoHolder.getCandidate();
@@ -450,6 +487,13 @@ public class MethodGuesser
             client.addRemoteMethod(existingMethod);
         }
 
+        /**
+         * Sends the assigned RemoteInvocations to the spring remoting endpoint and inspects the response.
+         * RemoteInvocations send by the guesser are always malformed. They contain a method name, a list of
+         * argument types and a list of argument values. The argument values are purposely chosen to not match
+         * the argument types. This prevents actual method calls that could perform dangerous stuff. However,
+         * based on the thrown exeception it is still possible to identify existing methods.
+         */
         public void run()
         {
             for (RemoteInvocationHolder invocationHolder : invocationHolders)
@@ -521,6 +565,13 @@ public class MethodGuesser
             }
         }
 
+        /**
+         * If an unexpected exception was thrown, this method is called. It prints a warning message to the user,
+         * but does not interrupt the guessing procedure.
+         *
+         * @param invoHolder  the RemoteInvocationHolder that caused the exception
+         * @param e  the thrown Exception
+         */
         private void unexpectedError(RemoteInvocationHolder invoHolder, Exception e)
         {
             String info = "";

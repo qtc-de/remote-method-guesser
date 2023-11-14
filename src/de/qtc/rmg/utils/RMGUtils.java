@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.MethodCandidate;
 import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.internal.RMIComponent;
 import de.qtc.rmg.io.Logger;
@@ -658,63 +657,6 @@ public class RMGUtils
     }
 
     /**
-     * Helper method that adds remote methods present on known remote objects to the list of successfully guessed methods.
-     * The known remote object classes are looked up by using the CtClassPool. Afterwards, all implemented interfaces
-     * of the corresponding CtClass are iterated and it is checked whether the interface extends java.rmi.Remote (this
-     * is required for all methods, that can be called from remote). From these interfaces, all methods are obtained
-     * and added to the list of successfully guessed methods.
-     *
-     * @param boundName bound name that is using the known class
-     * @param className name of the class implemented by the bound name
-     * @param guessedMethods list of successfully guessed methods (bound name -> list)
-     */
-    public static List<MethodCandidate> getKnownMethods(String className)
-    {
-        List<MethodCandidate> knownMethods = new ArrayList<MethodCandidate>();
-
-        try {
-            CtClass knownClass = pool.getCtClass(className);
-
-            if( knownClass.isInterface() )
-                addKnownMethods(knownClass, knownMethods);
-
-            for(CtClass intf : knownClass.getInterfaces()) {
-
-                if(! isAssignableFrom(intf, "java.rmi.Remote"))
-                    continue;
-
-                addKnownMethods(intf, knownMethods);
-            }
-
-        } catch(Exception e) {
-            ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
-        }
-
-        return knownMethods;
-    }
-
-    /**
-     * Same as the previous addKnownMethods function, but takes the corresponding interface as argument directly.
-     * This function is called by the previous addKnownMethods function to add the methods.
-     *
-     * @param intf Interface class to add methods from
-     * @param boundName bound name that is using the known class
-     * @param guessedMethods list of successfully guessed methods (bound name -> list)
-     */
-    public static void addKnownMethods(CtClass intf, List<MethodCandidate> knownMethodCandidates)
-    {
-        try {
-            CtMethod[] knownMethods = intf.getDeclaredMethods();
-
-            for(CtMethod knownMethod: knownMethods)
-                knownMethodCandidates.add(new MethodCandidate(knownMethod));
-
-        } catch(Exception e) {
-            ExceptionHandler.unexpectedException(e, "translation process", "of known remote methods", false);
-        }
-    }
-
-    /**
      * Returns a human readable method signature of a CtMethod. Builtin methods only return the signature in
      * a non well formatted format. This function is used to display known remote methods as the result of a
      * guessing operation.
@@ -1332,6 +1274,15 @@ public class RMGUtils
         return Long.parseLong(message);
     }
 
+    /**
+     * Convert a CtClass back to an ordinary Class<?> object. This method is intended to be called
+     * for classes that are known to already exist within the JVM. No compilation is triggered but
+     * the Class<?> object is simply obtained by Class.forName (including handling for all the edge
+     * cases).
+     *
+     * @param type  the CtClass that should be converted back to a Class<?> object
+     * @return Class<?> associated to the specified CtClass
+     */
     public static Class<?> ctClassToClass(CtClass type) throws ClassNotFoundException, NotFoundException
     {
         if (type.isPrimitive())

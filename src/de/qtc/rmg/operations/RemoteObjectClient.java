@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.springframework.remoting.support.RemoteInvocation;
-
 import de.qtc.rmg.internal.ExceptionHandler;
 import de.qtc.rmg.internal.MethodArguments;
 import de.qtc.rmg.internal.MethodCandidate;
@@ -339,7 +337,13 @@ public class RemoteObjectClient
         }
     }
 
-
+    /**
+     * Technically the same as the genericCall method, but does not perform any exception handling.
+     *
+     * @param targetMethod remote method to call
+     * @param argumentArray method arguments to use for the call
+     * @throws All possible encountered exceptions are passed to the caller
+     */
     public void unmanagedCall(MethodCandidate targetMethod, MethodArguments args) throws Exception
     {
         rmi.genericCall(null, -1, targetMethod.getHash(), args, false, targetMethod.getName(), remoteRef, null);
