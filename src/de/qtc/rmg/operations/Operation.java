@@ -75,6 +75,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY,
             RMGOption.SOCKET_FACTORY_SSL,
             RMGOption.SOCKET_FACTORY_PLAIN,
+            RMGOption.GENERIC_PRINT,
     }),
 
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks", new RMGOption[] {

@@ -11,6 +11,7 @@ import java.util.jar.Manifest;
 
 import de.qtc.rmg.exceptions.MalformedPluginException;
 import de.qtc.rmg.internal.ExceptionHandler;
+import de.qtc.rmg.internal.RMGOption;
 import de.qtc.rmg.io.Logger;
 import de.qtc.rmg.operations.Operation;
 import de.qtc.rmg.utils.RMGUtils;
@@ -49,8 +50,15 @@ public class PluginSystem {
         argumentProvider = provider;
         socketFactoryProvider = provider;
 
-        if(pluginPath != null)
+        if (RMGOption.GENERIC_PRINT.getBool())
+        {
+        	responseHandler = new GenericPrint();
+        }
+        
+        if (pluginPath != null)
+        {
             loadPlugin(pluginPath);
+        }
     }
 
     /**
@@ -73,55 +81,73 @@ public class PluginSystem {
         JarInputStream jarStream = null;
         File pluginFile = new File(pluginPath);
 
-        if(!pluginFile.exists()) {
+        if (!pluginFile.exists())
+        {
             Logger.eprintlnMixedYellow("Specified plugin path", pluginPath, "does not exist.");
             RMGUtils.exit();
         }
 
-        try {
+        try
+        {
             jarStream = new JarInputStream(new FileInputStream(pluginFile));
             Manifest mf = jarStream.getManifest();
             pluginClassName = mf.getMainAttributes().getValue(manifestAttribute);
             jarStream.close();
 
-            if(pluginClassName == null)
+            if (pluginClassName == null)
+            {
                 throw new MalformedPluginException();
-
-        } catch(Exception e) {
+            }
+        }
+        
+        catch (Exception e)
+        {
             Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "while reading the Manifest of the specified plugin.");
             Logger.eprintlnMixedBlue("Plugins need to be valid JAR files that contain the", manifestAttribute, "attribute.");
             RMGUtils.exit();
         }
 
-        try {
+        try
+        {
             URLClassLoader ucl = new URLClassLoader(new URL[] {pluginFile.toURI().toURL()});
             Class<?> pluginClass = Class.forName(pluginClassName, true, ucl);
             pluginInstance = pluginClass.newInstance();
-        } catch(Exception e) {
+        }
+        
+        catch (Exception e)
+        {
             Logger.eprintMixedYellow("Caught", e.getClass().getName(), "while reading plugin file ");
             Logger.printlnPlainBlue(pluginPath);
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
         }
 
-        if(pluginInstance instanceof IPayloadProvider) {
+        if (pluginInstance instanceof IPayloadProvider)
+        {
             payloadProvider = (IPayloadProvider)pluginInstance;
             inUse = true;
-
-        } if(pluginInstance instanceof IResponseHandler) {
+        }
+        
+        if (pluginInstance instanceof IResponseHandler)
+        {
             responseHandler = (IResponseHandler)pluginInstance;
             inUse = true;
-
-        } if(pluginInstance instanceof IArgumentProvider) {
+        }
+        
+        if(pluginInstance instanceof IArgumentProvider)
+        {
             argumentProvider = (IArgumentProvider)pluginInstance;
             inUse = true;
-
-        } if(pluginInstance instanceof ISocketFactoryProvider) {
+        }
+        
+        if(pluginInstance instanceof ISocketFactoryProvider)
+        {
             socketFactoryProvider = (ISocketFactoryProvider)pluginInstance;
             inUse = true;
         }
 
-        if(!inUse) {
+        if (!inUse)
+        {
             Logger.eprintMixedBlue("Plugin", pluginPath, "was successfully loaded, but is ");
             Logger.eprintlnPlainYellow("not in use.");
             Logger.eprintlnMixedYellow("Plugins should implement at least one of the", "IPayloadProvider, IResponseHandler, IArgumentProvider or ISocketFactoryProvider", "interfaces.");

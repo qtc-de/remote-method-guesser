@@ -110,7 +110,8 @@ public enum RMGOption {
     SOCKET_FACTORY_SSL("--socket-factory-ssl", "enforce SSL connections from dynamically created socket factories", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
     SOCKET_FACTORY("--socket-factory", "dynamically create a socket factory class with the specified name", Arguments.store(), RMGOptionGroup.CONNECTION, "classname"),
 
-    SPRING_REMOTING("--spring-remoting", "enforce method calls to be dispatched via spring remoting", Arguments.storeTrue(), RMGOptionGroup.CONNECTION);
+    SPRING_REMOTING("--spring-remoting", "enforce method calls to be dispatched via spring remoting", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    GENERIC_PRINT("--return-value", "attempt to output the return value using GenericPrint", Arguments.storeTrue(), RMGOptionGroup.ACTION);
 
     public final String name;
     public final String description;
