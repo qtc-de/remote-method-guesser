@@ -307,7 +307,7 @@ to provide a permissive ``SecurityManager`` yourself in advance to prevent this.
 it is not made part of it's default codebase yet:
 
 ```java
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.lang.reflect.Constructor;
 import java.rmi.Remote;
@@ -320,7 +320,7 @@ import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
-import de.qtc.rmg.networking.RMIWhisperer;
+import eu.tneitzel.rmg.networking.RMIWhisperer;
 import sun.rmi.server.Activation;
 import sun.rmi.server.ActivationGroupImpl;
 

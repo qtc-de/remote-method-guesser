@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.io.Serializable;
 

@@ -1,11 +1,11 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.rmi.Remote;
 import java.rmi.server.RemoteRef;
 
-import de.qtc.rmg.endpoints.KnownEndpoint;
-import de.qtc.rmg.endpoints.KnownEndpointHolder;
-import de.qtc.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.endpoints.KnownEndpoint;
+import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
 import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 

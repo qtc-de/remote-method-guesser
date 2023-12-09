@@ -1,10 +1,10 @@
-package de.qtc.rmg.server.legacy;
+package eu.tneitzel.rmg.server.legacy;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
-import de.qtc.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Logger;
 
 @SuppressWarnings("serial")
 public class LegacyServiceImpl extends UnicastRemoteObject implements LegacyService

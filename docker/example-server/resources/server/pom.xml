@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>de.qtc.rmg.server.ExampleServer</groupId>
+  <groupId>eu.tneitzel.rmg.server.ExampleServer</groupId>
   <artifactId>rmg-example-server</artifactId>
   <version>4.1.0</version>
   <name>rmg-example-server</name>
@@ -47,7 +47,7 @@
           <finalName>rmg-example-server-${project.version}</finalName>
           <archive>
             <manifest>
-              <mainClass>de.qtc.rmg.server.ExampleServer</mainClass>
+              <mainClass>eu.tneitzel.rmg.server.ExampleServer</mainClass>
             </manifest>
             <manifestEntries>
                 <Built-By>

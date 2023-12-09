@@ -30,11 +30,11 @@ tests:
           ignore_case: True
           values:
             - 'ssl-server'
-            - 'de.qtc.rmg.server.interfaces.ISslServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.ISslServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'secure-server'
-            - 'de.qtc.rmg.server.interfaces.ISecureServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.ISecureServer (unknown class)'
 
       - regex:
           description: |-
@@ -79,11 +79,11 @@ tests:
           ignore_case: True
           values:
             - 'plain-server2'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'legacy-service'
-            - 'de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
+            - 'eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
 
       - contains:
           description: |-
@@ -190,13 +190,13 @@ tests:
           ignore_case: True
           values:
             - 'activation-test'
-            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
-            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
           invert:
@@ -308,13 +308,13 @@ tests:
           ignore_case: True
           values:
             - 'activation-test'
-            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
-            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
             - 'TLS: yes  ObjID:'
@@ -432,11 +432,11 @@ tests:
           ignore_case: True
           values:
             - 'plain-server2'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'legacy-service'
-            - '_de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
+            - '_eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
 
       - contains:
           description: |-

@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -7,12 +7,12 @@ import java.rmi.Remote;
 import java.rmi.server.RemoteRef;
 import java.rmi.server.UID;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.operations.ActivationClient;
-import de.qtc.rmg.plugin.IResponseHandler;
-import de.qtc.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.operations.ActivationClient;
+import eu.tneitzel.rmg.plugin.IResponseHandler;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;

@@ -1,18 +1,18 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.networking.TimeoutSocketFactory;
-import de.qtc.rmg.networking.TrustAllSocketFactory;
-import de.qtc.rmg.utils.ProgressBar;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.networking.TimeoutSocketFactory;
+import eu.tneitzel.rmg.networking.TrustAllSocketFactory;
+import eu.tneitzel.rmg.utils.ProgressBar;
 
 
 /**

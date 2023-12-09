@@ -1,11 +1,11 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.util.EnumSet;
 import java.util.Properties;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.Argument;
 import net.sourceforge.argparse4j.inf.ArgumentAction;

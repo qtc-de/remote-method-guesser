@@ -1,4 +1,4 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,12 +9,12 @@ import java.rmi.server.RMISocketFactory;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import de.qtc.rmg.exceptions.MalformedPluginException;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.exceptions.MalformedPluginException;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * The PluginSystem class allows rmg to be extended by user defined classes. It can be used to setup

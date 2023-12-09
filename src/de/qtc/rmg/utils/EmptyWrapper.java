@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 /**
  * EmptyWrapper is basically a dummy class that extends RemoteWrapper. It is only used

@@ -1,9 +1,9 @@
-package de.qtc.rmg;
+package eu.tneitzel.rmg;
 
-import de.qtc.rmg.internal.ArgumentHandler;
-import de.qtc.rmg.operations.Dispatcher;
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.internal.ArgumentHandler;
+import eu.tneitzel.rmg.operations.Dispatcher;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * The Starter class contains the entrypoint of remote-method-guesser. It is responsible

@@ -1,4 +1,4 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 /**
  * ReturnValueProvider is a helper class that can be used to capture return values of custom

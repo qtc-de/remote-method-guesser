@@ -3,7 +3,7 @@
   
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>de.qtc.rmg.server.ssrf</groupId>
+  <groupId>eu.tneitzel.rmg.server.ssrf</groupId>
   <artifactId>rmg-ssrf-server</artifactId>
   <version>1.3.0</version>
   <name>rmg-ssrf-server</name>
@@ -50,7 +50,7 @@
                <finalName>rmg-ssrf-server-${project.version}</finalName>
                <archive>
                    <manifest>
-                       <mainClass>de.qtc.rmg.server.ssrf.Starter</mainClass>
+                       <mainClass>eu.tneitzel.rmg.server.ssrf.Starter</mainClass>
                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                    </manifest>
                </archive>

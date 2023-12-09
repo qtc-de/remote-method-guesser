@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -22,10 +22,10 @@ import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.DummySocketFactory;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.networking.DummySocketFactory;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;

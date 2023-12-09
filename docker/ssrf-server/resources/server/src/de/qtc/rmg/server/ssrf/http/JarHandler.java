@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.ssrf.http;
+package eu.tneitzel.rmg.server.ssrf.http;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import de.qtc.rmg.server.ssrf.utils.Logger;
+import eu.tneitzel.rmg.server.ssrf.utils.Logger;
 
 /**
  * The JarHandler handles requests to the codebase endpoint specified within the RMI server.

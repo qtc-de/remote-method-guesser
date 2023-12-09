@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.io.InvalidClassException;
@@ -11,14 +11,14 @@ import java.rmi.server.RMISocketFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.qtc.rmg.exceptions.SSRFException;
-import de.qtc.rmg.internal.CodebaseCollector;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.plugin.PluginSystem;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
+import eu.tneitzel.rmg.exceptions.SSRFException;
+import eu.tneitzel.rmg.internal.CodebaseCollector;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
 import javassist.tools.reflect.Reflection;
 
 /**

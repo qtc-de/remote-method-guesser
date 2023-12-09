@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -13,7 +13,7 @@ import java.util.List;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
-import de.qtc.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;

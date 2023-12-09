@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.activation;
+package eu.tneitzel.rmg.server.activation;
 
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
@@ -15,10 +15,10 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
-import de.qtc.rmg.server.interfaces.IPlainServer;
-import de.qtc.rmg.server.operations.PlainServer;
-import de.qtc.rmg.server.utils.Logger;
-import de.qtc.rmg.server.utils.Utils;
+import eu.tneitzel.rmg.server.interfaces.IPlainServer;
+import eu.tneitzel.rmg.server.operations.PlainServer;
+import eu.tneitzel.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Utils;
 
 /**
  * Create an ActivationServer. This class does basically the same as rmid, but skips some configuration

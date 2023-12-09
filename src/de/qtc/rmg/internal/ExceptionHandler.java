@@ -1,9 +1,9 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.rmi.server.ObjID;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * During the different RMI operations you have always a roughly same set of exceptions

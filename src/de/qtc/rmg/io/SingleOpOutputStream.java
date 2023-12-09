@@ -1,8 +1,8 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.ByteArrayOutputStream;
 
-import de.qtc.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
 
 /**
  * The SingleOpOutputStream class is used during SSRF operations. When the SSRF option is used,

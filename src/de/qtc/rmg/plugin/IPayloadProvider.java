@@ -1,6 +1,6 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
-import de.qtc.rmg.operations.Operation;
+import eu.tneitzel.rmg.operations.Operation;
 
 /**
  * The IPayloadProvider interface is used during all rmg actions that send payload objects to the remote server.

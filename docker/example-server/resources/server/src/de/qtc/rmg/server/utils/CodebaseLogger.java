@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.utils;
+package eu.tneitzel.rmg.server.utils;
 
 import java.net.MalformedURLException;
 import java.rmi.server.RMIClassLoader;

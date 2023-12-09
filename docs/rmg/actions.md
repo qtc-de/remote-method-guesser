@@ -295,13 +295,13 @@ following listing shows an example for this situation:
 [+] RMI registry bound names:
 [+]
 [+] 	- activation-test
-[+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
 [+] 	- activation-test2
-[+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
 [+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
@@ -327,15 +327,15 @@ the obtained `UnicastRef` is then displayed as usual below the activation relate
 [+] RMI registry bound names:
 [+]
 [+] 	- activation-test
-[+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7ff1
 [+] 		    Endpoint: iinsecure.example:37597  TLS: no  ObjID: [1c74dc89:180ac521427:-7ffb, 3078273701606404425]
 [+] 	- activation-test2
-[+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: 6fd4e3c:180ac45a068:-7fee
 [+] 		    Endpoint: iinsecure.example:35721  TLS: yes  ObjID: [1c74dc89:180ac521427:-7ff8, 6235870260204364974]
 [+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:41867  TLS: no  ObjID: [6fd4e3c:180ac45a068:-7fec, 969949632761859811]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)
@@ -733,13 +733,13 @@ the ``--bound-name`` during the action, more detailed information can be obtaine
 [+] RMI registry bound names:
 [+]
 [+] 	- FileManager
-[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.ssrf.rmi.IFileManager (unknown class)
 [+] 		    Endpoint: localhost:36983 ObjID: [-36af9747:17d8947959b:-7fff, 292657548115654006]
 [+]
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://localhost:8000/rmi-class-definitions.jar
-[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager
+[+] 		--> eu.tneitzel.rmg.server.ssrf.rmi.IFileManager
 ```
 
 Apart from ``list`` the following scan actions are available:

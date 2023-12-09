@@ -1,6 +1,6 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
-import de.qtc.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.internal.RMGOption;
 
 /**
  * The Logger class exposes static methods that can be used to create colored output.

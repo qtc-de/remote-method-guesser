@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -9,14 +9,14 @@ import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RemoteRef;
 
-import de.qtc.rmg.exceptions.SSRFException;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.internal.Pair;
-import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.io.RawObjectInputStream;
-import de.qtc.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.exceptions.SSRFException;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.internal.Pair;
+import eu.tneitzel.rmg.io.MaliciousOutputStream;
+import eu.tneitzel.rmg.io.RawObjectInputStream;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 import javassist.CtClass;
 import javassist.CtPrimitiveType;
 import sun.rmi.server.UnicastRef;

@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.legacy;
+package eu.tneitzel.rmg.server.legacy;
 
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
@@ -10,10 +10,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import de.qtc.rmg.server.interfaces.IPlainServer;
-import de.qtc.rmg.server.operations.PlainServer;
-import de.qtc.rmg.server.utils.Logger;
-import de.qtc.rmg.server.utils.Utils;
+import eu.tneitzel.rmg.server.interfaces.IPlainServer;
+import eu.tneitzel.rmg.server.operations.PlainServer;
+import eu.tneitzel.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Utils;
 
 @SuppressWarnings("unused")
 public class LegacyServer

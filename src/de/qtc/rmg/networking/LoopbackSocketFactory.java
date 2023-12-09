@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
 
 /**
  * Remote objects bound to an RMI registry are usually pointing to remote endpoints

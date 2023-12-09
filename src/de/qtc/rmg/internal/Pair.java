@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 /**
  * For the MethodArguments class, a Pair type is required. Unfortunately, Java 8 does not support such a

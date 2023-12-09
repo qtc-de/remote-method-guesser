@@ -4,7 +4,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.qtc.rmg</groupId>
+    <groupId>eu.tneitzel.rmg</groupId>
     <artifactId>remote-method-guesser</artifactId>
     <name>remote-method-guesser</name>
     <packaging>jar</packaging>
@@ -87,7 +87,7 @@
                 <finalName>rmg-${project.version}</finalName>
                 <archive>
                     <manifest>
-                        <mainClass>de.qtc.rmg.Starter</mainClass>
+                        <mainClass>eu.tneitzel.rmg.Starter</mainClass>
                         <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                     </manifest>
                     <manifestEntries>

@@ -1,9 +1,9 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.lang.reflect.Method;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
 import net.sourceforge.argparse4j.inf.Subparser;
 import net.sourceforge.argparse4j.inf.Subparsers;
 

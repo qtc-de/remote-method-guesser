@@ -1,4 +1,4 @@
-package de.qtc.rmg.springremoting;
+package eu.tneitzel.rmg.springremoting;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.operations.PortScanner;
-import de.qtc.rmg.operations.ScanAction;
-import de.qtc.rmg.plugin.PluginSystem;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.operations.PortScanner;
+import eu.tneitzel.rmg.operations.ScanAction;
+import eu.tneitzel.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;

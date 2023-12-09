@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.net.ServerSocket;

@@ -76,13 +76,13 @@ In this example we use *remote-method-guesser's* enum action to enumerate availa
 [+] RMI registry bound names:
 [+]
 [+] 	- FileManager
-[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.ssrf.rmi.IFileManager (unknown class)
 [+] 		    Endpoint: localhost:34289 ObjID: [2fd1b5a8:17d842f762e:-7fff, 8844200108184892689]
 [+]
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://localhost:8000/rmi-class-definitions.jar
-[+] 		--> de.qtc.rmg.server.ssrf.rmi.IFileManager
+[+] 		--> eu.tneitzel.rmg.server.ssrf.rmi.IFileManager
 ```
 
 

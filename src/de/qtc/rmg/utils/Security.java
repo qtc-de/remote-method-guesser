@@ -1,10 +1,10 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.qtc.rmg.exceptions.UnexpectedCharacterException;
-import de.qtc.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.exceptions.UnexpectedCharacterException;
+import eu.tneitzel.rmg.internal.RMGOption;
 
 /**
  * During sample creation, remote-method-guesser creates sample files with filenames and contents controlled by

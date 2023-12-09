@@ -1,4 +1,4 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.DataInput;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Field;
 
-import de.qtc.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
 
 /**
  * Wrapper class for an ObjectInputStream. Allows to perform raw byte operations on the underlying

@@ -1,7 +1,7 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
 
 /**
  * Simple progress bar that is used during the guess and scan operations.

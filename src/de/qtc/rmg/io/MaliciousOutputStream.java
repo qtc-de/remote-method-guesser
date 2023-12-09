@@ -1,13 +1,13 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.utils.DefinitelyNonExistingClass;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.utils.DefinitelyNonExistingClass;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import sun.rmi.server.MarshalOutputStream;
 
 /**
@@ -51,7 +51,7 @@ public class MaliciousOutputStream extends MarshalOutputStream {
         super(out);
 
         if( !MarshalOutputStream.class.isAssignableFrom(out.getClass()) ) {
-            Logger.eprintlnMixedYellow("Internal error:", "de.qtc.rmg.io.MaliciousOutputStream", "requires MaliciousOutputStream.");
+            Logger.eprintlnMixedYellow("Internal error:", "eu.tneitzel.rmg.io.MaliciousOutputStream", "requires MaliciousOutputStream.");
             RMGUtils.exit();
         }
 

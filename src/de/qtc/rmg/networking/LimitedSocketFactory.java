@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -9,8 +9,8 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * The LimitedSocketFactoryClass is used when creating a rogue JMX server. It is required

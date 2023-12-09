@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.ssrf;
+package eu.tneitzel.rmg.server.ssrf;
 
 import java.io.IOException;
 import java.rmi.AlreadyBoundException;
@@ -6,12 +6,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.server.ssrf.http.SSRFServer;
-import de.qtc.rmg.server.ssrf.rmi.FileManager;
-import de.qtc.rmg.server.ssrf.rmi.IFileManager;
-import de.qtc.rmg.server.ssrf.rmi.LocalhostJmxConnector;
-import de.qtc.rmg.server.ssrf.rmi.LocalhostSocketFactory;
-import de.qtc.rmg.server.ssrf.utils.Logger;
+import eu.tneitzel.rmg.server.ssrf.http.SSRFServer;
+import eu.tneitzel.rmg.server.ssrf.rmi.FileManager;
+import eu.tneitzel.rmg.server.ssrf.rmi.IFileManager;
+import eu.tneitzel.rmg.server.ssrf.rmi.LocalhostJmxConnector;
+import eu.tneitzel.rmg.server.ssrf.rmi.LocalhostSocketFactory;
+import eu.tneitzel.rmg.server.ssrf.utils.Logger;
 
 /**
  * The Starter class is responsible for creating an HTTP server that is vulnerable

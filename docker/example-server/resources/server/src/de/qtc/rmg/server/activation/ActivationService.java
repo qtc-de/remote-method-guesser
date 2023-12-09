@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.activation;
+package eu.tneitzel.rmg.server.activation;
 
 import java.io.IOException;
 import java.rmi.MarshalledObject;
@@ -6,8 +6,8 @@ import java.rmi.RemoteException;
 import java.rmi.activation.Activatable;
 import java.rmi.activation.ActivationID;
 
-import de.qtc.rmg.server.utils.Logger;
-import de.qtc.rmg.server.utils.Utils;
+import eu.tneitzel.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Utils;
 
 public class ActivationService extends Activatable implements IActivationService
 {

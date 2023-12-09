@@ -1,4 +1,4 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 /**
  * The IResponseHandler interface is used during rmg's 'call' action to handle the return value of an invoked method.

@@ -1,4 +1,4 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import de.qtc.rmg.exceptions.UnexpectedCharacterException;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.Security;
+import eu.tneitzel.rmg.exceptions.UnexpectedCharacterException;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.Security;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;

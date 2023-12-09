@@ -1,8 +1,8 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.util.HashMap;
 
-import de.qtc.rmg.operations.Operation;
+import eu.tneitzel.rmg.operations.Operation;
 import net.sourceforge.argparse4j.inf.ArgumentGroup;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 

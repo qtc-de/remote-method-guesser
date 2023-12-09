@@ -1,8 +1,8 @@
-package de.qtc.rmg.endpoints;
+package eu.tneitzel.rmg.endpoints;
 
 import java.util.List;
 
-import de.qtc.rmg.io.Logger;
+import eu.tneitzel.rmg.io.Logger;
 
 /**
  * The KnownEndpoint class represents a well known RMI endpoint. By the term 'well known' we mean

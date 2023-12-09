@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.net.MalformedURLException;
 import java.rmi.server.RMIClassLoader;
@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 

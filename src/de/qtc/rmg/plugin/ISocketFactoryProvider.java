@@ -1,4 +1,4 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;

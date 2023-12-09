@@ -1,10 +1,10 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.util.Arrays;
 
 import org.springframework.remoting.support.RemoteInvocation;
 
-import de.qtc.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.internal.MethodCandidate;
 
 
 /**

@@ -1,4 +1,4 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

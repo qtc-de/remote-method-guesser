@@ -1,4 +1,4 @@
-package de.qtc.rmg.exceptions;
+package eu.tneitzel.rmg.exceptions;
 
 /**
  * MalformedPluginExceptions are thrown then an rmg plugin was specified on the command

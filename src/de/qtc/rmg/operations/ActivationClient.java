@@ -1,14 +1,14 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.rmi.server.RemoteRef;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.RMIComponent;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.RMIComponent;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.MaliciousOutputStream;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
 import javassist.ClassPool;
 import javassist.CtClass;
 

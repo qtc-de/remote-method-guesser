@@ -1,4 +1,4 @@
-package de.qtc.rmg.exceptions;
+package eu.tneitzel.rmg.exceptions;
 
 import java.io.Serializable;
 

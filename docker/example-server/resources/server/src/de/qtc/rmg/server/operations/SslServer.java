@@ -1,10 +1,10 @@
-package de.qtc.rmg.server.operations;
+package eu.tneitzel.rmg.server.operations;
 
 import java.io.IOException;
 
-import de.qtc.rmg.server.interfaces.ISslServer;
-import de.qtc.rmg.server.utils.Logger;
-import de.qtc.rmg.server.utils.Utils;
+import eu.tneitzel.rmg.server.interfaces.ISslServer;
+import eu.tneitzel.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Utils;
 
 public class SslServer implements ISslServer {
 

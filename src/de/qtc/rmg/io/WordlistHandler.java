@@ -1,4 +1,4 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import de.qtc.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.internal.MethodCandidate;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 

@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.util.Iterator;
 

@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.rmi.server.UID;
 
-import de.qtc.rmg.io.DevNullOutputStream;
+import eu.tneitzel.rmg.io.DevNullOutputStream;
 import sun.rmi.server.MarshalOutputStream;
 import sun.rmi.transport.TransportConstants;
 

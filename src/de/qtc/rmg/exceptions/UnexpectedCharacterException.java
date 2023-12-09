@@ -1,4 +1,4 @@
-package de.qtc.rmg.exceptions;
+package eu.tneitzel.rmg.exceptions;
 
 /**
  * UnexpectedCharacterException may be thrown during the dynamic creation

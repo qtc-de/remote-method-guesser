@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 /**
  * The RMIComponent enum represents the different RMI components that may be targeted

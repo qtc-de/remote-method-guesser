@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.rmi.Remote;
 import java.util.HashSet;
@@ -6,13 +6,13 @@ import java.util.Set;
 
 import org.springframework.remoting.support.RemoteInvocation;
 
-import de.qtc.rmg.endpoints.KnownEndpointHolder;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.operations.RemoteObjectClient;
-import de.qtc.rmg.plugin.IResponseHandler;
-import de.qtc.rmg.plugin.PluginSystem;
-import de.qtc.rmg.plugin.ReturnValueProvider;
+import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.operations.RemoteObjectClient;
+import eu.tneitzel.rmg.plugin.IResponseHandler;
+import eu.tneitzel.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.plugin.ReturnValueProvider;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;

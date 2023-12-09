@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.ssrf.rmi;
+package eu.tneitzel.rmg.server.ssrf.rmi;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;

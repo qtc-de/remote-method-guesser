@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -12,9 +12,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * Wrapper around an SSLSocketFactory that trusts all certificates. This is used for TLS protected

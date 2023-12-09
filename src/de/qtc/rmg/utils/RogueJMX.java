@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -12,10 +12,10 @@ import java.rmi.server.RMISocketFactory;
 import javax.management.remote.rmi.RMIConnection;
 import javax.management.remote.rmi.RMIServer;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.LimitedSocketFactory;
-import de.qtc.rmg.operations.RemoteObjectClient;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.networking.LimitedSocketFactory;
+import eu.tneitzel.rmg.operations.RemoteObjectClient;
 import sun.rmi.server.UnicastServerRef;
 import sun.rmi.transport.LiveRef;
 

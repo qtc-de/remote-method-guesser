@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,12 +12,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.rmi.server.UID;
 
-import de.qtc.rmg.exceptions.SSRFException;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.SingleOpOutputStream;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.exceptions.SSRFException;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.SingleOpOutputStream;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import sun.rmi.server.MarshalOutputStream;
 import sun.rmi.transport.TransportConstants;
 

@@ -1,4 +1,4 @@
-package de.qtc.rmg.networking;
+package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
 
 /**
  * During the creation of the An Trinh registry whitelist bypass gadget, the creation of a

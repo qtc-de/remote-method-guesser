@@ -2,11 +2,11 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
 
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.plugin.DefaultProvider;
-import de.qtc.rmg.plugin.IResponseHandler;
-import de.qtc.rmg.plugin.IPayloadProvider;
-import de.qtc.rmg.plugin.IArgumentProvider;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.plugin.DefaultProvider;
+import eu.tneitzel.rmg.plugin.IResponseHandler;
+import eu.tneitzel.rmg.plugin.IPayloadProvider;
+import eu.tneitzel.rmg.plugin.IArgumentProvider;
 
 
 public class PluginTest implements IResponseHandler, IPayloadProvider, IArgumentProvider {

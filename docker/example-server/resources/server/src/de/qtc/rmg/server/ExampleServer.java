@@ -1,4 +1,4 @@
-package de.qtc.rmg.server;
+package eu.tneitzel.rmg.server;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
@@ -11,17 +11,17 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
-import de.qtc.rmg.server.activation.ActivationServer;
-import de.qtc.rmg.server.factory.CustomSocketFactoryServer;
-import de.qtc.rmg.server.interfaces.IPlainServer;
-import de.qtc.rmg.server.interfaces.ISecureServer;
-import de.qtc.rmg.server.interfaces.ISslServer;
-import de.qtc.rmg.server.legacy.LegacyServer;
-import de.qtc.rmg.server.operations.PlainServer;
-import de.qtc.rmg.server.operations.SecureServer;
-import de.qtc.rmg.server.operations.SslServer;
-import de.qtc.rmg.server.utils.Logger;
-import de.qtc.rmg.server.utils.Utils;
+import eu.tneitzel.rmg.server.activation.ActivationServer;
+import eu.tneitzel.rmg.server.factory.CustomSocketFactoryServer;
+import eu.tneitzel.rmg.server.interfaces.IPlainServer;
+import eu.tneitzel.rmg.server.interfaces.ISecureServer;
+import eu.tneitzel.rmg.server.interfaces.ISslServer;
+import eu.tneitzel.rmg.server.legacy.LegacyServer;
+import eu.tneitzel.rmg.server.operations.PlainServer;
+import eu.tneitzel.rmg.server.operations.SecureServer;
+import eu.tneitzel.rmg.server.operations.SslServer;
+import eu.tneitzel.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Utils;
 
 public class ExampleServer
 {
@@ -39,7 +39,7 @@ public class ExampleServer
 
     public static void main(String[] argv)
     {
-        String disableColor = System.getProperty("de.qtc.rmg.server.disableColor");
+        String disableColor = System.getProperty("eu.tneitzel.rmg.server.disableColor");
 
         if (disableColor != null && disableColor.equalsIgnoreCase("true"))
         {

@@ -1,4 +1,4 @@
-package de.qtc.rmg.utils;
+package eu.tneitzel.rmg.utils;
 
 import java.io.InvalidClassException;
 import java.lang.reflect.Array;
@@ -25,12 +25,12 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.internal.RMIComponent;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.MaliciousOutputStream;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.internal.RMIComponent;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.MaliciousOutputStream;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -86,7 +86,7 @@ public class RMGUtils
             ExceptionHandler.internalError("RMGUtils.init", "Caught unexpected NotFoundException.");
         }
 
-        dummyClass = pool.makeInterface("de.qtc.rmg.Dummy");
+        dummyClass = pool.makeInterface("eu.tneitzel.rmg.Dummy");
         createdClasses = new HashSet<String>();
     }
 
@@ -250,12 +250,12 @@ public class RMGUtils
 
             if (!RMGOption.SOCKET_FACTORY_PLAIN.getBool() && (RMGOption.CONN_SSL.getBool() || RMGOption.SOCKET_FACTORY_SSL.getBool()))
             {
-                ctClass = pool.getAndRename("de.qtc.rmg.networking.LoopbackSslSocketFactory", className);
+                ctClass = pool.getAndRename("eu.tneitzel.rmg.networking.LoopbackSslSocketFactory", className);
             }
 
             else if (!RMGOption.SOCKET_FACTORY_SSL.getBool() && (!RMGOption.CONN_SSL.getBool() || RMGOption.SOCKET_FACTORY_PLAIN.getBool()))
             {
-                ctClass = pool.getAndRename("de.qtc.rmg.networking.LoopbackSocketFactory", className);
+                ctClass = pool.getAndRename("eu.tneitzel.rmg.networking.LoopbackSocketFactory", className);
             }
 
             else
@@ -607,7 +607,7 @@ public class RMGUtils
      */
     public static void enableCodebase()
     {
-        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "eu.tneitzel.rmg.internal.CodebaseCollector");
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
     }
 
@@ -618,7 +618,7 @@ public class RMGUtils
      */
     public static void enableCodebaseCollector()
     {
-        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "de.qtc.rmg.internal.CodebaseCollector");
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", "eu.tneitzel.rmg.internal.CodebaseCollector");
     }
 
     /**

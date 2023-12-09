@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.legacy;
+package eu.tneitzel.rmg.server.legacy;
 
 public class StringContainer {
 }

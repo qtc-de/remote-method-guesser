@@ -1,4 +1,4 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
@@ -10,25 +10,25 @@ import java.util.Set;
 
 import javax.management.remote.rmi.RMIServer;
 
-import de.qtc.rmg.endpoints.KnownEndpoint;
-import de.qtc.rmg.endpoints.KnownEndpointHolder;
-import de.qtc.rmg.exceptions.UnexpectedCharacterException;
-import de.qtc.rmg.internal.ArgumentHandler;
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.internal.RMIComponent;
-import de.qtc.rmg.io.Formatter;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.SampleWriter;
-import de.qtc.rmg.io.WordlistHandler;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.networking.RMIRegistryEndpoint;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
-import de.qtc.rmg.utils.RogueJMX;
-import de.qtc.rmg.utils.UnicastWrapper;
-import de.qtc.rmg.utils.YsoIntegration;
+import eu.tneitzel.rmg.endpoints.KnownEndpoint;
+import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
+import eu.tneitzel.rmg.exceptions.UnexpectedCharacterException;
+import eu.tneitzel.rmg.internal.ArgumentHandler;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.internal.RMIComponent;
+import eu.tneitzel.rmg.io.Formatter;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.SampleWriter;
+import eu.tneitzel.rmg.io.WordlistHandler;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.networking.RMIRegistryEndpoint;
+import eu.tneitzel.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
+import eu.tneitzel.rmg.utils.RogueJMX;
+import eu.tneitzel.rmg.utils.UnicastWrapper;
+import eu.tneitzel.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 
@@ -37,9 +37,9 @@ import javassist.NotFoundException;
  * to the ArgumentParser object and extracts all required arguments parameters for the corresponding method calls.
  *
  * Methods within the Dispatcher class can be annotated with the Parameters annotation to specify additional requirements
- * on their expected arguments. Refer to the de.qtc.rmg.annotations.Parameters class for more details.
+ * on their expected arguments. Refer to the eu.tneitzel.rmg.annotations.Parameters class for more details.
  *
- * To add a new operation to rmg, the operation  must first be registered within the de.qtc.rmg.operations.Operation class.
+ * To add a new operation to rmg, the operation  must first be registered within the eu.tneitzel.rmg.operations.Operation class.
  * A new Operation needs to be created there that references the corresponding method within this class.
  *
  * @author Tobias Neitzel (@qtc_de)

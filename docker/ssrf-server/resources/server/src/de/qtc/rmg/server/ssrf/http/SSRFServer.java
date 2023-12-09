@@ -1,11 +1,11 @@
-package de.qtc.rmg.server.ssrf.http;
+package eu.tneitzel.rmg.server.ssrf.http;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import com.sun.net.httpserver.HttpServer;
 
-import de.qtc.rmg.server.ssrf.utils.Logger;
+import eu.tneitzel.rmg.server.ssrf.utils.Logger;
 
 /**
  * The SSRFServer class creates an HTTP server that is vulnerable to SSRF attacks.

@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.factory;
+package eu.tneitzel.rmg.server.factory;
 
 import java.io.IOException;
 import java.io.Serializable;

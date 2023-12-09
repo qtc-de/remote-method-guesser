@@ -1,11 +1,11 @@
-package de.qtc.rmg.server.operations;
+package eu.tneitzel.rmg.server.operations;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.qtc.rmg.server.interfaces.ISecureServer;
-import de.qtc.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.interfaces.ISecureServer;
+import eu.tneitzel.rmg.server.utils.Logger;
 
 public class SecureServer implements ISecureServer {
 

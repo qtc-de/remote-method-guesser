@@ -5,12 +5,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.plugin.IResponseHandler;
-import de.qtc.rmg.utils.ActivatableWrapper;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
-import de.qtc.rmg.utils.UnicastWrapper;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.plugin.IResponseHandler;
+import eu.tneitzel.rmg.utils.ActivatableWrapper;
+import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
+import eu.tneitzel.rmg.utils.UnicastWrapper;
 
 /**
  * GenericPrint is an rmg ResponseHandler plugin that attempts to print all incoming

@@ -1,4 +1,4 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.util.ArrayList;
@@ -6,18 +6,18 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.internal.RMIComponent;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.networking.RMIRegistryEndpoint;
-import de.qtc.rmg.utils.DefinitelyNonExistingClass;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.SpringRemotingWrapper;
-import de.qtc.rmg.utils.UnicastWrapper;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.internal.RMIComponent;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.networking.RMIRegistryEndpoint;
+import eu.tneitzel.rmg.utils.DefinitelyNonExistingClass;
+import eu.tneitzel.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.SpringRemotingWrapper;
+import eu.tneitzel.rmg.utils.UnicastWrapper;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;

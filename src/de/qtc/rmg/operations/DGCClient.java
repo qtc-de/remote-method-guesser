@@ -1,15 +1,15 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.rmi.server.ObjID;
 import java.util.HashMap;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.MethodArguments;
-import de.qtc.rmg.internal.RMIComponent;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.MaliciousOutputStream;
-import de.qtc.rmg.networking.RMIEndpoint;
-import de.qtc.rmg.utils.DefinitelyNonExistingClass;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.MethodArguments;
+import eu.tneitzel.rmg.internal.RMIComponent;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.MaliciousOutputStream;
+import eu.tneitzel.rmg.networking.RMIEndpoint;
+import eu.tneitzel.rmg.utils.DefinitelyNonExistingClass;
 
 /**
  * The distributed garbage collector (DGC) is a well known RMI object with publicly known method definitions.
@@ -94,7 +94,7 @@ public class DGCClient {
                     Logger.statusDefault();
                     ExceptionHandler.showStackTrace(e);
 
-                } else if( c.getMessage().equals("de.qtc.rmg.utils.DefinitelyNonExistingClass")) {
+                } else if( c.getMessage().equals("eu.tneitzel.rmg.utils.DefinitelyNonExistingClass")) {
                     Logger.printlnMixedYellow("- RMI server", "did not", "attempt to parse the supplied codebase.");
                     Logger.printlnMixedBlue("  --> The server", "does use", "a Security Manager.");
                     Logger.statusDefault();

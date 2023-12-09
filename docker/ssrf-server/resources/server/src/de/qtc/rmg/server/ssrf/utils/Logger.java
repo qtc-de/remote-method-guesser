@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.ssrf.utils;
+package eu.tneitzel.rmg.server.ssrf.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

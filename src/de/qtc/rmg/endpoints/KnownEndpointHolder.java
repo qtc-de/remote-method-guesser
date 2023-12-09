@@ -1,4 +1,4 @@
-package de.qtc.rmg.endpoints;
+package eu.tneitzel.rmg.endpoints;
 
 import java.io.InputStream;
 import java.util.List;

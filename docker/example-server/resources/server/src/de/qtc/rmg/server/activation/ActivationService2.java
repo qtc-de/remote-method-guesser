@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.activation;
+package eu.tneitzel.rmg.server.activation;
 
 import java.rmi.MarshalledObject;
 import java.rmi.RemoteException;
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
-import de.qtc.rmg.server.utils.Logger;
+import eu.tneitzel.rmg.server.utils.Logger;
 
 public class ActivationService2 extends Activatable implements IActivationService2
 {

@@ -1,10 +1,10 @@
-package de.qtc.rmg.operations;
+package eu.tneitzel.rmg.operations;
 
 import java.util.EnumSet;
 import java.util.List;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
  * The ScanAction Enum represents available enumeration techniques that are applied during rmg's

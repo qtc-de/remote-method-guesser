@@ -1,4 +1,4 @@
-package de.qtc.rmg.internal;
+package eu.tneitzel.rmg.internal;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -8,9 +8,9 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.io.RawObjectOutputStream;
-import de.qtc.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.io.RawObjectOutputStream;
+import eu.tneitzel.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;

@@ -1,4 +1,4 @@
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 /**
  * The IArgumentProvider interface is used during rmg's 'call' action to obtain the argument array that should be

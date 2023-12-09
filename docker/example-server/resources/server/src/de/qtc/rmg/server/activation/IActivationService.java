@@ -1,4 +1,4 @@
-package de.qtc.rmg.server.activation;
+package eu.tneitzel.rmg.server.activation;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

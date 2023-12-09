@@ -1,4 +1,4 @@
-package de.qtc.rmg.io;
+package eu.tneitzel.rmg.io;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -6,15 +6,15 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import de.qtc.rmg.endpoints.KnownEndpoint;
-import de.qtc.rmg.endpoints.Vulnerability;
-import de.qtc.rmg.internal.CodebaseCollector;
-import de.qtc.rmg.internal.MethodCandidate;
-import de.qtc.rmg.operations.RemoteObjectClient;
-import de.qtc.rmg.utils.ActivatableWrapper;
-import de.qtc.rmg.utils.RemoteObjectWrapper;
-import de.qtc.rmg.utils.SpringRemotingWrapper;
-import de.qtc.rmg.utils.UnicastWrapper;
+import eu.tneitzel.rmg.endpoints.KnownEndpoint;
+import eu.tneitzel.rmg.endpoints.Vulnerability;
+import eu.tneitzel.rmg.internal.CodebaseCollector;
+import eu.tneitzel.rmg.internal.MethodCandidate;
+import eu.tneitzel.rmg.operations.RemoteObjectClient;
+import eu.tneitzel.rmg.utils.ActivatableWrapper;
+import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
+import eu.tneitzel.rmg.utils.SpringRemotingWrapper;
+import eu.tneitzel.rmg.utils.UnicastWrapper;
 
 /**
  * The formatter class is used to print formatted output for the enum and guess operations.

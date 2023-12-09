@@ -23,7 +23,7 @@ have been resolved and why we did not follow this path.
 
 Our first concern was to write the user supplied object to the `ObjectOutputStream`
 that one can obtain by calling the `getOutputStream` method on a `StreamRemoteCall`
-object. Luckily, remote-method-guesser [already implemented](https://github.com/qtc-de/remote-method-guesser/blob/master/src/de/qtc/rmg/networking/RMIEndpoint.java#L157)
+object. Luckily, remote-method-guesser [already implemented](https://github.com/qtc-de/remote-method-guesser/blob/master/src/eu.tneitzel.rmg/networking/RMIEndpoint.java#L157)
 *RMI* calls on such a low level that all this stuff can be accessed quite easily.
 Writing the user supplied object is however not that straight forward. We do not
 want to deserialize the object, as this would require all gadget libraries to be
