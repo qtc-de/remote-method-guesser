@@ -12,36 +12,36 @@ import org.springframework.remoting.rmi.RmiServiceExporter;
 @SuppressWarnings("deprecation")
 public class SpringRemotingService implements ServerOperations
 {
-	Logger logger = LoggerFactory.getLogger(SpringRemotingService.class);
-	
-	SpringRemotingService springRemotingService()
-	{
-		return new SpringRemotingService();
-	}
+    Logger logger = LoggerFactory.getLogger(SpringRemotingService.class);
 
-	@Bean
-	RmiServiceExporter exporter(SpringRemotingService impl)
-	{
-		Class<ServerOperations> serverInterface = ServerOperations.class;
-		RmiServiceExporter exporter = new RmiServiceExporter();
-		
-		exporter.setServiceInterface(serverInterface);
-		exporter.setService(impl);
-		exporter.setServiceName("spring-remoting");
-		exporter.setRegistryPort(1099);
-		
-		return exporter;
-	}
-	
-	public String notRelevant()
-	{
-    	logger.info("Processing call for: notRelevant()");
-		return "Hello World :D";
-	}
+    SpringRemotingService springRemotingService()
+    {
+        return new SpringRemotingService();
+    }
+
+    @Bean
+    RmiServiceExporter exporter(SpringRemotingService impl)
+    {
+        Class<ServerOperations> serverInterface = ServerOperations.class;
+        RmiServiceExporter exporter = new RmiServiceExporter();
+
+        exporter.setServiceInterface(serverInterface);
+        exporter.setService(impl);
+        exporter.setServiceName("spring-remoting");
+        exporter.setRegistryPort(1099);
+
+        return exporter;
+    }
+
+    public String notRelevant()
+    {
+        logger.info("Processing call for: notRelevant()");
+        return "Hello World :D";
+    }
 
     public String execute(String command)
     {
-    	logger.info("Processing call for: String execute(String command)");
+        logger.info("Processing call for: String execute(String command)");
         String result = "";
 
         try
@@ -50,7 +50,7 @@ public class SpringRemotingService implements ServerOperations
             p.waitFor();
             result = readFromProcess(p);
         }
-        
+
         catch (IOException | InterruptedException e)
         {
             result = "Exception: " + e.getMessage();
@@ -61,7 +61,7 @@ public class SpringRemotingService implements ServerOperations
 
     public String system(String command, String[] args)
     {
-    	logger.info("Processing call for: String system(String command, String[] args)");
+        logger.info("Processing call for: String system(String command, String[] args)");
         String result = "";
 
         String[] commandArray = new String[args.length + 1];
@@ -74,7 +74,7 @@ public class SpringRemotingService implements ServerOperations
             p.waitFor();
             result = readFromProcess(p);
         }
-        
+
         catch (IOException | InterruptedException e)
         {
             result = "Exception: " + e.getMessage();
@@ -85,16 +85,16 @@ public class SpringRemotingService implements ServerOperations
 
     public String upload(int size, int id, byte[] content)
     {
-    	logger.info("Processing call for: String upload(int size, int id, byte[] content)");
+        logger.info("Processing call for: String upload(int size, int id, byte[] content)");
         return "Upload of size " + size + " was saved as user_uploads_" + id + ".";
     }
 
     public int math(int num1, int num2)
     {
-    	logger.info("Processing call for: int math(int num1, int num2)");
+        logger.info("Processing call for: int math(int num1, int num2)");
         return num1 / num2;
     }
-    
+
     private static String readFromProcess(Process p) throws IOException
     {
         StringBuilder result = new StringBuilder();
