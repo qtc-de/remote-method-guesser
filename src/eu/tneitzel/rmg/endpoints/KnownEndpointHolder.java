@@ -3,6 +3,7 @@ package eu.tneitzel.rmg.endpoints;
 import java.io.InputStream;
 import java.util.List;
 
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -101,7 +102,12 @@ public class KnownEndpointHolder
     {
         if (instance == null)
         {
-            Yaml yaml = new Yaml(new Constructor(KnownEndpointHolder.class));
+            LoaderOptions options = new LoaderOptions();
+
+            options.setAllowDuplicateKeys(false);
+            options.setAllowRecursiveKeys(false);
+
+            Yaml yaml = new Yaml(new Constructor(KnownEndpointHolder.class, options));
 
             InputStream stream = KnownEndpoint.class.getResourceAsStream(resource);
             instance = yaml.load(stream);
