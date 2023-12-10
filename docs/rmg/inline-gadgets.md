@@ -10,7 +10,7 @@ we mean gadgets that are passed e.g. as base64 encoded command line parameter.
 This would e.g. allow to use serialization based rmg actions without having the
 *ysoserial* even present.
 
-For version *v4.5.0* of remote-method-guesser, *inline gadgets* were part of the
+For version *v5.0.0* of remote-method-guesser, *inline gadgets* were part of the
 roadmap. However, as it turned out, our considerations on how to implement them
 were too naive and at the end, this feature was not implemented at all. In this
 document we want to write down some of the problems we encountered, how they could

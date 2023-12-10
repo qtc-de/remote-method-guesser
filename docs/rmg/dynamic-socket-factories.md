@@ -2,7 +2,7 @@
 
 ----
 
-With version *v4.5.0* support for dynamically created socket factories
+With version *v5.0.0* support for dynamically created socket factories
 were added to *remote-method-guesser*. This basically means the following:
 
 *RMI* servers can register a custom socket factory that has to be used
@@ -22,7 +22,7 @@ classes often still rely on the default socket implementations. This means
 that at the end of the day, the socket factory still outputs a regular
 socket, as it can also be obtained from *Java's* default socket *APIs*.
 
-From version *v4.5.0* on, *remote-method-guesser* attempts to detect
+From version *v5.0.0* on, *remote-method-guesser* attempts to detect
 errors caused by missing socket factory classes. In these cases, *rmg*
 attempts to create the class dynamically. Since the actual implementation
 is unknown, the dynamically created socket factory is simply the default

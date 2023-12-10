@@ -49,7 +49,7 @@ import javassist.NotFoundException;
  * serialVersionUID. Since changing the serialVersionUID of an already existing class is not possible, we instead
  * create a new class where the full qualified class name is prefixed with an underscore.
  *
- * From remote-method-guesser v4.5.0, this class has another purpose of handling custom socket factories. When the
+ * From remote-method-guesser v5.0.0, this class has another purpose of handling custom socket factories. When the
  * server exposes RMI objects with custom socket factory classes, this usually causes a ClassNotFound error, as
  * we do not have the associated implementations on the client side. In this case, remote-method-guesser now attempts
  * to create the socket factory class dynamically. Since the implementation is still unknown, it simply clones the
@@ -191,7 +191,7 @@ public class CodebaseCollector extends RMIClassLoaderSpi
      * of rmg (which is the MaliciousOutputStream class) allows arbitrary objects and is therefore
      * more flexible.
      *
-     * Since version v4.5.0, this function always returns null instead of invoking the original loaders
+     * Since version v5.0.0, this function always returns null instead of invoking the original loaders
      * getClassAnnotation method. This was changed, as the original loaders getClassAnnotation method
      * leaked the local ysoserial path when using remote-method-guessers ysoserial integration.
      */
