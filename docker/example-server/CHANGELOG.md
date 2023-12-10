@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Changed the servers namespace from `de.qtc` to `eu.tneitzel`
+* Since Java 9 is no longer available in the alpine default package
+  repositories, the JDK is now obtained from an older image of the
+  example-server.
 
 
 ## v4.0.0 - Jan 19, 2023

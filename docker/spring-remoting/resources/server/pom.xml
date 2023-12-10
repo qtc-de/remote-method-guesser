@@ -43,6 +43,11 @@
                             <mainClass>eu.tneitzel.rmg.springremoting.Starter</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
+                        <manifestEntries>
+                            <Built-By>
+                                Tobias Neitzel (@qtc_de)
+                            </Built-By>
+                        </manifestEntries>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
