@@ -533,7 +533,10 @@ public class ExceptionHandler {
 
             else
             {
-                ExceptionHandler.unexpectedException(e, callName, "call", true);
+                Logger.eprintlnMixedYellow("Caught", "ConnectException", "during " + callName + " call.");
+                Logger.eprintMixedBlue("Exception message:", message);
+                showStackTrace(e);
+                RMGUtils.exit();
             }
         }
 
