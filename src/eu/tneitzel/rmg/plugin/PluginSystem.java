@@ -52,9 +52,9 @@ public class PluginSystem {
 
         if (RMGOption.GENERIC_PRINT.getBool())
         {
-        	responseHandler = new GenericPrint();
+            responseHandler = new GenericPrint();
         }
-        
+
         if (pluginPath != null)
         {
             loadPlugin(pluginPath);
@@ -99,7 +99,7 @@ public class PluginSystem {
                 throw new MalformedPluginException();
             }
         }
-        
+
         catch (Exception e)
         {
             Logger.eprintlnMixedYellow("Caught", e.getClass().getName(), "while reading the Manifest of the specified plugin.");
@@ -113,7 +113,7 @@ public class PluginSystem {
             Class<?> pluginClass = Class.forName(pluginClassName, true, ucl);
             pluginInstance = pluginClass.newInstance();
         }
-        
+
         catch (Exception e)
         {
             Logger.eprintMixedYellow("Caught", e.getClass().getName(), "while reading plugin file ");
@@ -127,19 +127,19 @@ public class PluginSystem {
             payloadProvider = (IPayloadProvider)pluginInstance;
             inUse = true;
         }
-        
+
         if (pluginInstance instanceof IResponseHandler)
         {
             responseHandler = (IResponseHandler)pluginInstance;
             inUse = true;
         }
-        
+
         if(pluginInstance instanceof IArgumentProvider)
         {
             argumentProvider = (IArgumentProvider)pluginInstance;
             inUse = true;
         }
-        
+
         if(pluginInstance instanceof ISocketFactoryProvider)
         {
             socketFactoryProvider = (ISocketFactoryProvider)pluginInstance;

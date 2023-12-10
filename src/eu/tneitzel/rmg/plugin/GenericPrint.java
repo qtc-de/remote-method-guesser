@@ -21,7 +21,7 @@ import eu.tneitzel.rmg.utils.UnicastWrapper;
  *
  * From remote-method-guesser v5.0.0, GenericPrint is included per default and does not need
  * to be compiled separately. It can be enabled by using the --generic-print option.
- * 
+ *
  * @author Tobias Neitzel (@qtc_de)
  */
 public class GenericPrint implements IResponseHandler
@@ -119,13 +119,13 @@ public class GenericPrint implements IResponseHandler
         {
             int length = Array.getLength(o);
             objectArray = new Object[length];
-            
+
             for(int ctr = 0; ctr < length; ctr++)
             {
                 objectArray[ctr] = Array.get(o, ctr);
             }
         }
-        
+
         else
         {
             objectArray = (Object[])o;
@@ -192,7 +192,7 @@ public class GenericPrint implements IResponseHandler
                 Logger.eprintlnYellow("Unsupported object type.");
             }
         }
-        
+
         catch (Exception e)
         {
             ExceptionHandler.unexpectedException(e, "constructing", "RemoteObjectWrapper", true);
