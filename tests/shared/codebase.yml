@@ -155,7 +155,7 @@ tests:
       - error: True
       - contains:
           values:
-            - 'The specified aciton requires one of the --component, --objid, --bound-name options'
+            - 'The specified action requires one of the --component, --objid, --bound-name options'
 
 
   - title: No Class Load

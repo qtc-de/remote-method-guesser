@@ -57,7 +57,7 @@ tests:
       - contains:
           values:
             - Registry rejected bind call
-            - Localhost bypass was used but failed
+            - Localhost bypass was used, but failed
 
 
   - title: Bind Call (Activation System localhost bypass)
@@ -79,7 +79,7 @@ tests:
       - contains:
           values:
             - Registry rejected bind call
-            - Localhost bypass was used but failed
+            - Localhost bypass was used, but failed
 
 
   - title: Rebind Call
@@ -122,7 +122,7 @@ tests:
           ignore_case: True
           values:
             - Registry rejected rebind call
-            - Localhost bypass was used but failed
+            - Localhost bypass was used, but failed
 
 
   - title: Unbind Call
@@ -163,4 +163,4 @@ tests:
           ignore_case: True
           values:
             - Registry rejected unbind call
-            - Localhost bypass was used but failed
+            - Localhost bypass was used, but failed
