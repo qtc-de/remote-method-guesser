@@ -93,7 +93,7 @@ tests:
       - error: False
       - contains:
           values:
-            - Registry rejected bind call because it was not send from localhost.
+            - Registry rejected bind call because it was not sent from localhost.
             - Localhost bypass was used but failed.
 
 

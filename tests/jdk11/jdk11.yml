@@ -10,7 +10,7 @@ tester:
 
 containers:
   - name: 'rmg-jdk11'
-    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:4.0-jdk11'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-example-server:5.0-jdk11'
     volumes:
       - '${volume}:${volume-d}'
     aliases:

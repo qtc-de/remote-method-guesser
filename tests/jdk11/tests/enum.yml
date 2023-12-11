@@ -120,7 +120,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -235,7 +235,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -351,7 +351,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -467,7 +467,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
