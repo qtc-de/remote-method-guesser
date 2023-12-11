@@ -534,7 +534,7 @@ public class ExceptionHandler {
             else
             {
                 Logger.eprintlnMixedYellow("Caught", "ConnectException", "during " + callName + " call.");
-                Logger.eprintMixedBlue("Exception message:", message);
+                Logger.eprintlnMixedBlue("Exception message:", message);
                 showStackTrace(e);
                 RMGUtils.exit();
             }
