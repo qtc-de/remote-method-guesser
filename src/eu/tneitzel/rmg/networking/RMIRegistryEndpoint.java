@@ -33,7 +33,8 @@ public class RMIRegistryEndpoint extends RMIEndpoint
     private Registry rmiRegistry;
     private Map<String,Remote> remoteObjectCache;
 
-    private static boolean stopLookupLoop = false;
+    private static int lookupCount = 0;
+    private static final int maxLookupCount = 5;
 
     /**
      * The main purpose of this constructor function is to setup the different socket factories.
@@ -55,10 +56,13 @@ public class RMIRegistryEndpoint extends RMIEndpoint
 
         this.remoteObjectCache = new HashMap<String,Remote>();
 
-        try {
+        try
+        {
             RMISocketFactory.setSocketFactory(PluginSystem.getDefaultSocketFactory(host, port));
-
-        } catch (IOException e) {
+        }
+        
+        catch (IOException e)
+        {
             Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
             ExceptionHandler.showStackTrace(e);
             Logger.eprintln("");
@@ -66,10 +70,13 @@ public class RMIRegistryEndpoint extends RMIEndpoint
 
         java.security.Security.setProperty("ssl.SocketFactory.provider", PluginSystem.getDefaultSSLSocketFactory(host, port));
 
-        try {
+        try
+        {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
-
-        } catch( RemoteException e ) {
+        }
+        
+        catch (RemoteException e)
+        {
             ExceptionHandler.internalError("RMIRegistryEndpoint.locateRegistry", "Caught unexpected RemoteException.");
             ExceptionHandler.stackTrace(e);
             RMGUtils.exit();
@@ -95,34 +102,52 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      */
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
-        if( RMGOption.TARGET_BOUND_NAME.notNull() )
+        if (RMGOption.TARGET_BOUND_NAME.notNull())
+        {
             return new String[] { RMGOption.TARGET_BOUND_NAME.getValue() };
+        }
 
         String[] boundNames = null;
 
-        try {
+        try
+        {
             boundNames = rmiRegistry.list();
-
-        } catch( java.rmi.ConnectIOException e ) {
+        }
+        
+        catch (java.rmi.ConnectIOException e)
+        {
             ExceptionHandler.connectIOException(e, "list");
-
-        } catch( java.rmi.ConnectException e ) {
+        }
+        
+        catch (java.rmi.ConnectException e)
+        {
             ExceptionHandler.connectException(e, "list");
-
-        } catch( java.rmi.UnknownHostException e ) {
+        }
+        
+        catch (java.rmi.UnknownHostException e)
+        {
             ExceptionHandler.unknownHost(e, host, true);
-
-        } catch( java.rmi.NoSuchObjectException e ) {
+        }
+        
+        catch (java.rmi.NoSuchObjectException e)
+        {
             throw e;
-
-        } catch( Exception e ) {
-
+        }
+        
+        
+        catch (Exception e)
+        {
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if( cause instanceof SSRFException )
+            if (cause instanceof SSRFException)
+            {
                 SSRFSocket.printContent(host, port);
+            }
+            
             else
+            {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
+            }
         }
 
         return boundNames;
@@ -141,8 +166,10 @@ public class RMIRegistryEndpoint extends RMIEndpoint
     {
         RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
 
-        for(int ctr = 0; ctr < boundNames.length; ctr++)
+        for (int ctr = 0; ctr < boundNames.length; ctr++)
+        {
             remoteObjects[ctr] = this.lookup(boundNames[ctr]);
+        }
 
         return remoteObjects;
     }
@@ -165,6 +192,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
             {
                 remoteObject = rmiRegistry.lookup(boundName);
                 remoteObjectCache.put(boundName, remoteObject);
+                lookupCount = 0;
             }
 
             catch (java.rmi.ConnectIOException e)
@@ -200,7 +228,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
                 {
                     InvalidClassException invalidClassException = (InvalidClassException)cause;
 
-                    if (stopLookupLoop || !cause.getMessage().contains("serialVersionUID"))
+                    if (lookupCount > maxLookupCount || !cause.getMessage().contains("serialVersionUID"))
                     {
                         ExceptionHandler.invalidClassException(invalidClassException);
                     }
@@ -211,7 +239,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
                         long serialVersionUID = RMGUtils.getSerialVersionUID(invalidClassException);
 
                         CodebaseCollector.addSerialVersionUID(className, serialVersionUID);
-                        stopLookupLoop = true;
+                        lookupCount += 1;
                     }
 
                     catch (Exception e1)
