@@ -77,7 +77,7 @@ tests:
       - contains:
           values:
             - 'plain-server'
-            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'Endpoint: iinsecure.dev:37797  TLS: no  ObjID: [79bf1d8a:17b14e4e4b0:-7ff8, -8372830402508756097]'
             - 'http://iinsecure.dev/well-hidden-development-folder/'
 
@@ -150,7 +150,7 @@ tests:
       - contains:
           values:
             - 'NotBoundException'
-            - 'unbind was accepeted'
+            - 'unbind was accepted'
             - 'Vulnerability Status: Vulnerable'
 
 
@@ -316,7 +316,7 @@ tests:
       - contains:
           values:
             - 'plain-server'
-            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'Endpoint: iinsecure.dev:37797  TLS: no  ObjID: [79bf1d8a:17b14e4e4b0:-7ff8, -8372830402508756097]'
             - 'http://iinsecure.dev/well-hidden-development-folder/'
 
@@ -389,7 +389,7 @@ tests:
       - contains:
           values:
             - 'NotBoundException'
-            - 'unbind was accepeted'
+            - 'unbind was accepted'
             - 'Vulnerability Status: Vulnerable'
 
 
