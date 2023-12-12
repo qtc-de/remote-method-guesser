@@ -17,7 +17,7 @@ plugins:
             - --no-color
             - --objid
             - "'${ROGUE_OBJID}'"
-            - '&>'
+            - '>'
             - ${JMX_LOG_1}
 
     - os_command:
@@ -38,7 +38,7 @@ plugins:
             - ${FORWARD_PORT-0-1}
             - --forward-objid
             - "'${FORWARD_OBJID-0-1}'"
-            - '&>'
+            - '>'
             - ${JMX_LOG_2}
 
 
