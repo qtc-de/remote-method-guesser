@@ -344,7 +344,7 @@ public class Formatter
                 Logger.printPlainMixedPurple("  TLS:", "unknown");
         }
 
-        Logger.printlnPlainMixedBlue("  CLS:", ref.getSocketFactoryClassName());
+        Logger.printPlainMixedBlue("  CLS:", ref.getSocketFactoryClassName());
         Logger.printlnPlainMixedBlue("  ObjID:", ref.objID.toString());
     }
 
