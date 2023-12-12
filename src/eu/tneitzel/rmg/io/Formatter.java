@@ -338,12 +338,12 @@ public class Formatter
 
         if (csf == null || csf.getClass() == RMISocketFactory.class)
         {
-            Logger.printPlainMixedRed("  CSF:", csf.getClass().getSimpleName());
+            Logger.printPlainMixedRed("  CSF:", RMISocketFactory.class.getSimpleName());
         }
 
         else if (csf.getClass() == SslRMIClientSocketFactory.class)
         {
-            Logger.printPlainMixedGreen("  CSF:", csf.getClass().getSimpleName());
+            Logger.printPlainMixedGreen("  CSF:", SslRMIClientSocketFactory.class.getSimpleName());
         }
 
         else
