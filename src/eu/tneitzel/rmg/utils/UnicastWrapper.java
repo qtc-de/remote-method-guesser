@@ -105,21 +105,62 @@ public class UnicastWrapper extends RemoteObjectWrapper
      */
     public int isTLSProtected()
     {
-        if( csf != null ) {
-
+        if (csf != null)
+        {
             Class<?> factoryClass = csf.getClass();
 
-            if( factoryClass == SslRMIClientSocketFactory.class )
+            if (factoryClass == SslRMIClientSocketFactory.class)
+            {
                 return 1;
+            }
 
-            if( factoryClass == RMISocketFactory.class )
+            if (factoryClass == RMISocketFactory.class)
+            {
                 return -1;
+            }
+        }
 
-        } else if( remoteObject != null ) {
+        else if (remoteObject != null)
+        {
             return -1;
         }
 
         return 0;
+    }
+
+    /**
+     * Return the name of the socket factory class used by the remote reference.
+     *
+     * @return name of the socket factory class
+     */
+    public String getSocketFactoryClassName()
+    {
+        if (csf != null)
+        {
+            Class<?> factoryClass = csf.getClass();
+
+            if (factoryClass == SslRMIClientSocketFactory.class)
+            {
+                return SslRMIClientSocketFactory.class.getName();
+            }
+
+            else if (factoryClass == RMISocketFactory.class)
+            {
+                return RMISocketFactory.class.getName();
+            }
+
+            else
+            {
+                return factoryClass.getCanonicalName();
+            }
+        }
+
+        else if (remoteObject != null)
+        {
+            return RMISocketFactory.class.getName();
+        }
+
+        return null;
     }
 
     /**
@@ -130,8 +171,10 @@ public class UnicastWrapper extends RemoteObjectWrapper
      */
     public boolean hasDuplicates()
     {
-        if( this.duplicates.size() == 0 )
+        if (this.duplicates.size() == 0)
+        {
             return false;
+        }
 
         return true;
     }
@@ -156,8 +199,10 @@ public class UnicastWrapper extends RemoteObjectWrapper
     {
         List<String> duplicateNames = new ArrayList<String>();
 
-        for(UnicastWrapper o : this.duplicates)
+        for (UnicastWrapper o : this.duplicates)
+        {
             duplicateNames.add(o.boundName);
+        }
 
         return duplicateNames.toArray(new String[0]);
     }
@@ -173,8 +218,10 @@ public class UnicastWrapper extends RemoteObjectWrapper
      */
     public static UnicastWrapper fromRef(UnicastRef unicastRef, Class<?> intf) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
-        if( !Remote.class.isAssignableFrom(intf) )
+        if (!Remote.class.isAssignableFrom(intf))
+        {
             ExceptionHandler.internalError("UnicastWrapper.fromRef", "Specified interface is not valid");
+        }
 
         RemoteObjectInvocationHandler remoteObjectInvocationHandler = new RemoteObjectInvocationHandler(unicastRef);
         Remote remoteObject = (Remote)Proxy.newProxyInstance(intf.getClassLoader(), new Class[] { intf }, remoteObjectInvocationHandler);
@@ -193,11 +240,12 @@ public class UnicastWrapper extends RemoteObjectWrapper
     {
         List<UnicastWrapper> unique = new ArrayList<UnicastWrapper>();
 
-        outer: for(UnicastWrapper current : list) {
-
-            for(UnicastWrapper other : unique) {
-
-                if(other.getInterfaceName().equals(current.getInterfaceName())) {
+        outer: for (UnicastWrapper current : list)
+        {
+            for (UnicastWrapper other : unique)
+            {
+                if (other.getInterfaceName().equals(current.getInterfaceName()))
+                {
                     other.addDuplicate(current);
                     continue outer;
                 }
@@ -217,10 +265,12 @@ public class UnicastWrapper extends RemoteObjectWrapper
      */
     public static boolean hasDuplicates(UnicastWrapper[] list)
     {
-        for(UnicastWrapper o : list) {
-
-            if( o.hasDuplicates() )
+        for (UnicastWrapper o : list)
+        {
+            if (o.hasDuplicates())
+            {
                 return true;
+            }
         }
 
         return false;
