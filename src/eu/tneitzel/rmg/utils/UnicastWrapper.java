@@ -6,12 +6,9 @@ import java.rmi.Remote;
 import java.rmi.server.ObjID;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.RMISocketFactory;
 import java.rmi.server.RemoteObjectInvocationHandler;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import sun.rmi.server.UnicastRef;
@@ -93,74 +90,6 @@ public class UnicastWrapper extends RemoteObjectWrapper
     public String getTarget()
     {
         return getHost() + ":" + getPort();
-    }
-
-    /**
-     * Checks whether the socket factory used by the remote object is TLS protected. This function
-     * returns 1 if the default SslRMIClientSocketFactory class is used. -1 if the default RMISocketFactory
-     * class is used and 0 if none of the previously mentioned cases applies. Notice that a client
-     * socket factory with a value of null implies the default socket factory (RMISocketFactory).
-     *
-     * @return 1 -> SslRMIClientSocketFactory, -1 -> RMISocketFactory, 0 -> Unknown
-     */
-    public int isTLSProtected()
-    {
-        if (csf != null)
-        {
-            Class<?> factoryClass = csf.getClass();
-
-            if (factoryClass == SslRMIClientSocketFactory.class)
-            {
-                return 1;
-            }
-
-            if (factoryClass == RMISocketFactory.class)
-            {
-                return -1;
-            }
-        }
-
-        else if (remoteObject != null)
-        {
-            return -1;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Return the name of the socket factory class used by the remote reference.
-     *
-     * @return name of the socket factory class
-     */
-    public String getSocketFactoryClassName()
-    {
-        if (csf != null)
-        {
-            Class<?> factoryClass = csf.getClass();
-
-            if (factoryClass == SslRMIClientSocketFactory.class)
-            {
-                return SslRMIClientSocketFactory.class.getName();
-            }
-
-            else if (factoryClass == RMISocketFactory.class)
-            {
-                return RMISocketFactory.class.getName();
-            }
-
-            else
-            {
-                return factoryClass.getCanonicalName();
-            }
-        }
-
-        else if (remoteObject != null)
-        {
-            return RMISocketFactory.class.getName();
-        }
-
-        return null;
     }
 
     /**

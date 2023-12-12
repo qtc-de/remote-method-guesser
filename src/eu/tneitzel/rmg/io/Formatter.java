@@ -1,10 +1,14 @@
 package eu.tneitzel.rmg.io;
 
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMISocketFactory;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import eu.tneitzel.rmg.endpoints.KnownEndpoint;
 import eu.tneitzel.rmg.endpoints.Vulnerability;
@@ -330,21 +334,23 @@ public class Formatter
         Logger.print("    ");
         Logger.printPlainMixedBlue("Endpoint:", ref.getTarget());
 
-        switch (ref.isTLSProtected())
+        RMIClientSocketFactory csf = ref.csf;
+
+        if (csf == null || csf.getClass() == RMISocketFactory.class)
         {
-            case 1:
-                Logger.printPlainMixedGreen("  TLS:", "yes");
-                break;
-
-            case -1:
-                Logger.printPlainMixedRed("  TLS:", "no");
-                break;
-
-            default:
-                Logger.printPlainMixedPurple("  TLS:", "unknown");
+            Logger.printPlainMixedRed("  CSF:", csf.getClass().getSimpleName());
         }
 
-        Logger.printPlainMixedBlue("  CLS:", ref.getSocketFactoryClassName());
+        else if (csf.getClass() == SslRMIClientSocketFactory.class)
+        {
+            Logger.printPlainMixedGreen("  CSF:", csf.getClass().getSimpleName());
+        }
+
+        else
+        {
+            Logger.printPlainMixedPurple("  CSF:", csf.getClass().getName());
+        }
+
         Logger.printlnPlainMixedBlue("  ObjID:", ref.objID.toString());
     }
 
