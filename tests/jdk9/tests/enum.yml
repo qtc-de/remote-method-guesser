@@ -40,7 +40,7 @@ tests:
           description: |-
             'Check whether objID values are displayed'
           match:
-            - 'Endpoint: iinsecure.example:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+            - 'Endpoint: iinsecure.example:\d+  CSF: (RMISocketFactory|SslRMIClientSocketFactory)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
           description: |-
@@ -200,7 +200,7 @@ tests:
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
           invert:
-            - 'TLS: yes  ObjID:'
+            - 'CSF: SslRMIClientSocketFactory  ObjID:'
 
       - contains:
           description: |-
@@ -317,7 +317,7 @@ tests:
             - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
-            - 'TLS: yes  ObjID:'
+            - 'CSF: SslRMIClientSocketFactory  ObjID:'
 
       - contains:
           description: |-
