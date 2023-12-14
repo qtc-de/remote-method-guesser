@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import eu.tneitzel.rmg.endpoints.KnownEndpoint;
+import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
 import eu.tneitzel.rmg.endpoints.Vulnerability;
 import eu.tneitzel.rmg.internal.CodebaseCollector;
 import eu.tneitzel.rmg.internal.MethodCandidate;
@@ -58,7 +59,13 @@ public class Formatter
 
             Logger.increaseIndent();
 
-            if (remoteObject.isKnown())
+            if (remoteObject instanceof SpringRemotingWrapper)
+            {
+                Logger.printMixedBlue("-->", SpringRemotingWrapper.invocationHandlerClass, "");
+                KnownEndpointHolder.getHolder().lookup(SpringRemotingWrapper.invocationHandlerClass).printEnum();
+            }
+
+            else if (remoteObject.isKnown())
             {
                 Logger.printMixedBlue("-->", remoteObject.getInterfaceName(), "");
                 remoteObject.knownEndpoint.printEnum();
@@ -312,7 +319,18 @@ public class Formatter
         if (interfaceName != null)
         {
             Logger.print("    ");
-            Logger.printlnPlainMixedPurple("Spring Remoting Interface:", interfaceName);
+
+            if (ref.isKnown())
+            {
+                Logger.printPlainMixedPurple("Spring Remoting Interface:", interfaceName);
+                ref.knownEndpoint.printEnum();
+            }
+
+            else
+            {
+                Logger.printPlainMixedPurple("Spring Remoting Interface:", interfaceName);
+                Logger.printlnPlainMixedBlue("", "(unknown class)");
+            }
         }
 
         printUnicastRef((UnicastWrapper)ref);
