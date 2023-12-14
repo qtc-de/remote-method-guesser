@@ -1,0 +1,60 @@
+tester:
+  title: Calling Tests
+  description: |-
+    Perform tests for calling methods on Spring Remoting
+
+  id: '005-003'
+  groups:
+    - call
+  id_pattern: '005-003-{:03}'
+
+
+variables:
+  file-exec: spring-remoting-execute.txt
+  file-system: spring-remoting-system.txt
+
+
+tests:
+  - title: Execute Call
+    description: |-
+      Invokes the execute function on the spring remoting interface
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-SPRING}
+      - '"touch ${volume-d}/${file-exec}"'
+      - --bound-name
+      - spring-remoting
+      - --signature
+      - 'void execute(String dummy)'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file-exec}'
+
+  - title: System Call
+    description: |-
+      Invokes the system function on the spring remoting interface
+
+    command:
+      - rmg
+      - call
+      - ${TARGET-SPRING}
+      - '"touch", new String[] { "${volume-d}/${file-system}" }'
+      - --bound-name
+      - spring-remoting
+      - --signature
+      - 'void system(String command, String[] args)'
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - file_exists:
+          cleanup: True
+          files:
+            - '${volume}/${file-system}'
