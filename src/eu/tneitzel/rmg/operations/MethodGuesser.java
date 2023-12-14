@@ -440,6 +440,25 @@ public class MethodGuesser
                     }
                 }
 
+                catch (java.rmi.UnmarshalException e)
+                {
+                    /*
+                     * When running with multiple threads, from time to time, stream corruption can be observed.
+                     * This seems to be non deterministically and only appears in certain setups. In my current
+                     * setup, it seems always to break on the "String selectSurname(String email)" method. In
+                     * future, this should be debugged. However, as in a run of 3000 methods this only occurs one
+                     * or two times, it is probably not that important.
+                     */
+                    if (RMGOption.GLOBAL_VERBOSE.getBool())
+                    {
+                        String info = "Caught unexpected " + e.getClass().getName() + " while guessing the " + candidate.getSignature() + "method.\n"
+                                +"[-]" + Logger.getIndent() + "This occurs sometimes when guessing with multiple threads.\n"
+                                +"[-]" + Logger.getIndent() + "You can retry with --threads 1 or just ignore the exception.";
+                        Logger.eprintlnBlue(info);
+                        ExceptionHandler.showStackTrace(e);
+                    }
+                }
+
                 catch(Exception e)
                 {
                     /*
@@ -449,11 +468,11 @@ public class MethodGuesser
                     e.printStackTrace(new PrintWriter(writer));
 
                     String info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
-                                 +"Please report this to improve rmg :)\n"
-                                 +"Stack-Trace:\n"
+                                 +"[-]" + Logger.getIndent() + "Please report this to improve rmg :)\n"
+                                 +"[-]" + Logger.getIndent() + "Stack-Trace:\n"
                                  +writer.toString();
 
-                    Logger.println(info);
+                    Logger.eprintlnBlue(info);
                 }
 
                 finally
@@ -557,12 +576,50 @@ public class MethodGuesser
                          */
                     }
 
+                    else if (cause instanceof java.rmi.UnmarshalException)
+                    {
+                        /*
+                         * When running with multiple threads, from time to time, stream corruption can be observed.
+                         * This seems to be non deterministically and only appears in certain setups. In my current
+                         * setup, it seems always to break on the "String selectSurname(String email)" method. In
+                         * future, this should be debugged. However, as in a run of 3000 methods this only occurs one
+                         * or two times, it is probably not that important.
+                         */
+                        if (RMGOption.GLOBAL_VERBOSE.getBool())
+                        {
+                            String info = "Caught unexpected " + e.getClass().getName() + " while guessing the " + SpringRemotingWrapper.getSignature(invocationHolder.getCandidate()) + " method.\n"
+                                    +"[-]" + Logger.getIndent() + "This occurs sometimes when guessing with multiple threads.\n"
+                                    +"[-]" + Logger.getIndent() + "You can retry with --threads 1 or just ignore the exception.";
+                            Logger.eprintlnBlue(info);
+                            ExceptionHandler.showStackTrace(e);
+                        }
+                    }
+
                     else
                     {
                         /*
                          * If we end up here, an unexpected exception was raised that indicates a general error.
                          */
                         unexpectedError(invocationHolder, e);
+                    }
+                }
+
+                catch (java.rmi.UnmarshalException e)
+                {
+                    /*
+                     * When running with multiple threads, from time to time, stream corruption can be observed.
+                     * This seems to be non deterministically and only appears in certain setups. In my current
+                     * setup, it seems always to break on the "String selectSurname(String email)" method. In
+                     * future, this should be debugged. However, as in a run of 3000 methods this only occurs one
+                     * or two times, it is probably not that important.
+                     */
+                    if (RMGOption.GLOBAL_VERBOSE.getBool())
+                    {
+                        String info = "Caught unexpected " + e.getClass().getName() + " while guessing the " + SpringRemotingWrapper.getSignature(invocationHolder.getCandidate()) + " method.\n"
+                                +"[-]" + Logger.getIndent() + "This occurs sometimes when guessing with multiple threads.\n"
+                                +"[-]" + Logger.getIndent() + "You can retry with --threads 1 or just ignore the exception.";
+                        Logger.eprintlnBlue(info);
+                        ExceptionHandler.showStackTrace(e);
                     }
                 }
 
@@ -600,8 +657,8 @@ public class MethodGuesser
                 e.printStackTrace(new PrintWriter(writer));
 
                 info = "Caught unexpected " + e.getClass().getName() + " during method guessing.\n"
-                             +"Please report this to improve rmg :)\n"
-                             +"Stack-Trace:\n"
+                             +"[-]" + Logger.getIndent() + "Please report this to improve rmg :)\n"
+                             +"[-]" + Logger.getIndent() + "Stack-Trace:\n"
                              +writer.toString();
             }
 
@@ -610,7 +667,7 @@ public class MethodGuesser
                 info = "Spring Remoting call did not cause an exception. This is not expected.";
             }
 
-            Logger.println(info);
+            Logger.eprintlnBlue(info);
         }
     }
 }
