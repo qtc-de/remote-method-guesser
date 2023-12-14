@@ -12,12 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Add support for dynamically created socket factory classes ([docs](/docs/rmg/dynamic-socket-factories.md))
 * Add support for method guessing on spring-remoting endpoints ([docs](/docs/rmg/spring-remoting.md))
+* Add a *Spring Remoting* example server ([src](docker/spring-remoting/), [package](https://github.com/qtc-de/remote-method-guesser/pkgs/container/remote-method-guesser%2Fspring-remoting-server))
 
 ### Changed
 
 * Changed the namespace of the project from `de.qtc` to `eu.tneitzel`
 * Fix leak of local ysoserial path (e30f52c)
 * The GenericPrint plugin is now included in *rmg* per default (b09e9a5)
+* Stream corruption errors during method guessing are only displayed if `--verbose` is used
 
 
 ## [4.4.1] - Jun 22, 2023
