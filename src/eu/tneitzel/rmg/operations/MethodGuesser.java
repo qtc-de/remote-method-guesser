@@ -53,6 +53,7 @@ public class MethodGuesser
     private List<RemoteObjectClient> clientList;
     private List<RemoteObjectClient> knownClientList;
     private List<Set<MethodCandidate>> candidateSets;
+    private Set<RemoteInvocationHolder> invocationHolders;
     private List<Set<RemoteInvocationHolder>> invocationHolderSets;
 
     /**
@@ -77,7 +78,7 @@ public class MethodGuesser
 
         if (SpringRemotingWrapper.containsSpringRemotingClient(remoteObjects))
         {
-            Set<RemoteInvocationHolder> invocationHolders = SpringRemotingWrapper.getInvocationHolders(candidates);
+            invocationHolders = SpringRemotingWrapper.getInvocationHolders(candidates);
             invocationHolderSets = RMGUtils.splitSet(invocationHolders, RMGOption.THREADS.getValue());
         }
 
@@ -87,7 +88,22 @@ public class MethodGuesser
         }
 
         this.clientList = initClientList(remoteObjects);
-        this.progressBar = new ProgressBar(candidates.size() * clientList.size(), 37);
+        int workCount = 0;
+
+        for (RemoteObjectClient client : clientList)
+        {
+            if (client.remoteObject instanceof SpringRemotingWrapper)
+            {
+                workCount += invocationHolders.size();
+            }
+
+            else
+            {
+                workCount += candidates.size();
+            }
+        }
+
+        this.progressBar = new ProgressBar(workCount, 37);
     }
 
     /**
