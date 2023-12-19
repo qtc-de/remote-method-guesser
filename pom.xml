@@ -4,10 +4,34 @@
 
     <groupId>eu.tneitzel.rmg</groupId>
     <artifactId>remote-method-guesser</artifactId>
-    <name>remote-method-guesser</name>
-    <packaging>jar</packaging>
     <version>5.0.0</version>
-    <description>Identify common misconfigurations on Java RMI endpoints</description>
+    <packaging>jar</packaging>
+
+    <name>${project.artifactId}</name>
+    <description>Java RMI Vulnerability Scanner</description>
+    <url>https://github.com/qtc-de/remote-method-guesser</url>
+
+    <licenses>
+      <license>
+        <name>GPL-v3.0</name>
+        <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+      </license>
+    </licenses>
+
+    <developers>
+       <developer>
+         <id>qtc-de</id>
+         <name>Tobias Neitzel</name>
+         <email>secure@tneitzel.eu</email>
+         <url>https://tneitzel.eu/</url>
+       </developer>
+    </developers>
+
+    <scm>
+      <connection>scm:git:git://github.com/qtc-de/remote-method-guesser.git</connection>
+      <developerConnection>scm:git:ssh://github.com:qtc-de/remote-method-guesser.git</developerConnection>
+      <url>https://github.com/qtc-de/remote-method-guesser/tree/master</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
