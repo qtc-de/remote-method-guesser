@@ -1,0 +1,6 @@
+version: '3.7'
+
+services:
+    spring-remoting:
+      image: ghcr.io/qtc-de/remote-method-guesser/spring-remoting-server:1.0
+      build: .

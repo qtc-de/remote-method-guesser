@@ -30,17 +30,17 @@ tests:
           ignore_case: True
           values:
             - 'ssl-server'
-            - 'de.qtc.rmg.server.interfaces.ISslServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.ISslServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'secure-server'
-            - 'de.qtc.rmg.server.interfaces.ISecureServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.ISecureServer (unknown class)'
 
       - regex:
           description: |-
             'Check whether objID values are displayed'
           match:
-            - 'Endpoint: iinsecure.example:\d+  TLS: (yes|no|unknown)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
+            - 'Endpoint: iinsecure.example:\d+  CSF: (RMISocketFactory|SslRMIClientSocketFactory)  ObjID: \[[0-9a-f:-]+, [0-9-]+\]'
 
       - contains:
           description: |-
@@ -79,11 +79,11 @@ tests:
           ignore_case: True
           values:
             - 'plain-server2'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'legacy-service'
-            - 'de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
+            - 'eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
 
       - contains:
           description: |-
@@ -124,7 +124,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+              [+] 	- Caught NotBoundException during unbind call (unbind was accepted).
               [+] 	  Vulnerability Status: Vulnerable
 
       - contains:
@@ -190,17 +190,17 @@ tests:
           ignore_case: True
           values:
             - 'activation-test'
-            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
-            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
           invert:
-            - 'TLS: yes  ObjID:'
+            - 'CSF: SslRMIClientSocketFactory  ObjID:'
 
       - contains:
           description: |-
@@ -241,7 +241,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -308,16 +308,16 @@ tests:
           ignore_case: True
           values:
             - 'activation-test'
-            - 'de.qtc.rmg.server.activation.IActivationService (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'activation-test2'
-            - 'de.qtc.rmg.server.activation.IActivationService2 (unknown class)'
+            - 'eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)'
             - 'Activator: iinsecure.example:1098  ActivationID:'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'java.rmi.activation.ActivationSystem'
             - 'sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activation System)'
-            - 'TLS: yes  ObjID:'
+            - 'CSF: SslRMIClientSocketFactory  ObjID:'
 
       - contains:
           description: |-
@@ -359,7 +359,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Registry rejected unbind call cause it was not send from localhost.
+              [+] 	- Registry rejected unbind call cause it was not sent from localhost.
               [+] 	  Vulnerability Status: Non Vulnerable
 
       - contains:
@@ -432,11 +432,11 @@ tests:
           ignore_case: True
           values:
             - 'plain-server2'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'plain-server'
-            - 'de.qtc.rmg.server.interfaces.IPlainServer (unknown class)'
+            - 'eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)'
             - 'legacy-service'
-            - '_de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
+            - '_eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)'
 
       - contains:
           description: |-
@@ -477,7 +477,7 @@ tests:
             - |-
               [+] RMI registry localhost bypass enumeration (CVE-2019-2684):
               [+]
-              [+] 	- Caught NotBoundException during unbind call (unbind was accepeted).
+              [+] 	- Caught NotBoundException during unbind call (unbind was accepted).
               [+] 	  Vulnerability Status: Vulnerable
 
       - contains:

@@ -38,7 +38,7 @@ tests:
       - contains:
           values:
             - 'Caught unexpected AccessControlException during deserialization attack'
-            - 'The servers SecurityManager may refused the operation.'
+            - "The server's SecurityManager may refused the operation."
 
 
   - title: Gadget Call (SSL)

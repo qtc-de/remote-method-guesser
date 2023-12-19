@@ -34,21 +34,21 @@ The registry on port `1090` is *SSL* protected and contains three available boun
 [+] RMI registry bound names:
 [+]
 [+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fff, 8831379559932805383]
 [+] 	- ssl-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.ISslServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:42031  TLS: yes  ObjID: [-492549a8:1809adab6bf:-7ffe, -8819602238278920745]
 [+] 	- secure-server
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.ISecureServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffd, -5037949272481440924]
 [+]
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://iinsecure.example/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.interfaces.ISslServer
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
-[+] 		--> de.qtc.rmg.server.interfaces.ISecureServer
+[+] 		--> eu.tneitzel.rmg.server.interfaces.ISslServer
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer
+[+] 		--> eu.tneitzel.rmg.server.interfaces.ISecureServer
 [+]
 [+] RMI server String unmarshalling enumeration:
 [+]
@@ -96,13 +96,13 @@ The registry on port `1098` hosts an *Activation System* and has some *activatab
 [+] RMI registry bound names:
 [+]
 [+] 	- activation-test
-[+] 		--> de.qtc.rmg.server.activation.IActivationService (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: -492549a8:1809adab6bf:-7ff1
 [+] 	- activation-test2
-[+] 		--> de.qtc.rmg.server.activation.IActivationService2 (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService2 (unknown class)
 [+] 		    Activator: iinsecure.example:1098  ActivationID: -492549a8:1809adab6bf:-7fee
 [+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7fec, 5541025679742310482]
 [+] 	- java.rmi.activation.ActivationSystem
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub (known class: RMI Activator)
@@ -111,10 +111,10 @@ The registry on port `1098` hosts an *Activation System* and has some *activatab
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://iinsecure.example/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
-[+] 		--> de.qtc.rmg.server.activation.IActivationService
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService
 [+] 		--> sun.rmi.server.Activation$ActivationSystemImpl_Stub
-[+] 		--> de.qtc.rmg.server.activation.IActivationService2
+[+] 		--> eu.tneitzel.rmg.server.activation.IActivationService2
 [+]
 [+] RMI server String unmarshalling enumeration:
 [+]
@@ -167,20 +167,20 @@ registry port binds an *RMI Activator instance*, but not a full working *Activat
 [+] RMI registry bound names:
 [+]
 [+] 	- plain-server2
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff7, 8893583921173173865]
 [+] 	- legacy-service
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ffc, -5452660335673756521]
 [+] 	- plain-server
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer (unknown class)
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer (unknown class)
 [+] 		    Endpoint: iinsecure.example:40579  TLS: no  ObjID: [-492549a8:1809adab6bf:-7ff8, 5860842907020657289]
 [+]
 [+] RMI server codebase enumeration:
 [+]
 [+] 	- http://iinsecure.example/well-hidden-development-folder/
-[+] 		--> de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub
-[+] 		--> de.qtc.rmg.server.interfaces.IPlainServer
+[+] 		--> eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub
+[+] 		--> eu.tneitzel.rmg.server.interfaces.IPlainServer
 [+]
 [+] RMI server String unmarshalling enumeration:
 [+]
@@ -230,8 +230,8 @@ to enable *codebase logging*:
 ```yaml
 environment:
   [...]
-    -Djava.rmi.server.RMIClassLoaderSpi=de.qtc.rmg.server.utils.CodebaseLogger
-    -Dde.qtc.rmg.server.disableColor=true
+    -Djava.rmi.server.RMIClassLoaderSpi=eu.tneitzel.rmg.server.utils.CodebaseLogger
+    -Deu.tneitzel.rmg.server.disableColor=true
 ```
 
 Each successful method call is logged on the server side. The following listing shows the output after the server
@@ -265,7 +265,7 @@ Picked up _JAVA_OPTIONS: -Djava.rmi.server.hostname=iinsecure.example     -Djava
 [2022.05.06 - 19:45:12]     
 [2022.05.06 - 19:45:12]     Creating LegacyServiceImpl object.
 [2022.05.06 - 19:45:12]         Binding LegacyServiceImpl as legacy-service
-[2022.05.06 - 19:45:12]         Boundname legacy-service with class de.qtc.rmg.server.legacy.LegacyServiceImpl_Stub is ready.
+[2022.05.06 - 19:45:12]         Boundname legacy-service with class eu.tneitzel.rmg.server.legacy.LegacyServiceImpl_Stub is ready.
 [2022.05.06 - 19:45:12]     Creating PlainServer object.
 [2022.05.06 - 19:45:12]         Binding Object as plain-server
 [2022.05.06 - 19:45:12]         Boundname plain-server with interface IPlainServer is ready.

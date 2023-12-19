@@ -161,25 +161,25 @@ that is applied by RMI when the RMI server location was set to *localhost*.
 The following listing contains the default implementation that is used by *remote-method-guesser* internally:
 
 ```java
-package de.qtc.rmg.plugin;
+package eu.tneitzel.rmg.plugin;
 
 import java.lang.reflect.Method;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
 
-import de.qtc.rmg.internal.ExceptionHandler;
-import de.qtc.rmg.internal.RMGOption;
-import de.qtc.rmg.io.Logger;
-import de.qtc.rmg.networking.DGCClientSocketFactory;
-import de.qtc.rmg.networking.LoopbackSocketFactory;
-import de.qtc.rmg.networking.LoopbackSslSocketFactory;
-import de.qtc.rmg.networking.SSRFResponseSocketFactory;
-import de.qtc.rmg.networking.SSRFSocketFactory;
-import de.qtc.rmg.networking.TrustAllSocketFactory;
-import de.qtc.rmg.operations.Operation;
-import de.qtc.rmg.operations.RegistryClient;
-import de.qtc.rmg.utils.RMGUtils;
-import de.qtc.rmg.utils.YsoIntegration;
+import eu.tneitzel.rmg.internal.ExceptionHandler;
+import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.io.Logger;
+import eu.tneitzel.rmg.networking.DGCClientSocketFactory;
+import eu.tneitzel.rmg.networking.LoopbackSocketFactory;
+import eu.tneitzel.rmg.networking.LoopbackSslSocketFactory;
+import eu.tneitzel.rmg.networking.SSRFResponseSocketFactory;
+import eu.tneitzel.rmg.networking.SSRFSocketFactory;
+import eu.tneitzel.rmg.networking.TrustAllSocketFactory;
+import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.operations.RegistryClient;
+import eu.tneitzel.rmg.utils.RMGUtils;
+import eu.tneitzel.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -263,7 +263,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
         ClassPool pool = ClassPool.getDefault();
 
         try {
-            CtClass evaluator = pool.makeClass("de.qtc.rmg.plugin.DefaultProviderEval");
+            CtClass evaluator = pool.makeClass("eu.tneitzel.rmg.plugin.DefaultProviderEval");
             String evalFunction = "public static Object[] eval() {"
                                 + "        return new Object[] { " + argumentString + "};"
                                 + "}";
@@ -357,7 +357,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     public String getDefaultSSLSocketFactory(String host, int port)
     {
         if( RMGOption.SSRFRESPONSE.notNull() )
-            return "de.qtc.rmg.networking.DGCClientSslSocketFactory";
+            return "eu.tneitzel.rmg.networking.DGCClientSslSocketFactory";
 
         TrustAllSocketFactory trustAllFax = new TrustAllSocketFactory();
 
@@ -365,7 +365,7 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
         LoopbackSslSocketFactory.fac = trustAllFax.getSSLSocketFactory();
         LoopbackSslSocketFactory.followRedirect = RMGOption.CONN_FOLLOW.getBool();
 
-        return "de.qtc.rmg.networking.LoopbackSslSocketFactory";
+        return "eu.tneitzel.rmg.networking.LoopbackSslSocketFactory";
     }
 }
 ```

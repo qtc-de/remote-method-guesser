@@ -12,3 +12,5 @@ buildNumber.properties
 .project
 .settings/
 .internal/
+*.swp
+*.bak

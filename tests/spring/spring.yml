@@ -1,0 +1,22 @@
+tester:
+  title: Spring Remoting Tests
+  description: |-
+    'Launches some tests for Spring Remoting based endpoints'
+
+  id: '005'
+  groups:
+    - spring
+
+
+containers:
+  - name: 'spring-remoting-server'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/spring-remoting-server:1.0'
+    volumes:
+      - '${volume}:${volume-d}'
+    aliases:
+      DOCKER-spring-remoting-server-IP: DOCKER-IP
+      DOCKER-spring-remoting-server-GATEWAY: DOCKER-GW
+
+
+testers:
+  - ./tests/*

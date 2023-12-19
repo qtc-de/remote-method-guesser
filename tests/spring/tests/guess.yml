@@ -1,0 +1,31 @@
+tester:
+  title: Guessing Tests
+  description: |-
+    Test method guessing on Spring Remoting endpoints
+
+  id: '005-002'
+  groups:
+    - guess
+  id_pattern: '005-002-{:03}'
+
+
+tests:
+  - title: Plain Guess
+    description: |-
+      Perform method guessing on a Spring Remoting endpoint
+
+    command:
+      - rmg
+      - guess
+      - ${TARGET-SPRING}
+      - --verbose
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+      - contains:
+          values:
+            - '[ spring-remoting ] HIT! Method with signature ??? system(String dummy, String[] dummy2) exists!'
+            - '[ spring-remoting ] HIT! Method with signature ??? execute(String dummy) exists!'
+            - '--> ??? system(String dummy, String[] dummy2)'
+            - '--> ??? execute(String dummy)'

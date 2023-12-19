@@ -379,7 +379,7 @@ although the speedup was just marginal.
 
 Summarized: *rmg v3.3.0* implements the hybrid approach. Pure primitive methods are guessed by using the *Ping polyglot* technique, whereas methods
 with at least one non primitive argument type are guessed by extending the ``TC_BLOCKDATA`` structure over it's expected length. The corresponding
-implementation can be found in the [MethodCandidate](https://github.com/qtc-de/remote-method-guesser/blob/develop/src/de/qtc/rmg/internal/MethodCandidate.java)
+implementation can be found in the [MethodCandidate](https://github.com/qtc-de/remote-method-guesser/blob/develop/src/eu.tneitzel.rmg/internal/MethodCandidate.java)
 class within the ``sendArguments`` method.
 
 

@@ -12,7 +12,7 @@ tester:
 
 containers:
   - name: 'rmg-ssrf'
-    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-ssrf-server:1.4'
+    image: 'ghcr.io/qtc-de/remote-method-guesser/rmg-ssrf-server:2.0'
     network_mode: host
 
 

@@ -18,7 +18,7 @@ tester:
         ge: 1.12.0
 
 variables:
-  rmg: rmg-4.4.1-jar-with-dependencies.jar
+  rmg: rmg-5.0.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
@@ -29,6 +29,9 @@ variables:
     - ${DOCKER-IP}
     - 1090
     - --ssl
+  TARGET-SPRING:
+    - ${DOCKER-IP}
+    - 1099
   TARGET-ACT:
     - ${DOCKER-IP}
     - 1098
@@ -59,3 +62,4 @@ testers:
   - ./jdk9/jdk9.yml
   - ./jdk11/jdk11.yml
   - ./generic/generic.yml
+  - ./spring/spring.yml

@@ -1,0 +1,35 @@
+tester:
+  title: Enumeration Tests
+  description: |-
+    Perform tests on the enum action for Spring Remoting
+
+  id: '005-001'
+  groups:
+    - enum
+  id_pattern: '005-001-{:03}'
+
+
+tests:
+  - title: RMI Server Enumeration
+    description: |-
+      Plain enum call. This call should detect that spring remoting is used
+      and should display the actual implemented interface instead of the
+      Spring Remoting interface
+
+    command:
+      - rmg
+      - enum
+      - ${TARGET-SPRING}
+      - ${OPTIONS}
+
+    validators:
+      - error: False
+
+      - contains:
+          description: |-
+            Check whether Spring Remoting is detected and whether the real
+            interface class is correctly dispalyed
+          values:
+            - 'spring-remoting'
+            - 'org.springframework.remoting.rmi.RmiInvocationHandler (known class: Spring RmiInvocationHandler)'
+            - 'Spring Remoting Interface: eu.tneitzel.rmg.springremoting.ServerOperations (unknown class)'
