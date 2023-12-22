@@ -703,7 +703,7 @@ public class RMGUtils
      *
      * @param method CtMethod that is going to be invoked
      * @param parameterArray array of arguments to use for the call
-     * @return MethodArguments - basically a list of Object value -> Type pairs
+     * @return MethodArguments - basically a list of Object value -&gt; Type pairs
      * @throws NotFoundException internal error
      */
     public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException

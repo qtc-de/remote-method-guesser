@@ -854,6 +854,7 @@ public class ExceptionHandler {
      * and prints the stacktrace if desired. This function should be used in most of the error
      * handling code of remote-method-guesser.
      *
+     * @param <T> throwable type
      * @param e Exception that was caught.
      */
     public static <T extends Throwable> void showStackTrace(T e)
@@ -867,6 +868,7 @@ public class ExceptionHandler {
     /**
      * Helper function that prints a stacktrace with a prefixed Logger item.
      *
+     * @param <T> throwable type
      * @param e Exception that was caught.
      */
     public static <T extends Throwable> void stackTrace(T e)

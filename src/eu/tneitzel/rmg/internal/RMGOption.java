@@ -283,6 +283,7 @@ public enum RMGOption
     /**
      * Returns the value stored within the option.
      *
+     * @param <T> type of the value
      * @return value stored within the option
      */
     @SuppressWarnings("unchecked")
@@ -457,6 +458,7 @@ public enum RMGOption
      * If the corresponding option was not set, an error message is printed and the current execution
      * ends. This should be called first by functions that require an specific argument.
      *
+     * @param <T> type of the value
      * @param option RMGOption that is required
      * @return the currently set option value
      */
