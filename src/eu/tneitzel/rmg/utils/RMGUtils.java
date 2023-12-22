@@ -1290,13 +1290,13 @@ public class RMGUtils
     }
 
     /**
-     * Convert a CtClass back to an ordinary Class<?> object. This method is intended to be called
+     * Convert a CtClass back to an ordinary Class object. This method is intended to be called
      * for classes that are known to already exist within the JVM. No compilation is triggered but
-     * the Class<?> object is simply obtained by Class.forName (including handling for all the edge
+     * the Class object is simply obtained by Class.forName (including handling for all the edge
      * cases).
      *
-     * @param type  the CtClass that should be converted back to a Class<?> object
-     * @return Class<?> associated to the specified CtClass
+     * @param type  the CtClass that should be converted back to a Class object
+     * @return Class associated to the specified CtClass
      * @throws ClassNotFoundException
      * @throws NotFoundException
      */
