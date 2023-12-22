@@ -1,7 +1,14 @@
 name: spring server
 
 on:
+
   push:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'docker/spring-remoting/resources/server/**'
+
   pull_request:
     branches:
       - master
@@ -23,14 +30,8 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: 8
-
-    - name: Cache local Maven repository
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+        cache: maven
+        cache-dependency-path: docker/spring-remoting/resources/server/pom.xml
 
     - name: Build with Maven
       run: cd docker/spring-remoting/resources/server/ && mvn -B package --file pom.xml

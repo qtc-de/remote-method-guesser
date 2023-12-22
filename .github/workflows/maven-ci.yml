@@ -1,7 +1,16 @@
 name: maven CI
 
 on:
+
   push:
+    branches:
+      - master
+      - develop
+      - 'feat/**'
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+
   pull_request:
     branches:
       - master
@@ -26,14 +35,8 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: 8
-
-    - name: Cache local Maven repository
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+        cache: maven
+        cache-dependency-path: pom.xml
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
