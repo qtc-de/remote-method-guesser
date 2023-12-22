@@ -193,7 +193,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void print(String msg)
     {
@@ -201,7 +201,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printPlain(String msg)
     {
@@ -209,7 +209,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void println(String msg)
     {
@@ -217,7 +217,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnPlain(String msg)
     {
@@ -225,7 +225,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprint(String msg)
     {
@@ -233,7 +233,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintln(String msg)
     {
@@ -241,7 +241,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintlnPlain(String msg)
     {
@@ -249,7 +249,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnBlue(String msg)
     {
@@ -257,7 +257,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintlnBlue(String msg)
     {
@@ -265,7 +265,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnYellow(String msg)
     {
@@ -273,7 +273,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintlnYellow(String msg)
     {
@@ -281,7 +281,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnPlainBlue(String msg)
     {
@@ -289,7 +289,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printPlainBlue(String msg)
     {
@@ -297,7 +297,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printPlainGreen(String msg)
     {
@@ -305,7 +305,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnPlainGreen(String msg)
     {
@@ -313,7 +313,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintlnPlainBlue(String msg)
     {
@@ -321,7 +321,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printlnPlainYellow(String msg)
     {
@@ -329,7 +329,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void printPlainYellow(String msg)
     {
@@ -337,7 +337,7 @@ public class Logger
     }
 
     /**
-     * @param msg
+     * @param msg the message to log
      */
     public static void eprintlnPlainYellow(String msg)
     {
@@ -345,8 +345,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedRed(String first, String second)
     {
@@ -354,8 +354,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedRed(String first, String second)
     {
@@ -363,8 +363,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printPlainMixedRed(String first, String second)
     {
@@ -372,8 +372,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedGreen(String first, String second)
     {
@@ -381,8 +381,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedGreen(String first, String second)
     {
@@ -390,8 +390,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printPlainMixedGreen(String first, String second)
     {
@@ -399,8 +399,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedPurple(String first, String second)
     {
@@ -408,8 +408,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedPurple(String first, String second)
     {
@@ -417,8 +417,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printPlainMixedPurple(String first, String second)
     {
@@ -426,8 +426,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedBlue(String first, String second)
     {
@@ -435,9 +435,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnMixedBlue(String first, String second, String third)
     {
@@ -445,8 +445,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedYellow(String first, String second)
     {
@@ -454,9 +454,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnMixedYellow(String first, String second, String third)
     {
@@ -464,8 +464,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedYellow(String first, String second)
     {
@@ -473,9 +473,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnPlainMixedYellow(String first, String second, String third)
     {
@@ -483,24 +483,24 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printPlainMixedYellowFirst(String first, String second) {
         log(yellow(first) + " " + second, false);
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintPlainMixedYellowFirst(String first, String second) {
         elog(yellow(first) + " " + second, false);
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedYellowFirst(String first, String second)
     {
@@ -508,9 +508,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnPlainMixedYellowFirst(String first, String second, String third)
     {
@@ -518,8 +518,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedBlue(String first, String second)
     {
@@ -527,8 +527,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnPlainMixedBlue(String first, String second)
     {
@@ -536,9 +536,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnPlainMixedBlue(String first, String second, String third)
     {
@@ -546,9 +546,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnPlainMixedBlue(String first, String second, String third)
     {
@@ -557,8 +557,8 @@ public class Logger
 
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printPlainMixedBlue(String first, String second)
     {
@@ -566,9 +566,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printPlainMixedBlueFirst(String first, String second, String third)
     {
@@ -576,8 +576,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnMixedBlue(String first, String second)
     {
@@ -585,9 +585,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnMixedBlue(String first, String second, String third)
     {
@@ -595,8 +595,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnMixedYellow(String first, String second)
     {
@@ -604,9 +604,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnMixedYellow(String first, String second, String third)
     {
@@ -614,8 +614,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedBlueFirst(String first, String second)
     {
@@ -623,9 +623,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnMixedBlueFirst(String first, String second, String third)
     {
@@ -633,8 +633,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnPlainMixedBlueFirst(String first, String second)
     {
@@ -642,8 +642,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnPlainMixedBlueFirst(String first, String second)
     {
@@ -651,9 +651,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnPlainMixedBlueFirst(String first, String second, String third)
     {
@@ -661,9 +661,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnPlainMixedBlueFirst(String first, String second, String third)
     {
@@ -671,8 +671,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printlnMixedYellowFirst(String first, String second)
     {
@@ -680,9 +680,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printlnMixedYellowFirst(String first, String second, String third)
     {
@@ -690,8 +690,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnMixedBlueFirst(String first, String second)
     {
@@ -699,9 +699,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnMixedBlueFirst(String first, String second, String third)
     {
@@ -709,8 +709,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintlnMixedYellowFirst(String first, String second)
     {
@@ -718,9 +718,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintlnMixedYellowFirst(String first, String second, String third)
     {
@@ -728,8 +728,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printMixedBlue(String first, String second)
     {
@@ -737,9 +737,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printMixedBlue(String first, String second, String third)
     {
@@ -747,8 +747,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printMixedYellow(String first, String second)
     {
@@ -756,9 +756,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printMixedYellow(String first, String second, String third)
     {
@@ -766,8 +766,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintMixedBlue(String first, String second)
     {
@@ -775,9 +775,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintMixedBlue(String first, String second, String third)
     {
@@ -785,8 +785,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintMixedYellow(String first, String second)
     {
@@ -794,9 +794,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintMixedYellow(String first, String second, String third)
     {
@@ -804,8 +804,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printMixedBlueFirst(String first, String second)
     {
@@ -813,9 +813,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printMixedBlueFirst(String first, String second, String third)
     {
@@ -823,8 +823,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void printMixedYellowFirst(String first, String second)
     {
@@ -832,9 +832,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void printMixedYellowFirst(String first, String second, String third)
     {
@@ -842,8 +842,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintMixedBlueFirst(String first, String second)
     {
@@ -851,9 +851,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintMixedBlueFirst(String first, String second, String third)
     {
@@ -861,8 +861,8 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
      */
     public static void eprintMixedYellowFirst(String first, String second)
     {
@@ -870,9 +870,9 @@ public class Logger
     }
 
     /**
-     * @param first
-     * @param second
-     * @param third
+     * @param first the first part of the message to log
+     * @param second the second part of the message to log
+     * @param third the third part of the message to log
      */
     public static void eprintMixedYellowFirst(String first, String second, String third)
     {

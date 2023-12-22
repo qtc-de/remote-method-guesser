@@ -28,8 +28,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param functionName
-     * @param message
+     * @param functionName description in progress
+     * @param message description in progress
      */
     public static void internalError(String functionName, String message)
     {
@@ -39,9 +39,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param functionName
-     * @param exit
+     * @param e description in progress
+     * @param functionName description in progress
+     * @param exit description in progress
      */
     public static void internalException(Exception e, String functionName, boolean exit)
     {
@@ -54,10 +54,10 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
-     * @param exit
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
+     * @param exit description in progress
      */
     public static void unexpectedException(Exception e, String during1, String during2, boolean exit)
     {
@@ -71,8 +71,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param exit
+     * @param e description in progress
+     * @param exit description in progress
      */
     public static void unknownCodebaseException(Throwable e, boolean exit)
     {
@@ -85,8 +85,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param boundName
+     * @param e description in progress
+     * @param boundName description in progress
      */
     public static void alreadyBoundException(Exception e, String boundName)
     {
@@ -97,9 +97,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
-     * @param bypass
+     * @param e description in progress
+     * @param callName description in progress
+     * @param bypass description in progress
      */
     public static void nonLocalhost(Exception e, String callName, boolean bypass)
     {
@@ -114,7 +114,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void jep290(Exception e)
     {
@@ -124,7 +124,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void deserializeClassNotFound(Exception e)
     {
@@ -136,10 +136,10 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
-     * @param className
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
+     * @param className description in progress
      */
     public static void deserializeClassNotFoundRandom(Exception e, String during1, String during2, String className)
     {
@@ -150,8 +150,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param wasString
+     * @param e description in progress
+     * @param wasString description in progress
      */
     public static void deserializeClassCast(Exception e, boolean wasString)
     {
@@ -165,8 +165,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param className
+     * @param e description in progress
+     * @param className description in progress
      */
     public static void codebaseClassNotFound(Exception e, String className)
     {
@@ -179,7 +179,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void codebaseSecurityManager(Exception e)
     {
@@ -189,9 +189,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param className
-     * @param payloadName
+     * @param e description in progress
+     * @param className description in progress
+     * @param payloadName description in progress
      */
     public static void codebaseClassNotFoundRandom(Exception e, String className, String payloadName)
     {
@@ -206,8 +206,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param wasString
+     * @param e description in progress
+     * @param wasString description in progress
      */
     public static void codebaseClassCast(Exception e, boolean wasString)
     {
@@ -221,7 +221,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void codebaseClassFormat(Exception e)
     {
@@ -232,9 +232,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void connectionRefused(Exception e, String during1, String during2)
     {
@@ -246,9 +246,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void noRouteToHost(Exception e, String during1, String during2)
     {
@@ -259,9 +259,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void noJRMPServer(Exception e, String during1, String during2)
     {
@@ -276,9 +276,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void sslError(Exception e, String during1, String during2)
     {
@@ -290,8 +290,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param endpoint
+     * @param e description in progress
+     * @param endpoint description in progress
      */
     public static void invalidClass(Exception e, String endpoint)
     {
@@ -299,9 +299,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param endpoint
-     * @param trace
+     * @param e description in progress
+     * @param endpoint description in progress
+     * @param trace description in progress
      */
     public static void invalidClass(Exception e, String endpoint, boolean trace)
     {
@@ -313,9 +313,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param operation
-     * @param className
+     * @param e description in progress
+     * @param operation description in progress
+     * @param className description in progress
      */
     public static void invalidClassBind(Exception e, String operation, String className)
     {
@@ -330,8 +330,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
+     * @param e description in progress
+     * @param callName description in progress
      */
     public static void invalidClassEnum(Exception e, String callName)
     {
@@ -343,8 +343,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
+     * @param e description in progress
+     * @param callName description in progress
      */
     public static void unsupportedOperationException(Exception e, String callName)
     {
@@ -357,8 +357,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
+     * @param e description in progress
+     * @param callName description in progress
      */
     public static void unsupportedOperationExceptionEnum(Exception e, String callName)
     {
@@ -369,9 +369,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void accessControl(Exception e, String during1, String during2)
     {
@@ -381,8 +381,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
+     * @param e description in progress
+     * @param during1 description in progress
      */
     public static void singleEntryRegistry(Exception e, String during1)
     {
@@ -393,9 +393,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param object
-     * @param exit
+     * @param e description in progress
+     * @param object description in progress
+     * @param exit description in progress
      */
     public static void noSuchObjectException(Exception e, String object, boolean exit)
     {
@@ -408,9 +408,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param objID
-     * @param exit
+     * @param e description in progress
+     * @param objID description in progress
+     * @param exit description in progress
      */
     public static void noSuchObjectException(Exception e, ObjID objID, boolean exit)
     {
@@ -442,9 +442,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void eofException(Exception e, String during1, String during2)
     {
@@ -458,7 +458,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param gadget
+     * @param gadget description in progress
      */
     public static void invalidListenerFormat(boolean gadget)
     {
@@ -470,7 +470,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param format
+     * @param format description in progress
      */
     public static void invalidHostFormat(String format)
     {
@@ -480,7 +480,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param signature
+     * @param signature description in progress
      */
     public static void invalidSignature(String signature)
     {
@@ -490,7 +490,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void unknownDeserializationException(Exception e)
     {
@@ -503,9 +503,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void unsupportedClassVersion(Exception e, String during1, String during2)
     {
@@ -515,7 +515,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void illegalArgument(Exception e)
     {
@@ -525,7 +525,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void illegalArgumentCodebase(Exception e)
     {
@@ -535,10 +535,10 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
-     * @param exit
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
+     * @param exit description in progress
      */
     public static void cannotCompile(Exception e, String during1, String during2, boolean exit)
     {
@@ -550,9 +550,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param host
-     * @param exit
+     * @param e description in progress
+     * @param host description in progress
+     * @param exit description in progress
      */
     public static void unknownHost(Exception e, String host, boolean exit)
     {
@@ -565,9 +565,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void networkUnreachable(Exception e, String during1, String during2)
     {
@@ -578,7 +578,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void bindException(Exception e)
     {
@@ -593,7 +593,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param location
+     * @param location description in progress
      */
     public static void ysoNotPresent(String location)
     {
@@ -613,7 +613,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param action
+     * @param action description in progress
      */
     public static void missingTarget(String action)
     {
@@ -624,7 +624,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param objID
+     * @param objID description in progress
      */
     public static void invalidObjectId(String objID)
     {
@@ -635,8 +635,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param expected
-     * @param is
+     * @param expected description in progress
+     * @param is description in progress
      */
     public static void wrongArgumentCount(int expected, int is)
     {
@@ -646,9 +646,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param action
-     * @param signature
+     * @param e description in progress
+     * @param action description in progress
+     * @param signature description in progress
      */
     public static void unrecognizedMethodHash(Exception e, String action, String signature)
     {
@@ -669,8 +669,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param name
+     * @param e description in progress
+     * @param name description in progress
      */
     public static void lookupClassNotFoundException(Exception e, String name)
     {
@@ -685,8 +685,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param boundName
+     * @param e description in progress
+     * @param boundName description in progress
      */
     public static void notBoundException(Exception e, String boundName)
     {
@@ -698,9 +698,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void timeoutException(Exception e, String during1, String during2)
     {
@@ -711,9 +711,9 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param during1
-     * @param during2
+     * @param e description in progress
+     * @param during1 description in progress
+     * @param during2 description in progress
      */
     public static void connectionReset(Exception e, String during1, String during2)
     {
@@ -727,7 +727,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void genericCall(Exception e)
     {
@@ -737,8 +737,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
+     * @param e description in progress
+     * @param callName description in progress
      */
     public static void connectException(Exception e, String callName)
     {
@@ -774,8 +774,8 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
-     * @param callName
+     * @param e description in progress
+     * @param callName description in progress
      */
     public static void connectIOException(Exception e, String callName)
     {
@@ -808,7 +808,7 @@ public class ExceptionHandler {
     }
 
     /**
-     * @param e
+     * @param e description in progress
      */
     public static void invalidClassException(Exception e)
     {
