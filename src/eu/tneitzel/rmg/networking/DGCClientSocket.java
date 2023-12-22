@@ -37,6 +37,12 @@ public class DGCClientSocket extends Socket {
     private int port;
     private String host;
 
+    /**
+     * Create a new DGCClientSocket.
+     *
+     * @param host remote host
+     * @param port remote port
+     */
     public DGCClientSocket(String host, int port)
     {
         this.host = host;

@@ -19,7 +19,6 @@ import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.plugin.PluginSystem;
 import eu.tneitzel.rmg.utils.RMGUtils;
 import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
-import javassist.tools.reflect.Reflection;
 
 /**
  * The RMIRegistryEndpoint represents an RMI Registry endpoint on the remote server. The class can be used
@@ -60,7 +59,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
         {
             RMISocketFactory.setSocketFactory(PluginSystem.getDefaultSocketFactory(host, port));
         }
-        
+
         catch (IOException e)
         {
             Logger.eprintlnMixedBlue("Unable to set custom", "RMISocketFactory.", "Host redirection will probably not work.");
@@ -74,7 +73,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
         {
             this.rmiRegistry = LocateRegistry.getRegistry(host, port, csf);
         }
-        
+
         catch (RemoteException e)
         {
             ExceptionHandler.internalError("RMIRegistryEndpoint.locateRegistry", "Caught unexpected RemoteException.");
@@ -99,6 +98,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * function of the RMI registry, but has error handling implemented.
      *
      * @return String array of available bound names.
+     * @throws java.rmi.NoSuchObjectException
      */
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
@@ -113,28 +113,28 @@ public class RMIRegistryEndpoint extends RMIEndpoint
         {
             boundNames = rmiRegistry.list();
         }
-        
+
         catch (java.rmi.ConnectIOException e)
         {
             ExceptionHandler.connectIOException(e, "list");
         }
-        
+
         catch (java.rmi.ConnectException e)
         {
             ExceptionHandler.connectException(e, "list");
         }
-        
+
         catch (java.rmi.UnknownHostException e)
         {
             ExceptionHandler.unknownHost(e, host, true);
         }
-        
+
         catch (java.rmi.NoSuchObjectException e)
         {
             throw e;
         }
-        
-        
+
+
         catch (Exception e)
         {
             Throwable cause = ExceptionHandler.getCause(e);
@@ -143,7 +143,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
             {
                 SSRFSocket.printContent(host, port);
             }
-            
+
             else
             {
                 ExceptionHandler.unexpectedException(e, "list", "call", true);
@@ -160,7 +160,11 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      *
      * @param boundNames list of bound names to determine the classes from
      * @return List of wrapped remote objects
-     * @throws Reflection related exceptions. RMI related once are caught by the other lookup function.
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws UnmarshalException if unmarshalling the return value fails
      */
     public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {
@@ -180,7 +184,11 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
-     * @throws Reflection related exceptions. RMI related one are caught and handled directly
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws UnmarshalException if unmarshalling the return value fails
      */
     public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
     {

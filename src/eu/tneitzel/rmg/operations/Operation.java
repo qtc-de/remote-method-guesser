@@ -22,6 +22,7 @@ import net.sourceforge.argparse4j.inf.Subparsers;
  */
 public enum Operation {
 
+    /** Binds an object to the registry that points to listener */
     BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -49,6 +50,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Regularly calls a method with the specified arguments */
     CALL("dispatchCall", "<arguments>", "Regularly calls a method with the specified arguments", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -78,6 +80,7 @@ public enum Operation {
             RMGOption.GENERIC_PRINT,
     }),
 
+    /** Perform remote class loading attacks */
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -108,6 +111,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Enumerate common vulnerabilities on Java RMI endpoints */
     ENUM("dispatchEnum", "[scan-action ...]", "Enumerate common vulnerabilities on Java RMI endpoints", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -136,6 +140,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Guess methods on bound names */
     GUESS("dispatchGuess", "", "Guess methods on bound names", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -168,12 +173,14 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Display details of known remote objects */
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects", new RMGOption[] {
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.KNOWN_CLASS,
     }),
 
+    /** Open ysoserials JRMP listener */
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener", new RMGOption[] {
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
@@ -187,6 +194,7 @@ public enum Operation {
             RMGOption.YSO,
     }),
 
+    /** Print information contained within an ObjID */
     OBJID("dispatchObjID", "<objid>", "Print information contained within an ObjID", new RMGOption[] {
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
@@ -195,6 +203,7 @@ public enum Operation {
             RMGOption.OBJID_OBJID,
     }),
 
+    /** Rebinds boundname as object that points to listener */
     REBIND("dispatchRebind", "[object] <listener>", "Rebinds boundname as object that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -222,6 +231,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Creates a rogue JMX listener (collect credentials) */
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
@@ -238,6 +248,7 @@ public enum Operation {
             RMGOption.LISTEN_PORT
     }),
 
+    /** Perform an RMI service scan on common RMI ports */
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports", new RMGOption[] {
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
@@ -251,6 +262,7 @@ public enum Operation {
             RMGOption.NO_PROGRESS,
     }),
 
+    /** Perform deserialization attacks against default RMI components */
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -282,6 +294,7 @@ public enum Operation {
             RMGOption.SOCKET_FACTORY_PLAIN,
     }),
 
+    /** Removes the specified bound name from the registry */
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
@@ -330,16 +343,25 @@ public enum Operation {
         this.options = options;
     }
 
+    /**
+     * @return method
+     */
     public Method getMethod()
     {
         return this.method;
     }
 
+    /**
+     * @return description
+     */
     public String getDescription()
     {
         return this.description;
     }
 
+    /**
+     * @return arguments
+     */
     public String getArgs()
     {
         return this.arguments;
@@ -359,11 +381,21 @@ public enum Operation {
         }
     }
 
+    /**
+     * Check whether an operation contains the specified option.
+     *
+     * @param option RMGOption to check for
+     * @return true if the option is contained within the operation.
+     */
     public boolean containsOption(RMGOption option)
     {
-        for( RMGOption o : this.options )
-            if( o == option )
+        for (RMGOption o : this.options)
+        {
+            if (o == option)
+            {
                 return true;
+            }
+        }
 
         return false;
     }
@@ -388,10 +420,15 @@ public enum Operation {
         return returnItem;
     }
 
+    /**
+     * Add a new subparser for each operation to the specified argumentParser.
+     *
+     * @param argumentParser parser to add the subparsers to.
+     */
     public static void addSubparsers(Subparsers argumentParser)
     {
-        for( Operation operation : Operation.values() ) {
-
+        for (Operation operation : Operation.values())
+        {
             Subparser parser = argumentParser.addParser(operation.name().toLowerCase()).help(operation.description);
             RMGOption.addOptions(operation, parser);
         }

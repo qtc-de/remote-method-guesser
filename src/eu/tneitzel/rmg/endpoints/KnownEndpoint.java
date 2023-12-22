@@ -27,61 +27,109 @@ public class KnownEndpoint
 
     private List<Vulnerability> vulnerabilities;
 
+    /**
+     * Set the name of the endpoint.
+     *
+     * @param name of the endpoint
+     */
     public void setName(String name)
     {
         this.name = name;
     }
 
+    /**
+     * Set the class name of the endpoint.
+     *
+     * @param className of the endpoint.
+     */
     public void setClassName(List<String> className)
     {
         this.className = className;
     }
 
+    /**
+     * Set the description of the endpoint.
+     *
+     * @param description of the endpoint.
+     */
     public void setDescription(String description)
     {
         this.description = description;
     }
 
+    /**
+     * Set the remote methods for the endpoint.
+     *
+     * @param remoteMethods list of remote methods
+     */
     public void setRemoteMethods(List<String> remoteMethods)
     {
         this.remoteMethods = remoteMethods;
     }
 
+    /**
+     * Set the references for the endpoint.
+     *
+     * @param references list of references
+     */
     public void setReferences(List<String> references)
     {
         this.references = references;
     }
 
+    /**
+     * Set the vulnerabilities for the endpoint.
+     *
+     * @param vulnerabilities list of vulnerabilities.
+     */
     public void setVulnerabilities(List<Vulnerability> vulnerabilities)
     {
         this.vulnerabilities = vulnerabilities;
     }
 
+    /**
+     * @return name
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * @return class name
+     */
     public List<String> getClassName()
     {
         return className;
     }
 
+    /**
+     * @return description
+     */
     public String getDescription()
     {
         return description;
     }
 
+    /**
+     * @return list of methods
+     */
     public List<String> getRemoteMethods()
     {
         return remoteMethods;
     }
 
+    /**
+     * @return list of references
+     */
     public List<String> getReferences()
     {
         return references;
     }
 
+    /**
+     * @return list of vulnerabilities
+     */
     public List<Vulnerability> getVulnerabilities()
     {
         return vulnerabilities;

@@ -12,8 +12,16 @@ public class MalformedPluginException extends Exception
 {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Constructor with zero arguments.
+     */
     public MalformedPluginException() {}
 
+    /**
+     * Constructor with message argument.
+     *
+     * @param message exception message.
+     */
     public MalformedPluginException(String message)
     {
        super(message);

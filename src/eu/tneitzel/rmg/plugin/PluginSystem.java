@@ -27,8 +27,8 @@ import eu.tneitzel.rmg.utils.RMGUtils;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class PluginSystem {
-
+public class PluginSystem
+{
     private static String manifestAttribute = "RmgPluginClass";
 
     private static IPayloadProvider payloadProvider = null;
@@ -196,6 +196,9 @@ public class PluginSystem {
      * first lookup a bound name and use the obtained reference to make calls on the object, another factory is used
      * (check the getDefaultClientSocketFactory function for more details).
      *
+     * @param host
+     * @param port
+     *
      * @return RMIClientSocketFactory that is used for direct RMI calls
      */
     public static RMIClientSocketFactory getClientSocketFactory(String host, int port)
@@ -207,6 +210,9 @@ public class PluginSystem {
      * Returns the RMISocketFactory that is used for all RMI connections that use the default RMISocketFactory. The
      * factory returned by this function is used when you perform RMI actions on a remote object reference that was
      * obtained from the RMI registry and the RMI server did not assign a custom socket factory to the object.
+     *
+     * @param host
+     * @param port
      *
      * @return RMISocketFactory that is used for "after lookup" RMI calls
      */
@@ -221,6 +227,9 @@ public class PluginSystem {
      * SSLSocketFactory is by setting a Java property. Therefore, this function should return the name of a class that
      * you want to use as your default SSLSocketFactory. Notice that the factory needs to be available on the class path
      * and it is not sufficient to define it within the plugin.
+     *
+     * @param host
+     * @param port
      *
      * @return String that indicates the desired SSLSocketFactories class name
      */

@@ -15,10 +15,13 @@ import eu.tneitzel.rmg.internal.ExceptionHandler;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class SingleOpOutputStream extends ByteArrayOutputStream {
-
+public class SingleOpOutputStream extends ByteArrayOutputStream
+{
     private int flushCount;
 
+    /**
+     * Simple constructor.
+     */
     public SingleOpOutputStream() {
         super();
         flushCount = 0;

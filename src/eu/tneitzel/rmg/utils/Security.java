@@ -19,8 +19,8 @@ import eu.tneitzel.rmg.internal.RMGOption;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public abstract class Security {
-
+public abstract class Security
+{
     private static Pattern boundName = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern alphaNumeric = Pattern.compile("[a-zA-Z0-9_-]+");
     private static Pattern jarFile = Pattern.compile("([a-zA-Z0-9])+\\.jar");
@@ -28,6 +28,12 @@ public abstract class Security {
     private static Pattern packageName = Pattern.compile("([a-zA-Z0-9_-]\\.?)+");
     private static Pattern shellInjection = Pattern.compile(".*[ '\"#&;`|*?~<>^()\\[\\]{}$\\\\\n].*");
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkBoundName(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool()  )
@@ -38,6 +44,12 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Bound name '" + input + "' contains invalid characters.");
     }
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkAlphaNumeric(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool() )
@@ -48,6 +60,12 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Input '" + input + "' contains non alphanumeric characters.");
     }
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkPackageName(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool() )
@@ -58,6 +76,12 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Package name '" + input + "' contains invalid characters.");
     }
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkJavaFile(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool() )
@@ -68,6 +92,12 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Filename '" + input + "' contains invalid characters.");
     }
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkJarFile(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool() )
@@ -78,6 +108,12 @@ public abstract class Security {
             throw new UnexpectedCharacterException("Jar name '" + input + "' contains invalid characters.");
     }
 
+    /**
+     * Check the specified string for invalid characters.
+     *
+     * @param input the input string
+     * @throws UnexpectedCharacterException if invalid characters are found.
+     */
     public static void checkShellInjection(String input) throws UnexpectedCharacterException
     {
         if( RMGOption.GUESS_TRUSTED.getBool() )

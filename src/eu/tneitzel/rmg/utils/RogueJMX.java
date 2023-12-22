@@ -43,6 +43,7 @@ public class RogueJMX implements RMIServer {
      *
      * @param address Address where the rogue JMX should be bound
      * @param port Port where the rogue JMX should listen
+     * @param objIDString the ObjID to use
      */
     public RogueJMX(String address, int port, String objIDString)
     {

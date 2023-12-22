@@ -23,13 +23,19 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class UnicastWrapper extends RemoteObjectWrapper
 {
+    /** associated ObjID */
     public final ObjID objID;
+    /** associated TCPEndpoint */
     public final TCPEndpoint endpoint;
+    /** associated UnicastRef */
     public final UnicastRef unicastRef;
 
+    /** associated RMIClientSocketFactory */
     public final RMIClientSocketFactory csf;
+    /** associated RMIServerSocketFactory */
     public final RMIServerSocketFactory ssf;
 
+    /** list of bound names implementing the same interface */
     public List<UnicastWrapper> duplicates;
 
     /**
@@ -42,7 +48,10 @@ public class UnicastWrapper extends RemoteObjectWrapper
      * @param remoteObject Incoming RemoteObject, usually obtained by an RMI lookup call
      * @param boundName The bound name that the remoteObject uses inside the RMI registry
      * @param ref UnicastRef to build the wrapper around
-     * @throws many Exceptions - These only occur if some reflective access fails
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public UnicastWrapper(Remote remoteObject, String boundName, UnicastRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -141,9 +150,13 @@ public class UnicastWrapper extends RemoteObjectWrapper
      * the specified interface and uses a RemoteObjectInvocationHandler to forward method invocations to
      * the specified RemoteRef.
      *
-     * @param remoteRef RemoteRef to the targeted RemoteObject
+     * @param unicastRef UnicastRef to the targeted RemoteObject
      * @param intf Interface that is implemented by the RemoteObject
-     * @throws many Exceptions...
+     * @return UnicastWrapper created from the specified UnicastRef
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public static UnicastWrapper fromRef(UnicastRef unicastRef, Class<?> intf) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {

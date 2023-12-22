@@ -231,7 +231,7 @@ public class YsoIntegration {
     }
 
 
-    /*
+    /**
     * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was
     * provided by Hans-Martin Münch (@h0ng10). Certain portions of the code were copied from the corresponding blog post:
     * https://mogwailabs.de/de/blog/2020/02/an-trinhs-rmi-registry-bypass/
@@ -246,7 +246,8 @@ public class YsoIntegration {
     *
     * @param host  listener address for the outgoing JRMP connection
     * @param port  listener port for the outgoing JRMP connection
-    * @param regMethod  registry Method to use for the call
+    * @return payload object
+    * @throws Exception
     */
     public static Object prepareAnTrinhGadget(String host, int port) throws Exception
     {

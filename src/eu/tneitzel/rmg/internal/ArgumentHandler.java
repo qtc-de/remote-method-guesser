@@ -29,8 +29,8 @@ import net.sourceforge.argparse4j.inf.Subparsers;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class ArgumentHandler {
-
+public class ArgumentHandler
+{
     private Namespace args;
     private ArgumentParser parser;
     private Properties config;
@@ -403,7 +403,7 @@ public class ArgumentHandler {
     /**
      * Helper function that handles port ranges.
      *
-     * @param portString user specified port string
+     * @param portRange user specified port string
      * @param portList Set of Integer where parsed ports are added
      */
     public void addRange(String portRange, Set<Integer> portList)

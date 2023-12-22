@@ -26,7 +26,9 @@ import sun.rmi.transport.tcp.TCPEndpoint;
 @SuppressWarnings("restriction")
 public class ActivatableWrapper extends RemoteObjectWrapper
 {
+    /** activationUID */
     public final UID activationUID;
+
     private final Object activationIDObj;
     private final RMIEndpoint activatorEndpoint;
     private final UnicastRef activatorUnicastRef;
@@ -55,7 +57,10 @@ public class ActivatableWrapper extends RemoteObjectWrapper
      * @param remoteObject Incoming RemoteObject, usually obtained by an RMI lookup call
      * @param boundName The bound name that the remoteObject uses inside the RMI registry
      * @param ref ActivatableRef to wrap around
-     * @throws many Exceptions - These only occur if some reflective access fails
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public ActivatableWrapper(Remote remoteObject, String boundName, RemoteRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -101,7 +106,10 @@ public class ActivatableWrapper extends RemoteObjectWrapper
      * to obtain a UnicastRef for the desired remote object.
      *
      * @return UnicastWrapper that contains the activated reference
-     * @throws Reflection related exceptions
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public UnicastWrapper activate() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -183,14 +191,18 @@ public class ActivatableWrapper extends RemoteObjectWrapper
         /**
          * This function should be called after the response was handled. It takes the activatedObject
          * and attempts to extract the remote out of it. This object is then returned.
-         * @return
+         *
+         * @return activated object
          */
         public Remote getRemote()
         {
-            try {
+            try
+            {
                 return activatedObject.get();
+            }
 
-            } catch (ClassNotFoundException | IOException e) {
+            catch (ClassNotFoundException | IOException e)
+            {
                 ExceptionHandler.unexpectedException(e, "activate", "call", true);
             }
 

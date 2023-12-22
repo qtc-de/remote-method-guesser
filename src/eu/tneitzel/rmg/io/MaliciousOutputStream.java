@@ -103,11 +103,21 @@ public class MaliciousOutputStream extends MarshalOutputStream {
             inner.writeObject(location);
     }
 
+    /**
+     * Set the location object to provide within the stream.
+     *
+     * @param payload object to use as location.
+     */
     public static void setDefaultLocation(Object payload)
     {
         defaultLocation = payload;
     }
 
+    /**
+     * Return the class name of the currently configured location object.
+     *
+     * @return classname of the currently configured location.
+     */
     public static String getDefaultLocation()
     {
         if(defaultLocation instanceof String)
@@ -116,6 +126,9 @@ public class MaliciousOutputStream extends MarshalOutputStream {
             return defaultLocation.getClass().getName();
     }
 
+    /**
+     * Reset the default location to null.
+     */
     public static void resetDefaultLocation()
     {
         defaultLocation = null;

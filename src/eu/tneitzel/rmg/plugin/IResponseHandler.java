@@ -9,6 +9,13 @@ package eu.tneitzel.rmg.plugin;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public interface IResponseHandler {
+
+public interface IResponseHandler
+{
+    /**
+     * Handle the response of an RMI call.
+     *
+     * @param responseObject the object that was returned by the server.
+     */
     void handleResponse(Object responseObject);
 }

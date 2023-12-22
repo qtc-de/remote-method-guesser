@@ -8,14 +8,20 @@ package eu.tneitzel.rmg.internal;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum RMIComponent {
-
+public enum RMIComponent
+{
+    /** RMI Activation System */
     ACTIVATOR("Activator", "act"),
+    /** Distributed Garbage Collector */
     DGC("DGC", "dgc"),
+    /** RMI Registry */
     REGISTRY("Registry", "reg"),
+    /** custom RMI endpoint */
     CUSTOM("RMI Endpoint", "endpoint");
 
+    /** name of the RMI component */
     public String name;
+    /** short name of the RMI component */
     public String shortName;
 
     /**

@@ -214,7 +214,7 @@ public class CodebaseCollector extends RMIClassLoaderSpi
     }
 
     /**
-     * Add a new className<->serialVersionUID pair to the serialVersionUID map.
+     * Add a new className&lt;-&gt;serialVersionUID pair to the serialVersionUID map.
      *
      * @param className  the className to add to the map
      * @param serialVersionUID  the serialVersionUID to add to the map

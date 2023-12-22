@@ -35,14 +35,21 @@ import sun.rmi.transport.TransportConstants;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class SSRFResponseSocket extends Socket {
-
+public class SSRFResponseSocket extends Socket
+{
     private int port;
     private String host;
     private byte[] content;
 
     private int count = 0;
 
+    /**
+     * Create a new SSRFResponseSocket.
+     *
+     * @param host remote host
+     * @param port remote port
+     * @param response RMI response data to simulate
+     */
     public SSRFResponseSocket(String host, int port, byte[] response)
     {
         this.host = host;
@@ -61,8 +68,8 @@ public class SSRFResponseSocket extends Socket {
     {
         ByteArrayOutputStream ibos = new ByteArrayOutputStream();
 
-        if( content[0] == TransportConstants.Return ) {
-
+        if (content[0] == TransportConstants.Return)
+        {
             ibos.write(TransportConstants.ProtocolAck);
 
             DataOutputStream dos = new DataOutputStream(ibos);
@@ -76,8 +83,10 @@ public class SSRFResponseSocket extends Socket {
 
     public OutputStream getOutputStream()
     {
-        if( count != 0 )
+        if (count != 0)
+        {
             System.exit(0);
+        }
 
         count += 1;
         return new DevNullOutputStream();

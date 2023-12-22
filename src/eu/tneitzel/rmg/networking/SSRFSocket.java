@@ -38,13 +38,19 @@ import sun.rmi.transport.TransportConstants;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public class SSRFSocket extends Socket {
-
+public class SSRFSocket extends Socket
+{
     private String host;
     private int port;
 
     private static ByteArrayOutputStream bos;
 
+    /**
+     * Create a new SSRFSocket.
+     *
+     * @param host remote host
+     * @param port remote port
+     */
     public SSRFSocket(String host, int port)
     {
         this.host = host;

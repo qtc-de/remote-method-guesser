@@ -36,9 +36,11 @@ import sun.rmi.transport.tcp.TCPEndpoint;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public class RMIEndpoint {
-
+public class RMIEndpoint
+{
+    /** remote port of the endpoint */
     public int port;
+    /** remote host of the endpoint */
     public String host;
 
     protected RMIClientSocketFactory csf;
@@ -87,6 +89,14 @@ public class RMIEndpoint {
 
     /**
      * Wrapper around the genericCall function specified below.
+     *
+     * @param objID
+     * @param callID
+     * @param methodHash
+     * @param callArguments
+     * @param locationStream
+     * @param callName
+     * @throws Exception
      */
     public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName) throws Exception
     {
@@ -95,17 +105,36 @@ public class RMIEndpoint {
 
     /**
      * Wrapper around the genericCall function specified below.
+     *
+     * @param objID
+     * @param callID
+     * @param methodHash
+     * @param callArguments
+     * @param locationStream
+     * @param callName
+     * @param ref
+     * @throws Exception
      */
     public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef ref) throws Exception
     {
         genericCall(objID, callID, methodHash, callArguments, locationStream, callName, ref, null);
     }
 
-   /*
+    /**
     * From remote-method-guesser v4.0.0 on we moved the logic of the genericCall function to the unmanagedCall
     * function. This allows other parts of the code to perform RMI calls with their own exception handling. However,
     * this is usually not desired, as connection related exceptions should normally be handled in a unified way. Calling
     * genericCall is therefore the preferred solution to perform low level RMI calls.
+    *
+    * @param objID
+    * @param callID
+    * @param methodHash
+    * @param callArguments
+    * @param locationStream
+    * @param callName
+    * @param remoteRef
+    * @param rtype
+    * @throws Exception
     */
     public void genericCall(ObjID objID, int callID, long methodHash, MethodArguments callArguments, boolean locationStream, String callName, RemoteRef remoteRef, CtClass rtype) throws Exception
     {
@@ -209,7 +238,6 @@ public class RMIEndpoint {
      * @param methodHash hash value of the method to call or interface hash for legacy calls
      * @param callArguments map of arguments for the call. Each argument must also ship a class it desires to be serialized to
      * @param locationStream if true, uses the MaliciousOutputStream class to write custom annotation objects
-     * @param callName the name of the RMI call you want to dispatch (only used for logging)
      * @param remoteRef optional remote reference to use for the call. If null, the specified ObjID and the host and port
      *                 of this class are used
      * @param rtype return type of the remote method. If specified, the servers response is forwarded to the ResponseHandler

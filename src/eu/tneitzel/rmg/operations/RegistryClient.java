@@ -48,7 +48,11 @@ public class RegistryClient {
     private static final long interfaceHash = 4905912898345647071L;
     private static final ObjID objID = new ObjID(ObjID.REGISTRY_ID);
 
-
+    /**
+     * Create a new RegistryClient.
+     *
+     * @param rmiEndpoint associated RMIEndpoint.
+     */
     public RegistryClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;

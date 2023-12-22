@@ -175,9 +175,11 @@ public class MethodCandidate
      * - If the function expects a primitive argument as first parameter, we should write an object
      * - If the function expects a non primitive argument as first parameter, we should write a primitive
      *
-     * This function returns the corresponding argument type depending on the corresponding method definition.
+     * This function puts the corresponding argument type depending on the corresponding method definition
+     * into the specified ObjectOutputStream.
      *
-     * @return confused parameter for method invocation
+     * @param oo ObjectOutputStream to write the confused argument to
+     *
      * @throws IOException
      */
     @SuppressWarnings("restriction")

@@ -14,15 +14,23 @@ import eu.tneitzel.rmg.utils.RMGUtils;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum ScanAction {
-
+public enum ScanAction
+{
+    /** list remote bound names */
     LIST,
+    /** enumerate string marshaling */
     STRING_MARSHALLING,
+    /** enumerate codebases and remote class loading */
     CODEBASE,
+    /** check for the localhost bypass */
     LOCALHOST_BYPASS,
+    /** enumerate security managers */
     SECURITY_MANAGER,
+    /** check for JEP290 */
     JEP290,
+    /** check for known deserialization filter bypasses */
     FILTER_BYPASS,
+    /** check for activator instances */
     ACTIVATOR;
 
     /**

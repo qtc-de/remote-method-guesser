@@ -13,6 +13,16 @@ import eu.tneitzel.rmg.operations.Operation;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public interface IPayloadProvider {
+
+public interface IPayloadProvider
+{
+    /**
+     * Provide a payload object for deserialization attacks.
+     *
+     * @param action the current RMG action that requested the gadget
+     * @param name the name of the gadget being requested
+     * @param args the arguments provided for the gadget
+     * @return a payload object to use for deserialization attacks
+     */
     Object getPayloadObject(Operation action, String name, String args);
 }
