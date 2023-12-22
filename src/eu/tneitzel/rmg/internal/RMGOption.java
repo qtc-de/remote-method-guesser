@@ -181,7 +181,7 @@ public enum RMGOption
     /** enforce method calls to be dispatched via spring remoting */
     SPRING_REMOTING("--spring-remoting", "enforce method calls to be dispatched via spring remoting", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
     /** attempt to output the return value using GenericPrint */
-    GENERIC_PRINT("--return-value", "attempt to output the return value using GenericPrint", Arguments.storeTrue(), RMGOptionGroup.ACTION);
+    GENERIC_PRINT("--generic-print", "attempt to output the return value using GenericPrint", Arguments.storeTrue(), RMGOptionGroup.ACTION);
 
     /** the name of the option */
     public final String name;
