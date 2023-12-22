@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    steps:
     - name: ${{ github.event.repository.name }}
       uses: actions/checkout@v4
 
