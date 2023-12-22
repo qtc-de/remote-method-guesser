@@ -52,7 +52,7 @@ public class RawObjectOutputStream {
      * Write raw byte to the underlying output stream.
      *
      * @param content byte to write
-     * @throws IOException
+     * @throws IOException internal error
      */
     public void writeRaw(byte content) throws IOException
     {

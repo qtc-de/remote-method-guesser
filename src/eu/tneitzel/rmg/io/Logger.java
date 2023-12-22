@@ -931,7 +931,7 @@ public class Logger
     }
 
     /**
-     * @param statusType
+     * @param statusType the thing that was checked (e.g. vulnerability, configuration, ...)
      */
     public static void statusUndecided(String statusType)
     {
@@ -979,9 +979,9 @@ public class Logger
     }
 
     /**
-     * @param endpointName
-     * @param callName
-     * @param className
+     * @param endpointName remote endpoint that is attacked
+     * @param callName the name or signature of the call that was used
+     * @param className the class name used for the codebase attack
      */
     public static void printCodebaseAttackIntro(String endpointName, String callName, String className)
     {
@@ -994,7 +994,7 @@ public class Logger
     }
 
     /**
-     * @param endpointName
+     * @param endpointName remote endpoint that is attacked
      */
     public static void printGadgetCallIntro(String endpointName)
     {

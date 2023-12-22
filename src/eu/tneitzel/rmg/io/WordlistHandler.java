@@ -99,7 +99,7 @@ public class WordlistHandler {
      * is currently a pain and the available wordlist names are hardcoded into this class.
      *
      * @return HashSet of method candidates parsed from the wordlist file
-     * @throws IOException
+     * @throws IOException if some file access fails
      */
     public static HashSet<MethodCandidate> getWordlistMethodsFromStream() throws IOException
     {

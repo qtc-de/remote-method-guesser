@@ -127,11 +127,11 @@ public class SampleWriter {
     /**
      * Wrapper around writeSamples with additional subfolder argument.
      *
-     * @param sampleFolder
-     * @param sampleName
-     * @param sampleContent
-     * @throws UnexpectedCharacterException
-     * @throws IOException
+     * @param sampleFolder sub folder within the sample folder to write the files in.
+     * @param sampleName name of the sample file
+     * @param sampleContent content of the sample file
+     * @throws UnexpectedCharacterException is thrown if the filenames are violating the security settings
+     * @throws IOException is thrown if an IO operation fails
      */
     public void writeSample(String sampleFolder, String sampleName, String sampleContent) throws UnexpectedCharacterException, IOException
     {

@@ -247,7 +247,7 @@ public class YsoIntegration {
     * @param host  listener address for the outgoing JRMP connection
     * @param port  listener port for the outgoing JRMP connection
     * @return payload object
-    * @throws Exception
+    * @throws Exception internal error
     */
     public static Object prepareAnTrinhGadget(String host, int port) throws Exception
     {

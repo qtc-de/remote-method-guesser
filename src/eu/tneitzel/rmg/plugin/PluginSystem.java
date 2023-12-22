@@ -196,8 +196,8 @@ public class PluginSystem
      * first lookup a bound name and use the obtained reference to make calls on the object, another factory is used
      * (check the getDefaultClientSocketFactory function for more details).
      *
-     * @param host
-     * @param port
+     * @param host remote host
+     * @param port remote port
      *
      * @return RMIClientSocketFactory that is used for direct RMI calls
      */
@@ -211,8 +211,8 @@ public class PluginSystem
      * factory returned by this function is used when you perform RMI actions on a remote object reference that was
      * obtained from the RMI registry and the RMI server did not assign a custom socket factory to the object.
      *
-     * @param host
-     * @param port
+     * @param host remote host
+     * @param port remote port
      *
      * @return RMISocketFactory that is used for "after lookup" RMI calls
      */
@@ -228,8 +228,8 @@ public class PluginSystem
      * you want to use as your default SSLSocketFactory. Notice that the factory needs to be available on the class path
      * and it is not sufficient to define it within the plugin.
      *
-     * @param host
-     * @param port
+     * @param host remote host
+     * @param port remote port
      *
      * @return String that indicates the desired SSLSocketFactories class name
      */

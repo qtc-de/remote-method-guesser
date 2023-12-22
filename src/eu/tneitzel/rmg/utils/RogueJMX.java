@@ -71,7 +71,7 @@ public class RogueJMX implements RMIServer {
      * injecting the serialization filter.
      *
      * @return Remote bound RogueJMX server
-     * @throws RemoteException
+     * @throws RemoteException internal error
      */
     public Remote export() throws RemoteException
     {

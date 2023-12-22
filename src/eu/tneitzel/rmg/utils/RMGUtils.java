@@ -201,7 +201,7 @@ public class RMGUtils
      * JVM and creates it otherwise.
      *
      * @return Class object for ActivatableRef
-     * @throws CannotCompileException
+     * @throws CannotCompileException internal error
      */
     public static Class makeActivatableRef() throws CannotCompileException
     {
@@ -234,7 +234,7 @@ public class RMGUtils
      * @param serialVersionUID for the SocketFactoryClass
      *
      * @return socket factory class that implements RMIClientSocketFactory
-     * @throws CannotCompileException
+     * @throws CannotCompileException internal error
      */
     public static Class makeSocketFactory(String className, long serialVersionUID) throws CannotCompileException
     {
@@ -459,7 +459,7 @@ public class RMGUtils
      *
      * @param method CtMethod to create the argument array for
      * @return argument array that can be used to invoke the method
-     * @throws NotFoundException
+     * @throws NotFoundException internal error
      */
     public static Object[] getArgumentArray(CtMethod method) throws NotFoundException
     {
@@ -704,7 +704,7 @@ public class RMGUtils
      * @param method CtMethod that is going to be invoked
      * @param parameterArray array of arguments to use for the call
      * @return MethodArguments - basically a list of Object value -> Type pairs
-     * @throws NotFoundException
+     * @throws NotFoundException internal error
      */
     public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
     {
@@ -821,7 +821,7 @@ public class RMGUtils
      * Divide a Set into n separate Sets, where n is the number specified within the count argument.
      * Basically copied from: https://stackoverflow.com/questions/16449644/how-can-i-take-a-java-set-of-size-x-and-break-into-x-y-sets
      *
-     * @param <T>
+     * @param <T> inner type of the set
      * @param original Set that should be divided
      * @param count Number of Sets to divide into
      * @return List of n separate sets, where n is equal to count
@@ -1297,8 +1297,8 @@ public class RMGUtils
      *
      * @param type  the CtClass that should be converted back to a Class object
      * @return Class associated to the specified CtClass
-     * @throws ClassNotFoundException
-     * @throws NotFoundException
+     * @throws ClassNotFoundException internal error
+     * @throws NotFoundException internal error
      */
     public static Class<?> ctClassToClass(CtClass type) throws ClassNotFoundException, NotFoundException
     {

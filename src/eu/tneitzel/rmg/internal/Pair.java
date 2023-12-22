@@ -15,8 +15,8 @@ public class Pair<K, V> {
     private V right;
 
     /**
-     * @param left
-     * @param right
+     * @param left left value
+     * @param right right value
      */
     public Pair(K left, V right)
     {

@@ -78,7 +78,7 @@ public class MethodCandidate
      * during method guessing.
      *
      * @param method CtMethod object
-     * @throws NotFoundException
+     * @throws NotFoundException indicates an internal error
      */
     public MethodCandidate(CtMethod method) throws NotFoundException
     {
@@ -180,7 +180,7 @@ public class MethodCandidate
      *
      * @param oo ObjectOutputStream to write the confused argument to
      *
-     * @throws IOException
+     * @throws IOException indicates an error in the RMI communication
      */
     @SuppressWarnings("restriction")
     public void sendArguments(ObjectOutputStream oo) throws IOException

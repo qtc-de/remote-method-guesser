@@ -98,7 +98,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * function of the RMI registry, but has error handling implemented.
      *
      * @return String array of available bound names.
-     * @throws java.rmi.NoSuchObjectException
+     * @throws java.rmi.NoSuchObjectException if the remote endpoint is not an RMI registry
      */
     public String[] getBoundNames() throws java.rmi.NoSuchObjectException
     {
