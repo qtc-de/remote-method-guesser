@@ -26,7 +26,7 @@ jobs:
           gpg-passphrase: SIGN_KEY_PASS
 
       - name: Publish package
-        run: mvn --batch-mode clean deploy
+        run: mvn --batch-mode clean deploy -Ppublish
         env:
           SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
