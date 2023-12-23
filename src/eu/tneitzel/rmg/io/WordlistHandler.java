@@ -39,6 +39,7 @@ public class WordlistHandler {
      * @param wordlistFile wordlist file to use (if not null, takes priority over wordlist Folder)
      * @param wordlistFolder wordlist folder to look for wordlist files
      * @param updateWordlists whether wordlists should be updated to the advanced format
+     * @param zeroArg whether to process zero argument methods
      */
     public WordlistHandler(String wordlistFile, String wordlistFolder, boolean updateWordlists, boolean zeroArg)
     {
@@ -98,7 +99,7 @@ public class WordlistHandler {
      * is currently a pain and the available wordlist names are hardcoded into this class.
      *
      * @return HashSet of method candidates parsed from the wordlist file
-     * @throws IOException
+     * @throws IOException if some file access fails
      */
     public static HashSet<MethodCandidate> getWordlistMethodsFromStream() throws IOException
     {

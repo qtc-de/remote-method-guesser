@@ -1,0 +1,37 @@
+name: spring server
+
+on:
+
+  push:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'docker/spring-remoting/resources/server/**'
+
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'docker/spring-remoting/resources/server/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: ${{ github.event.repository.name }}
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 8
+        cache: maven
+        cache-dependency-path: docker/spring-remoting/resources/server/pom.xml
+
+    - name: Build with Maven
+      run: cd docker/spring-remoting/resources/server/ && mvn -B package --file pom.xml

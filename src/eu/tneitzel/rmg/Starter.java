@@ -13,6 +13,11 @@ import eu.tneitzel.rmg.utils.RMGUtils;
  */
 public class Starter
 {
+    /**
+     * Main method :)
+     *
+     * @param argv  arguments passed to the program
+     */
     public static void main(String[] argv)
     {
         ArgumentHandler handler = new ArgumentHandler(argv);

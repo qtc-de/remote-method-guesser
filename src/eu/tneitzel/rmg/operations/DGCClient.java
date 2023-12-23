@@ -26,13 +26,18 @@ import eu.tneitzel.rmg.utils.DefinitelyNonExistingClass;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class DGCClient {
-
+public class DGCClient
+{
     private RMIEndpoint rmi;
 
     private static final long interfaceHash = -669196253586618813L;
     private static final ObjID objID = new ObjID(ObjID.DGC_ID);
 
+    /**
+     * Create a new DGCClient.
+     *
+     * @param rmiEndpoint associated RMIEndpoint.
+     */
     public DGCClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;

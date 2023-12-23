@@ -23,102 +23,178 @@ import net.sourceforge.argparse4j.inf.Namespace;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum RMGOption {
-
-    // Global arguments
+public enum RMGOption
+{
+    /** path to a configuration file */
     GLOBAL_CONFIG("--config", "path to a configuration file", Arguments.store(), RMGOptionGroup.GENERAL, "path"),
+    /** enable verbose output */
     GLOBAL_VERBOSE("--verbose", "enable verbose output", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
+    /** file system path to a rmg plugin */
     GLOBAL_PLUGIN("--plugin", "file system path to a rmg plugin", Arguments.store(), RMGOptionGroup.GENERAL, "path"),
+    /** disable colored output */
     GLOBAL_NO_COLOR("--no-color", "disable colored output", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
+    /** display stack traces for caught exceptions */
     GLOBAL_STACK_TRACE("--stack-trace", "display stack traces for caught exceptions", Arguments.storeTrue(), RMGOptionGroup.GENERAL),
 
+    /** target host */
     TARGET_HOST("host", "target host", Arguments.store(), RMGOptionGroup.NONE, "host"),
+    /** target port */
     TARGET_PORT("port", "target port", Arguments.store(), RMGOptionGroup.NONE, "port"),
+    /** target RMI component */
     TARGET_COMPONENT("--component", "target RMI component", Arguments.store(), RMGOptionGroup.TARGET, "component"),
+    /** target bound name within an RMI registry */
     TARGET_BOUND_NAME("--bound-name", "target bound name within an RMI registry", Arguments.store(), RMGOptionGroup.TARGET, "name"),
+    /** target ObjID */
     TARGET_OBJID("--objid", "target ObjID", Arguments.store(), RMGOptionGroup.TARGET, "objid"),
+    /** target method signature */
     TARGET_SIGNATURE("--signature", "target method signature", Arguments.store(), RMGOptionGroup.TARGET, "signature"),
 
+    /** follow redirects to different servers */
     CONN_FOLLOW("--follow", "follow redirects to different servers", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    /** use SSL for connections */
     CONN_SSL("--ssl", "use SSL for connections", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    /** scan timeout for read operation */
     SCAN_TIMEOUT_READ("--timeout-read", "scan timeout for read operation", Arguments.store(), RMGOptionGroup.CONNECTION, "sec"),
+    /** scan timeout for connect operation */
     SCAN_TIMEOUT_CONNECT("--timeout-connect", "scan timeout for connect operation", Arguments.store(), RMGOptionGroup.CONNECTION, "sec"),
 
+    /** print SSRF content as gopher payload */
     SSRF_GOPHER("--gopher", "print SSRF content as gopher payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    /** print SSRF payload instead of contacting a server */
     SSRF("--ssrf", "print SSRF payload instead of contacting a server", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    /** evaluate SSRF response from the server */
     SSRFRESPONSE("--ssrf-response", "evaluate SSRF response from the server", Arguments.store(), RMGOptionGroup.SSRF, "hex"),
+    /** double URL encode the SSRF payload */
     SSRF_ENCODE("--encode", "double URL encode the SSRF payload", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    /** print payload without color and without additional text */
     SSRF_RAW("--raw", "print payload without color and without additional text", Arguments.storeTrue(), RMGOptionGroup.SSRF),
+    /** use the stream protocol instead of single operation */
     SSRF_STREAM_PROTOCOL("--stream-protocol", "use the stream protocol instead of single operation", Arguments.storeTrue(), RMGOptionGroup.SSRF),
 
+    /** ObjID of the bound object. */
     BIND_OBJID("--bind-objid", "ObjID of the bound object.", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
+    /** host specifications the bound remote object should point to */
     BIND_ADDRESS("bind-host", "host specifications the bound remote object should point to", Arguments.store(), RMGOptionGroup.ACTION, "host:port"),
+    /** Bound name to use for (un)bind action */
     BIND_BOUND_NAME("bound-name", "Bound name to use for (un)bind action", Arguments.store(), RMGOptionGroup.ACTION, "name"),
+    /** attempt localhost bypass (CVE-2019-2684) */
     BIND_BYPASS("--localhost-bypass", "attempt localhost bypass (CVE-2019-2684)", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** attempt to bind the specified gadget instead of JMXServer */
     BIND_GADGET_NAME("--gadget-name", "attempt to bind the specified gadget instead of JMXServer", Arguments.store(), RMGOptionGroup.ACTION, "gadget"),
+    /** command for a custom gadget */
     BIND_GADGET_CMD("--gadget-cmd", "command for a custom gadget", Arguments.store(), RMGOptionGroup.ACTION, "cmd"),
 
+    /** classname to load during codebase attack */
     CODEBASE_CLASS("classname", "classname to load during codebase attack", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
+    /** codebase URL to load the payload from */
     CODEBASE_URL("url", "codebase URL to load the payload from", Arguments.store(), RMGOptionGroup.ACTION, "url"),
 
+    /** IP address to start the listener on */
     LISTEN_IP("ip", "IP address to start the listener on", Arguments.store(), RMGOptionGroup.ACTION, "ip"),
+    /** port number to start the listener on */
     LISTEN_PORT("port", "port number to start the listener on", Arguments.store(), RMGOptionGroup.ACTION, "port"),
 
+    /** ObjID to use for the JMX listener */
     ROGUEJMX_OBJID("--objid", "ObjID to use for the JMX listener", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
+    /** host to forward incoming JMX connections to */
     ROGUEJMX_FORWARD_HOST("--forward-host", "host to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "host"),
+    /** port to forward incoming JMX connections to */
     ROGUEJMX_FORWARD_PORT("--forward-port", "port to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "port"),
+    /** bound name to forward incoming JMX connections to */
     ROGUEJMX_FORWARD_BOUND_NAME("--forward-bound-name", "bound name to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "name"),
+    /** ObjID to forward incoming JMX connections to */
     ROGUEJMX_FORWARD_OBJID("--forward-objid", "ObjID to forward incoming JMX connections to", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
 
+    /** wordlist file to use for method guessing */
     GUESS_WORDLIST_FILE("--wordlist-file", "wordlist file to use for method guessing", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    /** location of the wordlist folder */
     GUESS_WORDLIST_FOLDER("--wordlist-folder", "location of the wordlist folder", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    /** create sample classes for identified methods */
     GUESS_CREATE_SAMPLES("--create-samples", "create sample classes for identified methods", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** folder used for sample generation */
     GUESS_SAMPLE_FOLDER("--sample-folder", "folder used for sample generation", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    /** location of the template folder */
     GUESS_TEMPLATE_FOLDER("--template-folder", "location of the template folder", Arguments.store(), RMGOptionGroup.ACTION, "path"),
+    /** disable bound name filtering */
     GUESS_TRUSTED("--trusted", "disable bound name filtering", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** force guessing on known remote objects */
     GUESS_FORCE_GUESSING("--force-guessing", "force guessing on known remote objects", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** guess duplicate remote classes */
     GUESS_DUPLICATES("--guess-duplicates", "guess duplicate remote classes", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** update wordlist file with method hashes */
     GUESS_UPDATE("--update", "update wordlist file with method hashes", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** allow guessing on void functions (dangerous) */
     GUESS_ZERO_ARG("--zero-arg", "allow guessing on void functions (dangerous)", Arguments.storeTrue(), RMGOptionGroup.ACTION),
 
+    /** gadget name to use for the deserialization attack */
     GADGET_NAME("gadget", "gadget name to use for the deserialization attack", Arguments.store(), RMGOptionGroup.ACTION, "gadget"),
+    /** command to pass for the specified gadget */
     GADGET_CMD("cmd", "command to pass for the specified gadget", Arguments.store(), RMGOptionGroup.ACTION, "cmd"),
 
+    /** attempt localhost bypass during enum */
     ENUM_BYPASS("--localhost-bypass", "attempt localhost bypass during enum", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** scan actions to perform during the enumeration */
     ENUM_ACTION("--scan-action", "scan actions to perform during the enumeration", Arguments.store(), RMGOptionGroup.ACTION, "action"),
 
+    /** host to perform the scan on */
     SCAN_HOST("host", "host to perform the scan on", Arguments.store(), RMGOptionGroup.ACTION, "host"),
+    /** port specifications to perform the portscan on */
     SCAN_PORTS("--ports", "port specifications to perform the portscan on", Arguments.store(), RMGOptionGroup.ACTION, "port"),
 
+    /** argument string to use for the call */
     CALL_ARGUMENTS("arguments", "argument string to use for the call", Arguments.store(), RMGOptionGroup.ACTION, "args"),
+    /** ObjID string to parse */
     OBJID_OBJID("objid", "ObjID string to parse", Arguments.store(), RMGOptionGroup.ACTION, "objid"),
+    /** classname to check within the database */
     KNOWN_CLASS("classname", "classname to check within the database", Arguments.store(), RMGOptionGroup.ACTION, "classname"),
 
+    /** enable activation for ActivatableRef */
     ACTIVATION("--activate", "enable activation for ActivatableRef", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** force activation of ActivatableRef */
     FORCE_ACTIVATION("--force-activation", "force activation of ActivatableRef", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** payload argument position */
     ARGUMENT_POS("--position", "payload argument position", Arguments.store(), RMGOptionGroup.ACTION, "pos"),
+    /** do not use a canary during RMI attacks */
     NO_CANARY("--no-canary", "do not use a canary during RMI attacks", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** disable progress bars */
     NO_PROGRESS("--no-progress", "disable progress bars", Arguments.storeTrue(), RMGOptionGroup.ACTION),
+    /** maximum number of threads (default: 5) */
     THREADS("--threads", "maximum number of threads (default: 5)", Arguments.store(), RMGOptionGroup.ACTION, "threads"),
+    /** location of ysoserial.jar for deserialization attacks */
     YSO("--yso", "location of ysoserial.jar for deserialization attacks", Arguments.store(), RMGOptionGroup.ACTION, "yso-path"),
+    /** method to use for dgc operations */
     DGC_METHOD("--dgc-method", "method to use for dgc operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
+    /** method to use for registry operations */
     REG_METHOD("--registry-method", "method to use for registry operations", Arguments.store(), RMGOptionGroup.ACTION, "method"),
+    /** serialVersionUID to use for RMI stubs */
     SERIAL_VERSION_UID("--serial-version-uid", "serialVersionUID to use for RMI stubs", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
+    /** serialVersionUID to use for payload classes */
     PAYLOAD_SERIAL_VERSION_UID("--payload-serial-version-uid", "serialVersionUID to use for payload classes", Arguments.store(), RMGOptionGroup.ACTION, "uid"),
 
+    /** enforce plaintext connections from dynamically created socket factories */
     SOCKET_FACTORY_PLAIN("--socket-factory-plain", "enforce plaintext connections from dynamically created socket factories", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    /** enforce SSL connections from dynamically created socket factories */
     SOCKET_FACTORY_SSL("--socket-factory-ssl", "enforce SSL connections from dynamically created socket factories", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
+    /** dynamically create a socket factory class with the specified name */
     SOCKET_FACTORY("--socket-factory", "dynamically create a socket factory class with the specified name", Arguments.store(), RMGOptionGroup.CONNECTION, "classname"),
 
+    /** enforce method calls to be dispatched via spring remoting */
     SPRING_REMOTING("--spring-remoting", "enforce method calls to be dispatched via spring remoting", Arguments.storeTrue(), RMGOptionGroup.CONNECTION),
-    GENERIC_PRINT("--return-value", "attempt to output the return value using GenericPrint", Arguments.storeTrue(), RMGOptionGroup.ACTION);
+    /** attempt to output the return value using GenericPrint */
+    GENERIC_PRINT("--generic-print", "attempt to output the return value using GenericPrint", Arguments.storeTrue(), RMGOptionGroup.ACTION);
 
+    /** the name of the option */
     public final String name;
+    /** description of the option */
     public final String description;
+    /** metavar of the option */
     public final String metavar;
+    /** argumentAction of the option */
     public final ArgumentAction argumentAction;
+    /**  RMGOptionGroup of the option */
     public RMGOptionGroup optionGroup = null;
 
+    /** the value of the option */
     public Object value = null;
 
     private final static EnumSet<RMGOption> intOptions = EnumSet.of(RMGOption.THREADS, RMGOption.ARGUMENT_POS, RMGOption.SCAN_TIMEOUT_CONNECT,
@@ -207,6 +283,7 @@ public enum RMGOption {
     /**
      * Returns the value stored within the option.
      *
+     * @param <T> type of the value
      * @return value stored within the option
      */
     @SuppressWarnings("unchecked")
@@ -251,7 +328,8 @@ public enum RMGOption {
      * Attempts to set an option value obtained from an argparse4j Namespace object.
      * If the corresponding option was not specified, use the default value.
      *
-     * @param value
+     * @param args argparse4j namespace
+     * @param def value to set for the current option
      */
     public void setValue(Namespace args, Object def)
     {
@@ -380,6 +458,7 @@ public enum RMGOption {
      * If the corresponding option was not set, an error message is printed and the current execution
      * ends. This should be called first by functions that require an specific argument.
      *
+     * @param <T> type of the value
      * @param option RMGOption that is required
      * @return the currently set option value
      */

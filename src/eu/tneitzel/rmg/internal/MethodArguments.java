@@ -36,6 +36,9 @@ public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<P
 
     private Pair<Object,Class>[] methodArguments;
 
+    /**
+     * @param capacity number of method arguments the object can hold
+     */
     @SuppressWarnings("unchecked")
     public MethodArguments(int capacity)
     {
@@ -43,6 +46,10 @@ public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<P
         this.methodArguments = new Pair[capacity];
     }
 
+    /**
+     * @param argumentObject the actual argument object
+     * @param argumentClass the class the argument object should be marshaled as
+     */
     @SuppressWarnings("unchecked")
     public MethodArguments(Object argumentObject, Class argumentClass)
     {
@@ -70,6 +77,10 @@ public class MethodArguments implements Iterable<Pair<Object,Class>>, Iterator<P
         return methodArguments[currentIndex++];
     }
 
+    /**
+     * @param argumentObject the actual argument object
+     * @param argumentClass the class the argument object should be marshaled as
+     */
     public void add(Object argumentObject, Class argumentClass)
     {
         if (size < capacity)

@@ -40,7 +40,6 @@ import javassist.CtNewMethod;
 import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
-import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.server.UnicastServerRef;
 import sun.rmi.transport.LiveRef;
@@ -202,7 +201,7 @@ public class RMGUtils
      * JVM and creates it otherwise.
      *
      * @return Class object for ActivatableRef
-     * @throws CannotCompileException
+     * @throws CannotCompileException internal error
      */
     public static Class makeActivatableRef() throws CannotCompileException
     {
@@ -231,8 +230,11 @@ public class RMGUtils
      *
      * Check the CodebaseCollector class documentation for more information.
      *
+     * @param className name for the SocketFactoryClass
+     * @param serialVersionUID for the SocketFactoryClass
+     *
      * @return socket factory class that implements RMIClientSocketFactory
-     * @throws CannotCompileException
+     * @throws CannotCompileException internal error
      */
     public static Class makeSocketFactory(String className, long serialVersionUID) throws CannotCompileException
     {
@@ -457,7 +459,7 @@ public class RMGUtils
      *
      * @param method CtMethod to create the argument array for
      * @return argument array that can be used to invoke the method
-     * @throws NotFoundException
+     * @throws NotFoundException internal error
      */
     public static Object[] getArgumentArray(CtMethod method) throws NotFoundException
     {
@@ -701,8 +703,8 @@ public class RMGUtils
      *
      * @param method CtMethod that is going to be invoked
      * @param parameterArray array of arguments to use for the call
-     * @return MethodArguments - basically a list of Object value -> Type pairs
-     * @throws NotFoundException
+     * @return MethodArguments - basically a list of Object value -&gt; Type pairs
+     * @throws NotFoundException internal error
      */
     public static MethodArguments applyParameterTypes(CtMethod method, Object[] parameterArray) throws NotFoundException
     {
@@ -819,7 +821,7 @@ public class RMGUtils
      * Divide a Set into n separate Sets, where n is the number specified within the count argument.
      * Basically copied from: https://stackoverflow.com/questions/16449644/how-can-i-take-a-java-set-of-size-x-and-break-into-x-y-sets
      *
-     * @param <T>
+     * @param <T> inner type of the set
      * @param original Set that should be divided
      * @param count Number of Sets to divide into
      * @return List of n separate sets, where n is equal to count
@@ -950,7 +952,8 @@ public class RMGUtils
      *
      * @param instance An Instance of Remote - Usually obtained by the RMI lookup method
      * @return underlying RemoteRef that is used by the Remote instance
-     * @throws Reflection Exceptions - If some reflective access fails
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
      */
     public static RemoteRef extractRef(Remote instance) throws IllegalArgumentException, IllegalAccessException
     {
@@ -982,7 +985,8 @@ public class RMGUtils
      *
      * @param uref UnicastRef to extract the ObjID from
      * @return ObjID extracted from specified UnicastRef
-     * @throws Reflection Exceptions - If some reflective access fails
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
      */
     public static ObjID extractObjID(UnicastRef uref) throws IllegalArgumentException, IllegalAccessException
     {
@@ -1005,7 +1009,8 @@ public class RMGUtils
      *
      * @param remote Instance of Remote that contains an ref with assigned ObjID
      * @return ObjID extracted from specified instance of Remote
-     * @throws Reflection Exceptions - If some reflective access fails
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
      */
     public static ObjID extractObjID(Remote remote) throws IllegalArgumentException, IllegalAccessException
     {
@@ -1156,7 +1161,11 @@ public class RMGUtils
      *
      * @param pattern Serial filter pattern as usually used for ObjectInputFilter
      * @return Either sun.misc.ObjectInputFilter or java.io.ObjectInputFilter depending on the Java environment
-     * @throws Exceptions - related to reflective access
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchMethodException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws InvocationTargetException if reflective access fails
      */
     public static Object createObjectInputFilter(String pattern) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
@@ -1186,7 +1195,11 @@ public class RMGUtils
      *
      * @param uref UnicastServerRef to inject the ObjectInputFilter on
      * @param filter ObjectInputFilter to inject
-     * @throws Exceptions - related to reflective access
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws InvocationTargetException if reflective access fails
      */
     public static void injectObjectInputFilter(UnicastServerRef uref, Object filter) throws SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException
     {
@@ -1198,6 +1211,8 @@ public class RMGUtils
 
     /**
      * Returns the ObjID for the user specified RMI component,
+     *
+     * @param component the well known RMI component to return the Object ID for
      *
      * @return ObjID for the user specified RMI component.
      */
@@ -1275,13 +1290,15 @@ public class RMGUtils
     }
 
     /**
-     * Convert a CtClass back to an ordinary Class<?> object. This method is intended to be called
+     * Convert a CtClass back to an ordinary Class object. This method is intended to be called
      * for classes that are known to already exist within the JVM. No compilation is triggered but
-     * the Class<?> object is simply obtained by Class.forName (including handling for all the edge
+     * the Class object is simply obtained by Class.forName (including handling for all the edge
      * cases).
      *
-     * @param type  the CtClass that should be converted back to a Class<?> object
-     * @return Class<?> associated to the specified CtClass
+     * @param type  the CtClass that should be converted back to a Class object
+     * @return Class associated to the specified CtClass
+     * @throws ClassNotFoundException internal error
+     * @throws NotFoundException internal error
      */
     public static Class<?> ctClassToClass(CtClass type) throws ClassNotFoundException, NotFoundException
     {

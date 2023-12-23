@@ -78,7 +78,7 @@ public class MethodCandidate
      * during method guessing.
      *
      * @param method CtMethod object
-     * @throws NotFoundException
+     * @throws NotFoundException indicates an internal error
      */
     public MethodCandidate(CtMethod method) throws NotFoundException
     {
@@ -175,10 +175,12 @@ public class MethodCandidate
      * - If the function expects a primitive argument as first parameter, we should write an object
      * - If the function expects a non primitive argument as first parameter, we should write a primitive
      *
-     * This function returns the corresponding argument type depending on the corresponding method definition.
+     * This function puts the corresponding argument type depending on the corresponding method definition
+     * into the specified ObjectOutputStream.
      *
-     * @return confused parameter for method invocation
-     * @throws IOException
+     * @param oo ObjectOutputStream to write the confused argument to
+     *
+     * @throws IOException indicates an error in the RMI communication
      */
     @SuppressWarnings("restriction")
     public void sendArguments(ObjectOutputStream oo) throws IOException

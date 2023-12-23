@@ -42,7 +42,9 @@ public class RemoteObjectClient
     private String boundName;
     private String randomClassName;
 
+    /** underlying UnicastWrapper */
     public UnicastWrapper remoteObject;
+    /** list of available remote methods*/
     public List<MethodCandidate> remoteMethods;
 
     /**
@@ -106,6 +108,7 @@ public class RemoteObjectClient
      * constructed UnicastRef and implements the specified interface.
      *
      * @param intf Interface implemented by the RemoteObject
+     * @return newly created UnicastWrapper for the specified interface
      */
     public UnicastWrapper assignInterface(Class<?> intf)
     {
@@ -341,8 +344,8 @@ public class RemoteObjectClient
      * Technically the same as the genericCall method, but does not perform any exception handling.
      *
      * @param targetMethod remote method to call
-     * @param argumentArray method arguments to use for the call
-     * @throws All possible encountered exceptions are passed to the caller
+     * @param args method arguments to use for the call
+     * @throws Exception all possible encountered exceptions are passed to the caller
      */
     public void unmanagedCall(MethodCandidate targetMethod, MethodArguments args) throws Exception
     {

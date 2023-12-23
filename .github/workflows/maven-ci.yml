@@ -1,0 +1,50 @@
+name: maven CI
+
+on:
+
+  push:
+    branches:
+      - master
+      - develop
+      - 'feat/**'
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/maven-ci.yml'
+
+  pull_request:
+    branches:
+      - master
+      - develop
+      - 'feat/**'
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/maven-ci.yml'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: ${{ github.event.repository.name }}
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 8
+        cache: maven
+        cache-dependency-path: pom.xml
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Archive generated JAR file
+      uses: actions/upload-artifact@v4
+      with:
+        name: rmg-compiled-jars
+        path: target/*.jar

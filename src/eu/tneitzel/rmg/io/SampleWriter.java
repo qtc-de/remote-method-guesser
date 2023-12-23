@@ -126,6 +126,12 @@ public class SampleWriter {
 
     /**
      * Wrapper around writeSamples with additional subfolder argument.
+     *
+     * @param sampleFolder sub folder within the sample folder to write the files in.
+     * @param sampleName name of the sample file
+     * @param sampleContent content of the sample file
+     * @throws UnexpectedCharacterException is thrown if the filenames are violating the security settings
+     * @throws IOException is thrown if an IO operation fails
      */
     public void writeSample(String sampleFolder, String sampleName, String sampleContent) throws UnexpectedCharacterException, IOException
     {
@@ -171,6 +177,7 @@ public class SampleWriter {
      *
      * @param boundName bound name to create the sample for
      * @param className underlying class name of the corresponding bound name (usually an interface)
+     * @param unknownClass whether the class to create is unknown
      * @param methods available remote methods represented by MethodCandidates
      * @param rmi RMIEndpoint to the currently targeted RMI endpoint
      * @throws UnexpectedCharacterException is thrown if class or bound names violate the security policies
@@ -180,7 +187,8 @@ public class SampleWriter {
      */
     public void createSamples(String boundName, String className, boolean unknownClass, List<MethodCandidate> methods, RMIEndpoint rmi) throws UnexpectedCharacterException, NotFoundException, IOException, CannotCompileException
     {
-        for(MethodCandidate method : methods) {
+        for (MethodCandidate method : methods)
+        {
             createSample(className, unknownClass, boundName, method, rmi.host, rmi.port);
         }
     }
@@ -190,6 +198,7 @@ public class SampleWriter {
      * is basically an ugly find an replace over the template files.
      *
      * @param className class name of the remote interface or the RMI stub (if legacy is used)
+     * @param unknownClass whether the class to create is unknown
      * @param boundName bound name where the corresponding class name is available
      * @param method MethodCandidate to create the sample for
      * @param remoteHost currently targeted RMI host

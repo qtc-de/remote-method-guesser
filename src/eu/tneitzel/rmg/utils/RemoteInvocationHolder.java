@@ -66,21 +66,33 @@ public class RemoteInvocationHolder
         return invo.toString().hashCode();
     }
 
+    /**
+     * @return name of the method
+     */
     public String getName()
     {
         return invo.getMethodName();
     }
 
+    /**
+     * @return parameter types of the method
+     */
     public Class<?>[] getTypes()
     {
         return invo.getParameterTypes();
     }
 
+    /**
+     * @return MethodCandidate associated with the method
+     */
     public MethodCandidate getCandidate()
     {
         return candidate;
     }
 
+    /**
+     * @return RemoteInvocation associated with the method
+     */
     public RemoteInvocation getInvo()
     {
         return invo;

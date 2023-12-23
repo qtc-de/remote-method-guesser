@@ -16,8 +16,16 @@ package eu.tneitzel.rmg.exceptions;
 @SuppressWarnings("serial")
 public class UnexpectedCharacterException extends Exception
 {
+    /**
+     * Constructor with zero arguments.
+     */
     public UnexpectedCharacterException() {}
 
+    /**
+     * Constructor with message argument.
+     *
+     * @param message exception message.
+     */
     public UnexpectedCharacterException(String message)
     {
        super(message);

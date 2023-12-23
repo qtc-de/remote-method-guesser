@@ -6,7 +6,6 @@ import java.rmi.server.RemoteRef;
 import eu.tneitzel.rmg.endpoints.KnownEndpoint;
 import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
-import javassist.tools.reflect.Reflection;
 import sun.rmi.server.UnicastRef;
 
 /**
@@ -23,8 +22,11 @@ import sun.rmi.server.UnicastRef;
 @SuppressWarnings("restriction")
 public abstract class RemoteObjectWrapper
 {
+    /** associated boundName */
     public String boundName;
+    /** associated Remote */
     public Remote remoteObject;
+    /** associated knownEndpoint */
     public KnownEndpoint knownEndpoint;
 
     private String interfaceName;
@@ -65,7 +67,10 @@ public abstract class RemoteObjectWrapper
      *
      * @param remote remote to create the wrapper for
      * @return RemoteObjectWrapper for the specified remote
-     * @throws Reflection related exceptions
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public static RemoteObjectWrapper getInstance(Remote remote) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -80,7 +85,10 @@ public abstract class RemoteObjectWrapper
      * @param remote remote to create the wrapper for
      * @param boundName bound name as specified in the RMI registry
      * @return RemoteObjectWrapper - Either a UnicastWrapper or a ActivatableWrapper depending on the Remote
-     * @throws Reflection related exceptions
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public static RemoteObjectWrapper getInstance(Remote remote, String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {

@@ -28,8 +28,11 @@ import sun.rmi.server.UnicastRef;
 @SuppressWarnings("restriction")
 public class SpringRemotingWrapper extends UnicastWrapper
 {
+    /** class name of the RmiInvocationHandler class */
     public final static String invocationHandlerClass = "org.springframework.remoting.rmi.RmiInvocationHandler";
+    /** method signature of the getTargetInterfaceName method */
     public final static String methodGetStr = "java.lang.String getTargetInterfaceName()";
+    /** method signature of the invoke method */
     public final static String methodInvokeStr = "java.lang.Object invoke(org.springframework.remoting.support.RemoteInvocation invo)";
 
     private static MethodCandidate methodGet;
@@ -45,6 +48,10 @@ public class SpringRemotingWrapper extends UnicastWrapper
      * @param remoteObject  the spring remoting remoteObject obtained from the registry
      * @param boundName     the boundName that is associated with the remoteObject
      * @param ref  a UnicastRef that can be used to call methods on the remoteObject
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
      */
     public SpringRemotingWrapper(Remote remoteObject, String boundName, UnicastRef ref) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException
     {
@@ -114,6 +121,8 @@ public class SpringRemotingWrapper extends UnicastWrapper
     /**
      * Determines whether the method to call is a known spring remoting method, that needs to be processed by the
      * remoting wrapper itself, or whether it is an RMI method implemented by the underlying object.
+     *
+     * @param targetMethod the method to check
      *
      * @return true if the method needs to be dispatched using spring remoting
      */

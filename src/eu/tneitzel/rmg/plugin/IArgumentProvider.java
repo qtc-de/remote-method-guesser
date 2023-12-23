@@ -10,6 +10,14 @@ package eu.tneitzel.rmg.plugin;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public interface IArgumentProvider {
+
+public interface IArgumentProvider
+{
+    /**
+     * Provide an argument array for remote method calls.
+     *
+     * @param argumentString the argument string specified on the command line
+     * @return argument array for a remote method call
+     */
     Object[] getArgumentArray(String argumentString);
 }

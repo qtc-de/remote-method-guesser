@@ -15,13 +15,19 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum RMGOptionGroup {
-
+public enum RMGOptionGroup
+{
+    /** SSRF related arguments */
     SSRF("ssrf arguments"),
+    /** target related arguments */
     TARGET("target arguments"),
+    /** connection related arguments */
     CONNECTION("connection arguments"),
+    /** general arguments */
     GENERAL("general arguments"),
+    /** action related arguments */
     ACTION("action arguments"),
+    /** no option group */
     NONE("");
 
     private final String name;

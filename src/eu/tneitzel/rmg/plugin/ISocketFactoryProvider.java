@@ -32,11 +32,34 @@ import java.rmi.server.RMISocketFactory;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public interface ISocketFactoryProvider {
-
+public interface ISocketFactoryProvider
+{
+    /**
+     * Construct the client socket factory to use. This factory is used to create sockets
+     * for direct RMI communication (e.g. when connecting to the RMI registry).
+     *
+     * @param host  remote host
+     * @param port  remote port
+     * @return RMIClientSocketFactory to use
+     */
     public RMIClientSocketFactory getClientSocketFactory(String host, int port);
 
+    /**
+     * Construct the RMI socket factory to use. This factory is used for implicit RMI
+     * connections, e.g. when calling a method on a previously obtained remote object.
+     *
+     * @param host  remote host
+     * @param port  remote port
+     * @return RMISocketFactory to use
+     */
     public RMISocketFactory getDefaultSocketFactory(String host, int port);
 
+    /**
+     * Return the SSL socket factory class that should be used for implicit RMI connections.
+     *
+     * @param host  remote host
+     * @param port  remote port
+     * @return name of the SSL socket factory class to use for SSL connections.
+     */
     public String getDefaultSSLSocketFactory(String host, int port);
 }

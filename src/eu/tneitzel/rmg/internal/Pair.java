@@ -14,17 +14,27 @@ public class Pair<K, V> {
     private K left;
     private V right;
 
+    /**
+     * @param left left value
+     * @param right right value
+     */
     public Pair(K left, V right)
     {
         this.left = left;
         this.right = right;
     }
 
+    /**
+     * @return left value
+     */
     public K left()
     {
         return this.left;
     }
 
+    /**
+     * @return right value
+     */
     public V right()
     {
         return this.right;

@@ -43,6 +43,7 @@ public class RogueJMX implements RMIServer {
      *
      * @param address Address where the rogue JMX should be bound
      * @param port Port where the rogue JMX should listen
+     * @param objIDString the ObjID to use
      */
     public RogueJMX(String address, int port, String objIDString)
     {
@@ -70,7 +71,7 @@ public class RogueJMX implements RMIServer {
      * injecting the serialization filter.
      *
      * @return Remote bound RogueJMX server
-     * @throws RemoteException
+     * @throws RemoteException internal error
      */
     public Remote export() throws RemoteException
     {

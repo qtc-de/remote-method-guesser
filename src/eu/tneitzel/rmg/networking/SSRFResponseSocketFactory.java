@@ -16,6 +16,11 @@ public class SSRFResponseSocketFactory extends RMISocketFactory {
 
     private byte[] content;
 
+    /**
+     * Create a new SSRFResponseSocketFactory.
+     *
+     * @param content the RMI response data to simulate
+     */
     public SSRFResponseSocketFactory(byte[] content)
     {
         this.content = content;

@@ -33,14 +33,18 @@ import javassist.CtClass;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class ActivationClient {
-
+public class ActivationClient
+{
     private RMIEndpoint rmi;
 
     private static final long methodHash = -8767355154875805558L;
     private static final ObjID objID = new ObjID(ObjID.ACTIVATOR_ID);
 
-
+    /**
+     * Create a new ActivationClient.
+     *
+     * @param rmiEndpoint associated RMIEndpoint
+     */
     public ActivationClient(RMIEndpoint rmiEndpoint)
     {
         this.rmi = rmiEndpoint;
@@ -212,7 +216,7 @@ public class ActivationClient {
     /**
      * This function is used for performing regular calls to the RMI Activator. It is used when the RMI server
      * returns an ActivatableRef that needs to be activated. Callers need to obtain the return value
-     * (MarshalledObject<? extends Remote>) by registering a ResponseHandler.
+     * (MarshalledObject&lt;? extends Remote&gt;) by registering a ResponseHandler.
      *
      * Notice that the ActivationID is passed as a generic Object argument. This is required, since
      * remote-method-guesser should stay compatible with Java distributions that already removed the

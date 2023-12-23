@@ -36,7 +36,9 @@ import eu.tneitzel.rmg.io.Logger;
  */
 public class LoopbackSslSocketFactory extends SSLSocketFactory implements RMIClientSocketFactory
 {
+    /** SSLSocketFactory used for socket creation */
     public transient SSLSocketFactory fax;
+    /** Whether to print redirection information */
     public transient boolean printInfo = true;
 
     /**

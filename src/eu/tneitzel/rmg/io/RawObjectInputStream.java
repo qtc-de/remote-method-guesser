@@ -52,7 +52,7 @@ public class RawObjectInputStream {
      * Skip the next n bytes of input on the stream.
      *
      * @param n amount of bytes to skip
-     * @throws IOException
+     * @throws IOException internal error
      */
     public void skip(int n) throws IOException
     {
