@@ -47,4 +47,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: rmg-compiled-jars
-        path: target/rmg-*
+        path: target/*.jar
