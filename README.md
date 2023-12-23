@@ -2,8 +2,8 @@
 
 ---
 
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/maven%20CI/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/maven%20CI/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
+[![maven CI](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
+[![maven CI](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
 [![](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
 [![](https://img.shields.io/badge/build%20system-maven-blue)](https://maven.apache.org/)
 ![](https://img.shields.io/badge/java-8%2b-blue)
@@ -22,12 +22,9 @@ within the *Arsenal* sessions. The recording of the session and the correspondin
 * Slides: [https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal](https://www.slideshare.net/TobiasNeitzel/remotemethodguesser-bhusa2021-arsenal)
 * Recording: [https://youtu.be/t_aw1mDNhzI](https://youtu.be/t_aw1mDNhzI)
 
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/example-server.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/example%20server/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/example-server.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/ssrf-server.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/ssrf%20server/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/ssrf-server.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/spring%20server/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/spring-server.yml)
-[![](https://github.com/qtc-de/remote-method-guesser/workflows/spring%20server/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/spring-server.yml)
+[![example server](https://github.com/qtc-de/remote-method-guesser/actions/workflows/example-server.yml/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/example-server.yml)
+[![ssrf server](https://github.com/qtc-de/remote-method-guesser/actions/workflows/ssrf-server.yml/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/ssrf-server.yml)
+[![spring server](https://github.com/qtc-de/remote-method-guesser/actions/workflows/spring-server.yml/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/spring-server.yml)
 
 The *remote-method-guesser* repository contains three example servers that can be used to practice *Java RMI* enumeration and attacks.
 The [rmg-example-server](/docker/example-server) exposes regular *RMI* services that can be enumerated and exploited using *remote-method-guesser*.
