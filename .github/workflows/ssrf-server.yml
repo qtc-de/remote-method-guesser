@@ -8,6 +8,7 @@ on:
       - develop
     paths:
       - 'docker/ssrf-server/resources/server/**'
+      - '.github/workflows/ssrf-server.yml'
 
   pull_request:
     branches:
@@ -15,6 +16,7 @@ on:
       - develop
     paths:
       - 'docker/ssrf-server/resources/server/**'
+      - '.github/workflows/ssrf-server.yml'
 
 jobs:
   build:
