@@ -8,6 +8,7 @@ on:
       - develop
     paths:
       - 'docker/spring-remoting/resources/server/**'
+      - '.github/workflows/spring-server.yml'
 
   pull_request:
     branches:
@@ -15,6 +16,7 @@ on:
       - develop
     paths:
       - 'docker/spring-remoting/resources/server/**'
+      - '.github/workflows/spring-server.yml'
 
 jobs:
   build:

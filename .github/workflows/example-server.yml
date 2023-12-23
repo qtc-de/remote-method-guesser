@@ -8,6 +8,7 @@ on:
       - develop
     paths:
       - 'docker/example-server/resources/server/**'
+      - '.github/workflows/example-server.yml'
 
   pull_request:
     branches:
@@ -15,6 +16,7 @@ on:
       - develop
     paths:
       - 'docker/example-server/resources/server/**'
+      - '.github/workflows/example-server.yml'
 
 jobs:
   build:
