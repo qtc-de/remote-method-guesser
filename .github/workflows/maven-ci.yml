@@ -10,6 +10,7 @@ on:
     paths:
       - 'src/**'
       - 'pom.xml'
+      - '.github/workflows/maven-ci.yml'
 
   pull_request:
     branches:
@@ -19,6 +20,7 @@ on:
     paths:
       - 'src/**'
       - 'pom.xml'
+      - '.github/workflows/maven-ci.yml'
 
 jobs:
   build:
