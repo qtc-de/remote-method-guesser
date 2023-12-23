@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: rmg
+  IMAGE_NAME: qtc-de/remote-method-guesser/rmg
 
 jobs:
   build-and-push-image:
