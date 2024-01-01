@@ -9,7 +9,6 @@ import eu.tneitzel.argparse4j.global.modifiers.MetaVar;
 import eu.tneitzel.argparse4j.global.modifiers.NArgs;
 import eu.tneitzel.argparse4j.global.modifiers.Type;
 import eu.tneitzel.argparse4j.impl.Arguments;
-import eu.tneitzel.argparse4j.impl.action.StoreTrueArgumentAction;
 import eu.tneitzel.argparse4j.inf.ArgumentAction;
 
 /**
@@ -623,24 +622,7 @@ public enum RMGOption implements IOption
      */
     RMGOption(String name, String description, ArgumentAction argumentAction, IOptionGroup optionGroup)
     {
-        this.name = name;
-        this.description = description;
-        this.argumentAction = argumentAction;
-        this.optionGroup = optionGroup;
-
-        if (argumentAction instanceof StoreTrueArgumentAction)
-        {
-            this.modifiers = new IArgumentModifier[] {
-                    new Type(Boolean.class)
-            };
-        }
-
-        else
-        {
-            this.modifiers = new IArgumentModifier[] {
-                    new Type(String.class)
-            };
-        }
+        this(name, description, argumentAction, optionGroup, new IArgumentModifier[] {});
     }
 
     /**
