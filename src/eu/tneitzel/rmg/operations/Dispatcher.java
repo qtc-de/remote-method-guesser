@@ -10,6 +10,8 @@ import java.util.Set;
 
 import javax.management.remote.rmi.RMIServer;
 
+import eu.tneitzel.argparse4j.global.IOption;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
 import eu.tneitzel.rmg.endpoints.KnownEndpoint;
 import eu.tneitzel.rmg.endpoints.KnownEndpointHolder;
 import eu.tneitzel.rmg.exceptions.UnexpectedCharacterException;
@@ -150,11 +152,21 @@ public class Dispatcher
      */
     public RMIEndpoint getRMIEndpoint()
     {
-        int port = RMGOption.require(RMGOption.TARGET_PORT);
-        String host = RMGOption.require(RMGOption.TARGET_HOST);
+        try
+        {
+            int port = RMGOption.TARGET_PORT.require();
+            String host = RMGOption.TARGET_HOST.require();
 
-        this.createMethodCandidate();
-        return new RMIEndpoint(host, port);
+            this.createMethodCandidate();
+            return new RMIEndpoint(host, port);
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
+
+        return null;
     }
 
     /**
@@ -192,7 +204,15 @@ public class Dispatcher
      */
     private RemoteObjectClient getRemoteObjectClient(RMIEndpoint rmi)
     {
-        RMGOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME, RMGOption.TARGET_COMPONENT);
+        try
+        {
+            IOption.requireOneOf(RMGOption.TARGET_OBJID, RMGOption.TARGET_BOUND_NAME, RMGOption.TARGET_COMPONENT);
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
 
         if (RMGOption.TARGET_BOUND_NAME.isNull() && RMGOption.TARGET_OBJID.isNull())
         {
@@ -339,10 +359,18 @@ public class Dispatcher
      */
     public void dispatchListen()
     {
-        String listenerIP = RMGOption.require(RMGOption.LISTEN_IP);
-        int listenerPort = RMGOption.require(RMGOption.LISTEN_PORT);
+        try
+        {
+            String listenerIP = RMGOption.LISTEN_IP.require();
+            int listenerPort = RMGOption.LISTEN_PORT.require();
 
-        YsoIntegration.createJRMPListener(listenerIP, listenerPort, p.getGadget());
+            YsoIntegration.createJRMPListener(listenerIP, listenerPort, p.getGadget());
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
     }
 
     /**
@@ -431,8 +459,20 @@ public class Dispatcher
     {
         RMGOption.requireTarget();
 
-        String codebase = RMGOption.require(RMGOption.CODEBASE_URL);
-        String className = RMGOption.require(RMGOption.CODEBASE_CLASS);
+        String codebase = "";
+        String className = "";
+
+        try
+        {
+            codebase = RMGOption.CODEBASE_URL.require();
+            className = RMGOption.CODEBASE_CLASS.require();
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
+
         RMGUtils.setCodebase(codebase);
 
         Object payload = null;
@@ -664,20 +704,28 @@ public class Dispatcher
      */
     public void dispatchKnown()
     {
-        String className = RMGOption.require(RMGOption.KNOWN_CLASS);
-        Formatter formatter = new Formatter();
-
-        KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
-        KnownEndpoint endpoint = keh.lookup(className);
-
-        if (endpoint == null)
+        try
         {
-            Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
+            String className = RMGOption.KNOWN_CLASS.require();
+            Formatter formatter = new Formatter();
+
+            KnownEndpointHolder keh = KnownEndpointHolder.getHolder();
+            KnownEndpoint endpoint = keh.lookup(className);
+
+            if (endpoint == null)
+            {
+                Logger.eprintlnMixedYellow("The specified class name", className, "isn't a known class.");
+            }
+
+            else
+            {
+                formatter.listKnownEndpoint(endpoint);
+            }
         }
 
-        else
+        catch (RequirementException e)
         {
-            formatter.listKnownEndpoint(endpoint);
+            ExceptionHandler.requirementException(e);
         }
     }
 
@@ -687,21 +735,29 @@ public class Dispatcher
      */
     public void dispatchPortScan()
     {
-        String host = RMGOption.require(RMGOption.TARGET_HOST);
-        int[] rmiPorts = p.getRmiPorts();
+        try
+        {
+            String host = RMGOption.TARGET_HOST.require();
+            int[] rmiPorts = p.getRmiPorts();
 
-        Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
-        Logger.printlnPlainMixedBlueFirst(host, "for RMI services.");
-        Logger.lineBreak();
-        Logger.increaseIndent();
+            Logger.printMixedYellow("Scanning", String.valueOf(rmiPorts.length), "Ports on ");
+            Logger.printlnPlainMixedBlueFirst(host, "for RMI services.");
+            Logger.lineBreak();
+            Logger.increaseIndent();
 
-        PortScanner ps = new PortScanner(host, rmiPorts);
-        ps.portScan();
+            PortScanner ps = new PortScanner(host, rmiPorts);
+            ps.portScan();
 
-        Logger.decreaseIndent();
-        Logger.lineBreak();
+            Logger.decreaseIndent();
+            Logger.lineBreak();
 
-        Logger.println("Portscan finished.");
+            Logger.println("Portscan finished.");
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
     }
 
     /**
@@ -709,10 +765,44 @@ public class Dispatcher
      */
     public void dispatchObjID()
     {
-        String objIDString = RMGOption.require(RMGOption.OBJID_OBJID);
+        try
+        {
+            int listenerPort = RMGOption.LISTEN_PORT.require();
+            String listenerHost = RMGOption.LISTEN_IP.require();
 
-        ObjID objID = RMGUtils.parseObjID(objIDString);
-        RMGUtils.printObjID(objID);
+            RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getValue());
+
+            if (RMGOption.ROGUEJMX_FORWARD_HOST.notNull())
+            {
+                String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getValue();
+                int forwardPort = RMGOption.ROGUEJMX_FORWARD_PORT.require();
+
+                String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getValue();
+                String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getValue();
+
+                RMIEndpoint rmi = new RMIEndpoint(forwardHost, forwardPort);
+                RemoteObjectClient client = getRemoteObjectClient(objid, boundName, rmi);
+                client.assignInterface(RMIServer.class);
+
+                rogueJMX.forwardTo(client);
+            }
+
+            try
+            {
+                rogueJMX.export();
+                Logger.lineBreak();
+            }
+
+            catch (java.rmi.RemoteException e)
+            {
+                ExceptionHandler.unexpectedException(e, "exporting", "rogue JMX server", true);
+            }
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
     }
 
     /**
@@ -723,35 +813,18 @@ public class Dispatcher
      */
     public void dispatchRogueJMX()
     {
-        int listenerPort = RMGOption.require(RMGOption.LISTEN_PORT);
-        String listenerHost = RMGOption.require(RMGOption.LISTEN_IP);
-
-        RogueJMX rogueJMX = new RogueJMX(listenerHost, listenerPort, RMGOption.ROGUEJMX_OBJID.getValue());
-
-        if (RMGOption.ROGUEJMX_FORWARD_HOST.notNull())
-        {
-            String forwardHost = RMGOption.ROGUEJMX_FORWARD_HOST.getValue();
-            int forwardPort = RMGOption.require(RMGOption.ROGUEJMX_FORWARD_PORT);
-
-            String boundName = RMGOption.ROGUEJMX_FORWARD_BOUND_NAME.getValue();
-            String objid = RMGOption.ROGUEJMX_FORWARD_OBJID.getValue();
-
-            RMIEndpoint rmi = new RMIEndpoint(forwardHost, forwardPort);
-            RemoteObjectClient client = getRemoteObjectClient(objid, boundName, rmi);
-            client.assignInterface(RMIServer.class);
-
-            rogueJMX.forwardTo(client);
-        }
-
         try
         {
-            rogueJMX.export();
-            Logger.lineBreak();
+            String objIDString = RMGOption.OBJID_OBJID.require();
+
+            ObjID objID = RMGUtils.parseObjID(objIDString);
+            RMGUtils.printObjID(objID);
         }
 
-        catch (java.rmi.RemoteException e)
+        catch (RequirementException e)
         {
-            ExceptionHandler.unexpectedException(e, "exporting", "rogue JMX server", true);
+            ExceptionHandler.requirementException(e);
         }
+
     }
 }
