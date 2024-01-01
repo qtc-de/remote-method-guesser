@@ -1,10 +1,6 @@
 package eu.tneitzel.rmg.internal;
 
-import java.util.HashMap;
-
-import eu.tneitzel.rmg.operations.Operation;
-import net.sourceforge.argparse4j.inf.ArgumentGroup;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
+import eu.tneitzel.argparse4j.global.IOptionGroup;
 
 /**
  * The RMGOptionGroup enum is used to bundle certain options into a logical context. The corresponding
@@ -15,7 +11,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum RMGOptionGroup
+public enum RMGOptionGroup implements IOptionGroup
 {
     /** SSRF related arguments */
     SSRF("ssrf arguments"),
@@ -31,7 +27,6 @@ public enum RMGOptionGroup
     NONE("");
 
     private final String name;
-    private final HashMap<Operation,ArgumentGroup> argumentGroups;
 
     /**
      * RMGOptionGroups are initialized by the group name that should be displayed within the help menu.
@@ -41,31 +36,11 @@ public enum RMGOptionGroup
     RMGOptionGroup(String name)
     {
         this.name = name;
-        this.argumentGroups = new HashMap<Operation,ArgumentGroup>();
     }
 
-    /**
-     * Helper function that adds the ArgumentGroup to an ArgumentParser. Each remote-method-guesser operation
-     * uses a separate subparser. Each subparser contains its own ArgumentGroup. Therefore, it is required to
-     * create each ArgumentGroup for each operation.
-     *
-     * This function first checks whether the ArgumentGroup for the specified operation was already created.
-     * If so, it is simply returned. Otherwise, it is created, added to the parser and added to an internally
-     * stored HashMap for later use.
-     *
-     * @param argParser ArgumentParser to add the ArgumentGroup to
-     * @param operation remote-method-guesser operation for the current ArgumentGroup
-     * @return ArgumentGroup for the specified operation
-     */
-    public ArgumentGroup addArgumentGroup(ArgumentParser argParser, Operation operation)
+    @Override
+    public String getName()
     {
-        ArgumentGroup group = argumentGroups.get(operation);
-
-        if( group == null ) {
-            group = argParser.addArgumentGroup(name);
-            argumentGroups.put(operation, group);
-        }
-
-        return group;
+        return name;
     }
 }

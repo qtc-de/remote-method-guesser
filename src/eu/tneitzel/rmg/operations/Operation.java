@@ -2,10 +2,13 @@ package eu.tneitzel.rmg.operations;
 
 import java.lang.reflect.Method;
 
+import eu.tneitzel.argparse4j.global.GlobalOption;
+import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IOption;
+import eu.tneitzel.argparse4j.inf.Subparser;
+import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
-import net.sourceforge.argparse4j.inf.Subparser;
-import net.sourceforge.argparse4j.inf.Subparsers;
 
 /**
  * The Operation enum class contains one item for each possible rmg action. An enum item consists out of
@@ -20,8 +23,8 @@ import net.sourceforge.argparse4j.inf.Subparsers;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum Operation {
-
+public enum Operation implements IAction
+{
     /** Binds an object to the registry that points to listener */
     BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
@@ -430,7 +433,19 @@ public enum Operation {
         for (Operation operation : Operation.values())
         {
             Subparser parser = argumentParser.addParser(operation.name().toLowerCase()).help(operation.description);
-            RMGOption.addOptions(operation, parser);
+            GlobalOption.addOptions(parser, operation, RMGOption.values());
         }
+    }
+
+    @Override
+    public String getName()
+    {
+        return method.getName();
+    }
+
+    @Override
+    public IOption[] getOptions()
+    {
+        return options;
     }
 }

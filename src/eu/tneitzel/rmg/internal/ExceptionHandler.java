@@ -2,6 +2,10 @@ package eu.tneitzel.rmg.internal;
 
 import java.rmi.server.ObjID;
 
+import eu.tneitzel.argparse4j.global.IOption;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementAllOfException;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementOneOfException;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.utils.RMGUtils;
 
@@ -17,14 +21,48 @@ import eu.tneitzel.rmg.utils.RMGUtils;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class ExceptionHandler {
-
+public class ExceptionHandler
+{
     private static void sslOption()
     {
         if(RMGOption.CONN_SSL.getBool())
             Logger.eprintlnMixedBlue("You probably used", "--ssl", "on a plaintext connection?");
         else
             Logger.eprintlnMixedYellow("You can retry the operation using the", "--ssl", "option.");
+    }
+
+    /**
+     * @param e description in progress
+     */
+    public static void requirementException(RequirementException e)
+    {
+        StringBuilder optionString = new StringBuilder();
+        IOption[] requiredOptions = e.getRequiredOptions();
+
+        for (IOption option : requiredOptions)
+        {
+            optionString.append(option.getName());
+            optionString.append(", ");
+        }
+
+        optionString.setLength(optionString.length() - 2);
+
+        if (e instanceof RequirementAllOfException)
+        {
+            Logger.eprintlnMixedYellow("Error: The specified action requires the", optionString.toString(), "options.");
+        }
+
+        else if (e instanceof RequirementOneOfException)
+        {
+            Logger.eprintlnMixedYellow("Error: The specified action requires one of the", optionString.toString(), "options.");
+        }
+
+        else
+        {
+            Logger.eprintlnMixedYellow("Error: The specified action requires the", requiredOptions[0].getName(), "option.");
+        }
+
+        RMGUtils.exit();
     }
 
     /**

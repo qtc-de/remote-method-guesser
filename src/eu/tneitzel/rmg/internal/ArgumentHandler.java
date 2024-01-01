@@ -10,17 +10,19 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import eu.tneitzel.argparse4j.ArgumentParsers;
+import eu.tneitzel.argparse4j.global.GlobalOption;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
+import eu.tneitzel.argparse4j.inf.ArgumentParser;
+import eu.tneitzel.argparse4j.inf.ArgumentParserException;
+import eu.tneitzel.argparse4j.inf.Namespace;
+import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
 import eu.tneitzel.rmg.operations.PortScanner;
 import eu.tneitzel.rmg.operations.ScanAction;
 import eu.tneitzel.rmg.plugin.PluginSystem;
 import eu.tneitzel.rmg.utils.RMGUtils;
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.Namespace;
-import net.sourceforge.argparse4j.inf.Subparsers;
 
 /**
  * The ArgumentHandler class is a wrapper around an argparse4j ArgumentParser. It adds some
@@ -110,8 +112,8 @@ public class ArgumentHandler
      */
     private void initialize()
     {
-        config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.name));
-        RMGOption.prepareOptions(args, config);
+        config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.getName()));
+        GlobalOption.parseOptions(args, config, RMGOption.values());
 
         if (RMGOption.GLOBAL_NO_COLOR.getBool())
         {
@@ -295,19 +297,27 @@ public class ArgumentHandler
         String gadget = null;
         String command = null;
 
-        if (this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND)
+        try
         {
-            boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
-            boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
+            if (this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND)
+            {
+                boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
+                boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
 
-            gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
-            command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.require(RMGOption.BIND_ADDRESS);
+                gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
+                command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.BIND_ADDRESS.require();
+            }
+
+            else
+            {
+                    gadget = RMGOption.GADGET_NAME.require();
+                    command = RMGOption.GADGET_CMD.require();
+            }
         }
 
-        else
+        catch (RequirementException e)
         {
-            gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
-            command = RMGOption.require(RMGOption.GADGET_CMD);
+            ExceptionHandler.requirementException(e);
         }
 
         return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
@@ -321,8 +331,18 @@ public class ArgumentHandler
      */
     public Object[] getCallArguments()
     {
-        String argumentString = (String) RMGOption.require(RMGOption.CALL_ARGUMENTS);
-        return PluginSystem.getArgumentArray(argumentString);
+        try
+        {
+            String argumentString = (String) RMGOption.CALL_ARGUMENTS.require();
+            return PluginSystem.getArgumentArray(argumentString);
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
+
+        return null;
     }
 
     /**
