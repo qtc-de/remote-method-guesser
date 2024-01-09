@@ -87,7 +87,7 @@ public class ArgumentHandler
         {
             InputStream configStream = null;
 
-            configStream = ArgumentParser.class.getResourceAsStream(defaultConfiguration);
+            configStream = ArgumentHandler.class.getResourceAsStream(defaultConfiguration);
             config.load(configStream);
             configStream.close();
 

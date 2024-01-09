@@ -74,7 +74,7 @@ public enum RMGOption implements IOption
             Arguments.store(),
             RMGOptionGroup.NONE,
             new IArgumentModifier[] {
-                    new MetaVar("path"),
+                    new MetaVar("port"),
                     new Type(Integer.class)
                 }),
 
@@ -199,7 +199,7 @@ public enum RMGOption implements IOption
     BIND_ADDRESS("bind-host",
                  "host specifications the bound remote object should point to",
                  Arguments.store(),
-                 RMGOptionGroup.ACTION,
+                 RMGOptionGroup.NONE,
                     new IArgumentModifier[] {
                             new MetaVar("host:port"),
                         }),
@@ -208,7 +208,7 @@ public enum RMGOption implements IOption
     BIND_BOUND_NAME("bound-name",
             "Bound name to use for (un)bind action",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("name"),
                 }),
@@ -241,7 +241,7 @@ public enum RMGOption implements IOption
     CODEBASE_CLASS("classname",
             "classname to load during codebase attack",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("name"),
                 }),
@@ -250,7 +250,7 @@ public enum RMGOption implements IOption
     CODEBASE_URL("url",
             "codebase URL to load the payload from",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("url"),
                 }),
@@ -259,7 +259,7 @@ public enum RMGOption implements IOption
     LISTEN_IP("ip",
             "IP address to start the listener on",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("IP"),
                 }),
@@ -268,7 +268,7 @@ public enum RMGOption implements IOption
     LISTEN_PORT("port",
             "port number to start the listener on",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("port"),
                     new Type(Integer.class)
@@ -395,7 +395,7 @@ public enum RMGOption implements IOption
     GADGET_NAME("gadget",
             "gadget name to use for the deserialization attack",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("gadget"),
                 }),
@@ -404,7 +404,7 @@ public enum RMGOption implements IOption
     GADGET_CMD("cmd",
             "command to pass for the specified gadget",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("cmd"),
                 }),
@@ -431,7 +431,7 @@ public enum RMGOption implements IOption
     SCAN_HOST("host",
             "host to perform the scan on",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("host"),
                 }),
@@ -450,7 +450,7 @@ public enum RMGOption implements IOption
     CALL_ARGUMENTS("arguments",
             "argument string to use for the call",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("args"),
                 }),
@@ -459,7 +459,7 @@ public enum RMGOption implements IOption
     OBJID_OBJID("objid",
             "ObjID string to parse",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("objid"),
                 }),
@@ -468,7 +468,7 @@ public enum RMGOption implements IOption
     KNOWN_CLASS("classname",
             "classname to check within the database",
             Arguments.store(),
-            RMGOptionGroup.ACTION,
+            RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("name"),
                 }),
