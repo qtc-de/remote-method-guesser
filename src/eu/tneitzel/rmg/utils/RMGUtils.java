@@ -1335,4 +1335,24 @@ public class RMGUtils
             return Class.forName(type.getName());
         }
     }
+
+    /**
+     * Primitive argument parser for finding a single string value option on the command line.
+     *
+     * @param opt option name to find
+     * @param args command line
+     * @return the value of the specified option
+     */
+    public static String getOption(String opt, String[] args)
+    {
+        for (int ctr = 0; ctr < args.length - 1; ctr++)
+        {
+            if (args[ctr].equals(opt))
+            {
+                return args[ctr + 1];
+            }
+        }
+
+        return null;
+    }
 }

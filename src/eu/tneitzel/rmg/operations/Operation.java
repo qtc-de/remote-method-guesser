@@ -9,6 +9,7 @@ import eu.tneitzel.argparse4j.inf.Subparser;
 import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 
 /**
  * The Operation enum class contains one item for each possible rmg action. An enum item consists out of
@@ -434,6 +435,12 @@ public enum Operation implements IAction
         {
             Subparser parser = argumentParser.addParser(operation.name().toLowerCase()).help(operation.description);
             GlobalOption.addOptions(parser, operation);
+        }
+
+        for (IAction action : PluginSystem.getPluginActions())
+        {
+            Subparser parser = argumentParser.addParser(action.getName().toLowerCase()).help(action.getDescription());
+            GlobalOption.addOptions(parser, action);
         }
     }
 

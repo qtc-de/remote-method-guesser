@@ -126,7 +126,6 @@ public class ArgumentHandler
         }
 
         checkPortRange();
-        PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
 
     /**

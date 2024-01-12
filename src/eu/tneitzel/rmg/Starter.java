@@ -3,6 +3,7 @@ package eu.tneitzel.rmg;
 import eu.tneitzel.rmg.internal.ArgumentHandler;
 import eu.tneitzel.rmg.operations.Dispatcher;
 import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
@@ -20,6 +21,9 @@ public class Starter
      */
     public static void main(String[] argv)
     {
+        String pluginPath = RMGUtils.getOption("--plugin", argv);
+        PluginSystem.init(pluginPath);
+
         ArgumentHandler handler = new ArgumentHandler(argv);
         Operation operation = handler.getAction();
 

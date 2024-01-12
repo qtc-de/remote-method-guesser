@@ -9,6 +9,7 @@ import java.rmi.server.RMISocketFactory;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import eu.tneitzel.argparse4j.global.IAction;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
@@ -31,6 +32,7 @@ public class PluginSystem
 {
     private static String manifestAttribute = "RmgPluginClass";
 
+    private static IActionProvider actionProvider = null;
     private static IPayloadProvider payloadProvider = null;
     private static IResponseHandler responseHandler = null;
     private static IArgumentProvider argumentProvider = null;
@@ -46,6 +48,7 @@ public class PluginSystem
     public static void init(String pluginPath)
     {
         DefaultProvider provider = new DefaultProvider();
+
         payloadProvider = provider;
         argumentProvider = provider;
         socketFactoryProvider = provider;
@@ -120,6 +123,12 @@ public class PluginSystem
             Logger.printlnPlainBlue(pluginPath);
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
+        }
+
+        if (pluginInstance instanceof IActionProvider)
+        {
+            actionProvider = (IActionProvider)pluginInstance;
+            inUse = true;
         }
 
         if (pluginInstance instanceof IPayloadProvider)
@@ -286,5 +295,21 @@ public class PluginSystem
     public static void setResponeHandler(IResponseHandler handler)
     {
         responseHandler = handler;
+    }
+
+    /**
+     * Return actions added by a user defined plugin. If no plugin was specified,
+     * an empty array of actions is returned.
+     *
+     * @return array of additional actions
+     */
+    public static IAction[] getPluginActions()
+    {
+        if (actionProvider != null)
+        {
+            return actionProvider.getActions();
+        }
+
+        return new IAction[] {};
     }
 }
