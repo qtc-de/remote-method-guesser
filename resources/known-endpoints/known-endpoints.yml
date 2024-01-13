@@ -293,3 +293,149 @@ knownEndpoints:
         remote-method-guesser can be used to guess remote methods.
       references:
         - https://github.com/qtc-de/remote-method-guesser#guess
+
+
+- name: Quartz Scheduler
+  className:
+    - org.quartz.core.QuartzScheduler
+    - org.quartz.core.QuartzScheduler_Stub
+
+  description: |
+    QuartzScheduler is an interface that can be used to control a Job scheduler. If this interface can be accessed without any
+    restrictions, remote code execution is usually possible by scheduling an org.quartz.jobs.NativeJob.
+
+  remoteMethods:
+    - void addCalendar(String calName, org.quartz.Calendar calendar, boolean replace, boolean updateTriggers)
+    - void addInternalJobListener(org.quartz.JobListener jobListener)
+    - void addInternalSchedulerListener(org.quartz.SchedulerListener schedulerListener)
+    - void addInternalTriggerListener(org.quartz.TriggerListener triggerListener)
+    - void addJob(org.quartz.JobDetail jobDetail, boolean replace)
+    - void addJob(org.quartz.JobDetail jobDetail, boolean replace, boolean storeNonDurableWhileAwaitingScheduling)
+    - void addNoGCObject(Object obj)
+    - boolean checkExists(org.quartz.JobKey jobKey)
+    - boolean checkExists(org.quartz.TriggerKey triggerKey)
+    - void clear()
+    - boolean deleteCalendar(String calName)
+    - boolean deleteJob(org.quartz.JobKey jobKey)
+    - boolean deleteJobs(List<org.quartz.JobKey> jobKeys)
+    - org.quartz.Calendar getCalendar(String calName)
+    - List<String> getCalendarNames()
+    - List<org.quartz.JobExecutionContext> getCurrentlyExecutingJobs()
+    - org.quartz.JobListener getInternalJobListener(String name)
+    - List<org.quartz.JobListener> getInternalJobListeners()
+    - List<org.quartz.SchedulerListener> getInternalSchedulerListeners()
+    - org.quartz.TriggerListener getInternalTriggerListener(String name)
+    - List<org.quartz.TriggerListener> getInternalTriggerListeners()
+    - org.quartz.JobDetail getJobDetail(org.quartz.JobKey jobKey)
+    - org.quartz.spi.JobFactory getJobFactory()
+    - List<String> getJobGroupNames()
+    - Set<org.quartz.JobKey> getJobKeys(org.quartz.impl.matchers.GroupMatcher<org.quartz.JobKey> matcher)
+    - Class<?> getJobStoreClass()
+    - ListenerManager getListenerManager()
+    - org.slf4j.Logger getLog()
+    - Set<String> getPausedTriggerGroups()
+    - SchedulerContext getSchedulerContext()
+    - String getSchedulerInstanceId()
+    - String getSchedulerName()
+    - SchedulerSignaler getSchedulerSignaler()
+    - ThreadGroup getSchedulerThreadGroup()
+    - Class<?> getThreadPoolClass()
+    - int getThreadPoolSize()
+    - org.quartz.Trigger getTrigger(org.quartz.TriggerKey triggerKey)
+    - List<String> getTriggerGroupNames()
+    - Set<org.quartz.TriggerKey> getTriggerKeys(org.quartz.impl.matchers.GroupMatcher<org.quartz.TriggerKey> matcher)
+    - List<? extends org.quartz.Trigger> getTriggersOfJob(org.quartz.JobKey jobKey)
+    - org.quartz.Trigger.TriggerState getTriggerState(org.quartz.TriggerKey triggerKey)
+    - String getVersion()
+    - static String getVersionIteration()
+    - static String getVersionMajor()
+    - static String getVersionMinor()
+    - void initialize()
+    - boolean interrupt(org.quartz.JobKey jobKey)
+    - boolean interrupt(String fireInstanceId)
+    - boolean isClustered()
+    - boolean isInStandbyMode()
+    - boolean isShutdown()
+    - boolean isShuttingDown()
+    - boolean isSignalOnSchedulingChange()
+    - boolean isStarted()
+    - void notifyJobListenersToBeExecuted(org.quartz.JobExecutionContext jec)
+    - void notifyJobListenersWasExecuted(org.quartz.JobExecutionContext jec, org.quartz.JobExecutionException je)
+    - void notifyJobListenersWasVetoed(org.quartz.JobExecutionContext jec)
+    - protected void notifyJobStoreJobComplete(org.quartz.spi.OperableTrigger trigger, org.quartz.JobDetail detail, org.quartz.org.quartz.Trigger.CompletedExecutionInstruction instCode)
+    - protected void notifyJobStoreJobVetoed(org.quartz.spi.OperableTrigger trigger, org.quartz.JobDetail detail, org.quartz.org.quartz.Trigger.CompletedExecutionInstruction instCode)
+    - void notifySchedulerListenersError(String msg, SchedulerException se)
+    - void notifySchedulerListenersFinalized(org.quartz.Trigger trigger)
+    - void notifySchedulerListenersInStandbyMode()
+    - void notifySchedulerListenersJobAdded(org.quartz.JobDetail jobDetail)
+    - void notifySchedulerListenersJobDeleted(org.quartz.JobKey jobKey)
+    - void notifySchedulerListenersPausedJob(org.quartz.JobKey key)
+    - void notifySchedulerListenersPausedJobs(String group)
+    - void notifySchedulerListenersPausedTrigger(org.quartz.TriggerKey triggerKey)
+    - void notifySchedulerListenersPausedTriggers(String group)
+    - void notifySchedulerListenersResumedJob(org.quartz.JobKey key)
+    - void notifySchedulerListenersResumedJobs(String group)
+    - void notifySchedulerListenersResumedTrigger(org.quartz.TriggerKey key)
+    - void notifySchedulerListenersResumedTriggers(String group)
+    - void notifySchedulerListenersSchduled(org.quartz.Trigger trigger)
+    - void notifySchedulerListenersShutdown()
+    - void notifySchedulerListenersShuttingdown()
+    - void notifySchedulerListenersStarted()
+    - void notifySchedulerListenersStarting()
+    - void notifySchedulerListenersUnscheduled(org.quartz.TriggerKey triggerKey)
+    - protected void notifySchedulerThread(long candidateNewNextFireTime)
+    - void notifyTriggerListenersComplete(org.quartz.JobExecutionContext jec, org.quartz.org.quartz.Trigger.CompletedExecutionInstruction instCode)
+    - boolean notifyTriggerListenersFired(org.quartz.JobExecutionContext jec)
+    - void notifyTriggerListenersMisfired(org.quartz.Trigger trigger)
+    - int numJobsExecuted()
+    - void pauseAll()
+    - void pauseJob(org.quartz.JobKey jobKey)
+    - void pauseJobs(org.quartz.impl.matchers.GroupMatcher<org.quartz.JobKey> groupMatcher)
+    - void pauseTrigger(org.quartz.TriggerKey triggerKey)
+    - void pauseTriggers(org.quartz.impl.matchers.GroupMatcher<org.quartz.TriggerKey> matcher)
+    - boolean removeInternalJobListener(String name)
+    - boolean removeInternalSchedulerListener(org.quartz.SchedulerListener schedulerListener)
+    - boolean removeinternalTriggerListener(String name)
+    - boolean removeNoGCObject(Object obj)
+    - Date rescheduleJob(org.quartz.TriggerKey triggerKey, org.quartz.Trigger newTrigger)
+    - void resumeAll()
+    - void resumeJob(org.quartz.JobKey jobKey)
+    - void resumeJobs(org.quartz.impl.matchers.GroupMatcher<org.quartz.JobKey> matcher)
+    - void resumeTrigger(org.quartz.TriggerKey triggerKey)
+    - void resumeTriggers(org.quartz.impl.matchers.GroupMatcher<org.quartz.TriggerKey> matcher)
+    - Date runningSince()
+    - void scheduleJob(org.quartz.JobDetail jobDetail, Set<? extends org.quartz.Trigger> triggersForJob, boolean replace)
+    - Date scheduleJob(org.quartz.JobDetail jobDetail, org.quartz.Trigger trigger)
+    - Date scheduleJob(org.quartz.Trigger trigger)
+    - void scheduleJobs(Map<org.quartz.JobDetail,Set<? extends org.quartz.Trigger>> triggersAndJobs, boolean replace)
+    - void setJobFactory(org.quartz.spi.JobFactory factory)
+    - void setSignalOnSchedulingChange(boolean signalOnSchedulingChange)
+    - void shutdown()
+    - void shutdown(boolean waitForJobsToComplete)
+    - void standby()
+    - void start()
+    - void startDelayed(int seconds)
+    - boolean supportsPersistence()
+    - void triggerJob(org.quartz.JobKey jobKey, org.quartz.JobDataMap data)
+    - void triggerJob(org.quartz.spi.OperableTrigger trig)
+    - boolean unscheduleJob(org.quartz.TriggerKey triggerKey)
+    - boolean unscheduleJobs(List<org.quartz.TriggerKey> triggerKeys)
+    - void validateState()
+
+  references:
+    - https://www.quartz-scheduler.org/documentation/
+    - https://www.quartz-scheduler.org/api/2.2.2/org/quartz/core/QuartzScheduler.html
+
+  vulnerabilities:
+    - name: Vulnerable Methods
+      description: |
+        Quartz scheduler allows job scheduling. By scheduling a NativeJob, it is possible to execute
+        operating system commands as a feature.
+      references:
+        - https://github.com/qtc-de/remote-method-guesser#call
+
+    - name: Deserialization
+      description: |
+        Several methods accept non trivial parameters and can therefore be used for deserialization attacks.
+      references:
+        - https://github.com/qtc-de/remote-method-guesser#serial
