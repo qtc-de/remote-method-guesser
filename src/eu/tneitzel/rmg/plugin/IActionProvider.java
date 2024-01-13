@@ -13,6 +13,18 @@ import eu.tneitzel.argparse4j.global.IAction;
 
 public interface IActionProvider
 {
+    /**
+     * Return all actions that get added by the plugin.
+     *
+     * @return actions that are added by the plugin
+     */
     IAction[] getActions();
+
+    /**
+     * Is called by remote-method-guesser if the user specified an action that was defined
+     * by the plugin.
+     *
+     * @param action the action specified by the user
+     */
     void dispatch(IAction action);
 }
