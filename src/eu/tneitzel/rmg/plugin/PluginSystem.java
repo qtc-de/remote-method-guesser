@@ -10,6 +10,7 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
@@ -311,5 +312,18 @@ public class PluginSystem
         }
 
         return new IAction[] {};
+    }
+
+    /**
+     * Add actions added by a user defined plugin to an argument parser.
+     *
+     * @param parser the argument parser to add the actions to
+     */
+    public static void addPluginActions(Subparsers parser)
+    {
+        for (IAction action : getPluginActions())
+        {
+            action.addSuparser(parser);
+        }
     }
 }

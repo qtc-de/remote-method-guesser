@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import eu.tneitzel.argparse4j.ArgumentParsers;
+import eu.tneitzel.argparse4j.global.ActionContext;
 import eu.tneitzel.argparse4j.global.GlobalOption;
 import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
 import eu.tneitzel.argparse4j.inf.ArgumentParser;
@@ -55,8 +56,10 @@ public class ArgumentHandler
         parser = ArgumentParsers.newFor("remote-method-guesser").build();
         parser.description("rmg v" + ArgumentHandler.class.getPackage().getImplementationVersion() + " - a Java RMI Vulnerability Scanner");
 
-        Subparsers subparsers = parser.addSubparsers().help(" ").metavar("action").dest("action");
-        Operation.addSubparsers(subparsers);
+        ActionContext ctx = Operation.getActionContext();
+        Subparsers subParsers = ctx.addSubparsers(parser);
+
+        PluginSystem.addPluginActions(subParsers);
 
         try
         {

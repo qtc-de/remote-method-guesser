@@ -4,7 +4,7 @@
 
     <groupId>eu.tneitzel</groupId>
     <artifactId>remote-method-guesser</artifactId>
-    <version>5.0.0</version>
+    <version>5.1.0</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -51,7 +51,7 @@
         <dependency>
           <groupId>eu.tneitzel</groupId>
           <artifactId>argparse4j</artifactId>
-          <version>1.0.1</version>
+          <version>1.1.0</version>
         </dependency>
 
         <dependency>

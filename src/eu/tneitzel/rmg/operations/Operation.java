@@ -2,14 +2,11 @@ package eu.tneitzel.rmg.operations;
 
 import java.lang.reflect.Method;
 
-import eu.tneitzel.argparse4j.global.GlobalOption;
+import eu.tneitzel.argparse4j.global.ActionContext;
 import eu.tneitzel.argparse4j.global.IAction;
 import eu.tneitzel.argparse4j.global.IOption;
-import eu.tneitzel.argparse4j.inf.Subparser;
-import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
-import eu.tneitzel.rmg.plugin.PluginSystem;
 
 /**
  * The Operation enum class contains one item for each possible rmg action. An enum item consists out of
@@ -336,9 +333,13 @@ public enum Operation implements IAction
      */
     Operation(String methodName, String arguments, String description, RMGOption[] options)
     {
-        try {
+        try
+        {
             this.method = Dispatcher.class.getDeclaredMethod(methodName, new Class<?>[] {});
-        } catch(Exception e) {
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.internalException(e, "Operation constructor", true);
         }
 
@@ -425,29 +426,19 @@ public enum Operation implements IAction
     }
 
     /**
-     * Add a new subparser for each operation to the specified argumentParser.
+     * Create an ActionContext for the Operation enum.
      *
-     * @param argumentParser parser to add the subparsers to.
+     * @return ActionContext that can be used to create argument parsers from.
      */
-    public static void addSubparsers(Subparsers argumentParser)
+    public static ActionContext getActionContext()
     {
-        for (Operation operation : Operation.values())
-        {
-            Subparser parser = argumentParser.addParser(operation.name().toLowerCase()).help(operation.description);
-            GlobalOption.addOptions(parser, operation);
-        }
-
-        for (IAction action : PluginSystem.getPluginActions())
-        {
-            Subparser parser = argumentParser.addParser(action.getName().toLowerCase()).help(action.getDescription());
-            GlobalOption.addOptions(parser, action);
-        }
+        return new ActionContext("action", " ", " ", Operation.values());
     }
 
     @Override
     public String getName()
     {
-        return method.getName();
+        return name().toLowerCase();
     }
 
     @Override
