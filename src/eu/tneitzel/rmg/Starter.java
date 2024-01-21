@@ -25,13 +25,17 @@ public class Starter
         PluginSystem.init(pluginPath);
 
         ArgumentHandler handler = new ArgumentHandler(argv);
-        Operation operation = handler.getAction();
 
         RMGUtils.init();
         RMGUtils.disableWarning();
         RMGUtils.enableCodebaseCollector();
+
+        Operation operation = handler.getAction();
         Dispatcher dispatcher = new Dispatcher(handler);
 
-        operation.invoke(dispatcher);
+        if (operation != null)
+        {
+            operation.invoke(dispatcher);
+        }
     }
 }

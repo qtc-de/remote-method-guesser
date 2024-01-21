@@ -13,6 +13,7 @@ import java.util.Set;
 import eu.tneitzel.argparse4j.ArgumentParsers;
 import eu.tneitzel.argparse4j.global.ActionContext;
 import eu.tneitzel.argparse4j.global.GlobalOption;
+import eu.tneitzel.argparse4j.global.IAction;
 import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
 import eu.tneitzel.argparse4j.inf.ArgumentParser;
 import eu.tneitzel.argparse4j.inf.ArgumentParserException;
@@ -163,6 +164,15 @@ public class ArgumentHandler
 
         if (action == null)
         {
+            for (IAction action : PluginSystem.getPluginActions())
+            {
+                if (action.getName() == args.getString("action"))
+                {
+                    PluginSystem.dispatchPluginAction(action);
+                    return null;
+                }
+            }
+
             ExceptionHandler.internalError("ArgumentHandler.getAction", "Invalid action was specified");
         }
 

@@ -335,4 +335,14 @@ public class PluginSystem
             action.addSuparser(container);
         }
     }
+
+    /**
+     * Dispatch an action that was provided by a plugin.
+     *
+     * @param pluginAction the plugin action to dispatch
+     */
+    public static void dispatchPluginAction(IAction pluginAction)
+    {
+        actionProvider.dispatch(pluginAction);
+    }
 }

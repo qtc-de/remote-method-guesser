@@ -246,7 +246,7 @@ public class Dispatcher
 
         else
         {
-            ExceptionHandler.missingTarget(p.getAction().name());
+            ExceptionHandler.missingTarget(p.getAction().getName());
             return null;
         }
     }
