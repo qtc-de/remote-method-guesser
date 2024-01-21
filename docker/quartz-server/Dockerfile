@@ -33,6 +33,6 @@ ENV _JAVA_OPTIONS -Djava.rmi.server.hostname=iinsecure.example \
     -Dorg.quartz.scheduler.rmi.createRegistry=true \
     -Dorg.quartz.scheduler.rmi.serverPort=4444
 
-EXPOSE 1099/tcp
+EXPOSE 1099/tcp 4444/tcp
 
 CMD ["/opt/start.sh"]
