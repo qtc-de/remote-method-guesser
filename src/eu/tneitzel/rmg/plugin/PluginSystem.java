@@ -10,12 +10,14 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.inf.SubparserContainer;
 import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
+import eu.tneitzel.rmg.operations.OperationGroup;
 import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
@@ -323,7 +325,14 @@ public class PluginSystem
     {
         for (IAction action : getPluginActions())
         {
-            action.addSuparser(parser);
+            SubparserContainer container = parser;
+
+            if (action.getGroup() == null)
+            {
+                container = parser.getOrCreateSubparserGroup(OperationGroup.PLUGIN.getName());
+            }
+
+            action.addSuparser(container);
         }
     }
 }

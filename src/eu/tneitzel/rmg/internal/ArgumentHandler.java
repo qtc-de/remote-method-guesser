@@ -55,6 +55,7 @@ public class ArgumentHandler
     {
         parser = ArgumentParsers.newFor("remote-method-guesser").build();
         parser.description("rmg v" + ArgumentHandler.class.getPackage().getImplementationVersion() + " - a Java RMI Vulnerability Scanner");
+        parser.addArgument("--plugin").help("file system path of a rmg plugin");
 
         ActionContext ctx = Operation.getActionContext();
         Subparsers subParsers = ctx.addSubparsers(parser);

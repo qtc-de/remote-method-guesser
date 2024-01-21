@@ -4,9 +4,11 @@ import java.lang.reflect.Method;
 
 import eu.tneitzel.argparse4j.global.ActionContext;
 import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IActionGroup;
 import eu.tneitzel.argparse4j.global.IOption;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 
 /**
  * The Operation enum class contains one item for each possible rmg action. An enum item consists out of
@@ -433,6 +435,17 @@ public enum Operation implements IAction
     public static ActionContext getActionContext()
     {
         return new ActionContext("action", " ", " ", Operation.values());
+    }
+
+    @Override
+    public IActionGroup getGroup()
+    {
+        if (PluginSystem.getPluginActions().length != 0)
+        {
+            return OperationGroup.NATIVE;
+        }
+
+        return null;
     }
 
     @Override
