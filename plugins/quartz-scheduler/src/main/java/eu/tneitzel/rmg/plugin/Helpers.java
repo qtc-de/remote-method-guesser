@@ -1,11 +1,12 @@
 package eu.tneitzel.rmg.plugin;
 
+import java.rmi.UnmarshalException;
+
 import org.quartz.core.RemotableQuartzScheduler;
 
 import eu.tneitzel.rmg.internal.RMGOption;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.networking.RMIRegistryEndpoint;
-import eu.tneitzel.rmg.operations.RemoteObjectClient;
 import eu.tneitzel.rmg.utils.RMGUtils;
 
 public class Helpers
@@ -25,10 +26,17 @@ public class Helpers
             String host = RMGOption.TARGET_HOST.getValue();
             int port = RMGOption.TARGET_PORT.getValue();
 
-            RMIRegistryEndpoint endpoint = new RMIRegistryEndpoint(host, port);
-            RemoteObjectClient client = new RemoteObjectClient(endpoint, RMGOption.TARGET_BOUND_NAME.<String>getValue());
+            try
+            {
+                RMIRegistryEndpoint endpoint = new RMIRegistryEndpoint(host, port);
+                scheduler = (RemotableQuartzScheduler)endpoint.lookup(RMGOption.TARGET_BOUND_NAME.<String>getValue());
+            }
 
-            scheduler = client.createProxy(RemotableQuartzScheduler.class);
+            catch (UnmarshalException e)
+            {
+                Logger.printlnMixedYellow("Caught unexpected", "UnmarshalException", "while calling the RMI registry.");
+                RMGUtils.exit();
+            }
         }
 
         return scheduler;
