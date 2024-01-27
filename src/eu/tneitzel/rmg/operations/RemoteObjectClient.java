@@ -449,7 +449,7 @@ public class RemoteObjectClient
 
         try
         {
-            remoteObject = rmiReg.lookup(boundName).getUnicastWrapper();
+            remoteObject = rmiReg.lookupWrapper(boundName).getUnicastWrapper();
         }
 
         catch (Exception e)

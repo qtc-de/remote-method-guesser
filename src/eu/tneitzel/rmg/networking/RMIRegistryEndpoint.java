@@ -155,20 +155,15 @@ public class RMIRegistryEndpoint extends RMIEndpoint
 
     /**
      * Performs the RMI registries lookup operation to obtain a remote reference for the specified
-     * bound names. The corresponding remote objects are wrapped inside the RemoteObjectWrapper class
-     * and returned as an array.
+     * bound names. The main benefit of using this method is, that it performs exception handling.
      *
      * @param boundNames list of bound names to determine the classes from
-     * @return List of wrapped remote objects
-     * @throws IllegalArgumentException if reflective access fails
-     * @throws IllegalAccessException if reflective access fails
-     * @throws NoSuchFieldException if reflective access fails
-     * @throws SecurityException if reflective access fails
-     * @throws UnmarshalException if unmarshalling the return value fails
+     * @return List of remote objects looked up from the remote registry
+     * @throws UnmarshalException if unmarshaling the return value fails
      */
-    public RemoteObjectWrapper[] lookup(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    public Remote[] lookup(String[] boundNames) throws UnmarshalException
     {
-        RemoteObjectWrapper[] remoteObjects = new RemoteObjectWrapper[boundNames.length];
+        Remote[] remoteObjects = new Remote[boundNames.length];
 
         for (int ctr = 0; ctr < boundNames.length; ctr++)
         {
@@ -184,13 +179,9 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      *
      * @param boundName name to lookup within the registry
      * @return Remote representing the requested remote object
-     * @throws IllegalArgumentException if reflective access fails
-     * @throws IllegalAccessException if reflective access fails
-     * @throws NoSuchFieldException if reflective access fails
-     * @throws SecurityException if reflective access fails
      * @throws UnmarshalException if unmarshalling the return value fails
      */
-    public RemoteObjectWrapper lookup(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    public Remote lookup(String boundName) throws UnmarshalException
     {
         Remote remoteObject = remoteObjectCache.get(boundName);
 
@@ -280,7 +271,47 @@ public class RMIRegistryEndpoint extends RMIEndpoint
             }
         }
 
+        return remoteObject;
+    }
+
+    /**
+     * Same as the lookup action, but returns a RemoteObjectWrapper.
+     *
+     * @param boundName name to lookup within the registry
+     * @return RemoteObjectWrapper for the remote object
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws UnmarshalException if unmarshalling the return value fails
+     */
+    public RemoteObjectWrapper lookupWrapper(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    {
+        Remote remoteObject = lookup(boundName);
         return RemoteObjectWrapper.getInstance(remoteObject, boundName);
+    }
+
+    /**
+     * Same as the lookup action, but returns an array of RemoteObjectWrapper.
+     *
+     * @param boundName name to lookup within the registry
+     * @return RemoteObjectWrapper for the remote object
+     * @throws IllegalArgumentException if reflective access fails
+     * @throws IllegalAccessException if reflective access fails
+     * @throws NoSuchFieldException if reflective access fails
+     * @throws SecurityException if reflective access fails
+     * @throws UnmarshalException if unmarshalling the return value fails
+     */
+    public RemoteObjectWrapper[] lookupWrappers(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    {
+        RemoteObjectWrapper[] wrappers = new RemoteObjectWrapper[boundNames.length];
+
+        for (int ctr = 0; ctr < boundNames.length; ctr++)
+        {
+            wrappers[ctr] = lookupWrapper(boundNames[ctr]);
+        }
+
+        return wrappers;
     }
 
     /**

@@ -105,7 +105,7 @@ public class Dispatcher
         {
             try
             {
-                remoteObjects = getRegistry().lookup(boundNames);
+                remoteObjects = getRegistry().lookupWrappers(boundNames);
                 return;
             }
 
