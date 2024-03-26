@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [5.0.0] - Dec 23, 2023
+## v5.0.0 - Dec 23, 2023
 
 ### Added
 
@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Stream corruption errors during method guessing are only displayed if `--verbose` is used
 
 
-## [4.4.1] - Jun 22, 2023
+## v4.4.1 - Jun 22, 2023
 
 ### Added
 
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Improve *rmg*s Java16+ compatibility (see #49)
 
 
-## [4.4.0] - Jan 19, 2023
+## v4.4.0 - Jan 19, 2023
 
 ### Changed
 
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Make *rmg* Java16+ compatible
 
 
-## [4.3.1] - Sep 19, 2022
+## v4.3.1 - Sep 19, 2022
 
 ### Changed
 
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Typofix `enmeration` -> `enumeration`
 
 
-## [4.3.0] - May 11, 2022
+## v4.3.0 - May 11, 2022
 
 ### Added
 
@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The [example server](/docker/example-server) now provides a full working *Activation System* on port `1098`
 
 
-## [4.2.2] - Jan 11, 2022
+## v4.2.2 - Jan 11, 2022
 
 ### Changed
 
@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fix some typos inside the help menu
 
 
-## [4.2.1] - Jan 07, 2022
+## v4.2.1 - Jan 07, 2022
 
 ### Changed
 
@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Improve test cases
 
 
-## [4.2.0] - Dec 30, 2021
+## v4.2.0 - Dec 30, 2021
 
 ### Changed
 
@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Updated test cases.
 
 
-## [4.1.0] - Dec 23, 2021
+## v4.1.0 - Dec 23, 2021
 
 ### Added
 
@@ -118,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bugfix: Indentation issue within the *SSRF* server
 
 
-## [4.0.0] - Dec 05, 2021
+## v4.0.0 - Dec 05, 2021
 
 ### Added
 
@@ -148,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Changed the *DGC enumeration* to *Security Manager* enumeration.
 
 
-## [3.3.0] - June 20, 2021
+## v3.3.0 - June 20, 2021
 
 ### Added
 
@@ -171,7 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Some small bug fixes
 
 
-## [3.2.0] - Apr 02, 2021
+## v3.2.0 - Apr 02, 2021
 
 ### Added
 
@@ -193,7 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The default wordlist and template files are now contained within the *rmg* JAR file
 
 
-## [3.1.1] - Feb 16, 2021
+## v3.1.1 - Feb 16, 2021
 
 ### Changed
 
@@ -202,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that will be resolved in version ``v3.2.0``.
 
 
-## [3.1.0] - Feb 14, 2021
+## v3.1.0 - Feb 14, 2021
 
 ### Added
 
@@ -239,7 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed support for JSON output
 
 
-## [3.0.0] - Nov 28, 2020
+## v3.0.0 - Nov 28, 2020
 
 ### Added
 
@@ -266,7 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The docker container compiles the *example-server* now during build time
 
 
-## [2.0.0] - Sep 30, 2020
+## v2.0.0 - Sep 30, 2020
 
 ### Added
 
@@ -287,7 +287,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove old example server
 
 
-## [1.1.0] - Aug 06, 2020
+## v1.1.0 - Aug 06, 2020
 
 ### Added
 
@@ -297,6 +297,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add support for primitive types in interfaces
 
 
-## [1.0.0] - Nov 26, 2020
+## v1.0.0 - Nov 26, 2020
 
 Initial release :)
