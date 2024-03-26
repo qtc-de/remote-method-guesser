@@ -27,9 +27,14 @@ public class Dispatcher
     public static void dispatchScheduleJob() throws RemoteException
     {
         RemotableQuartzScheduler scheduler = Helpers.getScheduler();
+
+        String cmd = QuartzOption.SCHEDULE_CMD.getValue();
         String jobName = String.format("rmg-job-%d", System.currentTimeMillis());
 
-        JobDetail myJob = JobBuilder.newJob(NativeJob.class).withIdentity(jobName).build();
+        Logger.printMixedBlue("Scheduling job", jobName, "executing ");
+        Logger.printlnPlainYellow(cmd);
+
+        JobDetail myJob = JobBuilder.newJob(NativeJob.class).withIdentity(jobName).usingJobData(org.quartz.jobs.NativeJob.PROP_COMMAND, cmd).build();
         Trigger myTrigger = TriggerBuilder.newTrigger().startNow().build();
 
         try

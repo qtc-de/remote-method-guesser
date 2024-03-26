@@ -6,6 +6,13 @@ import eu.tneitzel.rmg.internal.RMGOption;
 
 public enum QuartzAction implements IAction
 {
+    SCHEDULE("schedule", "schedule a NativeJob for command execution", new IOption[] {
+            RMGOption.TARGET_HOST,
+            RMGOption.TARGET_PORT,
+            RMGOption.TARGET_BOUND_NAME,
+            QuartzOption.SCHEDULE_CMD,
+    }),
+
     VERSION("version", "get the version of the remote scheduler", new IOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,

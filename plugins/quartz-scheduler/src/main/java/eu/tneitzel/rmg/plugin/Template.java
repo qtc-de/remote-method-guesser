@@ -4,13 +4,8 @@ import eu.tneitzel.argparse4j.global.IAction;
 import java.rmi.RemoteException;
 
 /**
- * The Template class represents a template to develop remote-method-guesser plugins.
- * It implements all the available plugin interfaces, but only uses placeholder implementations.
- * If you want to build a plugin from it, remove the interfaces and methods that you do not
- * intend to use. Other methods need to be overwritten with actual useful implementations.
- *
- * When changing the class name, make sure to also change the RmgPluginClass entry within the
- * pom.xml file.
+ * The Quartz Scheduler plugin implements IActionProvider to add additional
+ * actions to remote method guesser.
  */
 public class Template implements IActionProvider
 {
@@ -28,6 +23,11 @@ public class Template implements IActionProvider
             if (action == QuartzAction.VERSION)
             {
                 Dispatcher.dispatchVersion();
+            }
+
+            else if (action == QuartzAction.SCHEDULE)
+            {
+                Dispatcher.dispatchScheduleJob();
             }
         }
 
