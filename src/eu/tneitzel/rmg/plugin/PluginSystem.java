@@ -6,10 +6,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IOption;
 import eu.tneitzel.argparse4j.inf.SubparserContainer;
 import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
@@ -315,6 +319,27 @@ public class PluginSystem
         }
 
         return new IAction[] {};
+    }
+
+    /**
+     * Return options added by a user defined plugin. If no plugin was specified,
+     * an empty list of options is returned.
+     *
+     * @return array of additional options
+     */
+    public static List<IOption> getPluginOptions()
+    {
+        List<IOption> options = new ArrayList<IOption>();
+
+        if (actionProvider != null)
+        {
+            for (IAction action : actionProvider.getActions())
+            {
+                options.addAll(Arrays.asList(action.getOptions()));
+            }
+        }
+
+        return options;
     }
 
     /**

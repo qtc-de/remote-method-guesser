@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import eu.tneitzel.argparse4j.ArgumentParsers;
 import eu.tneitzel.argparse4j.global.ActionContext;
 import eu.tneitzel.argparse4j.global.GlobalOption;
 import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IOption;
 import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
 import eu.tneitzel.argparse4j.inf.ArgumentParser;
 import eu.tneitzel.argparse4j.inf.ArgumentParserException;
@@ -117,8 +119,11 @@ public class ArgumentHandler
      */
     private void initialize()
     {
+        List<IOption> options = PluginSystem.getPluginOptions();
+        options.addAll(Arrays.asList(RMGOption.values()));
+
         config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.getName()));
-        GlobalOption.parseOptions(args, config, RMGOption.values());
+        GlobalOption.parseOptions(args, config, options.toArray(new IOption[0]));
 
         if (RMGOption.GLOBAL_NO_COLOR.getBool())
         {
