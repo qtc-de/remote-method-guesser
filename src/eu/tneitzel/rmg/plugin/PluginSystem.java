@@ -34,6 +34,7 @@ import eu.tneitzel.rmg.utils.RMGUtils;
 public class PluginSystem
 {
     private static String manifestAttribute = "RmgPluginClass";
+    public static URLClassLoader pluginLoader = null;
 
     private static IActionProvider actionProvider = null;
     private static IPayloadProvider payloadProvider = null;
@@ -115,8 +116,8 @@ public class PluginSystem
 
         try
         {
-            URLClassLoader ucl = new URLClassLoader(new URL[] {pluginFile.toURI().toURL()});
-            Class<?> pluginClass = Class.forName(pluginClassName, true, ucl);
+            pluginLoader = new URLClassLoader(new URL[] {pluginFile.toURI().toURL()});
+            Class<?> pluginClass = Class.forName(pluginClassName, true, pluginLoader);
             pluginInstance = pluginClass.newInstance();
         }
 

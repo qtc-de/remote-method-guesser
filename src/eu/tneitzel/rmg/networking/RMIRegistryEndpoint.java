@@ -219,7 +219,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
                 ExceptionHandler.notBoundException(e, boundName);
             }
 
-            catch( Exception e )
+            catch (Exception e)
             {
                 Throwable cause = ExceptionHandler.getCause(e);
 
