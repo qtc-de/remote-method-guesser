@@ -6,6 +6,8 @@ import java.rmi.RemoteException;
 /**
  * The Quartz Scheduler plugin implements IActionProvider to add additional
  * actions to remote method guesser.
+ *
+ * @author Tobias Neitzel (@qtc_de)
  */
 public class Template implements IActionProvider
 {
@@ -20,14 +22,24 @@ public class Template implements IActionProvider
     {
         try
         {
-            if (action == QuartzAction.VERSION)
+            if (action == QuartzAction.LIST)
             {
-                Dispatcher.dispatchVersion();
+                Dispatcher.dispatchList();
+            }
+
+            if (action == QuartzAction.DELETE)
+            {
+                Dispatcher.dispatchDelete();
             }
 
             else if (action == QuartzAction.SCHEDULE)
             {
                 Dispatcher.dispatchScheduleJob();
+            }
+
+            else if (action == QuartzAction.VERSION)
+            {
+                Dispatcher.dispatchVersion();
             }
         }
 
