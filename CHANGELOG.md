@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## v5.1.0 - MMM DD, 2024
+
+### Added
+
+* Add GitHub pages for [Javadoc](https://qtc-de.github.io/remote-method-guesser/)
+* Add [IActionProvider](/src/eu/tneitzel/rmg/plugin/IActionProvider.java) plugin interface
+* Add [plugin template](/plugins/template)
+* Add [Quartz Scheduler plugin](/plugins/quartz-scheduler)
+* Add [Quartz Scheduler container](/docker/quartz-server)
+
+### Changed
+
+* Change argparse4j dependency to https://github.com/qtc-de/argparse4j
+* Change CHANGELOG.md version format (af1c52137277cacfe2ccc9c166fd68770ae3e213)
+* Improve RMI class loading for plugin classes (454a9fd17653ce3bceba58a9ba989e344ee2c7c7)
+* Refactor plugin system ([README](/plugins/README.md))
+
+
 ## v5.0.0 - Dec 23, 2023
 
 ### Added
