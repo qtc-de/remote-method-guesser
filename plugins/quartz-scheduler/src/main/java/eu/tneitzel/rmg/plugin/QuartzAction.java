@@ -11,18 +11,18 @@ import eu.tneitzel.rmg.internal.RMGOption;
  */
 public enum QuartzAction implements IAction
 {
-    LIST("list", "list jobs registred within sche scheduler", new IOption[] {
-            RMGOption.TARGET_HOST,
-            RMGOption.TARGET_PORT,
-            RMGOption.TARGET_BOUND_NAME,
-    }),
-
     DELETE("delete", "delete a job from the scheduler", new IOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
             RMGOption.TARGET_BOUND_NAME,
             QuartzOption.DELETE_GROUP,
             QuartzOption.DELETE_NAME,
+    }),
+
+    LIST("list", "list jobs registred within sche scheduler", new IOption[] {
+            RMGOption.TARGET_HOST,
+            RMGOption.TARGET_PORT,
+            RMGOption.TARGET_BOUND_NAME,
     }),
 
     SCHEDULE("schedule", "schedule a NativeJob for command execution", new IOption[] {
