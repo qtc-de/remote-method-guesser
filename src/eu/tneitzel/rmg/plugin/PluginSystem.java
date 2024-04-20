@@ -351,14 +351,7 @@ public class PluginSystem
     {
         for (IAction action : getPluginActions())
         {
-            SubparserContainer container = parser;
-
-            if (action.getGroup() == null)
-            {
-                container = parser.getOrCreateSubparserGroup(OperationGroup.PLUGIN.getName());
-            }
-
-            action.addSuparser(container);
+            action.addSuparser(parser);
         }
     }
 
