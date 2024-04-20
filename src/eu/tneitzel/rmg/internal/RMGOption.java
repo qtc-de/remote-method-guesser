@@ -718,4 +718,10 @@ public enum RMGOption implements IOption
     {
         return name;
     }
+
+    @Override
+    public String getEnumName()
+    {
+        return this.name();
+    }
 }
