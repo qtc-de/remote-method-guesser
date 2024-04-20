@@ -745,7 +745,9 @@ public class Dispatcher
             Logger.lineBreak();
             Logger.increaseIndent();
 
+            p.setSocketTimeout();
             PortScanner ps = new PortScanner(host, rmiPorts);
+
             ps.portScan();
 
             Logger.decreaseIndent();
