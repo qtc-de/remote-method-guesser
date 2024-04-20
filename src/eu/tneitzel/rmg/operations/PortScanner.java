@@ -111,10 +111,10 @@ public class PortScanner {
      * @param read timeout for read operations on the sockets
      * @param connect timeout for the initial socket connect
      */
-    public static void setSocketTimeouts(String read, String connect)
+    public static void setSocketTimeouts(int read, int connect)
     {
-        readTimeout = Integer.valueOf(read);
-        connectTimeout = Integer.valueOf(connect);
+        readTimeout = read;
+        connectTimeout = connect;
     }
 
     /**

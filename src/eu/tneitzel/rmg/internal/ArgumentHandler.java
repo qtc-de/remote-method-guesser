@@ -397,7 +397,7 @@ public class ArgumentHandler
     {
         Set<Integer> rmiPorts = new HashSet<Integer>();
 
-        String defaultPorts = config.getProperty("rmi_ports");
+        String defaultPorts = config.getProperty("RMI_PORTS");
         List<String> portStrings = (List<String>)RMGOption.SCAN_PORTS.value;
 
         if (portStrings == null)
@@ -480,12 +480,12 @@ public class ArgumentHandler
      */
     public void setSocketTimeout()
     {
-        String scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getValue();
-        String scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getValue();
+        int scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getValue();
+        int scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getValue();
 
-        System.setProperty("sun.rmi.transport.connectionTimeout", scanTimeoutConnect);
-        System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", scanTimeoutRead);
-        System.setProperty("sun.rmi.transport.tcp.responseTimeout", scanTimeoutRead);
+        System.setProperty("sun.rmi.transport.connectionTimeout", String.valueOf(scanTimeoutConnect));
+        System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", String.valueOf(scanTimeoutRead));
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", String.valueOf(scanTimeoutRead));
 
         PortScanner.setSocketTimeouts(scanTimeoutRead, scanTimeoutConnect);
     }
