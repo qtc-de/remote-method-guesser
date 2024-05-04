@@ -38,8 +38,7 @@ tests:
       - plain-server
       - --signature
       - 'String execute(String dummy)'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -51,32 +50,32 @@ tests:
             - groups=0(root)
 
 
-  - title: Execute Call (Argument Provider Plugin)
-    description: |-
-      'Invokes the login function on the legacy-service object using'
-      'a custom argument provider that creates the required HashMap.'
+  #- title: Execute Call (Argument Provider Plugin)
+  #  description: |-
+  #    'Invokes the login function on the legacy-service object using'
+  #    'a custom argument provider that creates the required HashMap.'
 
-    groups:
-      - argument-provider
+  #  groups:
+  #    - argument-provider
 
-    command:
-      - rmg
-      - call
-      - ${TARGET}
-      - login
-      - --bound-name
-      - legacy-service
-      - --signature
-      - 'String login(java.util.HashMap dummy1)'
-      - --plugin
-      - ../utils/PluginTest.jar
-      - ${OPTIONS}
+  #  command:
+  #    - rmg
+  #    - call
+  #    - ${TARGET}
+  #    - login
+  #    - --bound-name
+  #    - legacy-service
+  #    - --signature
+  #    - 'String login(java.util.HashMap dummy1)'
+  #    - --plugin
+  #    - ../utils/PluginTest.jar
+  #    - ${OPTIONS}
 
-    validators:
-      - error: False
-      - contains:
-          values:
-            - Session-ID-123
+  #  validators:
+  #    - error: False
+  #    - contains:
+  #        values:
+  #          - Session-ID-123
 
 
   - title: Execute Call (Based on ObjID)
@@ -96,8 +95,7 @@ tests:
       - 0
       - --signature
       - 'String[] list()'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -126,8 +124,7 @@ tests:
       - '[0:0:0, 0]'
       - --signature
       - 'String[] list()'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -223,8 +220,7 @@ tests:
       - activation-test
       - --signature
       - 'String execute(String dummy)'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -251,8 +247,7 @@ tests:
       - plain-server
       - --signature
       - 'String system(String command, String[] args)'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -279,8 +274,7 @@ tests:
       - activation-test
       - --signature
       - 'String system(String command, String[] args)'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
 
     validators:
@@ -310,8 +304,7 @@ tests:
       - --signature
       - 'int math(int dummy1, int dummy2)'
       - 'new Integer(338), new Integer(999)'
-      - --plugin
-      - ../utils/PluginTest.jar
+      - --show-response
       - ${OPTIONS}
       - --serial-version-uid
       - 4444

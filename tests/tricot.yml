@@ -18,7 +18,7 @@ tester:
         ge: 1.12.0
 
 variables:
-  rmg: rmg-5.0.0-jar-with-dependencies.jar
+  rmg: rmg-5.1.0-jar-with-dependencies.jar
   volume: /tmp/rmg-tricot-test/
   volume-d: /rce/
   codebase-class: CodebaseTest
@@ -54,7 +54,6 @@ plugins:
         - utils/CodebaseTest4.class
         - utils/CodebaseTest5.class
         - utils/CodebaseTest6.class
-        - utils/PluginTest.jar
 
 
 testers:

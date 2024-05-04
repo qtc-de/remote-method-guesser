@@ -14,15 +14,6 @@ variables:
   file: jdk8-method-rce-test.txt
 
 
-plugins:
-  - os_command:
-      cmd:
-        - /bin/bash
-        - ../../../plugins/build.sh
-        - ../../../target/${rmg}
-        - ../../utils/PluginTest.java
-        - ../../utils/PluginTest.jar
-
 tests:
   - title: String Marshaling
     description: |-
