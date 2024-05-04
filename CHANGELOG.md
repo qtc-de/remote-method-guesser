@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Change argparse4j dependency to https://github.com/qtc-de/argparse4j
 * Change CHANGELOG.md version format (af1c52137277cacfe2ccc9c166fd68770ae3e213)
+* Change option name `--generic-print` to `--show-response`
 * Improve RMI class loading for plugin classes (454a9fd17653ce3bceba58a9ba989e344ee2c7c7)
 * Improve `scan` action reliability (#62)
 * Refactor plugin system ([README](/plugins/README.md))

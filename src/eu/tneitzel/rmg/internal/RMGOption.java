@@ -594,8 +594,8 @@ public enum RMGOption implements IOption
             RMGOptionGroup.CONNECTION),
 
     /** attempt to output the return value using GenericPrint */
-    GENERIC_PRINT("--generic-print",
-            "attempt to output the return value using GenericPrint",
+    GENERIC_PRINT("--show-response",
+            "attempt to print the return value of an RMI call",
             Arguments.storeTrue(),
             RMGOptionGroup.ACTION);
 
