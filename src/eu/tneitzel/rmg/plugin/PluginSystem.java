@@ -14,14 +14,12 @@ import java.util.jar.Manifest;
 
 import eu.tneitzel.argparse4j.global.IAction;
 import eu.tneitzel.argparse4j.global.IOption;
-import eu.tneitzel.argparse4j.inf.SubparserContainer;
 import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
-import eu.tneitzel.rmg.operations.OperationGroup;
 import eu.tneitzel.rmg.utils.RMGUtils;
 
 /**
@@ -52,8 +50,9 @@ public class PluginSystem
      * pluginPath was specified, the plugin is attempted to be loaded and may overwrite previous settings.
      *
      * @param pluginPath user specified plugin path or null
+     * @param genericPrint whether to use the GenericPrint builtin plugin
      */
-    public static void init(String pluginPath)
+    public static void init(String pluginPath, boolean genericPrint)
     {
         DefaultProvider provider = new DefaultProvider();
 
@@ -61,7 +60,7 @@ public class PluginSystem
         argumentProvider = provider;
         socketFactoryProvider = provider;
 
-        if (RMGOption.GENERIC_PRINT.getBool())
+        if (genericPrint)
         {
             responseHandler = new GenericPrint();
         }

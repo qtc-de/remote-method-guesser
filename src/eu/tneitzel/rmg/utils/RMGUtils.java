@@ -1355,4 +1355,24 @@ public class RMGUtils
 
         return null;
     }
+
+    /**
+     * Primitive argument parser for finding a single boolean value option on the command line.
+     *
+     * @param opt option name to find
+     * @param args command line
+     * @return true if option was found
+     */
+    public static boolean getBooleanOption(String opt, String[] args)
+    {
+        for (String arg : args)
+        {
+            if (arg.equals(opt))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
