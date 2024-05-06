@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Improve RMI class loading for plugin classes (454a9fd17653ce3bceba58a9ba989e344ee2c7c7)
 * Improve `scan` action reliability (#62)
 * Refactor plugin system ([README](/plugins/README.md))
+* IArgumentProvider now accepts an array of arguments instead of a string (a653e6367260ba46333e596d81da283a64fc80f1)
 
 
 ## v5.0.0 - Dec 23, 2023

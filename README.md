@@ -201,10 +201,11 @@ option.
 [+] uid=0(root) gid=0(root) groups=0(root)
 ```
 
-During the ``call`` action, the argument string is evaluated as a *Java expression* of the following form: ``new Object[]{ <ARG> }``. Therefore,
-you need to make sure that your argument string fits into that pattern. E.g. using ``"id"`` as an argument results in an error, as the argument is
-passed as ``id`` to *remote-method-guesser* and the resulting expression ``new Object[]{ id }`` is not a valid *Java expression*. Instead, you need
-to use ``'"id"'`` as this leads to ``new Object[]{ "id" }``, which is valid.
+During the ``call`` action, the provided arguments are evaluated as *Java expression* by inserting them into the following template:
+``new Object[]{ arg1, arg2, arg3, ... }``. Therefore, you need to make sure that your provided arguments fit into that pattern. E.g.
+using ``"id"`` as an argument results in an error, as the argument is passed as ``id`` to *remote-method-guesser* and the resulting
+expression ``new Object[]{ id }`` is not a valid *Java expression*. Instead, you need to use ``'"id"'`` as this leads to ``new Object[]{ "id" }``,
+which is valid.
 
 Moreover, primitive types need to be specified in their corresponding object representation (e.g. ``new Integer(5)`` instead of ``5``). Otherwise they
 cannot be used within the ``Object[]`` array, that is created by the *Java expression*. During the *RMI call*, the corresponding arguments are used
