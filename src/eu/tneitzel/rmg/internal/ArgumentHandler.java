@@ -351,8 +351,8 @@ public class ArgumentHandler
     {
         try
         {
-            String argumentString = (String) RMGOption.CALL_ARGUMENTS.require();
-            return PluginSystem.getArgumentArray(argumentString);
+            String[] args = (String[])RMGOption.CALL_ARGUMENTS.require();
+            return PluginSystem.getArgumentArray(args);
         }
 
         catch (RequirementException e)

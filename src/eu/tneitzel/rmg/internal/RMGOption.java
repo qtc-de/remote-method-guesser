@@ -453,6 +453,7 @@ public enum RMGOption implements IOption
             RMGOptionGroup.NONE,
             new IArgumentModifier[] {
                     new MetaVar("args"),
+                    new NArgs("*")
                 }),
 
     /** ObjID string to parse */

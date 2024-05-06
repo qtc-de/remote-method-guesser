@@ -35,8 +35,8 @@ import javassist.CtNewMethod;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider {
-
+public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider
+{
     /**
      * Return an RMIServerImpl object as used by JMX endpoints when invoked from the bind, rebind or unbind
      * actions. In this case, name is expected to be 'jmx' or args is expected to be null. When the name is
@@ -51,21 +51,26 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public Object getPayloadObject(Operation action, String name, String args)
     {
-        switch(action) {
-
+        switch(action)
+        {
             case BIND:
             case REBIND:
             case UNBIND:
 
-                if(name.equalsIgnoreCase("jmx")) {
+                if (name.equalsIgnoreCase("jmx"))
+                {
                     String[] split = RMGUtils.splitListener(args);
                     return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
+                }
 
-                } else if(args == null) {
+                else if (args == null)
+                {
                     String[] split = RMGUtils.splitListener(name);
                     return RegistryClient.prepareRMIServerImpl(split[0], Integer.valueOf(split[1]));
+                }
 
-                } else {
+                else
+                {
                     Logger.eprintlnMixedYellow("The specified gadget", name, "is not supported for this action.");
                     RMGUtils.exit();
                 }
@@ -74,7 +79,8 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
 
             default:
 
-                if(args == null) {
+                if (args == null)
+                {
                     Logger.eprintlnMixedBlue("Specifying a", "gadget argument", "is required for this action.");
                     RMGUtils.exit();
                 }
@@ -86,40 +92,50 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     }
 
     /**
-     * This function performs basically an eval operation on the user specified argumentString. The argument string is
-     * inserted into the following expression: return new Object[] { " + argumentString + "};
+     * This function performs basically an eval operation on the user specified arguments. The argument string is
+     * inserted into the following expression: return new Object[] { arg1, arg2, arg3, ... };
      * This expression is evaluated and the resulting Object array is returned by this function. For this to work it is
      * important that all arguments within the argumentString are valid Java Object definitions. E.g. one has to use
      * new Integer(5) instead of a plain 5.
      */
     @Override
-    public Object[] getArgumentArray(String argumentString)
+    public Object[] getArgumentArray(String[] args)
     {
         Object[] result = null;
         ClassPool pool = ClassPool.getDefault();
 
-        try {
-            CtClass evaluator = pool.makeClass("eu.tneitzel.rmg.plugin.DefaultProviderEval");
-            String evalFunction = "public static Object[] eval() {"
-                                + "        return new Object[] { " + argumentString + "};"
-                                + "}";
+        String argumentString = prepareArgumentString(args);
+        StringBuilder evalFunction = new StringBuilder();
 
-            CtMethod me = CtNewMethod.make(evalFunction, evaluator);
+        evalFunction.append("public static Object[] eval() { return new Object[] {");
+        evalFunction.append(argumentString);
+        evalFunction.append("};}");
+
+        try
+        {
+            CtClass evaluator = pool.makeClass("eu.tneitzel.rmg.plugin.DefaultProviderEval");
+
+
+            CtMethod me = CtNewMethod.make(evalFunction.toString(), evaluator);
             evaluator.addMethod(me);
             Class<?> evalClass = evaluator.toClass();
 
             Method m = evalClass.getDeclaredMethods()[0];
             result = (Object[]) m.invoke(evalClass, (Object[])null);
+        }
 
-        } catch(VerifyError | CannotCompileException e) {
+        catch(VerifyError | CannotCompileException e)
+        {
             Logger.eprintlnMixedYellow("Specified argument string", argumentString, "is invalid.");
             Logger.eprintlnMixedBlue("Argument string has to be a valid Java expression like:", "'\"id\", new Integer(4)'.");
             Logger.eprintMixedYellow("Make sure that each argument is an", "Object", "not a ");
             Logger.printlnPlainYellow("Primitive.");
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
+        }
 
-        } catch (Exception e) {
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "argument array", "generation", true);
         }
 
@@ -132,17 +148,24 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public RMIClientSocketFactory getClientSocketFactory(String host, int port)
     {
-        if( RMGOption.SSRF.getBool() ) {
+        if (RMGOption.SSRF.getBool())
+        {
             return new SSRFSocketFactory();
+        }
 
-        } else if( RMGOption.SSRFRESPONSE.notNull() ) {
+        else if (RMGOption.SSRFRESPONSE.notNull())
+        {
             byte[] content = RMGUtils.hexToBytes(RMGOption.SSRFRESPONSE.getValue());
             return new SSRFResponseSocketFactory(content);
+        }
 
-        } else if( RMGOption.CONN_SSL.getBool() ) {
+        else if (RMGOption.CONN_SSL.getBool())
+        {
             return new TrustAllSocketFactory();
+        }
 
-        } else {
+        else
+        {
             return RMISocketFactory.getDefaultSocketFactory();
         }
     }
@@ -199,5 +222,26 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
         }
 
         return "eu.tneitzel.rmg.networking.LoopbackSslSocketFactory";
+    }
+
+    /**
+     * Transforms an array of string arguments to a representation that can be used within new Object[] {}.
+     *
+     * @param args user specified arguments
+     * @return prepared argument string
+     */
+    private static String prepareArgumentString(String[] args)
+    {
+        StringBuilder argString = new StringBuilder();
+
+        for (String arg : args)
+        {
+            argString.append(arg);
+            argString.append(",");
+        }
+
+        argString.setLength(argString.length() - 1);
+
+        return argString.toString();
     }
 }

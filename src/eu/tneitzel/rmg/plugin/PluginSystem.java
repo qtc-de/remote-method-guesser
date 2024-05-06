@@ -17,7 +17,6 @@ import eu.tneitzel.argparse4j.global.IOption;
 import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.exceptions.MalformedPluginException;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
-import eu.tneitzel.rmg.internal.RMGOption;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
 import eu.tneitzel.rmg.utils.RMGUtils;
@@ -198,12 +197,12 @@ public class PluginSystem
      * Is called during rmg's 'call' action to obtain the Object argument array. Just forwards the call to the corresponding
      * plugin.
      *
-     * @param argumentString as specified on the command line
+     * @param args as specified on the command line
      * @return Object array to use for the call
      */
-    public static Object[] getArgumentArray(String argumentString)
+    public static Object[] getArgumentArray(String[] args)
     {
-        return argumentProvider.getArgumentArray(argumentString);
+        return argumentProvider.getArgumentArray(args);
     }
 
     /**
