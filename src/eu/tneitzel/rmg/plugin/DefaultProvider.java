@@ -101,6 +101,11 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
     @Override
     public Object[] getArgumentArray(String[] args)
     {
+        if (args.length == 0)
+        {
+            return new Object[] {};
+        }
+
         Object[] result = null;
         ClassPool pool = ClassPool.getDefault();
 
