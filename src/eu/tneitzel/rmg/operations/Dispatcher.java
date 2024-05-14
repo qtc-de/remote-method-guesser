@@ -769,6 +769,29 @@ public class Dispatcher
     {
         try
         {
+            String objIDString = RMGOption.OBJID_OBJID.require();
+
+            ObjID objID = RMGUtils.parseObjID(objIDString);
+            RMGUtils.printObjID(objID);
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
+
+    }
+
+    /**
+     * Creates a rogue JMX server. The target specification which normally identifies the
+     * remote endpoint is used to identify where the rogue JMX server should listen. An
+     * additional endpoint specification can be made using host:port syntax to forward jmx
+     * connections to.
+     */
+    public void dispatchRogueJMX()
+    {
+        try
+        {
             int listenerPort = RMGOption.LISTEN_PORT.require();
             String listenerHost = RMGOption.LISTEN_IP.require();
 
@@ -805,28 +828,5 @@ public class Dispatcher
         {
             ExceptionHandler.requirementException(e);
         }
-    }
-
-    /**
-     * Creates a rogue JMX server. The target specification which normally identifies the
-     * remote endpoint is used to identify where the rogue JMX server should listen. An
-     * additional endpoint specification can be made using host:port syntax to forward jmx
-     * connections to.
-     */
-    public void dispatchRogueJMX()
-    {
-        try
-        {
-            String objIDString = RMGOption.OBJID_OBJID.require();
-
-            ObjID objID = RMGUtils.parseObjID(objIDString);
-            RMGUtils.printObjID(objID);
-        }
-
-        catch (RequirementException e)
-        {
-            ExceptionHandler.requirementException(e);
-        }
-
     }
 }
