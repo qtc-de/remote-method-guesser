@@ -2,6 +2,7 @@ package eu.tneitzel.rmg.networking;
 
 import java.io.IOException;
 import java.io.InvalidClassException;
+import java.io.StreamCorruptedException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
@@ -250,6 +251,11 @@ public class RMIRegistryEndpoint extends RMIEndpoint
                 }
 
                 else if (e instanceof UnmarshalException && e.getMessage().contains("Transport return code invalid"))
+                {
+                    throw (UnmarshalException)e;
+                }
+
+                else if (e instanceof UnmarshalException && ExceptionHandler.getCause(e) instanceof StreamCorruptedException)
                 {
                     throw (UnmarshalException)e;
                 }

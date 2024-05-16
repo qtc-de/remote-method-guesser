@@ -26,6 +26,7 @@ import eu.tneitzel.rmg.io.SampleWriter;
 import eu.tneitzel.rmg.io.WordlistHandler;
 import eu.tneitzel.rmg.networking.RMIEndpoint;
 import eu.tneitzel.rmg.networking.RMIRegistryEndpoint;
+import eu.tneitzel.rmg.utils.IUnknown;
 import eu.tneitzel.rmg.utils.RMGUtils;
 import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
 import eu.tneitzel.rmg.utils.RogueJMX;
@@ -33,6 +34,7 @@ import eu.tneitzel.rmg.utils.UnicastWrapper;
 import eu.tneitzel.rmg.utils.YsoIntegration;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
+import sun.rmi.server.UnicastRef;
 
 /**
  * The dispatcher class contains all method definitions for the different rmg actions. It obtains a reference
@@ -46,6 +48,7 @@ import javassist.NotFoundException;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
+@SuppressWarnings("restriction")
 public class Dispatcher
 {
     private ArgumentHandler p;
@@ -86,37 +89,59 @@ public class Dispatcher
      * The result is stored within an object attribute.
      *
      * It was observed that using --serial-version-uid option can cause an invalid transport return code
-     * exception. This seems to be some kind of race condition and cannot be reproduced reliably. The lookup
-     * operation on the RMI registry does pass only this UnmarshalException to the caller. If this is the case,
-     * we just retry a few times.
+     * exception. This seems to be some kind of race condition and cannot be reproduced reliably. It seems
+     * that RMI / Java does not clear the ObjectInput stream when reading an unknown class from it. The remaining
+     * bytes are left within the stream. Since RMI uses connection pooling, the next operation encounteres the
+     * invalid bytes and fails. If this is the case, we just retry a few times.
      *
      * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not an RMI registry
      */
     private void obtainBoundObjects() throws NoSuchObjectException
     {
-        int retryCount = 0;
-
-        if (boundNames == null)
+        if (RMGOption.TARGET_OBJID.notNull())
         {
-            obtainBoundNames();
-        }
+            RMIEndpoint ep = getRMIEndpoint();
+            ObjID objid = RMGUtils.parseObjID(RMGOption.TARGET_OBJID.getValue());
 
-        while (retryCount < 5)
-        {
             try
             {
-                remoteObjects = getRegistry().lookupWrappers(boundNames);
-                return;
+                UnicastRef ref = ep.getRemoteRef(objid);
+                remoteObjects = new RemoteObjectWrapper[] { UnicastWrapper.fromRef(ref, IUnknown.class) };
             }
 
-            catch (java.rmi.UnmarshalException e)
+            catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e)
             {
-                retryCount += 1;
+                ExceptionHandler.internalError("obtainBoundObjects", "reflection");
             }
 
-            catch (Exception e)
+        }
+
+        else
+        {
+            int retryCount = 0;
+
+            if (boundNames == null)
             {
-                ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+                obtainBoundNames();
+            }
+
+            while (retryCount < 5)
+            {
+                try
+                {
+                    remoteObjects = getRegistry().lookupWrappers(boundNames);
+                    return;
+                }
+
+                catch (java.rmi.UnmarshalException e)
+                {
+                    retryCount += 1;
+                }
+
+                catch (Exception e)
+                {
+                    ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+                }
             }
         }
     }
@@ -157,7 +182,7 @@ public class Dispatcher
             int port = RMGOption.TARGET_PORT.require();
             String host = RMGOption.TARGET_HOST.require();
 
-            this.createMethodCandidate();
+            createMethodCandidate();
             return new RMIEndpoint(host, port);
         }
 

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add [plugin template](/plugins/template)
 * Add [Quartz Scheduler plugin](/plugins/quartz-scheduler)
 * Add [Quartz Scheduler container](/docker/quartz-server)
+* Add `--objid` support for guess operation
 
 ### Changed
 
