@@ -26,6 +26,7 @@ import eu.tneitzel.rmg.io.SampleWriter;
 import eu.tneitzel.rmg.io.WordlistHandler;
 import eu.tneitzel.rmg.networking.RMIEndpoint;
 import eu.tneitzel.rmg.networking.RMIRegistryEndpoint;
+import eu.tneitzel.rmg.utils.EmptyWrapper;
 import eu.tneitzel.rmg.utils.IUnknown;
 import eu.tneitzel.rmg.utils.RMGUtils;
 import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
@@ -113,36 +114,43 @@ public class Dispatcher
             {
                 ExceptionHandler.internalError("obtainBoundObjects", "reflection");
             }
-
         }
 
         else
         {
-            int retryCount = 0;
-
             if (boundNames == null)
             {
                 obtainBoundNames();
             }
 
-            while (retryCount < 5)
+            remoteObjects = new RemoteObjectWrapper[boundNames.length];
+
+            outer: for (int ctr = 0; ctr < boundNames.length; ctr++)
             {
-                try
+                int retryCount = 0;
+
+                while (retryCount < 5)
                 {
-                    remoteObjects = getRegistry().lookupWrappers(boundNames);
-                    return;
+                    try
+                    {
+                        remoteObjects[ctr] = getRegistry().lookupWrapper(boundNames[ctr]);
+                        continue outer;
+                    }
+
+                    catch (java.rmi.UnmarshalException e)
+                    {
+                        retryCount += 1;
+                    }
+
+                    catch (Exception e)
+                    {
+                        ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+                    }
                 }
 
-                catch (java.rmi.UnmarshalException e)
-                {
-                    retryCount += 1;
-                }
-
-                catch (Exception e)
-                {
-                    ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
-                }
+                remoteObjects[ctr] = new EmptyWrapper(boundNames[ctr]);
             }
+
         }
     }
 

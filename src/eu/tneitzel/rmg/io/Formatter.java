@@ -51,13 +51,16 @@ public class Formatter
         for (RemoteObjectWrapper remoteObject : remoteObjects)
         {
             Logger.printlnMixedYellow("-", remoteObject.boundName);
+            Logger.increaseIndent();
 
             if (remoteObject.remoteObject == null)
             {
+                Logger.printlnMixedRed("--> Error:", "RemoteObject could not be obtained from registry.");
+                Logger.printlnMixedBlue("    Check", "/docs/rmg/transport-errors.md", "for more information.");
+
+                Logger.decreaseIndent();
                 continue;
             }
-
-            Logger.increaseIndent();
 
             if (remoteObject instanceof SpringRemotingWrapper)
             {

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Improve `scan` action reliability (#62)
 * Refactor plugin system ([README](/plugins/README.md))
 * IArgumentProvider now accepts an array of arguments instead of a string (a653e6367260ba46333e596d81da283a64fc80f1)
+* Let `enum` action continue on RemoteObject retrieval errors
 
 
 ## v5.0.0 - Dec 23, 2023
