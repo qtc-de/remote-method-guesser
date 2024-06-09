@@ -3,6 +3,7 @@ package eu.tneitzel.rmg.utils;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -243,12 +244,25 @@ public class YsoIntegration
             ysoPayload = method.invoke(null, new Object[] {gadget, command});
         }
 
-        catch (Exception  e)
+        catch (Exception e)
         {
             Logger.printlnPlain(" failed.");
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during gadget generation.");
-            Logger.eprintMixedBlue("You probably specified", "a wrong gadget name", "or an ");
-            Logger.eprintlnPlainBlue("invalid gadget argument.");
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if (cause instanceof InaccessibleObjectException)
+            {
+                Logger.eprintlnMixedYellow("Caught", "InaccessibleObjectException", "during gadget generation.");
+                Logger.eprintlnMixedBlue("This is caused by the", "Java module system", "in newer Java versions.");
+                Logger.eprintln("Retry using Java 8 or pass add-open directives to remote-method-guessers manifest.");
+            }
+
+            else
+            {
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during gadget generation.");
+                Logger.eprintMixedBlue("You probably specified", "a wrong gadget name", "or an ");
+                Logger.eprintlnPlainBlue("invalid gadget argument.");
+            }
+
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
         }
