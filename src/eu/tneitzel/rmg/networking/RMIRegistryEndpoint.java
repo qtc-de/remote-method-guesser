@@ -18,6 +18,7 @@ import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.plugin.PluginSystem;
+import eu.tneitzel.rmg.utils.EmptyWrapper;
 import eu.tneitzel.rmg.utils.RMGUtils;
 import eu.tneitzel.rmg.utils.RemoteObjectWrapper;
 
@@ -281,6 +282,42 @@ public class RMIRegistryEndpoint extends RMIEndpoint
     }
 
     /**
+     * It was observed that using --serial-version-uid option can cause an invalid transport return code
+     * exception during lookup. This seems to be some kind of race condition and cannot be reproduced reliably.
+     * We currently believe that RMI / Java does not clear the ObjectInput stream when reading an unknown class
+     * from it. The remaining bytes are left within the stream. Since RMI uses connection pooling, the next
+     * operation encounters the invalid bytes and fails. If this is the case, we just retry a few times.
+     *
+     * @param boundName  the bound name to lookup
+     * @param maxRetries  the maximum amount of retries to perform
+     * @return Remote object if lookup was successful. null otherwise.
+     */
+    public Remote lookupWithRetries(String boundName, int maxRetries)
+    {
+        int retryCount = 0;
+
+        while (retryCount < maxRetries)
+        {
+            try
+            {
+                return this.lookup(boundName);
+            }
+
+            catch (java.rmi.UnmarshalException e)
+            {
+                retryCount += 1;
+            }
+
+            catch (Exception e)
+            {
+                ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Same as the lookup action, but returns a RemoteObjectWrapper.
      *
      * @param boundName name to lookup within the registry
@@ -291,10 +328,21 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * @throws SecurityException if reflective access fails
      * @throws UnmarshalException if unmarshalling the return value fails
      */
-    public RemoteObjectWrapper lookupWrapper(String boundName) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    public RemoteObjectWrapper lookupWrapper(String boundName)
     {
-        Remote remoteObject = lookup(boundName);
-        return RemoteObjectWrapper.getInstance(remoteObject, boundName);
+        Remote remoteObject = lookupWithRetries(boundName, 5);
+
+        if (remoteObject != null)
+        {
+            try
+            {
+                return RemoteObjectWrapper.getInstance(remoteObject, boundName);
+            }
+
+            catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {}
+        }
+
+        return new EmptyWrapper(boundName);
     }
 
     /**
@@ -308,7 +356,7 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      * @throws SecurityException if reflective access fails
      * @throws UnmarshalException if unmarshalling the return value fails
      */
-    public RemoteObjectWrapper[] lookupWrappers(String[] boundNames) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, UnmarshalException
+    public RemoteObjectWrapper[] lookupWrappers(String[] boundNames)
     {
         RemoteObjectWrapper[] wrappers = new RemoteObjectWrapper[boundNames.length];
 

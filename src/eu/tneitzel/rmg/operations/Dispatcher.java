@@ -89,12 +89,6 @@ public class Dispatcher
      * was specified on the command line, all registered bound names within the RMI registry are looked up.
      * The result is stored within an object attribute.
      *
-     * It was observed that using --serial-version-uid option can cause an invalid transport return code
-     * exception. This seems to be some kind of race condition and cannot be reproduced reliably. It seems
-     * that RMI / Java does not clear the ObjectInput stream when reading an unknown class from it. The remaining
-     * bytes are left within the stream. Since RMI uses connection pooling, the next operation encounteres the
-     * invalid bytes and fails. If this is the case, we just retry a few times.
-     *
      * @throws java.rmi.NoSuchObjectException is thrown when the specified RMI endpoint is not an RMI registry
      */
     private void obtainBoundObjects() throws NoSuchObjectException
@@ -123,34 +117,7 @@ public class Dispatcher
                 obtainBoundNames();
             }
 
-            remoteObjects = new RemoteObjectWrapper[boundNames.length];
-
-            outer: for (int ctr = 0; ctr < boundNames.length; ctr++)
-            {
-                int retryCount = 0;
-
-                while (retryCount < 5)
-                {
-                    try
-                    {
-                        remoteObjects[ctr] = getRegistry().lookupWrapper(boundNames[ctr]);
-                        continue outer;
-                    }
-
-                    catch (java.rmi.UnmarshalException e)
-                    {
-                        retryCount += 1;
-                    }
-
-                    catch (Exception e)
-                    {
-                        ExceptionHandler.unexpectedException(e, "lookup", "operation", true);
-                    }
-                }
-
-                remoteObjects[ctr] = new EmptyWrapper(boundNames[ctr]);
-            }
-
+            remoteObjects = getRegistry().lookupWrappers(boundNames);
         }
     }
 
