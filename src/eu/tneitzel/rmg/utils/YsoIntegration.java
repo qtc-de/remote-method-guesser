@@ -3,7 +3,6 @@ package eu.tneitzel.rmg.utils;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -249,7 +248,7 @@ public class YsoIntegration
             Logger.printlnPlain(" failed.");
             Throwable cause = ExceptionHandler.getCause(e);
 
-            if (cause instanceof InaccessibleObjectException)
+            if (cause.getClass().getName().equals("java.lang.reflect.InaccessibleObjectException"))
             {
                 Logger.eprintlnMixedYellow("Caught", "InaccessibleObjectException", "during gadget generation.");
                 Logger.eprintlnMixedBlue("This is caused by the", "Java module system", "in newer Java versions.");
