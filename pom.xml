@@ -124,6 +124,7 @@
                         </Built-By>
                         <Add-Opens>
                             java.base/java.io
+                            java.base/java.util
                             java.base/java.lang
                             java.base/java.lang.reflect
                             java.base/jdk.internal.misc
