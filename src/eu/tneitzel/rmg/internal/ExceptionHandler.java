@@ -716,7 +716,17 @@ public class ExceptionHandler
 
         Logger.eprintlnMixedYellow("Caught unexpected", "ClassNotFoundException", "during lookup action.");
         Logger.eprintlnMixedBlue("The class", name, "could not be resolved within your class path.");
-        Logger.eprintlnMixedBlue("This usually means that the RemoteObject is using a custom", "RMIClientSocketFactory or InvocationHandler.");
+
+        if (name.equals("sun/rmi/server/ActivatableRef"))
+        {
+            Logger.eprintlnMixedBlue("Newer Java versions", "do not", "include this class anymore.");
+            Logger.eprintln("You can retry using an older Java version like Java 8.");
+        }
+
+        else
+        {
+            Logger.eprintlnMixedBlue("This usually means that the RemoteObject is using a custom", "RMIClientSocketFactory or InvocationHandler.");
+        }
 
         showStackTrace(e);
         RMGUtils.exit();
