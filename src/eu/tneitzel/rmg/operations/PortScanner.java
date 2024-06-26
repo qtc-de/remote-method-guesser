@@ -53,8 +53,8 @@ public class PortScanner {
     private TrustAllSocketFactory sslFactory;
     private RMIClientSocketFactory sockFactory;
 
-    private static int readTimeout = 5;
-    private static int connectTimeout = 5;
+    private static int readTimeout = 5000;
+    private static int connectTimeout = 3000;
 
     /**
      * The PortScanner class obtains the target host as a String and the ports to scan
@@ -111,10 +111,10 @@ public class PortScanner {
      * @param read timeout for read operations on the sockets
      * @param connect timeout for the initial socket connect
      */
-    public static void setSocketTimeouts(String read, String connect)
+    public static void setSocketTimeouts(int read, int connect)
     {
-        readTimeout = Integer.valueOf(read);
-        connectTimeout = Integer.valueOf(connect);
+        readTimeout = read;
+        connectTimeout = connect;
     }
 
     /**

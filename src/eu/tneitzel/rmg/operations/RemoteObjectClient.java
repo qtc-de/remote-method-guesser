@@ -1,6 +1,8 @@
 package eu.tneitzel.rmg.operations;
 
+import java.lang.reflect.Proxy;
 import java.rmi.server.ObjID;
+import java.rmi.server.RemoteObjectInvocationHandler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -96,6 +98,18 @@ public class RemoteObjectClient
         this.remoteMethods = Collections.synchronizedList(new ArrayList<MethodCandidate>());
 
         remoteRef = remoteObject.unicastRef;
+    }
+
+    /**
+     * Create a proxy for the RemoteObjectClient.
+     *
+     * @return proxy implementing the specified interface
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T createProxy(Class<T> intf)
+    {
+        RemoteObjectInvocationHandler invo = new RemoteObjectInvocationHandler(remoteRef);
+        return (T)Proxy.newProxyInstance(intf.getClassLoader(), new Class<?>[] { intf }, invo);
     }
 
     /**
@@ -435,7 +449,7 @@ public class RemoteObjectClient
 
         try
         {
-            remoteObject = rmiReg.lookup(boundName).getUnicastWrapper();
+            remoteObject = rmiReg.lookupWrapper(boundName).getUnicastWrapper();
         }
 
         catch (Exception e)

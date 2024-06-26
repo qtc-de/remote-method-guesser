@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import eu.tneitzel.rmg.plugin.PluginSystem;
 import eu.tneitzel.rmg.utils.RMGUtils;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
@@ -87,17 +88,41 @@ public class CodebaseCollector extends RMIClassLoaderSpi
      */
     public Class<?> loadClass(String codebase, String name, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
-        Class<?> resolvedClass = null;
-        long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
-
         addCodebase(codebase, name);
         codebase = null;
+
+        long serialVersionUID = RMGOption.SERIAL_VERSION_UID.getValue();
 
         if (serialVersionUIDMap.containsKey(name))
         {
             serialVersionUID = serialVersionUIDMap.get(name);
             name = "_" + name;
         }
+
+        else
+        {
+            try
+            {
+                // attempt to load the class directly
+                return originalLoader.loadClass(codebase, name, defaultLoader);
+            }
+
+            catch (ClassNotFoundException e) {}
+
+            if (PluginSystem.pluginLoader != null)
+            {
+                try
+                {
+                    // if a plugin is used attempt to load the class via the plugin loader
+                    return originalLoader.loadClass(codebase, name, PluginSystem.pluginLoader);
+                }
+
+                catch (ClassNotFoundException e) {}
+            }
+        }
+
+        // class could neither be loaded directly nor via plugin. Dynamic creation is required.
+        Class<?> resolvedClass = null;
 
         try
         {
@@ -147,19 +172,47 @@ public class CodebaseCollector extends RMIClassLoaderSpi
      */
     public Class<?> loadProxyClass(String codebase, String[] interfaces, ClassLoader defaultLoader) throws MalformedURLException, ClassNotFoundException
     {
+        for (String intf : interfaces)
+        {
+            addCodebase(codebase, intf);
+        }
+
+        codebase = null;
         Class<?> resolvedClass = null;
 
-        try {
+        try
+        {
+            // attempt to load the class directly without dynamic class creation
+            return originalLoader.loadProxyClass(codebase, interfaces, defaultLoader);
+        }
 
-            for(String intf : interfaces) {
-                RMGUtils.makeInterface(intf);
-                addCodebase(codebase, intf);
+        catch (ClassNotFoundException e) {}
+
+        if (PluginSystem.pluginLoader != null)
+        {
+            try
+            {
+                // if a plugin is used, attempt to load the class from the plugin loader
+                return originalLoader.loadProxyClass(codebase, interfaces, PluginSystem.pluginLoader);
             }
 
-            codebase = null;
+            catch (ClassNotFoundException e) {}
+        }
+
+        try
+        {
+            // the class could neither be loaded directly nor via plugin. Dynamic creation is required
+            for (String intf : interfaces)
+            {
+                RMGUtils.makeInterface(intf);
+            }
+
             resolvedClass = originalLoader.loadProxyClass(codebase, interfaces, defaultLoader);
 
-        } catch (CannotCompileException e) {
+        }
+
+        catch (CannotCompileException e)
+        {
             ExceptionHandler.internalError("loadProxyClass", "Unable to compile unknown interface class.");
         }
 
@@ -235,17 +288,24 @@ public class CodebaseCollector extends RMIClassLoaderSpi
      */
     private void addCodebase(String codebase, String className)
     {
-        if( codebase == null )
+        if (codebase == null)
+        {
             return;
+        }
 
-        if( className.startsWith("java.") || className.startsWith("[Ljava") || className.startsWith("javax.") )
+        if (className.startsWith("java.") || className.startsWith("[Ljava") || className.startsWith("javax."))
+        {
             codebases.putIfAbsent(codebase, new HashSet<String>());
+        }
 
-        else if( codebases.containsKey(codebase) ) {
+        else if (codebases.containsKey(codebase))
+        {
             Set<String> classNames = codebases.get(codebase);
             classNames.add(className);
+        }
 
-        } else {
+        else
+        {
             Set<String> classNames = new HashSet<String>();
             classNames.add(className);
             codebases.put(codebase, classNames);

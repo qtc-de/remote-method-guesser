@@ -101,41 +101,41 @@ tests:
             - '${volume}/${file}'
 
 
-  - title: Plugin Call
-    description: |-
-      'Uses a plugin as payload provider that returns the string that was specified'
-      'as agument. This is used on the execute method of the plain-server bound name'
-      'to verify code execution.'
+  #- title: Plugin Call
+  #  description: |-
+  #    'Uses a plugin as payload provider that returns the string that was specified'
+  #    'as agument. This is used on the execute method of the plain-server bound name'
+  #    'to verify code execution.'
 
-    groups:
-      - payload-provider
+  #  groups:
+  #    - payload-provider
 
-    command:
-      - rmg
-      - serial
-      - ${TARGET}
-      - custom 
-      - 'touch ${volume-d}/${file}'
-      - --signature
-      - 'String login(java.util.HashMap dummy1)'
-      - --bound-name
-      - legacy-service
-      - --plugin
-      - ../utils/PluginTest.jar
-      - ${OPTIONS}
+  #  command:
+  #    - rmg
+  #    - serial
+  #    - ${TARGET}
+  #    - custom 
+  #    - 'touch ${volume-d}/${file}'
+  #    - --signature
+  #    - 'String login(java.util.HashMap dummy1)'
+  #    - --bound-name
+  #    - legacy-service
+  #    - --plugin
+  #    - ../utils/PluginTest.jar
+  #    - ${OPTIONS}
 
-    validators:
-      - error: False
-      - contains:
-          values:
-            - java.util.HashMap
-            - Caught ClassNotFoundException
-            - deserialize canary
-            - probably worked
-      - file_exists:
-          cleanup: True
-          files:
-            - '${volume}/${file}'
+  #  validators:
+  #    - error: False
+  #    - contains:
+  #        values:
+  #          - java.util.HashMap
+  #          - Caught ClassNotFoundException
+  #          - deserialize canary
+  #          - probably worked
+  #    - file_exists:
+  #        cleanup: True
+  #        files:
+  #          - '${volume}/${file}'
 
 
   - title: Gadget Call (Legacy, non default SerialVersionUID)

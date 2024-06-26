@@ -20,7 +20,7 @@ import eu.tneitzel.rmg.utils.UnicastWrapper;
  * reasonable defaults to visualize them.
  *
  * From remote-method-guesser v5.0.0, GenericPrint is included per default and does not need
- * to be compiled separately. It can be enabled by using the --generic-print option.
+ * to be compiled separately. It can be enabled by using the --show-response option.
  *
  * @author Tobias Neitzel (@qtc_de)
  */

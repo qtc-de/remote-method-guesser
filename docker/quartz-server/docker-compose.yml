@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+    quartz-scheduler:
+      image: ghcr.io/qtc-de/remote-method-guesser/quartz-scheduler-server:1.0
+      build: .
+      environment:
+        - > 
+          _JAVA_OPTIONS=
+          -Djava.rmi.server.hostname=iinsecure.example
+          -Dorg.quartz.scheduler.rmi.export=true
+          -Dorg.quartz.scheduler.rmi.createRegistry=true
+          -Dorg.quartz.scheduler.rmi.serverPort=4444

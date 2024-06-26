@@ -28,7 +28,7 @@ COPY --from=jdk-builder /jdk /usr/lib/jvm/java-11-openjdk
 RUN set -ex                                                         \
     && ln -s /usr/lib/jvm/java-11-openjdk/bin/java /usr/bin/java    \
     && adduser -g '' -D -u 1000 rmg-user                            \
-    && wget -O /opt/ysoserial.jar https://github.com/frohoff/ysoserial/releases/latest/download/ysoserial-all.jar
+    && wget -O /home/rmg-user/ysoserial.jar https://github.com/frohoff/ysoserial/releases/latest/download/ysoserial-all.jar
 
 USER rmg-user:rmg-user
 

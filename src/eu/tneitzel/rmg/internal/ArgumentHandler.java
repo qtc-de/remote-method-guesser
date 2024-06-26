@@ -4,23 +4,29 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import eu.tneitzel.argparse4j.ArgumentParsers;
+import eu.tneitzel.argparse4j.global.ActionContext;
+import eu.tneitzel.argparse4j.global.GlobalOption;
+import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IOption;
+import eu.tneitzel.argparse4j.global.exceptions.RequirementException;
+import eu.tneitzel.argparse4j.inf.ArgumentParser;
+import eu.tneitzel.argparse4j.inf.ArgumentParserException;
+import eu.tneitzel.argparse4j.inf.Namespace;
+import eu.tneitzel.argparse4j.inf.Subparsers;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
 import eu.tneitzel.rmg.operations.PortScanner;
 import eu.tneitzel.rmg.operations.ScanAction;
 import eu.tneitzel.rmg.plugin.PluginSystem;
 import eu.tneitzel.rmg.utils.RMGUtils;
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.Namespace;
-import net.sourceforge.argparse4j.inf.Subparsers;
 
 /**
  * The ArgumentHandler class is a wrapper around an argparse4j ArgumentParser. It adds some
@@ -52,9 +58,12 @@ public class ArgumentHandler
     {
         parser = ArgumentParsers.newFor("remote-method-guesser").build();
         parser.description("rmg v" + ArgumentHandler.class.getPackage().getImplementationVersion() + " - a Java RMI Vulnerability Scanner");
+        parser.addArgument("--plugin").help("file system path of a rmg plugin");
 
-        Subparsers subparsers = parser.addSubparsers().help(" ").metavar("action").dest("action");
-        Operation.addSubparsers(subparsers);
+        ActionContext ctx = Operation.getActionContext();
+        Subparsers subParsers = ctx.addSubparsers(parser);
+
+        PluginSystem.addPluginActions(subParsers);
 
         try
         {
@@ -85,7 +94,7 @@ public class ArgumentHandler
         {
             InputStream configStream = null;
 
-            configStream = ArgumentParser.class.getResourceAsStream(defaultConfiguration);
+            configStream = ArgumentHandler.class.getResourceAsStream(defaultConfiguration);
             config.load(configStream);
             configStream.close();
 
@@ -110,8 +119,11 @@ public class ArgumentHandler
      */
     private void initialize()
     {
-        config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.name));
-        RMGOption.prepareOptions(args, config);
+        List<IOption> options = PluginSystem.getPluginOptions();
+        options.addAll(Arrays.asList(RMGOption.values()));
+
+        config = loadConfig(args.get(RMGOption.GLOBAL_CONFIG.getName()));
+        GlobalOption.parseOptions(args, config, options.toArray(new IOption[0]));
 
         if (RMGOption.GLOBAL_NO_COLOR.getBool())
         {
@@ -124,7 +136,6 @@ public class ArgumentHandler
         }
 
         checkPortRange();
-        PluginSystem.init(RMGOption.GLOBAL_PLUGIN.getValue());
     }
 
     /**
@@ -158,6 +169,15 @@ public class ArgumentHandler
 
         if (action == null)
         {
+            for (IAction action : PluginSystem.getPluginActions())
+            {
+                if (action.getName() == args.getString("action"))
+                {
+                    PluginSystem.dispatchPluginAction(action);
+                    return null;
+                }
+            }
+
             ExceptionHandler.internalError("ArgumentHandler.getAction", "Invalid action was specified");
         }
 
@@ -295,19 +315,27 @@ public class ArgumentHandler
         String gadget = null;
         String command = null;
 
-        if (this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND)
+        try
         {
-            boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
-            boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
+            if (this.getAction() == Operation.BIND || this.getAction() == Operation.REBIND)
+            {
+                boolean customGadget = RMGOption.BIND_GADGET_NAME.notNull();
+                boolean customCommand = RMGOption.BIND_GADGET_CMD.notNull();
 
-            gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
-            command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.require(RMGOption.BIND_ADDRESS);
+                gadget = customGadget ? RMGOption.BIND_GADGET_NAME.getValue() : "jmx";
+                command = customCommand ? RMGOption.BIND_GADGET_CMD.getValue() : RMGOption.BIND_ADDRESS.require();
+            }
+
+            else
+            {
+                    gadget = RMGOption.GADGET_NAME.require();
+                    command = RMGOption.GADGET_CMD.require();
+            }
         }
 
-        else
+        catch (RequirementException e)
         {
-            gadget = (String) RMGOption.require(RMGOption.GADGET_NAME);
-            command = RMGOption.require(RMGOption.GADGET_CMD);
+            ExceptionHandler.requirementException(e);
         }
 
         return PluginSystem.getPayloadObject(this.getAction(), gadget, command);
@@ -321,8 +349,18 @@ public class ArgumentHandler
      */
     public Object[] getCallArguments()
     {
-        String argumentString = (String) RMGOption.require(RMGOption.CALL_ARGUMENTS);
-        return PluginSystem.getArgumentArray(argumentString);
+        try
+        {
+            List<String> argList = RMGOption.CALL_ARGUMENTS.require();
+            return PluginSystem.getArgumentArray(argList.toArray(new String[0]));
+        }
+
+        catch (RequirementException e)
+        {
+            ExceptionHandler.requirementException(e);
+        }
+
+        return null;
     }
 
     /**
@@ -359,7 +397,7 @@ public class ArgumentHandler
     {
         Set<Integer> rmiPorts = new HashSet<Integer>();
 
-        String defaultPorts = config.getProperty("rmi_ports");
+        String defaultPorts = config.getProperty("RMI_PORTS");
         List<String> portStrings = (List<String>)RMGOption.SCAN_PORTS.value;
 
         if (portStrings == null)
@@ -442,12 +480,12 @@ public class ArgumentHandler
      */
     public void setSocketTimeout()
     {
-        String scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getValue();
-        String scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getValue();
+        int scanTimeoutRead = RMGOption.SCAN_TIMEOUT_READ.getValue();
+        int scanTimeoutConnect = RMGOption.SCAN_TIMEOUT_CONNECT.getValue();
 
-        System.setProperty("sun.rmi.transport.connectionTimeout", scanTimeoutConnect);
-        System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", scanTimeoutRead);
-        System.setProperty("sun.rmi.transport.tcp.responseTimeout", scanTimeoutRead);
+        System.setProperty("sun.rmi.transport.connectionTimeout", String.valueOf(scanTimeoutConnect));
+        System.setProperty("sun.rmi.transport.tcp.handshakeTimeout", String.valueOf(scanTimeoutRead));
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", String.valueOf(scanTimeoutRead));
 
         PortScanner.setSocketTimeouts(scanTimeoutRead, scanTimeoutConnect);
     }

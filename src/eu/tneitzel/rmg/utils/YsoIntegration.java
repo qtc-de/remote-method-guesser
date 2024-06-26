@@ -47,8 +47,8 @@ import sun.rmi.transport.tcp.TCPEndpoint;
  * @author Tobias Neitzel (@qtc_de)
  */
 @SuppressWarnings("restriction")
-public class YsoIntegration {
-
+public class YsoIntegration
+{
     private static String[] bypassGadgets = new String[]{"JRMPClient2", "AnTrinh"};
 
     /**
@@ -64,13 +64,18 @@ public class YsoIntegration {
         Object payloadObject = null;
         String[] split = command.split(":");
 
-        if(split.length != 2 || !split[1].matches("\\d+")) {
+        if (split.length != 2 || !split[1].matches("\\d+"))
+        {
             ExceptionHandler.invalidListenerFormat(true);
         }
 
-        try {
+        try
+        {
             payloadObject = prepareAnTrinhGadget(split[0], Integer.valueOf(split[1]));
-        } catch (Exception e) {
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "bypass object", "generation", true);
         }
 
@@ -86,10 +91,12 @@ public class YsoIntegration {
      */
     private static URLClassLoader getClassLoader() throws MalformedURLException
     {
-        File ysoJar = new File((String)RMGOption.YSO.getValue());
+        String path = RMGUtils.expandPath(RMGOption.YSO.getValue());
+        File ysoJar = new File(path);
 
-        if( !ysoJar.exists() ) {
-            ExceptionHandler.ysoNotPresent(RMGOption.YSO.getValue());
+        if (!ysoJar.exists())
+        {
+            ExceptionHandler.ysoNotPresent(path);
         }
 
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});
@@ -106,15 +113,21 @@ public class YsoIntegration {
      */
     private static InetAddress getLocalAddress(String host)
     {
-
         InetAddress addr = null;
 
-        try {
+        try
+        {
             addr = InetAddress.getByName(host);
-            if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress())
-                NetworkInterface.getByInetAddress(addr);
 
-        } catch (SocketException | UnknownHostException e) {
+            if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress())
+            {
+                NetworkInterface.getByInetAddress(addr);
+            }
+
+        }
+
+        catch (SocketException | UnknownHostException e)
+        {
             Logger.eprintlnMixedYellow("Specified address", host, "seems not to be available on your host.");
             Logger.eprintlnMixedBlue("Listener address is expected to be", "bound locally.");
             ExceptionHandler.showStackTrace(e);
@@ -140,7 +153,8 @@ public class YsoIntegration {
      */
     public static void createJRMPListener(String host, int port, Object payloadObject)
     {
-        try {
+        try
+        {
             InetAddress bindAddress = getLocalAddress(host);
             URLClassLoader ucl = getClassLoader();
 
@@ -166,28 +180,38 @@ public class YsoIntegration {
 
             runMethod.invoke(jrmpListener, new Object[] {});
             System.exit(0);
+        }
 
-        } catch( java.net.BindException e ) {
+        catch (java.net.BindException e)
+        {
             ExceptionHandler.bindException(e);
+        }
 
-        } catch( java.lang.reflect.InvocationTargetException e) {
-
+        catch (java.lang.reflect.InvocationTargetException e)
+        {
             Throwable t = ExceptionHandler.getCause(e);
 
-            if( t instanceof java.net.BindException) {
+            if (t instanceof java.net.BindException)
+            {
                 ExceptionHandler.bindException(e);
-
-            } else if( t instanceof java.lang.IllegalArgumentException) {
-                Logger.lineBreak();
-                Logger.printlnMixedYellow("Caught", "IllegalArgumentException", "during JRMPListener creation.");
-                Logger.printlnMixedBlue("Exception message:", t.getMessage());
-                RMGUtils.exit();
-
-            } else {
-                ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
             }
 
-        } catch( Exception e ) {
+            else if (t instanceof java.lang.IllegalArgumentException)
+            {
+                Logger.lineBreak();
+                Logger.eprintlnMixedYellow("Caught", "IllegalArgumentException", "during JRMPListener creation.");
+                Logger.eprintlnMixedBlue("Exception message:", t.getMessage());
+                RMGUtils.exit();
+            }
+
+            else
+            {
+                ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
+            }
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.unexpectedException(e, "JRMPListener", "creation", true);
         }
     }
@@ -202,13 +226,15 @@ public class YsoIntegration {
      */
     public static Object getPayloadObject(String gadget, String command)
     {
-        if(Arrays.asList(bypassGadgets).contains(gadget)) {
+        if (Arrays.asList(bypassGadgets).contains(gadget))
+        {
             return generateBypassGadget(command);
         }
 
         Object ysoPayload = null;
 
-        try {
+        try
+        {
             URLClassLoader ucl = getClassLoader();
 
             Class<?> yso = Class.forName("ysoserial.payloads.ObjectPayload$Utils", true, ucl);
@@ -216,12 +242,27 @@ public class YsoIntegration {
 
             Logger.print("Creating ysoserial payload...");
             ysoPayload = method.invoke(null, new Object[] {gadget, command});
+        }
 
-        } catch( Exception  e) {
+        catch (Exception e)
+        {
             Logger.printlnPlain(" failed.");
-            Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during gadget generation.");
-            Logger.eprintMixedBlue("You probably specified", "a wrong gadget name", "or an ");
-            Logger.printlnPlainBlue("invalid gadget argument.");
+            Throwable cause = ExceptionHandler.getCause(e);
+
+            if (cause.getClass().getName().equals("java.lang.reflect.InaccessibleObjectException"))
+            {
+                Logger.eprintlnMixedYellow("Caught", "InaccessibleObjectException", "during gadget generation.");
+                Logger.eprintlnMixedBlue("This is caused by the", "Java module system", "in newer Java versions.");
+                Logger.eprintln("Retry using Java 8 or pass add-open directives to remote-method-guessers manifest.");
+            }
+
+            else
+            {
+                Logger.eprintlnMixedYellow("Caught unexpected", e.getClass().getName(), "during gadget generation.");
+                Logger.eprintMixedBlue("You probably specified", "a wrong gadget name", "or an ");
+                Logger.eprintlnPlainBlue("invalid gadget argument.");
+            }
+
             ExceptionHandler.showStackTrace(e);
             RMGUtils.exit();
         }
@@ -229,7 +270,6 @@ public class YsoIntegration {
         Logger.printlnPlain(" done.");
         return ysoPayload;
     }
-
 
     /**
     * The bypass technique implemented by this code was discovered by An Trinh (@_tint0) and a detailed analysis was

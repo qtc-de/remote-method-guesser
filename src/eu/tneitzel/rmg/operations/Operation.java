@@ -2,10 +2,13 @@ package eu.tneitzel.rmg.operations;
 
 import java.lang.reflect.Method;
 
+import eu.tneitzel.argparse4j.global.ActionContext;
+import eu.tneitzel.argparse4j.global.IAction;
+import eu.tneitzel.argparse4j.global.IActionGroup;
+import eu.tneitzel.argparse4j.global.IOption;
 import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.internal.RMGOption;
-import net.sourceforge.argparse4j.inf.Subparser;
-import net.sourceforge.argparse4j.inf.Subparsers;
+import eu.tneitzel.rmg.plugin.PluginSystem;
 
 /**
  * The Operation enum class contains one item for each possible rmg action. An enum item consists out of
@@ -20,12 +23,14 @@ import net.sourceforge.argparse4j.inf.Subparsers;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public enum Operation {
-
+public enum Operation implements IAction
+{
     /** Binds an object to the registry that points to listener */
     BIND("dispatchBind", "[object] <listener>", "Binds an object to the registry that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.BIND_ADDRESS,
+            RMGOption.BIND_BOUND_NAME,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_PLUGIN,
@@ -38,10 +43,8 @@ public enum Operation {
             RMGOption.SSRF_ENCODE,
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
-            RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
-            RMGOption.BIND_ADDRESS,
             RMGOption.BIND_GADGET_NAME,
             RMGOption.BIND_GADGET_CMD,
             RMGOption.YSO,
@@ -54,6 +57,7 @@ public enum Operation {
     CALL("dispatchCall", "<arguments>", "Regularly calls a method with the specified arguments", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.CALL_ARGUMENTS,
             RMGOption.TARGET_BOUND_NAME,
             RMGOption.TARGET_OBJID,
             RMGOption.TARGET_SIGNATURE,
@@ -71,7 +75,6 @@ public enum Operation {
             RMGOption.SSRF_ENCODE,
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
-            RMGOption.CALL_ARGUMENTS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
             RMGOption.SOCKET_FACTORY,
@@ -84,6 +87,8 @@ public enum Operation {
     CODEBASE("dispatchCodebase", "<classname> <url>", "Perform remote class loading attacks", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.CODEBASE_CLASS,
+            RMGOption.CODEBASE_URL,
             RMGOption.TARGET_BOUND_NAME,
             RMGOption.TARGET_OBJID,
             RMGOption.TARGET_SIGNATURE,
@@ -100,8 +105,6 @@ public enum Operation {
             RMGOption.SSRF_ENCODE,
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
-            RMGOption.CODEBASE_URL,
-            RMGOption.CODEBASE_CLASS,
             RMGOption.ARGUMENT_POS,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
@@ -175,38 +178,40 @@ public enum Operation {
 
     /** Display details of known remote objects */
     KNOWN("dispatchKnown", "<className>", "Display details of known remote objects", new RMGOption[] {
+            RMGOption.KNOWN_CLASS,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
-            RMGOption.KNOWN_CLASS,
     }),
 
     /** Open ysoserials JRMP listener */
     LISTEN("dispatchListen", "<gadget> <command>", "Open ysoserials JRMP listener", new RMGOption[] {
+            RMGOption.LISTEN_IP,
+            RMGOption.LISTEN_PORT,
+            RMGOption.GADGET_NAME,
+            RMGOption.GADGET_CMD,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.GLOBAL_VERBOSE,
             RMGOption.GLOBAL_PLUGIN,
-            RMGOption.LISTEN_IP,
-            RMGOption.LISTEN_PORT,
-            RMGOption.GADGET_NAME,
-            RMGOption.GADGET_CMD,
             RMGOption.YSO,
     }),
 
     /** Print information contained within an ObjID */
     OBJID("dispatchObjID", "<objid>", "Print information contained within an ObjID", new RMGOption[] {
+            RMGOption.OBJID_OBJID,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.GLOBAL_VERBOSE,
-            RMGOption.OBJID_OBJID,
     }),
 
     /** Rebinds boundname as object that points to listener */
     REBIND("dispatchRebind", "[object] <listener>", "Rebinds boundname as object that points to listener", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.BIND_ADDRESS,
+            RMGOption.BIND_BOUND_NAME,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_PLUGIN,
@@ -219,10 +224,8 @@ public enum Operation {
             RMGOption.SSRF_ENCODE,
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
-            RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
             RMGOption.BIND_OBJID,
-            RMGOption.BIND_ADDRESS,
             RMGOption.BIND_GADGET_NAME,
             RMGOption.BIND_GADGET_CMD,
             RMGOption.YSO,
@@ -233,6 +236,8 @@ public enum Operation {
 
     /** Creates a rogue JMX listener (collect credentials) */
     ROGUEJMX("dispatchRogueJMX", "[forward-host]", "Creates a rogue JMX listener (collect credentials)", new RMGOption[] {
+            RMGOption.LISTEN_IP,
+            RMGOption.LISTEN_PORT,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
@@ -244,18 +249,16 @@ public enum Operation {
             RMGOption.ROGUEJMX_FORWARD_PORT,
             RMGOption.ROGUEJMX_FORWARD_BOUND_NAME,
             RMGOption.ROGUEJMX_FORWARD_OBJID,
-            RMGOption.LISTEN_IP,
-            RMGOption.LISTEN_PORT
     }),
 
     /** Perform an RMI service scan on common RMI ports */
     SCAN("dispatchPortScan", "[<port> [<port>] ...]", "Perform an RMI service scan on common RMI ports", new RMGOption[] {
+            RMGOption.SCAN_HOST,
+            RMGOption.SCAN_PORTS,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
             RMGOption.GLOBAL_VERBOSE,
-            RMGOption.SCAN_HOST,
-            RMGOption.SCAN_PORTS,
             RMGOption.SCAN_TIMEOUT_CONNECT,
             RMGOption.SCAN_TIMEOUT_READ,
             RMGOption.THREADS,
@@ -266,6 +269,8 @@ public enum Operation {
     SERIAL("dispatchSerial", "<gadget> <command>", "Perform deserialization attacks against default RMI components", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.GADGET_NAME,
+            RMGOption.GADGET_CMD,
             RMGOption.TARGET_BOUND_NAME,
             RMGOption.TARGET_OBJID,
             RMGOption.TARGET_SIGNATURE,
@@ -284,8 +289,6 @@ public enum Operation {
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
             RMGOption.ARGUMENT_POS,
-            RMGOption.GADGET_NAME,
-            RMGOption.GADGET_CMD,
             RMGOption.YSO,
             RMGOption.FORCE_ACTIVATION,
             RMGOption.SERIAL_VERSION_UID,
@@ -298,6 +301,7 @@ public enum Operation {
     UNBIND("dispatchUnbind", "", "Removes the specified bound name from the registry", new RMGOption[] {
             RMGOption.TARGET_HOST,
             RMGOption.TARGET_PORT,
+            RMGOption.BIND_BOUND_NAME,
             RMGOption.GLOBAL_CONFIG,
             RMGOption.GLOBAL_NO_COLOR,
             RMGOption.GLOBAL_STACK_TRACE,
@@ -309,7 +313,6 @@ public enum Operation {
             RMGOption.SSRF_ENCODE,
             RMGOption.SSRF_RAW,
             RMGOption.SSRF_STREAM_PROTOCOL,
-            RMGOption.BIND_BOUND_NAME,
             RMGOption.BIND_BYPASS,
             RMGOption.SOCKET_FACTORY,
             RMGOption.SOCKET_FACTORY_SSL,
@@ -332,9 +335,13 @@ public enum Operation {
      */
     Operation(String methodName, String arguments, String description, RMGOption[] options)
     {
-        try {
+        try
+        {
             this.method = Dispatcher.class.getDeclaredMethod(methodName, new Class<?>[] {});
-        } catch(Exception e) {
+        }
+
+        catch (Exception e)
+        {
             ExceptionHandler.internalException(e, "Operation constructor", true);
         }
 
@@ -421,16 +428,35 @@ public enum Operation {
     }
 
     /**
-     * Add a new subparser for each operation to the specified argumentParser.
+     * Create an ActionContext for the Operation enum.
      *
-     * @param argumentParser parser to add the subparsers to.
+     * @return ActionContext that can be used to create argument parsers from.
      */
-    public static void addSubparsers(Subparsers argumentParser)
+    public static ActionContext getActionContext()
     {
-        for (Operation operation : Operation.values())
+        return new ActionContext("action", " ", " ", Operation.values());
+    }
+
+    @Override
+    public IActionGroup getGroup()
+    {
+        if (PluginSystem.getPluginActions().length != 0)
         {
-            Subparser parser = argumentParser.addParser(operation.name().toLowerCase()).help(operation.description);
-            RMGOption.addOptions(operation, parser);
+            return OperationGroup.NATIVE;
         }
+
+        return null;
+    }
+
+    @Override
+    public String getName()
+    {
+        return name().toLowerCase();
+    }
+
+    @Override
+    public IOption[] getOptions()
+    {
+        return options;
     }
 }

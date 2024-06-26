@@ -150,6 +150,8 @@ public class UnicastWrapper extends RemoteObjectWrapper
      * the specified interface and uses a RemoteObjectInvocationHandler to forward method invocations to
      * the specified RemoteRef.
      *
+     * The boundname property that is part of each UnicastWrapper is set to the ObjID of the remote object.
+     *
      * @param unicastRef UnicastRef to the targeted RemoteObject
      * @param intf Interface that is implemented by the RemoteObject
      * @return UnicastWrapper created from the specified UnicastRef
@@ -168,7 +170,7 @@ public class UnicastWrapper extends RemoteObjectWrapper
         RemoteObjectInvocationHandler remoteObjectInvocationHandler = new RemoteObjectInvocationHandler(unicastRef);
         Remote remoteObject = (Remote)Proxy.newProxyInstance(intf.getClassLoader(), new Class[] { intf }, remoteObjectInvocationHandler);
 
-        return new UnicastWrapper(remoteObject, null, unicastRef);
+        return new UnicastWrapper(remoteObject, unicastRef.getLiveRef().getObjID().toString(), unicastRef);
     }
 
     /**

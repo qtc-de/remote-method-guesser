@@ -1335,4 +1335,55 @@ public class RMGUtils
             return Class.forName(type.getName());
         }
     }
+
+    /**
+     * Primitive argument parser for finding a single string value option on the command line.
+     *
+     * @param opt option name to find
+     * @param args command line
+     * @return the value of the specified option
+     */
+    public static String getOption(String opt, String[] args)
+    {
+        for (int ctr = 0; ctr < args.length - 1; ctr++)
+        {
+            if (args[ctr].equals(opt))
+            {
+                return args[ctr + 1];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Primitive argument parser for finding a single boolean value option on the command line.
+     *
+     * @param opt option name to find
+     * @param args command line
+     * @return true if option was found
+     */
+    public static boolean getBooleanOption(String opt, String[] args)
+    {
+        for (String arg : args)
+        {
+            if (arg.equals(opt))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Expand a leading ~/ with the users home directory.
+     *
+     * @param path  input path
+     * @return expanded path
+     */
+    public static String expandPath(String path)
+    {
+        return path.replaceFirst("^~/", System.getProperty("user.home") + "/");
+    }
 }
