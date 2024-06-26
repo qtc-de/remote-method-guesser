@@ -4,7 +4,7 @@
 
 [![maven CI](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml/badge.svg?branch=master)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
 [![maven CI](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml/badge.svg?branch=develop)](https://github.com/qtc-de/remote-method-guesser/actions/workflows/maven-ci.yml)
-[![](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
+[![](https://img.shields.io/badge/version-5.1.0-blue)](https://github.com/qtc-de/remote-method-guesser/releases)
 [![](https://img.shields.io/badge/build%20system-maven-blue)](https://maven.apache.org/)
 ![](https://img.shields.io/badge/java-8%2b-blue)
 [![](https://img.shields.io/badge/license-GPL%20v3.0-blue)](https://github.com/qtc-de/remote-method-guesser/blob/master/LICENSE)
