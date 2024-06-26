@@ -8,6 +8,7 @@
 [![](https://img.shields.io/badge/build%20system-maven-blue)](https://maven.apache.org/)
 ![](https://img.shields.io/badge/java-8%2b-blue)
 [![](https://img.shields.io/badge/license-GPL%20v3.0-blue)](https://github.com/qtc-de/remote-method-guesser/blob/master/LICENSE)
+[![](https://img.shields.io/badge/javadoc-fa6b05)](https://qtc-de.github.io/remote-method-guesser/)
 
 *remote-method-guesser* (*rmg*) is a *Java RMI* vulnerability scanner and can be used to identify and verify common security
 vulnerabilities on *Java RMI* endpoints.
