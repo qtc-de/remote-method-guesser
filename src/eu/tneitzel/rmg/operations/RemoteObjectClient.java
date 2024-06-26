@@ -103,6 +103,8 @@ public class RemoteObjectClient
     /**
      * Create a proxy for the RemoteObjectClient.
      *
+     * @param <T>  interface implemented by the proxy
+     * @param intf  the interface class
      * @return proxy implementing the specified interface
      */
     @SuppressWarnings("unchecked")

@@ -43,6 +43,7 @@ public class RMIEndpoint
     /** remote host of the endpoint */
     public String host;
 
+    /** client socket factory to use for connections */
     protected RMIClientSocketFactory csf;
 
     /**

@@ -322,11 +322,6 @@ public class RMIRegistryEndpoint extends RMIEndpoint
      *
      * @param boundName name to lookup within the registry
      * @return RemoteObjectWrapper for the remote object
-     * @throws IllegalArgumentException if reflective access fails
-     * @throws IllegalAccessException if reflective access fails
-     * @throws NoSuchFieldException if reflective access fails
-     * @throws SecurityException if reflective access fails
-     * @throws UnmarshalException if unmarshalling the return value fails
      */
     public RemoteObjectWrapper lookupWrapper(String boundName)
     {
@@ -348,13 +343,8 @@ public class RMIRegistryEndpoint extends RMIEndpoint
     /**
      * Same as the lookup action, but returns an array of RemoteObjectWrapper.
      *
-     * @param boundName name to lookup within the registry
+     * @param boundNames names to lookup within the registry
      * @return RemoteObjectWrapper for the remote object
-     * @throws IllegalArgumentException if reflective access fails
-     * @throws IllegalAccessException if reflective access fails
-     * @throws NoSuchFieldException if reflective access fails
-     * @throws SecurityException if reflective access fails
-     * @throws UnmarshalException if unmarshalling the return value fails
      */
     public RemoteObjectWrapper[] lookupWrappers(String[] boundNames)
     {
