@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## v5.1.0 - MMM DD, 2024
+## v5.1.0 - Jun 26, 2024
 
 ### Added
 
@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Refactor plugin system ([README](/plugins/README.md))
 * IArgumentProvider now accepts an array of arguments instead of a string (a653e6367260ba46333e596d81da283a64fc80f1)
 * Let `enum` action continue on RemoteObject retrieval errors
+* Change default ysoserial path to `~/ysoserial.jar`
 
 
 ## v5.0.0 - Dec 23, 2023
