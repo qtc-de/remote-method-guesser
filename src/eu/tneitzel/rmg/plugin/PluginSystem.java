@@ -35,6 +35,8 @@ import eu.tneitzel.rmg.utils.RMGUtils;
 public class PluginSystem
 {
     private static String manifestAttribute = "RmgPluginClass";
+
+    /** The class loader that was used to load the plugin */
     public static URLClassLoader pluginLoader = null;
 
     private static IActionProvider actionProvider = null;

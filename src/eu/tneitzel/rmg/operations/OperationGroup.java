@@ -11,7 +11,9 @@ import eu.tneitzel.argparse4j.global.IActionGroup;
  */
 public enum OperationGroup implements IActionGroup
 {
+	/** Native rmg operations */
     NATIVE("actions:"),
+    /** Operations added by plugins */
     PLUGIN("plugin actions:");
 
     private final String name;
