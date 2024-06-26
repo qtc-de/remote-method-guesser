@@ -91,11 +91,12 @@ public class YsoIntegration
      */
     private static URLClassLoader getClassLoader() throws MalformedURLException
     {
-        File ysoJar = new File((String)RMGOption.YSO.getValue());
+        String path = RMGUtils.expandPath(RMGOption.YSO.getValue());
+        File ysoJar = new File(path);
 
         if (!ysoJar.exists())
         {
-            ExceptionHandler.ysoNotPresent(RMGOption.YSO.getValue());
+            ExceptionHandler.ysoNotPresent(path);
         }
 
         return new URLClassLoader(new URL[] {ysoJar.toURI().toURL()});

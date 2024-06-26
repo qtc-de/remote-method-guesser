@@ -1375,4 +1375,15 @@ public class RMGUtils
 
         return false;
     }
+
+    /**
+     * Expand a leading ~/ with the users home directory.
+     *
+     * @param path  input path
+     * @return expanded path
+     */
+    public static String expandPath(String path)
+    {
+        return path.replaceFirst("^~/", System.getProperty("user.home") + "/");
+    }
 }
