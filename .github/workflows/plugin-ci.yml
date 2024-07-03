@@ -1,4 +1,4 @@
-name: maven CI
+name: plugin CI
 
 on:
 
