@@ -96,7 +96,7 @@ public class Template implements IPayloadProvider, IArgumentProvider, IResponseH
      * @param argumentString the argument string specified on the command line
      * @return argument array for a remote method call
      */
-    public Object[] getArgumentArray(String argumentString)
+    public Object[] getArgumentArray(String[] args)
     {
         // TODO Override with something useful or remove
         return null;
