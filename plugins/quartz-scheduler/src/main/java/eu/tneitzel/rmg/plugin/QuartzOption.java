@@ -161,4 +161,10 @@ public enum QuartzOption implements IOption
 
         return null;
     }
+
+    @Override
+    public String getEnumName()
+    {
+        return this.name();
+    }
 }

@@ -1,4 +1,4 @@
-name: spring server
+name: quartz server
 
 on:
 
@@ -7,8 +7,8 @@ on:
       - master
       - develop
     paths:
-      - 'docker/spring-remoting/resources/server/**'
-      - '.github/workflows/spring-server.yml'
+      - 'docker/quartz-server/resources/server/**'
+      - '.github/workflows/quartz-server.yml'
 
 
 jobs:
@@ -26,13 +26,13 @@ jobs:
         distribution: 'temurin'
         java-version: 8
         cache: maven
-        cache-dependency-path: docker/spring-remoting/resources/server/pom.xml
+        cache-dependency-path: docker/quartz-server/resources/server/pom.xml
 
     - name: Build with Maven
-      run: cd docker/spring-remoting/resources/server/ && mvn -B package --file pom.xml
+      run: cd docker/quartz-server/resources/server && mvn -B package --file pom.xml
 
     - name: Archive generated JAR file
       uses: actions/upload-artifact@v4
       with:
-        name: spring-server
-        path: docker/spring-remoting/resources/server/target/*.jar
+        name: quartz-server
+        path: docker/quartz-server/resources/server/target/*.jar
