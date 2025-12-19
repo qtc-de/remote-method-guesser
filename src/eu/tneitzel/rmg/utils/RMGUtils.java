@@ -1085,13 +1085,22 @@ public class RMGUtils
 
             Class<?>[] interfaces = remoteObject.getClass().getInterfaces();
 
+            StringBuilder intfNames = new StringBuilder();
+
             for(Class<?> intf : interfaces) {
 
                 String intfName = intf.getName();
 
-                if(!intfName.equals("java.rmi.Remote"))
-                    return intfName;
+                if(!intfName.equals("java.rmi.Remote")) {
+                    if(intfNames.length() != 0)
+                        intfNames.append(", ");
+
+                    intfNames.append(intfName);
+                }
             }
+
+            return intfNames.toString();
+
         }
 
         return remoteObject.getClass().getName();
