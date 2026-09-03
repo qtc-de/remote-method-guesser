@@ -2,6 +2,9 @@ package eu.tneitzel.rmg.plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.rmi.server.RMIClientSocketFactory;
@@ -20,6 +23,7 @@ import eu.tneitzel.rmg.internal.ExceptionHandler;
 import eu.tneitzel.rmg.io.Logger;
 import eu.tneitzel.rmg.operations.Operation;
 import eu.tneitzel.rmg.utils.RMGUtils;
+import javassist.CtClass;
 
 /**
  * The PluginSystem class allows rmg to be extended by user defined classes. It can be used to setup
@@ -43,6 +47,7 @@ public class PluginSystem
     private static IPayloadProvider payloadProvider = null;
     private static IResponseHandler responseHandler = null;
     private static IArgumentProvider argumentProvider = null;
+    private static IRmiMarshalProvider marshalProvider = null;
     private static ISocketFactoryProvider socketFactoryProvider = null;
 
     /**
@@ -58,6 +63,7 @@ public class PluginSystem
         DefaultProvider provider = new DefaultProvider();
 
         payloadProvider = provider;
+        marshalProvider = provider;
         argumentProvider = provider;
         socketFactoryProvider = provider;
 
@@ -160,6 +166,12 @@ public class PluginSystem
         if(pluginInstance instanceof ISocketFactoryProvider)
         {
             socketFactoryProvider = (ISocketFactoryProvider)pluginInstance;
+            inUse = true;
+        }
+
+        if(pluginInstance instanceof IRmiMarshalProvider)
+        {
+            marshalProvider = (IRmiMarshalProvider)pluginInstance;
             inUse = true;
         }
 
@@ -363,5 +375,32 @@ public class PluginSystem
     public static void dispatchPluginAction(IAction pluginAction)
     {
         actionProvider.dispatch(pluginAction);
+    }
+
+    /**
+     * Marshal a value using the currently active provider.
+     *
+     * @param type data type to marshal to
+     * @param value object to be marshaled
+     * @param out output stream to marshal to
+     * @throws IOException in case of a failing write operation to the stream
+     */
+    public static void marshalValue(Class<?> type, Object value, ObjectOutput out) throws IOException
+    {
+        marshalProvider.marshalValue(type, value, out);
+    }
+
+    /**
+     * Unmarshal a value using the currently active provider.
+     *
+     * @param type data type that is expected from the stream
+     * @param in ObjectInput to read from.
+     * @return unmarshaled object
+     * @throws IOException if reading the ObjectInput fails
+     * @throws ClassNotFoundException if the read in class is unknown.
+     */
+    public static Object unmarshalValue(CtClass type, ObjectInput in) throws IOException, ClassNotFoundException
+    {
+        return marshalProvider.unmarshalValue(type, in);
     }
 }

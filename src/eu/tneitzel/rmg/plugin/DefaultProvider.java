@@ -1,5 +1,8 @@
 package eu.tneitzel.rmg.plugin;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMISocketFactory;
@@ -21,6 +24,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import javassist.CtPrimitiveType;
 
 /**
  * The DefaultProvider is a default implementation of an rmg plugin. It implements the IArgumentProvider,
@@ -35,7 +39,7 @@ import javassist.CtNewMethod;
  *
  * @author Tobias Neitzel (@qtc_de)
  */
-public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider
+public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISocketFactoryProvider, IRmiMarshalProvider
 {
     /**
      * Return an RMIServerImpl object as used by JMX endpoints when invoked from the bind, rebind or unbind
@@ -248,5 +252,82 @@ public class DefaultProvider implements IArgumentProvider, IPayloadProvider, ISo
         argString.setLength(argString.length() - 1);
 
         return argString.toString();
+    }
+
+    /**
+     * Marshals the specified object value to the corresponding type and writes it to the specified
+     * output stream. This is basically a copy from the default RMI implementation of this function.
+     * The type values are obtained by the method signature and the object values come from the argument
+     * array.
+     *
+     * @param type data type to marshal to
+     * @param value object to be marshaled
+     * @param out output stream to marshal to
+     * @throws IOException in case of a failing write operation to the stream
+     */
+    public void marshalValue(Class<?> type, Object value, ObjectOutput out) throws IOException
+    {
+        if (type.isPrimitive()) {
+            if (type == int.class) {
+                out.writeInt(((Integer) value).intValue());
+            } else if (type == boolean.class) {
+                out.writeBoolean(((Boolean) value).booleanValue());
+            } else if (type == byte.class) {
+                out.writeByte(((Byte) value).byteValue());
+            } else if (type == char.class) {
+                out.writeChar(((Character) value).charValue());
+            } else if (type == short.class) {
+                out.writeShort(((Short) value).shortValue());
+            } else if (type == long.class) {
+                out.writeLong(((Long) value).longValue());
+            } else if (type == float.class) {
+                out.writeFloat(((Float) value).floatValue());
+            } else if (type == double.class) {
+                out.writeDouble(((Double) value).doubleValue());
+            } else {
+                throw new Error("Unrecognized primitive type: " + type);
+            }
+        } else {
+            out.writeObject(value);
+        }
+    }
+
+	/**
+     * Unmarshals an object from the specified ObjectInput according to the data type specified
+     * in the type parameter. This is required to read the result of RMI calls, as different types
+     * are written differently to the ObjectInput by the RMI server. The expected type is taken from
+     * the return value of the method signature.
+     *
+     * @param type data type that is expected from the stream
+     * @param in ObjectInput to read from.
+     * @return unmarshalled object
+     * @throws IOException if reading the ObjectInput fails
+     * @throws ClassNotFoundException if the read in class is unknown.
+     */
+    public Object unmarshalValue(CtClass type, ObjectInput in) throws IOException, ClassNotFoundException
+    {
+        if (type.isPrimitive()) {
+            if (type == CtPrimitiveType.intType) {
+                return Integer.valueOf(in.readInt());
+            } else if (type == CtPrimitiveType.booleanType) {
+                return Boolean.valueOf(in.readBoolean());
+            } else if (type == CtPrimitiveType.byteType) {
+                return Byte.valueOf(in.readByte());
+            } else if (type == CtPrimitiveType.charType) {
+                return Character.valueOf(in.readChar());
+            } else if (type == CtPrimitiveType.shortType) {
+                return Short.valueOf(in.readShort());
+            } else if (type == CtPrimitiveType.longType) {
+                return Long.valueOf(in.readLong());
+            } else if (type == CtPrimitiveType.floatType) {
+                return Float.valueOf(in.readFloat());
+            } else if (type == CtPrimitiveType.doubleType) {
+                return Double.valueOf(in.readDouble());
+            } else {
+                throw new Error("Unrecognized primitive type: " + type);
+            }
+        } else {
+            return in.readObject();
+        }
     }
 }
